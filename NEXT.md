@@ -323,6 +323,12 @@ Two more added by the sub-event work, both reasoned-about but not witnessed:
   — security rests on RLS and the anon key, which is entered in Settings and
   lives in localStorage, not in the source. **Make the GitHub repo private
   anyway**; the schema and client data model are the studio's business.
+- **To check which build is live**, open the app and look at Settings → Data &
+  storage → **App version**, or run
+  `curl -s https://gemevents.app/ | grep gem-build`. Both show a 12-char hash
+  of `gem-artifact.html`, stamped in by whichever builder produced the page.
+  `python3 build.py` prints the same value. If the app shows `dev`, it is
+  running from the raw artifact rather than a deployed build.
 - **Deploy is now `git push origin main`.** Cloudflare Workers Builds watches
   `github.com/lroy413/GEM`; a push runs `npm run build` (→ `scripts/build-dist.mjs`,
   which rebuilds index.html from the artifact and stages `dist/`) then
