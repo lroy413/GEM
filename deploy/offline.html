@@ -1,0 +1,37 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>GEM · Offline</title>
+<style>
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{min-height:100vh;display:grid;place-items:center;padding:32px;
+    font-family:'Inter',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;color:#3B2E33;
+    background:radial-gradient(900px 480px at 15% -10%,#F7E9EC,rgba(247,233,236,0) 60%),
+               linear-gradient(180deg,#FAF2F3,#FDF9F8)}
+  .card{max-width:420px;text-align:center;background:#fff;border:1px solid #EEE1E3;border-radius:20px;
+    padding:40px 34px;box-shadow:0 2px 6px rgba(59,46,51,.05),0 14px 34px rgba(120,70,80,.09)}
+  .mark{width:52px;height:52px;margin:0 auto 20px;border-radius:15px;display:grid;place-items:center;
+    background:linear-gradient(145deg,#E3C579,#C2A052 42%,#A8842F);color:#fff;
+    font-family:Georgia,serif;font-size:28px;font-weight:600;
+    box-shadow:inset 0 1px 0 rgba(255,255,255,.5),0 4px 14px rgba(143,113,48,.3)}
+  h1{font-family:Georgia,serif;font-size:27px;font-weight:600;letter-spacing:-.01em}
+  p{font-size:13.5px;line-height:1.65;color:#5E4E54;margin-top:12px}
+  .hint{font-size:11.5px;color:#948289;margin-top:20px;padding-top:18px;border-top:1px solid #EEE1E3}
+  button{margin-top:22px;height:44px;padding:0 22px;border-radius:10px;border:1px solid #8F7130;
+    background:linear-gradient(145deg,#E3C579,#C2A052 42%,#A8842F);color:#fff;
+    font-family:inherit;font-size:13.5px;font-weight:600;cursor:pointer;
+    box-shadow:inset 0 1px 0 rgba(255,255,255,.42),0 6px 18px rgba(143,113,48,.22)}
+</style>
+</head>
+<body>
+  <div class="card">
+    <div class="mark">G</div>
+    <h1>You're offline</h1>
+    <p>GEM couldn't reach the network. Anything already saved on this device is still available — reopen the app to keep working.</p>
+    <button onclick="location.href='/'">Reopen GEM</button>
+    <div class="hint">Changes made offline stay on this device until you're back online.</div>
+  </div>
+</body>
+</html>

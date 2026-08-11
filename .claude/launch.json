@@ -1,0 +1,11 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "gem",
+      "runtimeExecutable": "python3",
+      "runtimeArgs": ["/private/tmp/claude-501/-Users-ronin-Documents-GEM/e261f8c0-683c-440a-9d06-17be406cf99e/scratchpad/serve.py"],
+      "port": 8812
+    }
+  ]
+}

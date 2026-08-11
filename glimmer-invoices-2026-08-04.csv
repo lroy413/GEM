@@ -1,0 +1,9 @@
+﻿"Invoice","Client","Due date","Status","Amount"
+"GEM-1042","Priya & Sam","2026-08-01","paid","29000.00"
+"GEM-1051","Priya & Sam","2026-09-20","due","29000.00"
+"GEM-1039","Ava & Julian","2026-07-15","paid","21000.00"
+"GEM-1055","Ava & Julian","2026-08-19","due","21000.00"
+"GEM-1060","The Hale Gala","2026-07-28","over","37500.00"
+"GEM-1063","Nora & Beck","2026-09-01","draft","12000.00"
+
+"Total","","","","149500.00"

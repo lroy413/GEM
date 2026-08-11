@@ -1,0 +1,32 @@
+# Cloudflare Pages / Netlify header rules.
+# The <meta charset> in index.html already guarantees correct decoding, but
+# declaring it in the response header is the belt to that braces — it applies
+# before a single byte of markup is parsed.
+
+/*
+  X-Content-Type-Options: nosniff
+  Referrer-Policy: strict-origin-when-cross-origin
+
+/index.html
+  Content-Type: text/html; charset=utf-8
+  Cache-Control: no-cache
+
+/
+  Content-Type: text/html; charset=utf-8
+  Cache-Control: no-cache
+
+# Never cache the worker itself, or users get stranded on an old build.
+/sw.js
+  Content-Type: application/javascript; charset=utf-8
+  Cache-Control: no-cache
+  Service-Worker-Allowed: /
+
+/manifest.webmanifest
+  Content-Type: application/manifest+json; charset=utf-8
+  Cache-Control: no-cache
+
+/offline.html
+  Content-Type: text/html; charset=utf-8
+
+/icons/*
+  Cache-Control: public, max-age=31536000, immutable
