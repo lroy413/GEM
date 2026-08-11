@@ -1126,6 +1126,13 @@ td.inv-col{text-align:center;width:1%}
   .inv-box{width:34px;height:34px}
   .inv-tick{font-size:14px}
 }
+/* --- who can see the portal --- */
+.pa-list{margin-top:12px;display:flex;flex-direction:column;gap:6px}
+.pa-row{display:flex;align-items:center;gap:10px;padding:8px 11px;border:1px solid var(--line);
+  border-radius:var(--radius-sm);background:var(--card)}
+.pa-row .pa-em{flex:1;min-width:0;font-size:13px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.pa-row .pill{font-size:10px}
+.pa-row .r-act{opacity:1}
 /* --- two task lists, and a note on each task --- */
 .chk-tabs{display:flex;gap:6px;margin:2px 0 10px}
 .chk-tab{display:inline-flex;align-items:center;gap:7px;padding:6px 13px;border-radius:var(--radius-pill);
@@ -3457,6 +3464,19 @@ function viewClientDetail(id){
           return '<tr><td><b>'+esc(x.num)+'</b><div style="font-size:12px;color:var(--muted)">'+fmtDate(x.due)+'</div></td>'+
             '<td><span class="status '+cls+'">'+lbl+'</span></td><td style="text-align:right"><span class="val">'+money(x.amount)+'</span></td></tr>';
         }).join(''):'<tr><td style="color:var(--muted)">No invoices yet.</td></tr>')+'</tbody></table></div></div>'+
+      /* Portal access. Shown whether or not Supabase is connected, because
+         "why can't my couple log in" is answered here — and the answer is
+         usually that this studio has not connected yet. */
+      (ev?'<div class="card" style="margin-bottom:20px"><div class="card-h"><h3>Client Portal</h3>'+
+        '<span class="ev-h-r"><button class="btn btn-ghost btn-sm" id="portalCopy">Copy link</button>'+
+        (sbReady()?'<button class="btn btn-gold btn-sm" id="portalInvite">Invite</button>':'')+'</span></div>'+
+        '<div style="padding:16px 22px">'+
+          '<div class="kv"><span>Portal address</span><b><code class="build-id">'+esc(portalUrl())+'</code></b></div>'+
+          (sbReady()
+            ? '<div class="pa-list" id="portalAccess"><div class="hint">Checking who has access…</div></div>'
+            : '<div class="hint" style="margin-top:10px">Connect Supabase in Settings before inviting — '+
+              'portal access is an account on your project, not a link anyone can open.</div>')+
+        '</div></div>':'')+
       '<div class="card"><div class="card-h"><h3>Documents</h3>'+
         '<span class="ev-h-r"><span class="pill">'+docs.length+'</span>'+
         (ev?'<button class="btn btn-ghost btn-sm" id="clientDocUpload">⇪ Upload</button>':'')+'</span></div>'+
@@ -3518,7 +3538,7 @@ function wireEvents(){
   var add=function(sel,fn){ var b=document.querySelector(sel); if(b)b.onclick=function(e){e.stopPropagation();fn();}; };
   add('[data-addtl]',function(){
     openEditor({title:'Add Moment',sub:ev&&ev.title,saveLabel:'Add',
-      fields:[{id:'t',label:'Time',required:true,placeholder:'4:30 PM'},
+      fields:[{id:'t',label:'Time',required:true,placeholder:'4:30 PM',fmt:'time'},
               {id:'ev',label:'What happens',required:true,placeholder:'Ceremony'},
               {id:'ds',label:'Detail',placeholder:'Conservatory hall'}],
       onSave:function(v){ ev.timeline.push({id:uid('tl'),t:v.t,ev:v.ev,ds:v.ds});
@@ -5079,6 +5099,55 @@ function wireClientDetail(){
       p.onchange=function(){ var f=p.files&&p.files[0]; if(f)docAttach(b.dataset.id,f); };
       p.click(); };
   });
+  /* ---- portal access ---- */
+  var pev=eventForLead(l);
+  var cp=$('#portalCopy');
+  if(cp)cp.onclick=function(e2){ e2.stopPropagation();
+    var u=portalUrl();
+    (navigator.clipboard?navigator.clipboard.writeText(u):Promise.reject())
+      .then(function(){ toast('Portal link copied — '+u); })
+      .catch(function(){ toast(u); });
+  };
+  function paintAccess(){
+    var box=$('#portalAccess'); if(!box||!pev)return;
+    sbClientInvites(pev.id).then(function(rows){
+      rows=rows||[];
+      if(!rows.length){ box.innerHTML='<div class="hint">Nobody invited yet. '+
+        'The couple share one login, and can add one more person themselves.</div>'; return; }
+      box.innerHTML=rows.map(function(r){
+        return '<div class="pa-row"><span class="pa-em">'+esc(r.email)+'</span>'+
+          '<span class="status '+(r.claimed_at?'s-paid':'s-due')+'">'+
+            (r.claimed_at?'Signed in':'Invited')+'</span>'+
+          (r.source==='client'?'<span class="pill">added by the couple</span>':'')+
+          '<button class="r-act r-del" data-revoke="'+esc(r.email)+'" aria-label="Revoke">✕</button></div>';
+      }).join('');
+      box.querySelectorAll('[data-revoke]').forEach(function(b){
+        b.onclick=function(e2){ e2.stopPropagation();
+          confirmDelete('portal access for '+b.dataset.revoke,function(){
+            sbRevokeClient(pev.id,b.dataset.revoke)
+              .then(function(){ toast('Access revoked'); paintAccess(); })
+              .catch(function(err){ toast(err.message||'Could not revoke'); });
+          }); };
+      });
+    }).catch(function(err){
+      box.innerHTML='<div class="hint">Could not read invitations — '+esc(err.message||'')+'</div>';
+    });
+  }
+  if(sbReady()&&pev)paintAccess();
+  var pi=$('#portalInvite');
+  if(pi)pi.onclick=function(e2){
+    e2.stopPropagation();
+    if(!pev){ toast('This client has no event yet.'); return; }
+    openEditor({title:'Invite to the portal',sub:l.names,saveLabel:'Send invitation',
+      fields:[{id:'email',label:'Their email',type:'email',value:l.email||'',required:true,full:true}],
+      onSave:function(v){
+        sbInviteClient(pev.id,v.email,true).then(function(){
+          closeModal(); toast('Invited — they get in by signing in at '+portalUrl());
+          paintAccess();
+        }).catch(function(err){ toast(err.message||'Invite failed'); });
+      }});
+  };
+
   // collapsible sections + vendor bookings live here now
   document.querySelectorAll('[data-evtoggle]').forEach(function(btn){
     btn.onclick=function(ev){ ev.stopPropagation();
@@ -6217,7 +6286,13 @@ function wireSettings(){
       if(r==='in'){
         toast('Signed in ✦');
         var q=prefs(); if(!q.bizEmail)q.bizEmail=em; savePrefs();
-        render();
+        /* Claim any portal invitation waiting on this address. For a couple
+           this is the step that attaches them to their wedding; for staff it
+           finds nothing and costs one call. */
+        sbAfterSignIn().then(function(n){
+          if(n)toast('Portal access granted for '+n+' event'+(n===1?'':'s')+' ✦');
+          render();
+        });
       } else {
         sbSay('ok','Account created. Confirm the email we just sent, then sign in.');
       }
@@ -7132,6 +7207,47 @@ function openInquiryModal(){
  * One field-spec driven modal keeps every entity behaving the same
  * instead of a dozen bespoke dialogs drifting apart.
  * ============================================================ */
+/* Times are typed a dozen ways and printed on a running order that a vendor
+   team reads at a glance, so they get normalised to one shape. Anything this
+   cannot parse is left exactly as typed rather than mangled — a planner who
+   writes "after the toasts" keeps it.
+
+     10        → 10:00 AM        1000   → 10:00 AM
+     4:30      → 4:30 PM         430p   → 4:30 PM
+     17:30     → 5:30 PM         9.05   → 9:05 AM
+     noon      → 12:00 PM        0:15   → 12:15 AM
+
+   With no am/pm given, 7–11 reads as morning and everything else as
+   afternoon — the shape of a wedding day. It normalises as you leave the
+   field, so a wrong guess is visible immediately and one keystroke to fix. */
+function normTime(v){
+  var s=String(v==null?'':v).trim();
+  if(!s)return '';
+  if(/^noon$/i.test(s))return '12:00 PM';
+  if(/^midnight$/i.test(s))return '12:00 AM';
+  /* Every part after the hour is optional — "4:30" and "17:30" are times too,
+     and requiring the am/pm here left them untouched. */
+  var m=s.match(/^(\d{1,2})\s*[:.\-]?\s*(\d{2})?\s*([ap])?\.?\s*m?\.?$/i);
+  if(!m){
+    /* Bare digits: 930 and 1015 are times, 9 and 10 are hours. */
+    var d=s.match(/^(\d{3,4})$/);
+    if(d)m=[s,d[1].slice(0,d[1].length-2),d[1].slice(-2),null];
+    else{
+      var h1=s.match(/^(\d{1,2})$/);
+      if(h1)m=[s,h1[1],null,null];
+      else return s;
+    }
+  }
+  var h=parseInt(m[1],10), min=m[2]?parseInt(m[2],10):0;
+  var mer=m[3]?m[3].toLowerCase():null;
+  if(isNaN(h)||isNaN(min)||min>59||h>23)return s;
+  if(h===0){ h=12; mer=mer||'a'; }
+  else if(h>12){ h-=12; mer='p'; }              // 24-hour input is unambiguous
+  else if(h===12&&!mer){ mer='p'; }
+  if(!mer)mer=(h>=7&&h<=11)?'a':'p';
+  return h+':'+String(min).padStart(2,'0')+' '+(mer==='a'?'AM':'PM');
+}
+
 function openEditor(o){
   var fields=o.fields||[];
   md.className='modal';
@@ -7164,11 +7280,19 @@ function openEditor(o){
       var el=$('#ed_'+f.id); if(!el)return;
       var raw=el.value; if(typeof raw==='string')raw=raw.trim();
       if(f.required&&!raw&&!missing)missing=el;
-      vals[f.id]=(f.type==='number')?(Number(raw)||0):raw;
+      vals[f.id]=(f.type==='number')?(Number(raw)||0):(f.fmt==='time'?normTime(raw):raw);
     });
     if(missing){ missing.focus(); toast('Please complete the required fields.'); return; }
     o.onSave(vals);
   };
+  /* fmt:'time' fields tidy themselves as you leave them, so the result is
+     visible and correctable rather than a surprise at save time. */
+  fields.forEach(function(f){
+    if(f.fmt!=='time')return;
+    var el=$('#ed_'+f.id); if(!el)return;
+    el.setAttribute('inputmode','numeric');
+    el.onblur=function(){ el.value=normTime(el.value); };
+  });
   var first=md.querySelector('.modal-scroll input,.modal-scroll select,.modal-scroll textarea');
   if(first)setTimeout(function(){first.focus();},60);
 }
@@ -8045,7 +8169,7 @@ function openEventModal(existing,parentId){
       (canAttach?{id:'roleLabel',label:'Name it (for “Custom…”)',
         value:(e&&e.roleLabel)||'',placeholder:'e.g. Cake tasting',full:true}:null),
       {id:'date',label:'Event date',type:'date',value:e&&e.date,required:true},
-      {id:'startTime',label:'Start time',value:e&&e.startTime,placeholder:'4:30 PM'},
+      {id:'startTime',label:'Start time',value:e&&e.startTime,placeholder:'4:30 PM',fmt:'time'},
       {id:'venue',label:'Venue',value:e&&e.venue,placeholder:'To be confirmed'},
       {id:'loc',label:'City / region',value:e&&e.loc},
       {id:'line1',label:'Street address',value:a.line1,full:true},
@@ -8344,7 +8468,7 @@ function editRecord(kind,id){
       onSave:function(v){ Object.assign(it,v); closeModal(); afterChange(); }});},
     event:function(){ openEventModal(it); },
     timeline:function(){ openEditor({title:'Edit Timeline Item',sub:ev&&ev.title,onDelete:del,deleteLabel:it.ev,
-      fields:[{id:'t',label:'Time',value:it.t,required:true,placeholder:'4:30 PM'},
+      fields:[{id:'t',label:'Time',value:it.t,required:true,placeholder:'4:30 PM',fmt:'time'},
               {id:'ev',label:'What happens',value:it.ev,required:true},
               {id:'ds',label:'Detail',value:it.ds}],
       onSave:function(v){ Object.assign(it,v); sortTimeline(ev); closeModal(); afterChange(); }});},
@@ -9047,7 +9171,43 @@ function sbRest(path,opts){
   });
 }
 
+/* ---------- portal access for the couple ---------- */
+/* event_clients is written server-side, because the browser cannot turn an
+   email address into a user id — auth.users is not readable with the anon key.
+   So an invitation is stored against the address and claimed on first sign-in.
+   See migration 14. */
+function sbInviteClient(eventId,email,canEdit){
+  return sbRest('rpc/gem_invite_client',{method:'POST',
+    body:{p_event:eventId,p_email:email,p_can_edit:canEdit!==false}});
+}
+function sbInvitePartner(eventId,email){
+  return sbRest('rpc/gem_invite_partner',{method:'POST',body:{p_event:eventId,p_email:email}});
+}
+function sbRevokeClient(eventId,email){
+  return sbRest('rpc/gem_revoke_client',{method:'POST',body:{p_event:eventId,p_email:email}});
+}
+function sbClientInvites(eventId){
+  return sbRest('event_client_invites?select=*&event_id=eq.'+encodeURIComponent(eventId));
+}
+/* Called after every sign-in. Harmless when there is nothing to claim, and it
+   is what turns an invited couple into an attached one. */
+function sbClaimInvites(){
+  return sbRest('rpc/gem_claim_client_invites',{method:'POST',body:{}}).catch(function(){ return 0; });
+}
+/* The address the couple would visit. Falls back to this origin when no portal
+   domain is set, which is correct for a studio that has not split the hosts. */
+function portalUrl(){
+  var h=String(prefs().portalHost||'').trim().replace(/^https?:\/\//,'').replace(/\/.*$/,'');
+  return h?('https://'+h+'/'):location.origin+'/';
+}
+
 /* ---------- auth: magic link ---------- */
+function sbAfterSignIn(){
+  /* An invited couple is only linked to their wedding once they have signed in
+     at least once — the invitation is stored against their email and claimed
+     here. Safe and cheap for staff, who simply have none to claim. */
+  return sbClaimInvites();
+}
 function sbSignIn(email){
   var cfg=sbCfg();
   if(!cfg)return Promise.reject(new Error('Add your project URL and key first.'));
