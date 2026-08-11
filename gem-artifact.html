@@ -7267,7 +7267,7 @@ function openEditor(o){
         }).join('')+'</select>';
       else ctl='<input id="'+id+'" type="'+(f.type||'text')+'" value="'+esc(v)+'"'+
         (f.placeholder?' placeholder="'+esc(f.placeholder)+'"':'')+'>';
-      return '<div class="field"'+(f.full?' style="grid-column:1/-1"':'')+'><label for="'+id+'">'+esc(f.label)+
+      return '<div class="field" data-fid="'+f.id+'"'+(f.full?' style="grid-column:1/-1"':'')+'><label for="'+id+'">'+esc(f.label)+
         (f.required?' <span class="req">required</span>':'')+'</label>'+ctl+'</div>';
     }).join('')+'</div></div>'+
     '<div class="modal-actions">'+
@@ -7278,10 +7278,46 @@ function openEditor(o){
   $('#mCancel').onclick=closeModal;
   var del=$('#mDelete');
   if(del)del.onclick=function(){ confirmDelete(o.deleteLabel||o.title,function(){ o.onDelete(); }); };
-  $('#mSave').onclick=function(){
-    var vals={},missing=null;
+  /* Conditional fields. A field with showIf(vals) is hidden while that returns
+     false, and reads as empty on save — so a question that does not apply
+     cannot answer itself with a stale value. Fields are still built once, so
+     nothing typed is lost if a field hides and reappears. */
+  function currentVals(){
+    var v={};
     fields.forEach(function(f){
       var el=$('#ed_'+f.id); if(!el)return;
+      var raw=el.value; if(typeof raw==='string')raw=raw.trim();
+      v[f.id]=(f.type==='number')?(Number(raw)||0):raw;
+    });
+    return v;
+  }
+  function visible(f,v){ return typeof f.showIf!=='function'||!!f.showIf(v); }
+  function refresh(){
+    var v=currentVals();
+    fields.forEach(function(f){
+      if(typeof f.showIf!=='function')return;
+      var wrap=md.querySelector('.field[data-fid="'+f.id+'"]');
+      if(wrap)wrap.style.display=visible(f,v)?'':'none';
+    });
+  }
+  /* Some selects depend on another field's value for their OPTIONS, not just
+     their visibility — the sub-event roles come from the event type. */
+  if(typeof o.onFieldChange==='function'){
+    md.querySelectorAll('.modal-scroll input,.modal-scroll select')
+      .forEach(function(el){ el.addEventListener('change',function(){ o.onFieldChange(currentVals(),md); }); });
+  }
+  if(fields.some(function(f){return typeof f.showIf==='function';})){
+    md.querySelectorAll('.modal-scroll input,.modal-scroll select,.modal-scroll textarea')
+      .forEach(function(el){ el.addEventListener('change',refresh); el.addEventListener('input',refresh); });
+    refresh();
+  }
+
+  $('#mSave').onclick=function(){
+    var live=currentVals(), vals={}, missing=null;
+    fields.forEach(function(f){
+      var el=$('#ed_'+f.id); if(!el)return;
+      /* A hidden field is not a question that was asked. */
+      if(!visible(f,live)){ vals[f.id]=(f.type==='number')?0:''; return; }
       var raw=el.value; if(typeof raw==='string')raw=raw.trim();
       if(f.required&&!raw&&!missing)missing=el;
       vals[f.id]=(f.type==='number')?(Number(raw)||0):(f.fmt==='time'?normTime(raw):raw);
@@ -8158,6 +8194,21 @@ function openEventModal(existing,parentId){
     sub:e?e.title:(isSub?'Part of '+parent.title:'Events are usually created from a booked lead.'),
     twoCol:true,
     saveLabel:e?'Save changes':(isSub?'Add sub-event':'Create event'),
+    /* Changing the event type changes which occasions exist. Rebuilt in place
+       so a Corporate event never offers a rehearsal dinner, even when the type
+       is switched after the form is already open. */
+    onFieldChange:function(v,root){
+      var sel=root.querySelector('#ed_role'); if(!sel)return;
+      var want=rolesForType(v.eventType||typeOf);
+      var ids=want.map(function(r){return r.id;}).join(',');
+      if(sel.dataset.roleset===ids)return;
+      sel.dataset.roleset=ids;
+      var keep=sel.value;
+      sel.innerHTML=want.map(function(r){
+        return '<option value="'+r.id+'"'+(r.id===keep?' selected':'')+'>'+esc(r.label)+'</option>';
+      }).join('');
+      if(sel.value!==keep)sel.value=(want[0]||{}).id||'other';
+    },
     onDelete:e?function(){ closeModal(); deleteRecord('event',e.id); }:null,
     deleteLabel:e&&e.title,
     fields:[
@@ -8166,24 +8217,33 @@ function openEventModal(existing,parentId){
       {id:'leadId',label:'Client',type:'select',value:(e&&e.leadId)||(parent&&parent.leadId),options:opts,full:true},
       /* Present rather than revealed: openEditor builds its fields once, and a
          field that appears mid-edit loses whatever was typed in it. */
-      {id:'newClient',label:'New client’s name (for “Add a new client…”)',
-       value:'',placeholder:'e.g. Okafor & Bello',full:true},
+      {id:'newClient',label:'New client’s name',value:'',placeholder:'e.g. Okafor & Bello',
+       full:true,required:true,showIf:function(v){ return v.leadId==='__new'; }},
       /* A sub-event inherits the block's type, so it is only asked for on a
          standalone or primary event. */
       (isSub?null:{id:'eventType',label:'Event type',type:'select',
-        value:typeOf,options:EVENT_TYPES.map(function(t){return {value:t.id,label:t.id};}),full:true}),
+        value:typeOf,options:EVENT_TYPES.map(function(t){return {value:t.id,label:t.id};}),full:true,
+        /* A sub-event takes its block's type; asking again could contradict it. */
+        showIf:function(v){ return !v.parentId; }}),
       /* The parent picker is hidden once an event has sub-events of its own —
          the database holds the tree one level deep and the UI should not offer
          a move it will refuse. */
       (canAttach?{id:'parentId',label:'Part of',type:'select',
-        value:(e&&e.parentId)||(parent&&parent.id)||'',options:attachOpts,full:true}:null),
+        value:(e&&e.parentId)||(parent&&parent.id)||'',options:attachOpts,full:true,
+        /* A client created on this form has no events yet, so there is nothing
+           for this one to be part of. */
+        showIf:function(v){ return v.leadId!=='__new'; }}:null),
       (canAttach?{id:'role',label:'Which event is it',type:'select',
-        value:defRole,options:roleOpts,full:true}:null),
+        value:defRole,options:roleOpts,full:true,
+        /* Only a sub-event has a role. A standalone event is its own primary,
+           and asking which wedding occasion it is made no sense at all. */
+        showIf:function(v){ return !!v.parentId&&v.parentId!=='__new'; }}:null),
       /* Only meaningful for the Custom… role, but always present: openEditor
          builds its fields once and has no conditional-reveal, and a field that
          appears and disappears mid-edit loses what was typed in it. */
-      (canAttach?{id:'roleLabel',label:'Name it (for “Custom…”)',
-        value:(e&&e.roleLabel)||'',placeholder:'e.g. Cake tasting',full:true}:null),
+      (canAttach?{id:'roleLabel',label:'Name this occasion',
+        value:(e&&e.roleLabel)||'',placeholder:'e.g. Cake tasting',full:true,
+        showIf:function(v){ return !!v.parentId&&v.role==='custom'; }}:null),
       {id:'date',label:'Event date',type:'date',value:e&&e.date,required:true},
       {id:'startTime',label:'Start time',value:e&&e.startTime,placeholder:'4:30 PM',fmt:'time'},
       {id:'venue',label:'Venue',value:e&&e.venue,placeholder:'To be confirmed'},
