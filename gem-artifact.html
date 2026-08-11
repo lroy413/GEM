@@ -1171,6 +1171,11 @@ td.inv-col{text-align:center;width:1%}
 .samp-tag.card{position:absolute;top:10px;left:14px;z-index:2;background:rgba(0,0,0,.34);
   backdrop-filter:blur(3px)}
 .samp-tag.mini{padding:2px 7px;font-size:9px;vertical-align:middle}
+/* Which job a task belongs to, at a glance. The weight does the separating as
+   much as the hue, so it still reads if the colour does not register. */
+.t-m .t-ev{font-weight:600}
+.t-m .t-dot{display:inline-block;width:6px;height:6px;border-radius:50%;margin-right:6px;
+  vertical-align:1px}
 /* The event's type, so a corporate gala does not read as a wedding. */
 .ev-type{font-weight:700;letter-spacing:.03em;text-transform:uppercase;font-size:10px;color:var(--gold)}
 /* A locked card should look calm, not broken — the tag and the banner carry
@@ -3134,7 +3139,13 @@ function viewDashboard(){
     return '<div class="task'+(t.days===0?' is-today':'')+'" data-task="'+esc(t.eventId)+'|'+esc(t.id)+'">'+
       '<button class="tbox" aria-label="Mark complete"></button>'+
       '<div class="t-main"><div class="t-l">'+esc(t.lbl)+'</div>'+
-        '<div class="t-m">'+esc(t.eventTitle)+' · '+esc(t.cat||'General')+'</div></div>'+
+        /* The event gets a colour of its own so a mixed list separates at a
+           glance — with fifteen tasks across three jobs, the run of identical
+           grey lines was the hard part to read. The category stays muted so
+           the colour means one thing only: which event. */
+        '<div class="t-m"><span class="t-ev" style="color:'+eventTint(t.eventId)+'">'+
+          '<i class="t-dot" style="background:'+eventTint(t.eventId)+'"></i>'+esc(t.eventTitle)+'</span>'+
+          ' · '+esc(t.cat||'General')+'</div></div>'+
       badge+'</div>';
   }
   /* Today is deliberately not collapsible — it is the one group that
@@ -8346,6 +8357,26 @@ var EVENT_TYPES=[
 /* Offered whatever the type, because every event has a room to look at and
    suppliers to taste. */
 var EV_ROLES_UNIVERSAL=['tasting','walkthrough','photos','setup','custom','other'];
+/* A stable colour per event, so a list mixing several jobs separates without
+   needing a heading. Chosen from a fixed set rather than generated from a hue
+   wheel: random hues collide with the gold and pink the rest of the app uses,
+   and these are picked to sit at similar weight and stay legible on the card.
+   Derived from the id, so an event keeps its colour across every screen and
+   every device. */
+/* One per hue family, walked round the wheel so neighbouring events never look
+   alike. Every one measured at 4.6:1 or better against the card — the first
+   pass had three below 4.5, and this is 11px text. */
+var EVENT_TINTS=['#8D6E27','#627C54','#2F7D7A','#597990','#6A6FA0','#96607F','#9A5C5C','#A5633A'];
+/* Assigned by position, not by hashing the id. A hash collides — with four
+   events and eight colours the first attempt handed out two greens and two
+   duplicates — and the whole point is that two jobs never share a colour.
+   Sorting by id keeps it stable across renders and devices; it only shifts
+   when the set of events changes, which is the acceptable trade. */
+function eventTint(id){
+  var ids=db.events.map(function(e){return e.id;}).sort();
+  var i=ids.indexOf(id);
+  return EVENT_TINTS[(i<0?0:i)%EVENT_TINTS.length];
+}
 function eventTypeDef(t){
   return EVENT_TYPES.find(function(x){return x.id===t;})||
          EVENT_TYPES[EVENT_TYPES.length-1];
