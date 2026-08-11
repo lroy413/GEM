@@ -948,15 +948,35 @@ tbody tr:hover{background:var(--pink-50)}
 /* The label takes the slack. Previously margin-left:auto sat on EVERY .cat, so
    the spare space was split between the date and the category and neither
    landed in the same place twice — the column read as ragged down the list. */
-.check .lbl{font-size:14px;flex:1;min-width:0}
+.check{flex-wrap:wrap}
+.check .lbl{font-size:14px;flex:1 1 auto;min-width:12ch;overflow-wrap:anywhere}
 .check .cat{flex:0 0 auto;font-size:11px;color:var(--muted);background:var(--pink-100);
   padding:2px 9px;border-radius:20px;white-space:nowrap;text-align:center}
-/* Fixed columns so the pills line up vertically. Without nowrap a date like
-   "Oct 29, 2026" broke over two lines and took the whole row's height with it. */
-.check .cat.due{min-width:104px}
-.check .cat.tag{min-width:92px}
 /* An empty date cell still holds its column, but shows no pill. */
 .check .cat.due:empty{background:none}
+/* The aligned columns are a luxury that needs room, and the room in question
+   is the CARD's, not the window's — this list lives in the narrow right column
+   of a two-column grid, so it is cramped at any viewport. Keying the old rule
+   off the viewport meant the pills held 196px of fixed width inside a 420px
+   row, squeezing the label to ~40px: labels broke one word per line and long
+   words overflowed and painted underneath the pills. */
+.chk-scroll{container-type:inline-size}
+/* Narrow: the label owns the first line and the pills sit together on the
+   next, indented to line up under it. Ragged pills scattered after the text
+   was the original complaint; this keeps them in a column either way. */
+.chk-meta{display:flex;align-items:center;gap:12px;flex:1 1 100%;padding-left:34px;margin-top:2px}
+@container (min-width:400px){
+  .check{flex-wrap:nowrap}
+  .check .lbl{min-width:0}
+  .chk-meta{flex:0 0 auto;padding-left:0;margin-top:0;margin-left:auto}
+  .check .cat.due{min-width:104px}
+  .check .cat.tag{min-width:92px}
+}
+/* No container-query support: fall back to never pinning the widths, which
+   wraps rather than overlaps. */
+@supports not (container-type:inline-size){
+  .check .cat.due,.check .cat.tag{min-width:0}
+}
 /* Twelve rows, then scroll — a full task template runs to thirty-odd and would
    otherwise push the budget, documents and everything under it off the screen.
    A single-line row measures 55px, hence 660; the vh cap stops it eating a
@@ -964,8 +984,8 @@ tbody tr:hover{background:var(--pink-50)}
 .chk-scroll{max-height:min(660px,70vh);overflow-y:auto;overscroll-behavior:contain;
   margin-right:-6px;padding-right:6px}
 @media (max-width:700px){
-  .check .cat.due{min-width:0}
-  .check .cat.tag{min-width:0}
+  /* On a phone the empty date cell is dead weight; the container query above
+     already handles the widths. */
   .check .cat.due:empty{display:none}
 }
 
@@ -4041,8 +4061,13 @@ function viewEventDetail(id){
                 '<div class="check '+(c.done?'done':'')+'" data-cid="'+c.id+'">'+
                   '<div class="box" data-tick="'+c.id+'">'+(c.done?'✓':'')+'</div>'+
                   '<span class="lbl">'+esc(c.lbl)+(c.note?'<span class="has-note" title="Has notes">✎</span>':'')+'</span>'+
-                  '<span class="cat due">'+(c.due?fmtDate(c.due):'')+'</span>'+
-                  '<span class="cat tag">'+esc(c.cat)+'</span>'+rowActions('checklist',c.id)+'</div>'+
+                  /* The two pills travel as one group, so when the row is too
+                     narrow for them they drop to their own line together and
+                     stay aligned instead of scattering after the text. */
+                  '<span class="chk-meta">'+
+                    '<span class="cat due">'+(c.due?fmtDate(c.due):'')+'</span>'+
+                    '<span class="cat tag">'+esc(c.cat)+'</span>'+
+                  '</span>'+rowActions('checklist',c.id)+'</div>'+
                 (isOpen?'<div class="chk-detail">'+
                   '<textarea class="chk-note" data-note="'+c.id+'" rows="3" '+
                     'placeholder="Notes on this task — where it got to, what is blocking it, what was agreed.">'+esc(c.note||'')+'</textarea>'+
