@@ -1126,6 +1126,25 @@ td.inv-col{text-align:center;width:1%}
   .inv-box{width:34px;height:34px}
   .inv-tick{font-size:14px}
 }
+/* --- two task lists, and a note on each task --- */
+.chk-tabs{display:flex;gap:6px;margin:2px 0 10px}
+.chk-tab{display:inline-flex;align-items:center;gap:7px;padding:6px 13px;border-radius:var(--radius-pill);
+  border:1px solid var(--line);background:transparent;cursor:pointer;font:inherit;font-size:12.5px;
+  font-weight:600;color:var(--muted);transition:background .12s,border-color .12s,color .12s}
+.chk-tab:hover{border-color:var(--gold-line);color:var(--ink)}
+.chk-tab.on{background:var(--gold);border-color:var(--gold);color:#fff}
+.chk-tab .ct-n{font-size:11px;font-weight:700;background:var(--pink-100);color:var(--ink-soft);
+  border-radius:20px;padding:1px 7px}
+.chk-tab.on .ct-n{background:rgba(255,255,255,.28);color:#fff}
+.chk-wrap.open{background:var(--bg-2);border-radius:var(--radius-sm);margin:2px -8px;padding:0 8px}
+.chk-wrap.open .check{border-bottom-color:transparent}
+.lbl .has-note{margin-left:7px;font-size:11px;color:var(--gold)}
+.chk-detail{padding:2px 0 12px}
+.chk-note{width:100%;resize:vertical;font:inherit;font-size:13px;line-height:1.5;color:var(--ink);
+  padding:9px 11px;border:1px solid var(--line);border-radius:var(--radius-sm);background:var(--card)}
+.chk-note:focus{outline:none;border-color:var(--gold);box-shadow:var(--ring)}
+.chk-dact{display:flex;align-items:center;gap:10px;margin-top:8px}
+.chk-saved{font-size:11.5px;color:var(--ok)}
 /* Quick-add sheets: the link out sits left, the buttons right, and the row
    wraps rather than overflowing once there are four controls in it. */
 .modal-actions.wrap{flex-wrap:wrap;gap:8px}
@@ -2736,6 +2755,12 @@ function normalize(d){
     /* Floor plan: tables gain a shape and a position in room coordinates
        (feet). Anything without one is laid out on a tidy grid the first
        time the plan is opened, so an existing list never lands in a heap. */
+    /* Tasks predating the split stay internal — the safe direction, since
+       the alternative is the couple suddenly seeing the studio's worklist. */
+    (e.checklist||[]).forEach(function(c){
+      if(c.owner!=='client')c.owner='planner';
+      if(typeof c.note!=='string')c.note='';
+    });
     if(!e.floor)e.floor={w:60,h:40,unit:'ft',items:[],snap:true,showChairs:true};
     if(e.floor.showChairs===undefined)e.floor.showChairs=true;
     if(!e.floor.items)e.floor.items=[];
@@ -2826,7 +2851,7 @@ function uid(prefix){
 }
 var _justDragged=false;   // set during HTML5 drag so drop doesn't also navigate
 var _now=new Date();
-var state={view:'dashboard',eventId:null,clientId:null,boardId:null,qId:null,settingsPage:null,helpOpen:null,seatMode:'plan',floorSel:null,activeEventId:(db.events[0]||{}).id,
+var state={view:'dashboard',eventId:null,clientId:null,boardId:null,qId:null,settingsPage:null,helpOpen:null,seatMode:'plan',floorSel:null,chkTab:'planner',chkOpen:null,activeEventId:(db.events[0]||{}).id,
            calY:_now.getFullYear(),calM:_now.getMonth()};
 function activeEvent(){return db.events.find(function(e){return e.id===state.activeEventId;})||db.events[0];}
 
@@ -3043,6 +3068,9 @@ function allOpenTasks(){
   db.events.forEach(function(e){
     e.checklist.forEach(function(c){
       if(c.done)return;
+      /* The couple's tasks are theirs to chase; they are not the studio's
+         to-do list and would drown the real one. */
+      if(c.owner==='client')return;
       out.push({eventId:e.id,eventTitle:e.title,id:c.id,lbl:c.lbl,cat:c.cat,due:c.due||null,
                 days:c.due?daysAway(c.due):null});
     });
@@ -3502,7 +3530,8 @@ function wireEvents(){
               {id:'cat',label:'Category',type:'select',
                options:['Logistics','Design','Catering','Music','Finance','Attire','Stationery','General']},
               {id:'due',label:'Due date',type:'date'}],
-      onSave:function(v){ ev.checklist.push({id:uid('ck'),lbl:v.lbl,cat:v.cat,due:v.due||null,done:false});
+      onSave:function(v){ ev.checklist.push({id:uid('ck'),lbl:v.lbl,cat:v.cat,due:v.due||null,done:false,
+        owner:state.chkTab==='client'?'client':'planner',note:''});
         closeModal(); afterChange(); }});
   });
   add('[data-addbl]',function(){
@@ -3536,11 +3565,57 @@ function wireEvents(){
   var addSub=document.querySelector('[data-addsub]');
   if(addSub)addSub.onclick=function(e){ e.stopPropagation(); openEventModal(null,addSub.dataset.addsub); };
   var b=$('#evBack'); if(b)b.onclick=function(){setView('events',{eventId:null});};
+  /* The box ticks the task; the rest of the row opens it. Two targets in one
+     row, so neither action can be reached only by accident. */
+  var findTask=function(id){
+    var ev2=db.events.find(function(x){return x.id===state.eventId;});
+    return {ev:ev2,item:ev2&&ev2.checklist.find(function(c){return c.id===id;})};
+  };
+  document.querySelectorAll('[data-tick]').forEach(function(bx){
+    bx.onclick=function(e2){
+      e2.stopPropagation();
+      var t=findTask(bx.dataset.tick); if(!t.item)return;
+      t.item.done=!t.item.done; save(); render(); wireEvents();
+    };
+  });
   document.querySelectorAll('.check[data-cid]').forEach(function(ch){
-    ch.onclick=function(){
-      var e=db.events.find(function(x){return x.id===state.eventId;});
-      var item=e.checklist.find(function(c){return c.id===ch.dataset.cid;});
-      item.done=!item.done;save();render();wireEvents();
+    ch.onclick=function(e2){
+      if(e2.target.closest('[data-tick],.r-act,select,textarea'))return;
+      state.chkOpen=state.chkOpen===ch.dataset.cid?null:ch.dataset.cid;
+      render(); wireEvents();
+    };
+  });
+  document.querySelectorAll('[data-chktab]').forEach(function(b){
+    b.onclick=function(e2){ e2.stopPropagation();
+      state.chkTab=b.dataset.chktab; state.chkOpen=null; render(); wireEvents(); };
+  });
+  document.querySelectorAll('[data-assign]').forEach(function(b){
+    b.onclick=function(e2){
+      e2.stopPropagation();
+      var t=findTask(b.dataset.assign); if(!t.item)return;
+      t.item.owner=t.item.owner==='client'?'planner':'client';
+      /* Follow the task to whichever list it just joined, so it does not
+         appear to vanish. */
+      state.chkTab=t.item.owner;
+      save(); render(); wireEvents();
+      toast(t.item.owner==='client'?'Assigned to the couple — it shows in their portal ✦'
+                                   :'Moved back to your list');
+    };
+  });
+  /* Notes save as you type. No re-render on input: it would tear the textarea
+     out from under the cursor. */
+  document.querySelectorAll('[data-note]').forEach(function(ta){
+    var timer=null;
+    ta.onclick=function(e2){ e2.stopPropagation(); };
+    ta.oninput=function(){
+      var t=findTask(ta.dataset.note); if(!t.item)return;
+      t.item.note=ta.value;
+      clearTimeout(timer);
+      timer=setTimeout(function(){
+        save();
+        var tag=document.querySelector('[data-saved="'+ta.dataset.note+'"]');
+        if(tag){ tag.textContent='Saved'; setTimeout(function(){ if(tag)tag.textContent=''; },1400); }
+      },400);
     };
   });
 }
@@ -3665,17 +3740,47 @@ function viewEventDetail(id){
     '<div class="ev-col">'+
       evSection('checklist','Checklist',null,
         '<div style="padding:6px 22px 14px">'+
-          /* The due date and the category each get their own fixed column, and
-             the date cell is rendered even when empty — otherwise a task with
-             no due date pulls its category left and the list reads as ragged.
-             The scroller keeps a full template (30-odd tasks) from burying the
-             rest of the workspace; the buttons stay outside it. */
-          (e.checklist.length?'<div class="chk-scroll">'+e.checklist.map(function(c){
-            return '<div class="check '+(c.done?'done':'')+'" data-cid="'+c.id+'"><div class="box">'+(c.done?'✓':'')+'</div>'+
-              '<span class="lbl">'+esc(c.lbl)+'</span>'+
-              '<span class="cat due">'+(c.due?fmtDate(c.due):'')+'</span>'+
-              '<span class="cat tag">'+esc(c.cat)+'</span>'+rowActions('checklist',c.id)+'</div>';
-          }).join('')+'</div>':'<div class="empty-hint">No tasks yet — apply a template to get started.</div>')+
+          /* Two lists, not one. The studio's own work and the couple's jobs are
+             different things, and the couple's are the only ones the portal
+             shows — see migration 13. */
+          (function(){
+            var tab=state.chkTab==='client'?'client':'planner';
+            var mine=e.checklist.filter(function(c){return c.owner!=='client';});
+            var theirs=e.checklist.filter(function(c){return c.owner==='client';});
+            var list=tab==='client'?theirs:mine;
+            var open=state.chkOpen;
+            /* The due date and the category each get their own fixed column,
+               and the date cell renders even when empty — otherwise a task with
+               no due date pulls its category left and the list reads as ragged.
+               The scroller keeps a full template from burying the workspace. */
+            return '<div class="chk-tabs">'+
+              '<button class="chk-tab'+(tab==='planner'?' on':'')+'" data-chktab="planner">Yours'+
+                '<span class="ct-n">'+mine.filter(function(c){return !c.done;}).length+'</span></button>'+
+              '<button class="chk-tab'+(tab==='client'?' on':'')+'" data-chktab="client">The couple’s'+
+                '<span class="ct-n">'+theirs.filter(function(c){return !c.done;}).length+'</span></button>'+
+            '</div>'+
+            (list.length?'<div class="chk-scroll">'+list.map(function(c){
+              var isOpen=open===c.id;
+              return '<div class="chk-wrap'+(isOpen?' open':'')+'">'+
+                '<div class="check '+(c.done?'done':'')+'" data-cid="'+c.id+'">'+
+                  '<div class="box" data-tick="'+c.id+'">'+(c.done?'✓':'')+'</div>'+
+                  '<span class="lbl">'+esc(c.lbl)+(c.note?'<span class="has-note" title="Has notes">✎</span>':'')+'</span>'+
+                  '<span class="cat due">'+(c.due?fmtDate(c.due):'')+'</span>'+
+                  '<span class="cat tag">'+esc(c.cat)+'</span>'+rowActions('checklist',c.id)+'</div>'+
+                (isOpen?'<div class="chk-detail">'+
+                  '<textarea class="chk-note" data-note="'+c.id+'" rows="3" '+
+                    'placeholder="Notes on this task — where it got to, what is blocking it, what was agreed.">'+esc(c.note||'')+'</textarea>'+
+                  '<div class="chk-dact">'+
+                    '<button class="btn btn-ghost btn-sm" data-assign="'+c.id+'">'+
+                      (c.owner==='client'?'↩ Move back to your list':'→ Assign to the couple')+'</button>'+
+                    '<span class="chk-saved" data-saved="'+c.id+'"></span>'+
+                  '</div></div>':'')+
+              '</div>';
+            }).join('')+'</div>'
+            :'<div class="empty-hint">'+(tab==='client'
+                ?'Nothing assigned to the couple yet — open a task and use “Assign to the couple”.'
+                :'No tasks yet — apply a template to get started.')+'</div>');
+          })()+
           '<div class="sec-actions"><button class="btn btn-ghost btn-sm" data-addck="1">＋ Add task</button>'+
           '<button class="btn btn-gold btn-sm" data-template="1">✦ Apply template</button></div>'+
         '</div>','<span class="pill gold">'+pct+'%</span>')+
@@ -6446,7 +6551,12 @@ function viewPortal(){
   var multi=block.length>1;
   var inBlock=function(id){ return blockIds.indexOf(id)>-1; };
   var done=0,tot=0;
-  block.forEach(function(x){ done+=x.checklist.filter(function(c){return c.done;}).length; tot+=x.checklist.length; });
+  /* The couple's progress is progress on THEIR tasks. Counting the studio's
+     internal work would show them a number they cannot move. */
+  block.forEach(function(x){
+    var own=(x.checklist||[]).filter(function(c){return c.owner==='client';});
+    done+=own.filter(function(c){return c.done;}).length; tot+=own.length;
+  });
   var pct=tot?Math.round(done/tot*100):0;
   var roster=rosterFor(e);
   var attending=roster.filter(function(g){return gRsvp(g,e)==='yes';}).length;
@@ -6509,7 +6619,11 @@ function viewPortal(){
     '</div></div>'+
     '<div>'+
       '<div class="card" style="margin-bottom:20px"><div class="card-h"><h3>To Review</h3><span class="pill gold">'+pct+'%</span></div><div style="padding:8px 22px 16px">'+
-        block.reduce(function(acc,x){ return acc.concat((x.checklist||[]).map(function(c){ return {c:c,ev:x}; })); },[])
+        /* Only what the planner actually assigned them. Everything else is the
+           studio's internal work and was never theirs to read. */
+        block.reduce(function(acc,x){ return acc.concat((x.checklist||[])
+          .filter(function(c){return c.owner==='client';})
+          .map(function(c){ return {c:c,ev:x}; })); },[])
           .map(function(r){var c=r.c;
             return '<div class="check '+(c.done?'done':'')+'" style="cursor:default"><div class="box">'+(c.done?'✓':'')+'</div>'+
               '<span class="lbl">'+esc(c.lbl)+'</span>'+
@@ -9187,7 +9301,9 @@ function sbPush(opts){
       palette=[],boards=[],swatches=[],ideas=[],decor=[],images=[];
   E.forEach(function(e){
     (e.timeline||[]).forEach(function(t,i){ timeline.push({id:t.id,org_id:org,event_id:e.id,at_time:s(t.t),title:s(t.ev),detail:s(t.ds),sort_order:i}); });
-    (e.checklist||[]).forEach(function(c,i){ checklist.push({id:c.id,org_id:org,event_id:e.id,label:s(c.lbl),category:s(c.cat),done:!!c.done,due_date:nn(c.due),sort_order:i}); });
+    (e.checklist||[]).forEach(function(c,i){ checklist.push({id:c.id,org_id:org,event_id:e.id,label:s(c.lbl),
+      category:s(c.cat),done:!!c.done,due_date:nn(c.due),sort_order:i,
+      owner:c.owner==='client'?'client':'planner',note:s(c.note)}); });
     /* tag_event_id marks the sub-event a line belongs to. The budget itself
        stays on the primary — a planner quotes a weekend as one number. */
     (e.budget||[]).forEach(function(b,i){ budget.push({id:b.id,org_id:org,event_id:e.id,category:s(b.cat),
@@ -9395,7 +9511,8 @@ function sbPull(){
           parentId:e.parent_event_id||null,role:e.event_role||'primary',sort:e.sort_order||0,
           roleLabel:e.role_label||'',
           timeline:of(R.timeline_items,e.id).map(function(x){return {id:x.id,t:x.at_time,ev:x.title,ds:x.detail};}),
-          checklist:of(R.checklist_items,e.id).map(function(x){return {id:x.id,lbl:x.label,cat:x.category,done:x.done,due:x.due_date};}),
+          checklist:of(R.checklist_items,e.id).map(function(x){return {id:x.id,lbl:x.label,cat:x.category,done:x.done,
+            due:x.due_date,owner:x.owner==='client'?'client':'planner',note:x.note||''};}),
           budget:of(R.budget_lines,e.id).map(function(x){return {id:x.id,cat:x.category,est:Number(x.estimated),
             act:Number(x.actual),tagEventId:x.tag_event_id||null};}),
           tables:of(R.seating_tables,e.id).map(function(x){return {id:x.id,name:x.name,seats:x.seats,shape:x.shape,
