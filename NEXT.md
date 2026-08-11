@@ -310,6 +310,19 @@ Two more added by the sub-event work, both reasoned-about but not witnessed:
 
 - Source of truth is `gem-artifact.html`; `build.py` wraps it into `index.html`.
   Never edit `index.html` directly.
+- **This is a git repository as of 10 Aug 2026** — it was not before, and every
+  version of the app existed only as the file on disk. `index.html` is
+  committed deliberately alongside its source, so a deployed build is always
+  recoverable and a future push-to-deploy needs no build step in CI. The
+  identity is repo-local; nothing global was changed. No remote yet: the plan
+  is a GitHub connector in Claude (authenticated in the app, so no credential
+  on the Mac), then Cloudflare Workers Builds for push-to-deploy.
+- Checked before the first commit: no keys are embedded anywhere. Every
+  `service_role` / `eyJhbGciOi` hit is documentation warning *about* keys. The
+  only live identifier is the Supabase project URL, which is a public endpoint
+  — security rests on RLS and the anon key, which is entered in Settings and
+  lives in localStorage, not in the source. **Make the GitHub repo private
+  anyway**; the schema and client data model are the studio's business.
 - Deploy is `python3 deploy.py`, with `CLOUDFLARE_API_TOKEN` exported. It
   builds, uploads only the assets whose hash is not already in the store, cuts
   a new version of the `gemevents` Worker, and then polls the live site until
