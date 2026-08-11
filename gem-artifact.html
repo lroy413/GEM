@@ -420,7 +420,18 @@ html.no-motion body::before{opacity:.3}
   background:var(--pink-100);padding:1px 5px;border-radius:4px}
 
 /* ============ SETTINGS ============ */
-.set-list{max-width:660px;display:flex;flex-direction:column;gap:26px}
+/* The index was a 660px column, so on a desktop the groups hugged the left
+   edge with half the window empty beside them — every other view in the app
+   uses the width it is given. The groups are independent, so they tile.
+   align-items:start keeps each card its own height instead of stretching the
+   short ones to match Studio. */
+.set-list{display:grid;gap:26px 22px;align-items:start;grid-template-columns:1fr;max-width:660px}
+@media (min-width:900px){
+  .set-list{grid-template-columns:repeat(2,minmax(0,1fr));max-width:1060px}
+}
+@media (min-width:1360px){
+  .set-list{grid-template-columns:repeat(3,minmax(0,1fr));max-width:1500px}
+}
 .set-group{display:flex;flex-direction:column;gap:8px}
 .set-gh{font-size:9.5px;letter-spacing:1.9px;text-transform:uppercase;color:var(--muted);
   font-weight:600;padding-left:4px}
@@ -934,8 +945,29 @@ tbody tr:hover{background:var(--pink-50)}
 .box{width:22px;height:22px;border-radius:7px;border:2px solid var(--pink-300);display:grid;place-items:center;flex:0 0 22px;transition:all .15s;color:#fff}
 .check.done .box{background:var(--gold-grad);border-color:transparent}
 .check.done .lbl{text-decoration:line-through;color:var(--muted)}
-.check .lbl{font-size:14px}
-.check .cat{margin-left:auto;font-size:11px;color:var(--muted);background:var(--pink-100);padding:2px 9px;border-radius:20px}
+/* The label takes the slack. Previously margin-left:auto sat on EVERY .cat, so
+   the spare space was split between the date and the category and neither
+   landed in the same place twice — the column read as ragged down the list. */
+.check .lbl{font-size:14px;flex:1;min-width:0}
+.check .cat{flex:0 0 auto;font-size:11px;color:var(--muted);background:var(--pink-100);
+  padding:2px 9px;border-radius:20px;white-space:nowrap;text-align:center}
+/* Fixed columns so the pills line up vertically. Without nowrap a date like
+   "Oct 29, 2026" broke over two lines and took the whole row's height with it. */
+.check .cat.due{min-width:104px}
+.check .cat.tag{min-width:92px}
+/* An empty date cell still holds its column, but shows no pill. */
+.check .cat.due:empty{background:none}
+/* Twelve rows, then scroll — a full task template runs to thirty-odd and would
+   otherwise push the budget, documents and everything under it off the screen.
+   A single-line row measures 55px, hence 660; the vh cap stops it eating a
+   short laptop screen, and a row whose label wraps simply costs two slots. */
+.chk-scroll{max-height:min(660px,70vh);overflow-y:auto;overscroll-behavior:contain;
+  margin-right:-6px;padding-right:6px}
+@media (max-width:700px){
+  .check .cat.due{min-width:0}
+  .check .cat.tag{min-width:0}
+  .check .cat.due:empty{display:none}
+}
 
 /* budget bars */
 .bud-row{display:flex;align-items:center;gap:16px;padding:13px 22px;border-bottom:1px solid var(--line)}
@@ -1094,6 +1126,11 @@ td.inv-col{text-align:center;width:1%}
   .inv-box{width:34px;height:34px}
   .inv-tick{font-size:14px}
 }
+/* Quick-add sheets: the link out sits left, the buttons right, and the row
+   wraps rather than overflowing once there are four controls in it. */
+.modal-actions.wrap{flex-wrap:wrap;gap:8px}
+.modal-actions .ma-lead{margin-right:auto;font-size:13px}
+.gm-count{padding:0 22px 14px;font-size:12px;color:var(--gold-deep);min-height:1px}
 .build-id{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:12px;
   background:var(--pink-100);border:1px solid var(--line);border-radius:6px;padding:3px 8px;
   color:var(--ink-soft);user-select:all}
@@ -3476,7 +3513,20 @@ function wireEvents(){
       onSave:function(v){ ev.budget.push({id:uid('bl'),cat:v.cat,est:v.est,act:v.act});
         closeModal(); afterChange(); }});
   });
+  add('[data-addguest]',function(){ openGuestModal(ev); });
+  add('[data-openguests]',function(){ state.activeEventId=(ev||{}).id; setView('guests'); });
   add('[data-template]',function(){ openTemplateModal(ev); });
+  /* The vendor team is editable on the event workspace now, so its controls
+     need wiring here as well as on the client file. */
+  document.querySelectorAll('[data-addbooking]').forEach(function(b){
+    b.onclick=function(e2){ e2.stopPropagation(); openBookingModal(b.dataset.addbooking,null); };
+  });
+  document.querySelectorAll('.bstat-sel').forEach(function(sel){
+    sel.onchange=function(){
+      var bk=db.bookings.find(function(x){return x.id===sel.dataset.bid;});
+      if(bk){ bk.status=sel.value; afterChange(); }
+    };
+  });
   document.querySelectorAll('.ev-card').forEach(function(c){c.onclick=function(){setView('events',{eventId:c.dataset.ev});};});
   /* Sub-event chips sit inside the primary's card, so they must claim the
      click before it bubbles up and opens the primary instead. */
@@ -3582,7 +3632,7 @@ function viewEventDetail(id){
         '</div><button class="btn btn-ghost btn-sm" data-addtl="1" style="margin-top:14px">＋ Add moment</button></div>')+
 
       evSection('vendors','Vendor Team',vend.length,
-        vendorTeamMarkup(e,false)+
+        vendorTeamMarkup(e,true)+
         (lead.id?'<div class="sec-actions"><button class="link-btn" data-client="'+esc(lead.id)+'">Manage on the client file ›</button></div>':''),
         vend.length?'<span class="sec-badge">'+money(vend.reduce(function(a,b){return a+b.fee;},0))+'</span>':'')+
 
@@ -3605,13 +3655,27 @@ function viewEventDetail(id){
               '<td>'+(gMeal(g,e)?esc(gMeal(g,e)):'<span style="color:var(--muted)">—</span>')+'</td>'+
               '<td>'+(tb?esc(tb.name):'<span style="color:var(--muted)">Unseated</span>')+'</td></tr>';
           }).join('')+'</tbody></table></div>'
-          :'<div class="empty-hint">'+(evIsSub(e)?'Nobody invited yet — tick them on the guest list.':'No guests added yet.')+'</div>'))+
+          :'<div class="empty-hint">'+(evIsSub(e)?'Nobody invited yet — tick them on the guest list.':'No guests added yet.')+'</div>')+
+        /* Checklist and Budget both had an add control here and Guests did
+           not, so the only way in was the Guests view via the sidebar. */
+        '<div class="sec-actions"><button class="btn btn-ghost btn-sm" data-addguest="1">＋ Add guest</button>'+
+        '<button class="btn btn-ghost btn-sm" data-openguests="1">Open guest list ›</button></div>')+
     '</div>'+
 
     '<div class="ev-col">'+
       evSection('checklist','Checklist',null,
         '<div style="padding:6px 22px 14px">'+
-          (e.checklist.length?e.checklist.map(function(c){return '<div class="check '+(c.done?'done':'')+'" data-cid="'+c.id+'"><div class="box">'+(c.done?'✓':'')+'</div><span class="lbl">'+esc(c.lbl)+'</span>'+(c.due?'<span class="cat">'+fmtDate(c.due)+'</span>':'')+'<span class="cat">'+esc(c.cat)+'</span>'+rowActions('checklist',c.id)+'</div>';}).join(''):'<div class="empty-hint">No tasks yet — apply a template to get started.</div>')+
+          /* The due date and the category each get their own fixed column, and
+             the date cell is rendered even when empty — otherwise a task with
+             no due date pulls its category left and the list reads as ragged.
+             The scroller keeps a full template (30-odd tasks) from burying the
+             rest of the workspace; the buttons stay outside it. */
+          (e.checklist.length?'<div class="chk-scroll">'+e.checklist.map(function(c){
+            return '<div class="check '+(c.done?'done':'')+'" data-cid="'+c.id+'"><div class="box">'+(c.done?'✓':'')+'</div>'+
+              '<span class="lbl">'+esc(c.lbl)+'</span>'+
+              '<span class="cat due">'+(c.due?fmtDate(c.due):'')+'</span>'+
+              '<span class="cat tag">'+esc(c.cat)+'</span>'+rowActions('checklist',c.id)+'</div>';
+          }).join('')+'</div>':'<div class="empty-hint">No tasks yet — apply a template to get started.</div>')+
           '<div class="sec-actions"><button class="btn btn-ghost btn-sm" data-addck="1">＋ Add task</button>'+
           '<button class="btn btn-gold btn-sm" data-template="1">✦ Apply template</button></div>'+
         '</div>','<span class="pill gold">'+pct+'%</span>')+
@@ -6449,8 +6513,8 @@ function viewPortal(){
           .map(function(r){var c=r.c;
             return '<div class="check '+(c.done?'done':'')+'" style="cursor:default"><div class="box">'+(c.done?'✓':'')+'</div>'+
               '<span class="lbl">'+esc(c.lbl)+'</span>'+
-              (multi&&r.ev.id!==e.id?'<span class="cat">'+esc(roleLabel(r.ev,true))+'</span>':'')+
-              '<span class="cat">'+esc(c.cat)+'</span></div>';}).join('')+
+              (multi&&r.ev.id!==e.id?'<span class="cat tag">'+esc(roleLabel(r.ev,true))+'</span>':'')+
+              '<span class="cat tag">'+esc(c.cat)+'</span></div>';}).join('')+
       '</div></div>'+
       '<div class="card" style="margin-bottom:20px"><div class="card-h"><h3>Documents</h3></div>'+
         '<div class="tbl-wrap"><table><tbody>'+(docs.length?docs.map(function(d){
@@ -6636,22 +6700,59 @@ function openInvoiceModal(){
     save();closeModal();setView('finance');
   };
 }
-function openGuestModal(){
-  var e=activeEvent(); if(!e){toast('Create an event first ✦');return;}
-  md.className='modal';md.innerHTML='<h3>Add Guest</h3><p class="sub">Adding to '+esc(e.title)+'.</p>'+
+/* Quick add: built for typing several in a row, because nobody adds one guest.
+   "Save & add another" keeps the sheet open and the cursor in the name field;
+   the link out goes to the full list for anything more involved. */
+function openGuestModal(ev){
+  var e=ev||activeEvent(); if(!e){toast('Create an event first ✦');return;}
+  /* Guests belong to the primary. Adding one from a sub-event adds them to the
+     weekend's list and invites them to that night, which is what "add a guest
+     here" means when you are looking at the rehearsal dinner. */
+  var prim=evPrimary(e)||e, sub=evIsSub(e), added=0;
+  md.className='modal';md.innerHTML='<h3>Add Guest</h3><p class="sub">'+
+    (sub?'Adding to '+esc(prim.title)+', and inviting them to '+esc(roleLabel(e))+'.'
+        :'Adding to '+esc(prim.title)+'.')+'</p>'+
     '<div class="field"><label>Full name</label><input id="f_gname" placeholder="e.g. Eleanor Vance"></div>'+
     '<div class="field"><label>Party / group</label><input id="f_gparty" placeholder="e.g. Vance Family"></div>'+
     '<div class="field"><label>RSVP</label><select id="f_grsvp"><option value="invited">Invited</option><option value="pending">Pending</option><option value="yes">Attending</option><option value="no">Declined</option></select></div>'+
     '<div class="field"><label>Meal choice</label><select id="f_gmeal"><option value="">Not selected</option><option>Beef</option><option>Fish</option><option>Vegetarian</option><option>Kids</option></select></div>'+
     '<div class="field"><label>Dietary needs <span style="font-weight:400;color:var(--muted)">(optional)</span></label><input id="f_gdiet" placeholder="e.g. Nut allergy"></div>'+
-    '<div class="modal-actions"><button class="btn btn-ghost" id="mCancel">Cancel</button><button class="btn btn-gold" id="mSave">Add Guest</button></div>';
+    '<div class="modal-actions wrap"><button class="link-btn ma-lead" id="gFull">Open the full guest list ›</button>'+
+      '<button class="btn btn-ghost" id="mCancel">Cancel</button>'+
+      '<button class="btn btn-ghost" id="mAnother">Save &amp; add another</button>'+
+      '<button class="btn btn-gold" id="mSave">Add guest</button></div>'+
+    '<div class="gm-count" id="gCount"></div>';
   ov.classList.add('show');
-  $('#mCancel').onclick=closeModal;
-  $('#mSave').onclick=function(){
-    var n=$('#f_gname').value.trim(); if(!n){$('#f_gname').focus();return;}
-    e.guests.push({id:uid('g'),name:n,party:$('#f_gparty').value.trim()||'Guest',side:'A',
-      rsvp:$('#f_grsvp').value,meal:$('#f_gmeal').value,diet:$('#f_gdiet').value.trim(),tableId:null});
-    save();closeModal();setView('guests');
+  setTimeout(function(){ var f=$('#f_gname'); if(f)f.focus(); },60);
+
+  function add(){
+    var n=$('#f_gname').value.trim();
+    if(!n){ $('#f_gname').focus(); return false; }
+    var g={id:uid('g'),name:n,party:$('#f_gparty').value.trim()||'Guest',side:'A',
+      rsvp:$('#f_grsvp').value,meal:$('#f_gmeal').value,diet:$('#f_gdiet').value.trim(),tableId:null};
+    prim.guests.push(g);
+    /* On a sub-event the RSVP and meal just chosen describe THAT night, so
+       they go on the invitation rather than the guest row. */
+    if(sub){ setInvited(g,e,true); gSet(g,e,'rsvp',$('#f_grsvp').value); gSet(g,e,'meal',$('#f_gmeal').value); }
+    added++;
+    save();
+    return true;
+  }
+  function done(){ closeModal(); render(); }
+
+  $('#mCancel').onclick=function(){ if(added)done(); else closeModal(); };
+  $('#mSave').onclick=function(){ if(add())done(); };
+  $('#mAnother').onclick=function(){
+    if(!add())return;
+    ['f_gname','f_gparty','f_gdiet'].forEach(function(id){ var el=$('#'+id); if(el)el.value=''; });
+    $('#gCount').textContent=added+' added — keep going, or Cancel when you are done.';
+    $('#f_gname').focus();
+  };
+  /* Enter adds and stays put; the whole point is a run of names. */
+  $('#f_gname').onkeydown=function(ev2){ if(ev2.key==='Enter'){ ev2.preventDefault(); $('#mAnother').click(); } };
+  $('#gFull').onclick=function(){
+    if($('#f_gname').value.trim())add();
+    closeModal(); state.activeEventId=e.id; setView('guests');
   };
 }
 function openTableModal(){
@@ -7824,6 +7925,11 @@ function openEventModal(existing,parentId){
         value:(e&&e.parentId)||(parent&&parent.id)||'',options:attachOpts,full:true}:null),
       (canAttach?{id:'role',label:'Which event is it',type:'select',
         value:defRole,options:roleOpts,full:true}:null),
+      /* Only meaningful for the Custom… role, but always present: openEditor
+         builds its fields once and has no conditional-reveal, and a field that
+         appears and disappears mid-edit loses what was typed in it. */
+      (canAttach?{id:'roleLabel',label:'Name it (for “Custom…”)',
+        value:(e&&e.roleLabel)||'',placeholder:'e.g. Cake tasting',full:true}:null),
       {id:'date',label:'Event date',type:'date',value:e&&e.date,required:true},
       {id:'startTime',label:'Start time',value:e&&e.startTime,placeholder:'4:30 PM'},
       {id:'venue',label:'Venue',value:e&&e.venue,placeholder:'To be confirmed'},
@@ -7841,7 +7947,11 @@ function openEventModal(existing,parentId){
       {id:'venueNotes',label:'Site notes',type:'textarea',value:e&&e.venueNotes,full:true}
     ].filter(Boolean),
     onSave:function(v){
+      /* floor was missing here, so a brand-new event had no room envelope and
+         the seating view threw on f.showChairs until the next reload, when
+         normalize() quietly filled it in. Same defaults as normalize(). */
       var rec=e||{id:uid('e'),timeline:[],checklist:[],budget:[],tables:[],guests:[],
+                  floor:{w:60,h:40,unit:'ft',items:[],snap:true,showChairs:true},
                   design:{palette:[],boards:[],decor:[]}};
       rec.title=v.title; rec.leadId=v.leadId||null; rec.date=v.date; rec.startTime=v.startTime;
       rec.venue=v.venue; rec.loc=v.loc; rec.venueNotes=v.venueNotes;
@@ -7852,6 +7962,10 @@ function openEventModal(existing,parentId){
         var np=v.parentId&&evById(v.parentId)&&v.parentId!==rec.id?v.parentId:null;
         rec.parentId=np;
         rec.role=np?(v.role||'other'):'primary';
+        /* Kept only where it means something, so a name typed against a preset
+           role does not linger and reappear if the role is later set back to
+           Custom. */
+        rec.roleLabel=(np&&rec.role==='custom')?(v.roleLabel||'').trim():'';
         if(np)rec.sort=evChildren(np).filter(function(x){return x.id!==rec.id;}).length;
         else rec.sort=0;
       }
@@ -7878,17 +7992,41 @@ function evById(id){ return db.events.find(function(e){return e.id===id;}); }
 
    Records saved before this existed have no parentId and no role. Both are
    read defensively throughout: absent means "a primary, standing alone". */
+/* The occasions a planner actually schedules as their own date and venue.
+   Kept in step with the check constraint in migration 12 — a role that is not
+   in that list is refused on push and the event silently fails to sync. */
 var EV_ROLES=[
-  {id:'primary',  label:'Main event',      short:'Main'},
-  {id:'welcome',  label:'Welcome party',   short:'Welcome'},
-  {id:'rehearsal',label:'Rehearsal dinner',short:'Rehearsal'},
-  {id:'ceremony', label:'Ceremony',        short:'Ceremony'},
-  {id:'brunch',   label:'Farewell brunch', short:'Brunch'},
-  {id:'other',    label:'Other',           short:'Other'}
+  {id:'primary',    label:'Main event',        short:'Main'},
+  {id:'welcome',    label:'Welcome party',     short:'Welcome'},
+  {id:'rehearsal',  label:'Rehearsal dinner',  short:'Rehearsal'},
+  {id:'ceremony',   label:'Ceremony',          short:'Ceremony'},
+  {id:'reception',  label:'Reception',         short:'Reception'},
+  {id:'brunch',     label:'Farewell brunch',   short:'Brunch'},
+  {id:'tasting',    label:'Menu tasting',      short:'Tasting'},
+  {id:'walkthrough',label:'Venue walkthrough', short:'Walkthrough'},
+  {id:'fitting',    label:'Dress fitting',     short:'Fitting'},
+  {id:'shower',     label:'Shower',            short:'Shower'},
+  {id:'party',      label:'Bach party',        short:'Bach'},
+  {id:'photos',     label:'Photo session',     short:'Photos'},
+  {id:'setup',      label:'Setup / load-in',   short:'Setup'},
+  {id:'custom',     label:'Custom…',           short:'Custom'},
+  {id:'other',      label:'Other',             short:'Other'}
 ];
+function roleDef(id){
+  return EV_ROLES.find(function(x){return x.id===id;})||
+         EV_ROLES[EV_ROLES.length-1];
+}
 function evRole(e){ return (e&&e.parentId&&e.role)?e.role:(e&&e.parentId?'other':'primary'); }
 function roleLabel(e,short){
-  var r=evRole(e),m=EV_ROLES.find(function(x){return x.id===r;})||EV_ROLES[5];
+  var r=evRole(e);
+  /* A studio-named occasion wins over the preset list. Trimmed and capped so a
+     stray paragraph cannot blow out the switcher chips. */
+  if(r==='custom'){
+    var t=(e&&e.roleLabel||'').trim();
+    if(t)return short?t.slice(0,14):t.slice(0,40);
+    return short?'Custom':'Custom event';
+  }
+  var m=roleDef(r);
   return short?m.short:m.label;
 }
 function evIsSub(e){ return !!(e&&e.parentId&&evById(e.parentId)); }
@@ -9113,6 +9251,7 @@ function sbPush(opts){
       return {id:e.id,org_id:org,lead_id:nn(e.leadId),title:s(e.title),
       event_date:nn(e.date),venue:s(e.venue),location:s(e.loc),start_time:s(e.startTime),
       parent_event_id:par,event_role:par?(s(e.role)||'other'):'primary',sort_order:num(e.sort),
+      role_label:par&&e.role==='custom'?s(e.roleLabel):'',
       venue_address:e.venueAddress||{},venue_contact:e.venueContact||{},venue_notes:s(e.venueNotes),
       floor:{w:num(f.w)||60,h:num(f.h)||40,unit:f.unit||'ft',snap:f.snap!==false,showChairs:f.showChairs!==false}}; })],
     ['vendors',V.map(function(v){ return {id:v.id,org_id:org,name:s(v.name),category:s(v.cat),contact:s(v.contact),
@@ -9254,6 +9393,7 @@ function sbPull(){
         return {id:e.id,leadId:e.lead_id,title:e.title,date:e.event_date,venue:e.venue,loc:e.location,
           startTime:e.start_time,venueAddress:e.venue_address||{},venueContact:e.venue_contact||{},venueNotes:e.venue_notes,
           parentId:e.parent_event_id||null,role:e.event_role||'primary',sort:e.sort_order||0,
+          roleLabel:e.role_label||'',
           timeline:of(R.timeline_items,e.id).map(function(x){return {id:x.id,t:x.at_time,ev:x.title,ds:x.detail};}),
           checklist:of(R.checklist_items,e.id).map(function(x){return {id:x.id,lbl:x.label,cat:x.category,done:x.done,due:x.due_date};}),
           budget:of(R.budget_lines,e.id).map(function(x){return {id:x.id,cat:x.category,est:Number(x.estimated),
