@@ -29,6 +29,7 @@ const HEAD = `<!doctype html>
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
 <meta name="apple-mobile-web-app-title" content="GEM">
 <meta name="format-detection" content="telephone=no">
+<meta name="gem-build" content="__BUILD__">
 <link rel="manifest" href="/manifest.webmanifest">
 <link rel="icon" href="/icons/icon-192.png" sizes="192x192" type="image/png">
 <link rel="apple-touch-icon" href="/icons/icon-180.png">
@@ -61,9 +62,14 @@ rmSync(DIST, { recursive: true, force: true });
 mkdirSync(join(DIST, "icons"), { recursive: true });
 
 // 1 · index.html, rebuilt from the artifact exactly as build.py does.
-let src = readFileSync(join(ROOT, "gem-artifact.html"), "utf8");
+const rawSrc = readFileSync(join(ROOT, "gem-artifact.html"));
+let src = rawSrc.toString("utf8");
 src = src.replace(/^\s*<title>[\s\S]*?<\/title>\s*/, ""); // the wrapper supplies one
-const html = HEAD + src + FOOT;
+// Build stamp, derived from the source artifact so this and build.py agree
+// without either needing to know what the other produced. Surfaced in
+// Settings so "am I on the newest build?" is answerable inside the app.
+const build = sha(rawSrc).slice(0, 12);
+const html = HEAD.replace("__BUILD__", build) + src + FOOT;
 writeFileSync(join(DIST, "index.html"), html, "utf8");
 
 // The charset must land in the first bytes or the browser decodes as Latin-1

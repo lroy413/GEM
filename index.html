@@ -10,6 +10,7 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
 <meta name="apple-mobile-web-app-title" content="GEM">
 <meta name="format-detection" content="telephone=no">
+<meta name="gem-build" content="01083f609ac1">
 <link rel="manifest" href="/manifest.webmanifest">
 <link rel="icon" href="/icons/icon-192.png" sizes="192x192" type="image/png">
 <link rel="apple-touch-icon" href="/icons/icon-180.png">
@@ -1111,6 +1112,9 @@ td.inv-col{text-align:center;width:1%}
   .inv-box{width:34px;height:34px}
   .inv-tick{font-size:14px}
 }
+.build-id{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:12px;
+  background:var(--pink-100);border:1px solid var(--line);border-radius:6px;padding:3px 8px;
+  color:var(--ink-soft);user-select:all}
 /* --- the sample wedding, plainly marked --- */
 .samp-banner{display:flex;align-items:center;flex-wrap:wrap;gap:12px;margin:0 0 18px;padding:13px 16px;
   background:linear-gradient(135deg,#FFFDF9,#FBF3E8);border:1px solid var(--gold-line);
@@ -5358,6 +5362,17 @@ var SET_PAGES=[
     {k:'about',icon:'◈',t:'About GEM',d:'Version, security and what’s coming'}
   ]}
 ];
+/* Which build is this? Stamped into the page head by build.py and
+   scripts/build-dist.mjs from a hash of the source artifact. Without it the
+   only way to answer "am I on the newest version?" was to hash files on a
+   server, which is no use to someone looking at the app on a phone. */
+function buildStamp(){
+  var m=document.querySelector('meta[name="gem-build"]');
+  var v=m&&m.getAttribute('content');
+  /* Opened as the raw artifact rather than a built page — there is no head. */
+  if(!v||v==='__BUILD__')return null;
+  return v;
+}
 function setRow(label,control,hint){
   return '<div class="set-row"><div class="set-rl"><span>'+label+'</span>'+
     (hint?'<em>'+hint+'</em>':'')+'</div><div class="set-rc">'+control+'</div></div>';
@@ -5637,6 +5652,8 @@ function settingsPage(k){
       '<p class="set-intro">Everything currently lives in this browser. Connecting Supabase moves it to your account and syncs across devices.</p>'+
       '<div class="set-card">'+
         setRow('Stored on this device','<b>'+used+' KB</b>',counts)+
+        setRow('App version','<code class="build-id">'+esc(buildStamp()||'dev')+'</code>',
+          buildStamp()?'Reload the page to pick up a newer one':'Running from source, not a deployed build')+
         setRow('Export everything','<button class="btn btn-ghost btn-sm" id="s_export">Download JSON</button>','A full backup you can re-import')+
         setRow('Import a backup','<button class="btn btn-ghost btn-sm" id="s_import">Choose file</button>','Replaces what is here now')+
         setRow('Reset to sample data','<button class="btn btn-danger btn-sm" id="s_reset">Reset</button>','Clears your work and restores the demo')+
