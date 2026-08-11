@@ -1171,6 +1171,113 @@ td.inv-col{text-align:center;width:1%}
 .samp-tag.card{position:absolute;top:10px;left:14px;z-index:2;background:rgba(0,0,0,.34);
   backdrop-filter:blur(3px)}
 .samp-tag.mini{padding:2px 7px;font-size:9px;vertical-align:middle}
+/* Reordering the dashboard from Settings. */
+.dash-ord{display:flex;flex-direction:column}
+.do-row{display:flex;align-items:center;gap:14px;padding:12px 18px;border-bottom:1px solid var(--line)}
+.do-row:last-child{border-bottom:none}
+.do-row.off{opacity:.5}
+.do-move{display:flex;flex-direction:column;gap:3px}
+.do-b{width:24px;height:19px;border-radius:6px;border:1px solid var(--line);background:var(--card);
+  cursor:pointer;font-size:10px;line-height:1;color:var(--ink-soft)}
+.do-b:hover:not(:disabled){border-color:var(--gold);color:var(--gold)}
+.do-b:disabled{opacity:.3;cursor:default}
+.do-tx{flex:1;min-width:0;display:flex;flex-direction:column;gap:2px}
+.do-tx b{font-size:13.5px;font-weight:600}
+.do-tx em{font-style:normal;font-size:11.5px;color:var(--muted)}
+
+/* ============ DASHBOARD HERO — the one focal point ============
+   The old next-event strip was 106px against a 602px task list, so the thing
+   the whole business orbits had the least weight on the page. This commits to
+   it: a real card, a photograph when there is one, and the countdown at a size
+   you read from across the room. */
+.hero-wrap{position:relative;margin-bottom:22px}
+/* The deck behind, so several events read as a stack rather than a banner. */
+.hero-behind{position:absolute;left:0;right:0;top:0;height:100%;pointer-events:none}
+.hero-behind i{position:absolute;left:14px;right:14px;top:-7px;height:40px;border-radius:var(--radius-lg);
+  opacity:.30;display:block}
+.hero-behind i:nth-child(2){left:26px;right:26px;top:-13px;opacity:.16}
+.hero{position:relative;display:flex;align-items:stretch;gap:22px;overflow:hidden;
+  border-radius:var(--radius-lg);border:1px solid var(--line);background:var(--card);
+  box-shadow:var(--shadow);min-height:172px}
+/* No photograph yet: the event's own colour, not a stock image pretending to
+   be content. */
+.hero::before{content:"";position:absolute;inset:0;
+  background:linear-gradient(120deg,color-mix(in srgb,var(--tint) 16%,#fff) 0%,
+    color-mix(in srgb,var(--tint) 6%,#fff) 46%,var(--card) 100%)}
+.hero>*{position:relative;z-index:1}
+.hero-img{position:absolute;inset:0;z-index:0;background-size:cover;background-position:center}
+.hero.has-photo .hero-img::after{content:"";position:absolute;inset:0;
+  background:linear-gradient(100deg,rgba(255,255,255,.96) 0%,rgba(255,255,255,.9) 38%,
+    rgba(255,255,255,.35) 68%,rgba(255,255,255,.05) 100%)}
+.hero.has-photo::before{opacity:.5}
+.hero-body{flex:1;min-width:0;padding:24px 0 22px 26px;display:flex;flex-direction:column;gap:7px}
+.hero-k{display:flex;align-items:center;gap:9px;font-size:9.5px;letter-spacing:1.9px;
+  text-transform:uppercase;color:var(--muted);font-weight:600}
+.hero-type{color:var(--tint);font-weight:700}
+.hero-t{font-family:var(--serif);font-size:34px;line-height:1.06;font-weight:600;letter-spacing:-.014em;
+  color:var(--ink);background:none;border:0;padding:0;text-align:left;cursor:pointer;
+  max-width:100%;overflow:hidden;text-overflow:ellipsis}
+.hero-t:hover{color:var(--tint)}
+.hero-t:focus-visible{outline:none;box-shadow:var(--ring);border-radius:6px}
+.hero-m{font-size:13px;color:var(--ink-soft)}
+/* The first few moments of the day — the thing a planner actually pictures. */
+.hero-run{display:flex;flex-wrap:wrap;gap:6px;margin-top:4px}
+.hr-i{display:inline-flex;align-items:baseline;gap:6px;font-size:11.5px;color:var(--ink-soft);
+  background:rgba(255,255,255,.72);border:1px solid var(--line);border-radius:var(--radius-pill);
+  padding:3px 11px}
+.hr-i b{font-size:11px;color:var(--tint);font-weight:700}
+.hero-prog{display:flex;align-items:center;gap:10px;margin-top:auto;padding-top:10px;max-width:340px}
+.hero-prog .bar{flex:1;height:6px}
+.hero-prog .bar i{background:var(--tint)}
+.hero-prog span{font-size:11px;color:var(--muted);white-space:nowrap}
+.hero-side{display:flex;flex-direction:column;align-items:center;justify-content:center;
+  padding:0 30px 0 18px;border-left:1px solid var(--line);background:rgba(255,255,255,.5)}
+.hero-days{font-family:var(--serif);font-size:56px;line-height:1;font-weight:600;color:var(--tint);
+  font-variant-numeric:tabular-nums}
+.hero-dl{font-size:9.5px;letter-spacing:1.7px;text-transform:uppercase;color:var(--muted);margin-top:4px}
+.hero.empty{min-height:120px;border-style:dashed;box-shadow:none}
+.hero.empty::before{background:none}
+/* Shuffling the deck. */
+.hero-nav{display:flex;align-items:center;justify-content:center;gap:12px;margin-top:11px}
+.hn-b{width:28px;height:28px;border-radius:50%;border:1px solid var(--line);background:var(--card);
+  cursor:pointer;font-size:15px;line-height:1;color:var(--ink-soft);transition:border-color .12s,color .12s}
+.hn-b:hover{border-color:var(--gold);color:var(--gold)}
+.hn-dots{display:flex;gap:7px}
+.hn-d{width:8px;height:8px;border-radius:50%;border:0;padding:0;cursor:pointer;
+  background:var(--line);transition:transform .14s,background .14s}
+.hn-d.on{background:var(--d);transform:scale(1.45)}
+.hn-d:hover{background:var(--d);opacity:.7}
+
+/* ============ THE WEEK ============ */
+.wk{margin-bottom:22px}
+.wk-h{display:flex;align-items:baseline;justify-content:space-between;margin-bottom:9px}
+.wk-h .fig-head{margin:0}
+.wk-days{display:grid;grid-template-columns:repeat(7,1fr);gap:8px}
+.wk-d{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);
+  padding:11px 10px 12px;cursor:pointer;min-height:96px;display:flex;flex-direction:column;gap:3px;
+  transition:border-color .14s,transform .14s,box-shadow .14s}
+.wk-d:hover{border-color:var(--gold-line);transform:translateY(-2px);box-shadow:var(--shadow-sm)}
+.wk-d.today{border-color:var(--gold);box-shadow:0 0 0 3px rgba(176,141,62,.12)}
+.wk-d.quiet{background:transparent;box-shadow:none}
+.wk-dow{font-size:9.5px;letter-spacing:1.3px;text-transform:uppercase;color:var(--muted);font-weight:600}
+.wk-n{font-family:var(--serif);font-size:22px;line-height:1;font-weight:600}
+.wk-d.today .wk-n{color:var(--gold)}
+.wk-dots{display:flex;flex-wrap:wrap;gap:4px;margin-top:5px;min-height:8px}
+.wd{width:7px;height:7px;border-radius:50%;display:block}
+.wd.tk{background:var(--ok)}
+.wd.iv{background:var(--warn)}
+.wk-lbl{margin-top:auto;font-size:10.5px;color:var(--ink-soft);overflow:hidden;
+  text-overflow:ellipsis;white-space:nowrap}
+.wk-lbl.muted{color:var(--muted)}
+@media (max-width:900px){
+  .wk-days{grid-template-columns:repeat(4,1fr)}
+  .hero{flex-direction:column;min-height:0}
+  .hero-side{flex-direction:row;align-items:baseline;gap:10px;border-left:0;border-top:1px solid var(--line);
+    padding:12px 26px}
+  .hero-days{font-size:38px}
+  .hero-body{padding:20px 22px 8px}
+  .hero-t{font-size:27px}
+}
 /* Which job a task belongs to, at a glance. The weight does the separating as
    much as the hue, so it still reads if the colour does not register. */
 .t-m .t-ev{font-weight:600}
@@ -2865,7 +2972,7 @@ function uid(prefix){
 }
 var _justDragged=false;   // set during HTML5 drag so drop doesn't also navigate
 var _now=new Date();
-var state={view:'dashboard',eventId:null,clientId:null,boardId:null,qId:null,settingsPage:null,helpOpen:null,seatMode:'plan',floorSel:null,chkTab:'planner',chkOpen:null,activeEventId:(db.events[0]||{}).id,
+var state={view:'dashboard',eventId:null,clientId:null,boardId:null,qId:null,settingsPage:null,helpOpen:null,seatMode:'plan',floorSel:null,chkTab:'planner',chkOpen:null,heroIdx:0,activeEventId:(db.events[0]||{}).id,
            calY:_now.getFullYear(),calM:_now.getMonth()};
 function activeEvent(){return db.events.find(function(e){return e.id===state.activeEventId;})||db.events[0];}
 
@@ -3108,8 +3215,9 @@ function viewDashboard(){
   /* Primaries only. A welcome party two days before the wedding would
      otherwise win the countdown and the dashboard would announce the wrong
      date — one weekend, one number. */
-  var nextEvent=evPrimaries().filter(function(e){return daysAway(e.date)>=0;})
-    .sort(function(a,b){return a.date<b.date?-1:1;})[0];
+  var upcoming=evPrimaries().filter(function(e){return daysAway(e.date)>=0;})
+    .sort(function(a,b){return a.date<b.date?-1:1;});
+  var nextEvent=upcoming[0];
   var nextLead=db.leads.slice().filter(function(l){return daysAway(l.date)>=0;})
     .sort(function(a,b){return a.date<b.date?-1:1;})[0];
 
@@ -3174,22 +3282,29 @@ function viewDashboard(){
   var outstanding=db.invoices.filter(function(x){return x.status!=='paid'&&x.status!=='draft';}).reduce(function(a,x){return a+x.amount;},0);
   var collected=db.invoices.filter(function(x){return x.status==='paid';}).reduce(function(a,x){return a+x.amount;},0);
 
-  return ''+
-  setupCard()+
-  // ---- what's next ----
-  (nextEvent?'<div class="next-band" data-openevent="'+esc(nextEvent.id)+'" tabindex="0" role="link">'+
-    '<div class="nb-left">'+
-      '<div class="nb-k">Next event</div>'+
-      '<div class="nb-t">'+esc(nextEvent.title)+'</div>'+
-      '<div class="nb-m">'+esc(venueDot(nextEvent.venue,fmtDate(nextEvent.date)))+'</div>'+
-    '</div>'+
-    '<div class="nb-right">'+
-      '<div class="nb-days">'+daysAway(nextEvent.date)+'</div>'+
-      '<div class="nb-dl">days away</div>'+
-    '</div>'+
-  '</div>':'')+
+  /* ---- the modules, in the order this studio wants them ----
+     The figures are last by default on purpose. A planner opens this to see
+     what needs doing, not what it earned; the money matters but it is not the
+     reason you come in. Anyone who disagrees can move it to the top in
+     Settings → Appearance rather than being argued with. */
+  var MODS={
+    hero:function(){ return heroStack(upcoming); },
+    week:function(){ return weekStrip(); },
+    work:function(){ return workModule(); },
+    figures:function(){
+      return '<div class="fig-head">At a glance</div>'+
+      '<div class="figs">'+
+        fig('Booked',money(bookedVal),booked.length+' events')+
+        fig('Pipeline',money(pipeVal),db.leads.filter(function(l){return ['inquiry','proposal'].indexOf(l.stage)>-1;}).length+' open leads')+
+        fig('Collected',money(collected),'this season')+
+        fig('Outstanding',money(outstanding),db.invoices.filter(function(x){return x.status==='due'||x.status==='over';}).length+' invoices')+
+        fig('Next up',nextLead?daysAway(nextLead.date)+' days':'—',nextLead?nextLead.names:'')+
+      '</div>';
+    }
+  };
 
-  '<div class="grid-2" style="align-items:start">'+
+  function workModule(){
+    return '<div class="grid-2" style="align-items:start">'+
     // ---- the to-do list, front and centre ----
     '<div class="card"><div class="card-h"><h3>To Do</h3>'+
       '<span class="sec-badge">'+tasks.length+' open · '+doneToday+' of '+totalTasks+' done</span></div>'+
@@ -3209,23 +3324,149 @@ function viewDashboard(){
           '<div><div class="w-t">'+esc(w.t)+'</div><div class="w-m">'+esc(w.m)+'</div></div>'+
           '<span class="w-go">›</span></div>';
       }).join(''):'<div class="all-clear">✦<span>Nothing pending. You are all caught up.</span></div>')+'</div></div>'+
-  '</div>'+
+    '</div>';
+  }
 
-  // ---- figures, quiet at the bottom ----
-  '<div class="fig-head">At a glance</div>'+
-  '<div class="figs">'+
-    fig('Booked',money(bookedVal),booked.length+' events')+
-    fig('Pipeline',money(pipeVal),db.leads.filter(function(l){return ['inquiry','proposal'].indexOf(l.stage)>-1;}).length+' open leads')+
-    fig('Collected',money(collected),'this season')+
-    fig('Outstanding',money(outstanding),db.invoices.filter(function(x){return x.status==='due'||x.status==='over';}).length+' invoices')+
-    fig('Next up',nextLead?daysAway(nextLead.date)+' days':'—',nextLead?nextLead.names:'')+
+  return setupCard()+dashOrder().map(function(k){
+    return (dashHidden()[k]||!MODS[k])?'':MODS[k]();
+  }).join('');
+}
+
+/* ---- which modules, in which order ----
+   Kept in prefs so it travels with the studio rather than the device. Unknown
+   keys are dropped and missing ones appended, so a saved order from an older
+   build still works after a module is added or renamed. */
+var DASH_MODULES=[
+  {k:'hero',   label:'Upcoming events',  hint:'The card stack, with the next event on top'},
+  {k:'week',   label:'Your week',        hint:'Seven days, and what lands on each'},
+  {k:'work',   label:'To Do & Waiting On',hint:'The list you actually work from'},
+  {k:'figures',label:'At a glance',      hint:'Booked, pipeline, collected, outstanding'}
+];
+function dashOrder(){
+  var saved=prefs().dashOrder;
+  var known=DASH_MODULES.map(function(m){return m.k;});
+  var out=(Array.isArray(saved)?saved:[]).filter(function(k){return known.indexOf(k)>=0;});
+  known.forEach(function(k){ if(out.indexOf(k)<0)out.push(k); });
+  return out;
+}
+function dashHidden(){ return prefs().dashHidden||{}; }
+
+/* ---- the upcoming events, as a stack you can shuffle ----
+   One card at a time so the next event keeps the focus, with the others
+   visibly behind it — four weddings at once should feel like a deck you can
+   riffle, not four competing banners. */
+function heroStack(list){
+  if(!list.length){
+    return '<div class="hero empty"><div class="hero-body">'+
+      '<div class="hero-k">Nothing booked yet</div>'+
+      '<div class="hero-t">Your next event will live here</div>'+
+      '<div class="hero-m">Create one from a booked lead, or straight from Events.</div>'+
+    '</div></div>';
+  }
+  var i=Math.min(state.heroIdx||0,list.length-1);
+  var e=list[i];
+  var lead=leadForEvent(e);
+  var tint=eventTint(e.id);
+  var pct=evPct(e);
+  var kids=evChildren(e.id);
+  var next3=(e.timeline||[]).slice(0,3);
+  /* The couple's photo if there is one, otherwise the event's own colour.
+     Deliberately not a stock image — a placeholder that pretends to be content
+     looks worse than an honest wash. */
+  var photo=(lead&&lead.photo)||null;
+  return '<div class="hero-wrap">'+
+    /* The cards behind, purely as depth. */
+    (list.length>1?'<div class="hero-behind" aria-hidden="true">'+
+      list.slice(0,3).map(function(x,n){ return n===0?'':'<i style="background:'+eventTint(x.id)+'"></i>'; }).join('')+
+    '</div>':'')+
+    '<div class="hero'+(photo?' has-photo':'')+'" style="--tint:'+tint+'"'+
+      (photo?' data-photo="1"':'')+'>'+
+      (photo?'<div class="hero-img" style="background-image:url('+photo+')"></div>':'')+
+      '<div class="hero-body">'+
+        '<div class="hero-k">'+(i===0?'Next event':'Coming up')+
+          '<span class="hero-type">'+esc(evType(e))+'</span></div>'+
+        '<button class="hero-t" data-openevent="'+esc(e.id)+'">'+esc(e.title)+'</button>'+
+        '<div class="hero-m">'+esc(venueDot(e.venue,fmtDate(e.date)))+
+          (kids.length?' · '+(kids.length+1)+' events':'')+'</div>'+
+        (next3.length?'<div class="hero-run">'+next3.map(function(t){
+          return '<span class="hr-i"><b>'+esc(t.t)+'</b>'+esc(t.ev)+'</span>';
+        }).join('')+'</div>':'')+
+        '<div class="hero-prog"><div class="bar"><i style="width:'+pct+'%"></i></div>'+
+          '<span>'+pct+'% planned</span></div>'+
+      '</div>'+
+      '<div class="hero-side">'+
+        '<div class="hero-days">'+daysAway(e.date)+'</div>'+
+        '<div class="hero-dl">days away</div>'+
+      '</div>'+
+    '</div>'+
+    (list.length>1?'<div class="hero-nav">'+
+      '<button class="hn-b" data-hero="prev" aria-label="Previous event">‹</button>'+
+      '<div class="hn-dots">'+list.map(function(x,n){
+        return '<button class="hn-d'+(n===i?' on':'')+'" data-heroi="'+n+'" '+
+          'style="--d:'+eventTint(x.id)+'" aria-label="'+esc(x.title)+'"></button>';
+      }).join('')+'</div>'+
+      '<button class="hn-b" data-hero="next" aria-label="Next event">›</button>'+
+    '</div>':'')+
   '</div>';
+}
+
+/* ---- the week, so the shape of it lands before you read anything ---- */
+function weekStrip(){
+  var today=new Date(); today.setHours(0,0,0,0);
+  var days=[];
+  for(var d=0;d<7;d++){
+    var dt=new Date(today.getTime()+d*86400000);
+    var iso=dt.getFullYear()+'-'+String(dt.getMonth()+1).padStart(2,'0')+'-'+String(dt.getDate()).padStart(2,'0');
+    var evs=db.events.filter(function(e){return e.date===iso;});
+    var tasks=[];
+    db.events.forEach(function(e){ (e.checklist||[]).forEach(function(c){
+      if(!c.done&&c.due===iso&&c.owner!=='client')tasks.push({e:e,c:c}); }); });
+    var invs=db.invoices.filter(function(x){return x.due===iso&&x.status!=='paid'&&x.status!=='draft';});
+    days.push({dt:dt,iso:iso,evs:evs,tasks:tasks,invs:invs,today:d===0});
+  }
+  var DOW=['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
+  var busiest=Math.max.apply(null,days.map(function(x){return x.evs.length+x.tasks.length+x.invs.length;}))||1;
+  return '<div class="wk">'+
+    '<div class="wk-h"><span class="fig-head">Your week</span>'+
+      '<button class="link-btn" data-goto="calendar">Open calendar ›</button></div>'+
+    '<div class="wk-days">'+days.map(function(x){
+      var load=(x.evs.length+x.tasks.length+x.invs.length)/busiest;
+      return '<div class="wk-d'+(x.today?' today':'')+(load?'':' quiet')+'" data-goto="calendar">'+
+        '<div class="wk-dow">'+DOW[x.dt.getDay()]+'</div>'+
+        '<div class="wk-n">'+x.dt.getDate()+'</div>'+
+        '<div class="wk-dots">'+
+          x.evs.slice(0,3).map(function(e){
+            return '<i class="wd ev" style="background:'+eventTint(e.id)+'" title="'+esc(e.title)+'"></i>';
+          }).join('')+
+          (x.tasks.length?'<i class="wd tk" title="'+x.tasks.length+' task'+(x.tasks.length===1?'':'s')+' due"></i>':'')+
+          (x.invs.length?'<i class="wd iv" title="'+x.invs.length+' invoice'+(x.invs.length===1?'':'s')+' due"></i>':'')+
+        '</div>'+
+        (x.evs.length?'<div class="wk-lbl">'+esc(x.evs[0].title)+'</div>':
+          x.tasks.length?'<div class="wk-lbl muted">'+x.tasks.length+' due</div>':'')+
+      '</div>';
+    }).join('')+'</div></div>';
 }
 function fig(k,v,d){
   return '<div class="fig"><div class="fig-k">'+esc(k)+'</div><div class="fig-v">'+v+'</div>'+
     '<div class="fig-d">'+esc(d)+'</div></div>';
 }
 function wireDashboard(){
+  /* Shuffling the stack. Wraps in both directions so a deck of four never
+     dead-ends, and the index is clamped on render in case the set shrank. */
+  var upN=evPrimaries().filter(function(e){return daysAway(e.date)>=0;}).length;
+  document.querySelectorAll('[data-hero]').forEach(function(b){
+    b.onclick=function(e2){
+      e2.stopPropagation();
+      if(!upN)return;
+      var i=state.heroIdx||0;
+      state.heroIdx=(b.dataset.hero==='next'?i+1:i-1+upN)%upN;
+      render(); wireDashboard();
+    };
+  });
+  document.querySelectorAll('[data-heroi]').forEach(function(b){
+    b.onclick=function(e2){ e2.stopPropagation();
+      state.heroIdx=Number(b.dataset.heroi)||0; render(); wireDashboard(); };
+  });
   document.querySelectorAll('[data-tgroup]').forEach(function(btn){
     btn.onclick=function(){
       var key=btn.dataset.tgroup;
@@ -5536,6 +5777,11 @@ function prefs(){
     alertInvoices:d.alertInvoices!==false,
     alertQuestionnaires:d.alertQuestionnaires!==false,
     taskHorizon:d.taskHorizon||7,
+    /* prefs() rebuilds a whitelisted object, so anything not named here is
+       silently dropped on load — the dashboard order saved fine and then came
+       back as the default on the next reload. */
+    dashOrder:Array.isArray(d.dashOrder)?d.dashOrder:null,
+    dashHidden:d.dashHidden||{},
     portalDocs:d.portalDocs!==false,
     portalPayments:d.portalPayments!==false,
     portalQuestionnaires:d.portalQuestionnaires!==false,
@@ -5668,7 +5914,28 @@ function settingsPage(k){
         setRow('Open GEM on','<select class="set-sel" id="s_landing">'+
           [['dashboard','Dashboard'],['calendar','Calendar'],['pipeline','Leads & Pipeline'],['events','Events']]
           .map(function(o){return '<option value="'+o[0]+'"'+(p.landing===o[0]?' selected':'')+'>'+o[1]+'</option>';}).join('')+'</select>')+
-      '</div></div>';
+      '</div>'+
+      /* Everyone works differently. Some planners want the money first; most
+         want the list. Rather than argue for a default, the dashboard is
+         ordered here. */
+      '<div class="fig-head" style="margin:22px 0 8px">Dashboard layout</div>'+
+      '<div class="set-card"><div class="dash-ord">'+
+        dashOrder().map(function(k,i,arr){
+          var m=DASH_MODULES.find(function(x){return x.k===k;});
+          var off=!!dashHidden()[k];
+          return '<div class="do-row'+(off?' off':'')+'">'+
+            '<div class="do-move">'+
+              '<button class="do-b" data-dmove="'+k+':up"'+(i===0?' disabled':'')+' aria-label="Move up">↑</button>'+
+              '<button class="do-b" data-dmove="'+k+':down"'+(i===arr.length-1?' disabled':'')+' aria-label="Move down">↓</button>'+
+            '</div>'+
+            '<div class="do-tx"><b>'+esc(m.label)+'</b><em>'+esc(m.hint)+'</em></div>'+
+            toggle('dshow_'+k,!off)+
+          '</div>';
+        }).join('')+
+      '</div></div>'+
+      '<div class="set-note">The order here is the order on your dashboard. '+
+        'Hiding a module does not delete anything — it just stops it competing for the space.</div>'+
+    '</div>';
   }
   if(k==='planning'){
     return back+'<div class="set-page">'+
@@ -5997,6 +6264,28 @@ function wireSettings(){
   });
   var back=document.querySelector('[data-setback]');
   if(back)back.onclick=function(){ setView('settings',{settingsPage:null}); };
+
+  /* Dashboard layout. Order and visibility live in prefs so they travel with
+     the studio rather than the browser. */
+  document.querySelectorAll('[data-dmove]').forEach(function(b){
+    b.onclick=function(){
+      var parts=b.dataset.dmove.split(':'), k=parts[0], dir=parts[1];
+      var ord=dashOrder(), i=ord.indexOf(k);
+      var j=dir==='up'?i-1:i+1;
+      if(i<0||j<0||j>=ord.length)return;
+      ord.splice(j,0,ord.splice(i,1)[0]);
+      var q=prefs(); q.dashOrder=ord; savePrefs(); render(); wireSettings();
+    };
+  });
+  DASH_MODULES.forEach(function(m){
+    var t=document.getElementById('dshow_'+m.k);
+    if(!t)return;
+    t.onclick=function(){
+      var q=prefs(); q.dashHidden=Object.assign({},q.dashHidden||{});
+      if(q.dashHidden[m.k])delete q.dashHidden[m.k]; else q.dashHidden[m.k]=true;
+      savePrefs(); render(); wireSettings();
+    };
+  });
 
   // text + select fields save on change
   [['s_bizName','bizName'],['s_plannerName','plannerName'],['s_plannerRole','plannerRole'],
