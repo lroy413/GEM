@@ -9,6 +9,12 @@
   // quietly redefining it. Changing them changes how the live site routes.
   "name": "gemevents",
   "compatibility_date": "2026-08-05",
+  // The Worker had previews_enabled=false before it moved to wrangler. Wrangler
+  // turns preview URLs on by default when a workers.dev route exists and this
+  // is not declared, which silently made every uploaded version publicly
+  // reachable at its own <version>-gemevents.workers.dev address. Declared here
+  // so the setting is owned by this file rather than by a default.
+  "preview_urls": false,
   "assets": {
     "directory": "./dist",
     // /foo and /foo/ both resolve to /foo/index.html.
