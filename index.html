@@ -10,7 +10,7 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
 <meta name="apple-mobile-web-app-title" content="GEM">
 <meta name="format-detection" content="telephone=no">
-<meta name="gem-build" content="130b2a062406">
+<meta name="gem-build" content="24fe12fcd41a">
 <link rel="manifest" href="/manifest.webmanifest">
 <link rel="icon" href="/icons/icon-192.png" sizes="192x192" type="image/png">
 <link rel="apple-touch-icon" href="/icons/icon-180.png">
@@ -1189,6 +1189,8 @@ td.inv-col{text-align:center;width:1%}
 .samp-tag.card{position:absolute;top:10px;left:14px;z-index:2;background:rgba(0,0,0,.34);
   backdrop-filter:blur(3px)}
 .samp-tag.mini{padding:2px 7px;font-size:9px;vertical-align:middle}
+/* The event's type, so a corporate gala does not read as a wedding. */
+.ev-type{font-weight:700;letter-spacing:.03em;text-transform:uppercase;font-size:10px;color:var(--gold)}
 /* A locked card should look calm, not broken — the tag and the banner carry
    the message, so this is only a whisper. */
 .ev-card.is-sample .banner{filter:saturate(.72)}
@@ -3530,7 +3532,8 @@ function viewEvents(){
       (isSampleEvent(e)?'<span class="samp-tag card">Sample</span>':'')+
       '<span class="d">'+daysAway(e.date)+' days · '+fmtDate(e.date)+'</span>'+
       (kids.length?'<span class="ev-blk">'+(kids.length+1)+' events</span>':'')+'</div>'+
-      '<div class="body"><h4>'+esc(e.title)+'</h4><div class="loc">'+esc(venueDot(e.venue,e.loc))+'</div>'+
+      '<div class="body"><h4>'+esc(e.title)+'</h4>'+
+      '<div class="loc"><span class="ev-type">'+esc(evType(e))+'</span> · '+esc(venueDot(e.venue,e.loc))+'</div>'+
       (kids.length?'<div class="ev-subs">'+kids.map(function(k){
         return '<button class="ev-sub" type="button" data-ev="'+k.id+'">'+
           '<span class="es-r">'+esc(roleLabel(k,true))+'</span>'+
@@ -3636,7 +3639,8 @@ function wireEvents(){
          appear to vanish. */
       state.chkTab=t.item.owner;
       save(); render(); wireEvents();
-      toast(t.item.owner==='client'?'Assigned to the couple — it shows in their portal ✦'
+      var ev3=db.events.find(function(x){return x.id===state.eventId;});
+      toast(t.item.owner==='client'?('Assigned to '+clientTerm(ev3)+' — it shows in their portal ✦')
                                    :'Moved back to your list');
     };
   });
@@ -3794,7 +3798,7 @@ function viewEventDetail(id){
             return '<div class="chk-tabs">'+
               '<button class="chk-tab'+(tab==='planner'?' on':'')+'" data-chktab="planner">Yours'+
                 '<span class="ct-n">'+mine.filter(function(c){return !c.done;}).length+'</span></button>'+
-              '<button class="chk-tab'+(tab==='client'?' on':'')+'" data-chktab="client">The couple’s'+
+              '<button class="chk-tab'+(tab==='client'?' on':'')+'" data-chktab="client">'+esc(clientTerm(e,true))+'’s'+
                 '<span class="ct-n">'+theirs.filter(function(c){return !c.done;}).length+'</span></button>'+
             '</div>'+
             (list.length?'<div class="chk-scroll">'+list.map(function(c){
@@ -3810,13 +3814,13 @@ function viewEventDetail(id){
                     'placeholder="Notes on this task — where it got to, what is blocking it, what was agreed.">'+esc(c.note||'')+'</textarea>'+
                   '<div class="chk-dact">'+
                     '<button class="btn btn-ghost btn-sm" data-assign="'+c.id+'">'+
-                      (c.owner==='client'?'↩ Move back to your list':'→ Assign to the couple')+'</button>'+
+                      (c.owner==='client'?'↩ Move back to your list':'→ Assign to '+esc(clientTerm(e)))+'</button>'+
                     '<span class="chk-saved" data-saved="'+c.id+'"></span>'+
                   '</div></div>':'')+
               '</div>';
             }).join('')+'</div>'
             :'<div class="empty-hint">'+(tab==='client'
-                ?'Nothing assigned to the couple yet — open a task and use “Assign to the couple”.'
+                ?'Nothing assigned to '+esc(clientTerm(e))+' yet — open a task and use “Assign to '+esc(clientTerm(e))+'”.'
                 :'No tasks yet — apply a template to get started.')+'</div>');
           })()+
           '<div class="sec-actions"><button class="btn btn-ghost btn-sm" data-addck="1">＋ Add task</button>'+
@@ -5131,12 +5135,12 @@ function wireClientDetail(){
     sbClientInvites(pev.id).then(function(rows){
       rows=rows||[];
       if(!rows.length){ box.innerHTML='<div class="hint">Nobody invited yet. '+
-        'The couple share one login, and can add one more person themselves.</div>'; return; }
+        esc(clientTerm(pev,true))+' share one login, and can add one more person themselves.</div>'; return; }
       box.innerHTML=rows.map(function(r){
         return '<div class="pa-row"><span class="pa-em">'+esc(r.email)+'</span>'+
           '<span class="status '+(r.claimed_at?'s-paid':'s-due')+'">'+
             (r.claimed_at?'Signed in':'Invited')+'</span>'+
-          (r.source==='client'?'<span class="pill">added by the couple</span>':'')+
+          (r.source==='client'?'<span class="pill">added by '+esc(clientTerm(pev))+'</span>':'')+
           '<button class="r-act r-del" data-revoke="'+esc(r.email)+'" aria-label="Revoke">✕</button></div>';
       }).join('');
       box.querySelectorAll('[data-revoke]').forEach(function(b){
@@ -8144,10 +8148,14 @@ function openEventModal(existing,parentId){
   var parent=evById(parentId)||(e?evById(e.parentId):null)||null;
   var isSub=!!parent;
   var bookable=db.leads.filter(function(l){return ['booked','planning','wrapped'].indexOf(l.stage)>-1;});
-  var opts=[{value:'',label:'No linked client'}].concat(
+  /* "＋ Add a new client" writes into the name field below rather than opening
+     a second modal on top of this one. */
+  var opts=[{value:'',label:'No linked client'},{value:'__new',label:'＋ Add a new client…'}].concat(
     (e?db.leads:bookable.length?bookable:db.leads).map(function(l){return {value:l.id,label:l.names+' · '+l.type};}));
-  var roleOpts=EV_ROLES.filter(function(r){return r.id!=='primary';})
-    .map(function(r){return {value:r.id,label:r.label};});
+  /* A sub-event's type follows its parent — the roles on offer have to match
+     the block it is joining, not whatever this form last had selected. */
+  var typeOf=parent?evType(parent):(e?evType(e):((leadById((e&&e.leadId))||{}).type||'Wedding'));
+  var roleOpts=rolesForType(typeOf).map(function(r){return {value:r.id,label:r.label};});
   /* Sub-events are one level deep, so only events that are not already part of
      a block, and have no block of their own, may be attached to one. An event
      cannot be offered itself. */
@@ -8174,6 +8182,14 @@ function openEventModal(existing,parentId){
       {id:'title',label:'Event name',value:e&&e.title,required:true,full:true,
        placeholder:isSub?'Rehearsal Dinner':''},
       {id:'leadId',label:'Client',type:'select',value:(e&&e.leadId)||(parent&&parent.leadId),options:opts,full:true},
+      /* Present rather than revealed: openEditor builds its fields once, and a
+         field that appears mid-edit loses whatever was typed in it. */
+      {id:'newClient',label:'New client’s name (for “Add a new client…”)',
+       value:'',placeholder:'e.g. Okafor & Bello',full:true},
+      /* A sub-event inherits the block's type, so it is only asked for on a
+         standalone or primary event. */
+      (isSub?null:{id:'eventType',label:'Event type',type:'select',
+        value:typeOf,options:EVENT_TYPES.map(function(t){return {value:t.id,label:t.id};}),full:true}),
       /* The parent picker is hidden once an event has sub-events of its own —
          the database holds the tree one level deep and the UI should not offer
          a move it will refuse. */
@@ -8209,7 +8225,22 @@ function openEventModal(existing,parentId){
       var rec=e||{id:uid('e'),timeline:[],checklist:[],budget:[],tables:[],guests:[],
                   floor:{w:60,h:40,unit:'ft',items:[],snap:true,showChairs:true},
                   design:{palette:[],boards:[],decor:[]}};
-      rec.title=v.title; rec.leadId=v.leadId||null; rec.date=v.date; rec.startTime=v.startTime;
+      /* "＋ Add a new client…" creates the lead here, so an event can be made
+         for someone who is not in the pipeline yet without leaving the form. */
+      var lid=v.leadId||null;
+      if(lid==='__new'){
+        var nm=(v.newClient||'').trim();
+        if(!nm){ toast('Give the new client a name, or pick one from the list.'); return; }
+        var nl={id:uid('l'),names:nm,type:v.eventType||typeOf||'Wedding',date:v.date||null,
+          venue:v.venue||'',value:0,stage:'booked',guests:0,email:'',phone:'',notes:'',
+          partnerA:'',partnerB:'',pronounsA:'',pronounsB:'',altEmail:'',preferred:'',source:'',
+          address:{},photo:null,photoPath:null};
+        db.leads.unshift(nl); lid=nl.id;
+      }
+      rec.title=v.title; rec.leadId=lid; rec.date=v.date; rec.startTime=v.startTime;
+      /* A sub-event has no type of its own — it belongs to its parent's block,
+         and evType() resolves it upward. */
+      if(!v.parentId||v.parentId==='')rec.eventType=v.eventType||typeOf||'Wedding';
       rec.venue=v.venue; rec.loc=v.loc; rec.venueNotes=v.venueNotes;
       /* parentId and role move together — the database checks that a primary
          has no parent and a sub-event does, and rejects the pair if they
@@ -8248,21 +8279,79 @@ function evById(id){ return db.events.find(function(e){return e.id===id;}); }
 
    Records saved before this existed have no parentId and no role. Both are
    read defensively throughout: absent means "a primary, standing alone". */
+/* ---- what kind of event is this ----
+   GEM was shaped entirely around weddings: a corporate gala was offered a
+   rehearsal dinner and a farewell brunch, and its tasks were assigned to "the
+   couple". The type decides which sub-events are on the menu and what the
+   client is called. `roles` lists the sub-event roles worth offering; every
+   type also gets tasting, walkthrough, photos, setup, custom and other.
+
+   `client` is the term used wherever the app talks about the person paying —
+   the task tab, the portal, the assign button. */
+var EVENT_TYPES=[
+  {id:'Wedding',    client:'the couple', roles:['welcome','rehearsal','ceremony','reception','brunch','fitting','shower','party','afterparty']},
+  {id:'Corporate',  client:'the client', roles:['reception','dinner','session','keynote','breakout','networking','afterparty']},
+  {id:'Conference', client:'the client', roles:['session','keynote','breakout','networking','dinner','reception']},
+  {id:'Gala',       client:'the client', roles:['reception','dinner','ceremony','afterparty']},
+  {id:'Birthday',   client:'the host',   roles:['party','dinner','afterparty']},
+  {id:'Anniversary',client:'the couple', roles:['party','dinner','ceremony','afterparty']},
+  {id:'Shower',     client:'the host',   roles:['shower','party','dinner']},
+  {id:'Graduation', client:'the family', roles:['ceremony','party','dinner']},
+  {id:'Holiday',    client:'the client', roles:['party','dinner','reception','afterparty']},
+  {id:'Memorial',   client:'the family', roles:['ceremony','reception','dinner']},
+  {id:'Other',      client:'the client', roles:['ceremony','reception','party','dinner','session','afterparty']}
+];
+/* Offered whatever the type, because every event has a room to look at and
+   suppliers to taste. */
+var EV_ROLES_UNIVERSAL=['tasting','walkthrough','photos','setup','custom','other'];
+function eventTypeDef(t){
+  return EVENT_TYPES.find(function(x){return x.id===t;})||
+         EVENT_TYPES[EVENT_TYPES.length-1];
+}
+/* The event's own type, falling back to its client's for anything created
+   before events carried one. */
+function evType(e){
+  if(!e)return 'Wedding';
+  if(e.eventType)return e.eventType;
+  var p=e.parentId?db.events.find(function(x){return x.id===e.parentId;}):null;
+  if(p&&p.eventType)return p.eventType;
+  var l=e.leadId?db.leads.find(function(x){return x.id===e.leadId;}):null;
+  return (l&&l.type)||'Wedding';
+}
+/* "the couple" for a wedding, "the client" for a gala, "the host" for a
+   birthday. Used anywhere the app addresses whoever is paying. */
+function clientTerm(e,cap){
+  var t=eventTypeDef(evType(evPrimary(e)||e)).client;
+  return cap?t.charAt(0).toUpperCase()+t.slice(1):t;
+}
+/* The roles worth offering for this event's type. */
+function rolesForType(t){
+  var want=eventTypeDef(t).roles.concat(EV_ROLES_UNIVERSAL);
+  return EV_ROLES.filter(function(r){ return r.id!=='primary'&&want.indexOf(r.id)>=0; })
+    .sort(function(a,b){ return want.indexOf(a.id)-want.indexOf(b.id); });
+}
+
 /* The occasions a planner actually schedules as their own date and venue.
-   Kept in step with the check constraint in migration 12 — a role that is not
+   Kept in step with the check constraint in migration 15 — a role that is not
    in that list is refused on push and the event silently fails to sync. */
 var EV_ROLES=[
   {id:'primary',    label:'Main event',        short:'Main'},
   {id:'welcome',    label:'Welcome party',     short:'Welcome'},
-  {id:'rehearsal',  label:'Rehearsal dinner',  short:'Rehearsal'},
+  {id:'rehearsal',  label:'Rehearsal',         short:'Rehearsal'},
   {id:'ceremony',   label:'Ceremony',          short:'Ceremony'},
   {id:'reception',  label:'Reception',         short:'Reception'},
   {id:'brunch',     label:'Farewell brunch',   short:'Brunch'},
+  {id:'dinner',     label:'Dinner',            short:'Dinner'},
+  {id:'party',      label:'Party',             short:'Party'},
+  {id:'afterparty', label:'Afterparty',        short:'After'},
+  {id:'session',    label:'Session',           short:'Session'},
+  {id:'keynote',    label:'Keynote',           short:'Keynote'},
+  {id:'breakout',   label:'Breakout',          short:'Breakout'},
+  {id:'networking', label:'Networking',        short:'Networking'},
+  {id:'shower',     label:'Shower',            short:'Shower'},
+  {id:'fitting',    label:'Fitting',           short:'Fitting'},
   {id:'tasting',    label:'Menu tasting',      short:'Tasting'},
   {id:'walkthrough',label:'Venue walkthrough', short:'Walkthrough'},
-  {id:'fitting',    label:'Dress fitting',     short:'Fitting'},
-  {id:'shower',     label:'Shower',            short:'Shower'},
-  {id:'party',      label:'Bach party',        short:'Bach'},
   {id:'photos',     label:'Photo session',     short:'Photos'},
   {id:'setup',      label:'Setup / load-in',   short:'Setup'},
   {id:'custom',     label:'Custom…',           short:'Custom'},
@@ -9545,6 +9634,7 @@ function sbPush(opts){
       return {id:e.id,org_id:org,lead_id:nn(e.leadId),title:s(e.title),
       event_date:nn(e.date),venue:s(e.venue),location:s(e.loc),start_time:s(e.startTime),
       parent_event_id:par,event_role:par?(s(e.role)||'other'):'primary',sort_order:num(e.sort),
+      event_type:s(e.eventType)||'Wedding',
       role_label:par&&e.role==='custom'?s(e.roleLabel):'',
       venue_address:e.venueAddress||{},venue_contact:e.venueContact||{},venue_notes:s(e.venueNotes),
       floor:{w:num(f.w)||60,h:num(f.h)||40,unit:f.unit||'ft',snap:f.snap!==false,showChairs:f.showChairs!==false}}; })],
@@ -9687,6 +9777,7 @@ function sbPull(){
         return {id:e.id,leadId:e.lead_id,title:e.title,date:e.event_date,venue:e.venue,loc:e.location,
           startTime:e.start_time,venueAddress:e.venue_address||{},venueContact:e.venue_contact||{},venueNotes:e.venue_notes,
           parentId:e.parent_event_id||null,role:e.event_role||'primary',sort:e.sort_order||0,
+          eventType:e.event_type||'Wedding',
           roleLabel:e.role_label||'',
           timeline:of(R.timeline_items,e.id).map(function(x){return {id:x.id,t:x.at_time,ev:x.title,ds:x.detail};}),
           checklist:of(R.checklist_items,e.id).map(function(x){return {id:x.id,lbl:x.label,cat:x.category,done:x.done,
