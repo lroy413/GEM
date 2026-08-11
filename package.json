@@ -1,0 +1,14 @@
+{
+  "name": "gemevents",
+  "version": "1.0.0",
+  "private": true,
+  "description": "GEM — Glimmer Events Management. Static assets served by a Cloudflare Worker.",
+  "type": "module",
+  "scripts": {
+    "build": "node scripts/build-dist.mjs",
+    "deploy": "npm run build && npx wrangler deploy"
+  },
+  "devDependencies": {
+    "wrangler": "^4"
+  }
+}

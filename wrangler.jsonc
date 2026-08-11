@@ -1,0 +1,23 @@
+{
+  // Assets-only Worker: there is no `main`, so Cloudflare serves dist/
+  // directly with no script in front of it.
+  //
+  // These values mirror what the live Worker was already configured with when
+  // it was deployed through the assets API by deploy.py — read back from
+  // /workers/scripts/gemevents/versions before this file was written, so that
+  // moving to `wrangler deploy` reproduces the current behaviour rather than
+  // quietly redefining it. Changing them changes how the live site routes.
+  "name": "gemevents",
+  "compatibility_date": "2026-08-05",
+  "assets": {
+    "directory": "./dist",
+    // /foo and /foo/ both resolve to /foo/index.html.
+    "html_handling": "auto-trailing-slash",
+    // A single-page app: unknown paths fall back to index.html rather than
+    // returning 404, which is what lets the in-app router own the URL.
+    "not_found_handling": "single-page-application"
+  }
+  // No "routes" key on purpose. gemevents.app is attached to this Worker as a
+  // custom domain in the dashboard; listing routes here would hand management
+  // of that to wrangler, and an incomplete list would detach the domain.
+}
