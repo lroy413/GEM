@@ -323,7 +323,23 @@ Two more added by the sub-event work, both reasoned-about but not witnessed:
   — security rests on RLS and the anon key, which is entered in Settings and
   lives in localStorage, not in the source. **Make the GitHub repo private
   anyway**; the schema and client data model are the studio's business.
-- Deploy is `python3 deploy.py`, with `CLOUDFLARE_API_TOKEN` exported. It
+- **Deploy is now `git push origin main`.** Cloudflare Workers Builds watches
+  `github.com/lroy413/GEM`; a push runs `npm run build` (→ `scripts/build-dist.mjs`,
+  which rebuilds index.html from the artifact and stages `dist/`) then
+  `npx wrangler deploy`. A push to any other branch runs
+  `npx wrangler versions upload` instead — it exercises the whole build and
+  uploads a version **without** touching production, which is the way to test a
+  change to the build itself. Config lives in `wrangler.jsonc`.
+- Two things wrangler will do if you let it, both now pinned in `wrangler.jsonc`:
+  it **enables preview URLs** by default when a workers.dev route exists (the
+  Worker had them off; `preview_urls: false` restores that), and it would
+  **detach the `gemevents.app` custom domain** if a `routes` key were present
+  but incomplete — hence no `routes` key at all.
+- `/offline.html` returning **307 → /offline** is correct, not a fault:
+  `html_handling: auto-trailing-slash` strips the extension, and `sw.js`
+  already caches `/offline` for exactly this reason.
+- `deploy.py` still works and is unchanged — a second, independent path to the
+  same eight assets. It needs `CLOUDFLARE_API_TOKEN` exported. It
   builds, uploads only the assets whose hash is not already in the store, cuts
   a new version of the `gemevents` Worker, and then polls the live site until
   three consecutive fetches hash-match the local `index.html` — edges disagree
