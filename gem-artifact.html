@@ -2941,6 +2941,12 @@ function normalize(d){
       }
     });
     e.timeline.forEach(function(t){ if(!t.id)t.id=uid('tl'); });
+    /* The running order is chronological by contract — sortTimeline() runs on
+       every add and every edit. Running it here too does two jobs: it repairs a
+       timeline saved while toMinutes() still sorted ranges to the end, and it
+       gives a pulled one a defined order at all, since timeline_items come back
+       from PostgREST unsorted and nothing re-sorted them on the way in. */
+    sortTimeline(e);
     e.budget.forEach(function(b){ if(!b.id)b.id=uid('bl'); });
     e.checklist.forEach(function(c){ if(!c.id)c.id=uid('ck'); });
     if(!e.tables)e.tables=[];
@@ -7739,9 +7745,12 @@ function openInquiryModal(){
    With no am/pm given, 7–11 reads as morning and everything else as
    afternoon — the shape of a wedding day. It normalises as you leave the
    field, so a wrong guess is visible immediately and one keystroke to fix. */
-function normTime(v){
+/* One time, or null when the text is not one. normTime() wraps this so a range
+   can be tidied half by half — this half must be able to say "not a time" for
+   that to work, which is why a failure is null here and not the input back. */
+function normTimeOne(v){
   var s=String(v==null?'':v).trim();
-  if(!s)return '';
+  if(!s)return null;
   if(/^noon$/i.test(s))return '12:00 PM';
   if(/^midnight$/i.test(s))return '12:00 AM';
   /* Every part after the hour is optional — "4:30" and "17:30" are times too,
@@ -7754,17 +7763,39 @@ function normTime(v){
     else{
       var h1=s.match(/^(\d{1,2})$/);
       if(h1)m=[s,h1[1],null,null];
-      else return s;
+      else return null;
     }
   }
   var h=parseInt(m[1],10), min=m[2]?parseInt(m[2],10):0;
   var mer=m[3]?m[3].toLowerCase():null;
-  if(isNaN(h)||isNaN(min)||min>59||h>23)return s;
+  if(isNaN(h)||isNaN(min)||min>59||h>23)return null;
   if(h===0){ h=12; mer=mer||'a'; }
   else if(h>12){ h-=12; mer='p'; }              // 24-hour input is unambiguous
   else if(h===12&&!mer){ mer='p'; }
   if(!mer)mer=(h>=7&&h<=11)?'a':'p';
   return h+':'+String(min).padStart(2,'0')+' '+(mer==='a'?'AM':'PM');
+}
+/* A moment can be a range, and the field has to tidy one without mangling it.
+   The WHOLE string is tried as a single time first, deliberately: "6-35" is an
+   accepted way to type 6:35, and splitting on the dash before trying that would
+   turn a time into a range. Only text that is not a time on its own gets split. */
+function normTime(v){
+  var s=String(v==null?'':v).trim();
+  if(!s)return '';
+  var one=normTimeOne(s);
+  if(one)return one;
+  var parts=s.split(/\s*(?:[–—-]|\bto\b)\s*/i);
+  if(parts.length===2){
+    var a=normTimeOne(parts[0]), b=normTimeOne(parts[1]);
+    if(a&&b){
+      /* "9:00 - 10:00 PM" means both are PM. Tidying the halves independently
+         would read the start as nine in the morning, so a start with no am/pm
+         of its own borrows the end's. */
+      if(!/[ap]m?\.?\s*$/i.test(parts[0]))a=a.slice(0,-2)+b.slice(-2);
+      return a+' – '+b;
+    }
+  }
+  return s;
 }
 
 function openEditor(o){
@@ -9190,8 +9221,13 @@ function editRecord(kind,id){
   if(F[kind])F[kind]();
 }
 /* Keep the day-of running order in chronological order after an edit. */
+/* Sorts on the START of whatever is in the field. A moment is often a range —
+   "6:35 PM – 6:45 PM" is how a toast gets written — and this pattern used to be
+   anchored end to end, so a range matched nothing, took the 1e9 sentinel and
+   sorted after every other moment on the day. Unanchored, it reads the first
+   clock time it finds and ignores the rest. */
 function toMinutes(t){
-  var m=/^(\d{1,2}):(\d{2})\s*(AM|PM)?$/i.exec(String(t||'').trim());
+  var m=/(\d{1,2}):(\d{2})\s*(AM|PM)?/i.exec(String(t||'').trim());
   if(!m)return 1e9;
   var h=Number(m[1])%12, mi=Number(m[2]);
   if(m[3]&&/pm/i.test(m[3]))h+=12;
