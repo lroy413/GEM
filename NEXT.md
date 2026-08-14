@@ -20,9 +20,12 @@ runs local-first in the browser and syncs to Supabase when connected.
 | Database | Supabase, project `dqntxdhzcieycifzjzwc` |
 | Which build is live? | Settings → Data & storage → **App version**, or `curl -s https://gemevents.app/ \| grep gem-build` |
 
-Migrations **01–15 are all run** against the live project. **16 is not** — it
-adds `events.photo_path` for per-event cover photos, and until it runs, a push
-carrying one will be refused for naming a column that does not exist.
+Migrations **01–15 are all run** against the live project. **16 is not.**
+
+Run it **before** this build reaches production. It adds `events.photo_path`,
+and the events payload carries that key on every row whether or not anything
+has a cover — so until the column exists, PostgREST refuses *every* events
+push, not only the ones with a photograph. Migration first, then deploy.
 
 ---
 

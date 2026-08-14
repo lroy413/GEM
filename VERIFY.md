@@ -22,10 +22,12 @@ Nothing here needs a code change. If a step fails, write down which one and stop
 | You need | Two browsers (or one plus a private window), two email addresses you can read, and the Supabase SQL editor |
 | Live build | Settings → Data & storage → **App version**, or `curl -s https://gemevents.app/ \| grep gem-build` |
 
-**Run migration 16 first.** `supabase/16_event_photos.sql` adds
-`events.photo_path` and has not been run against the live project. Until it is,
-section B will fail on the event cover with a PostgREST error naming an unknown
-column, and it will take the whole push down with it. The migration ends in a
+**Run migration 16 first — before section A, and before this build reaches
+production.** `supabase/16_event_photos.sql` adds `events.photo_path` and has
+not been run against the live project. Every events row carries that key
+whether or not anything has a cover, so until the column exists PostgREST
+refuses the whole events push with an unknown-column error — section A would
+fail before you ever reached the photographs in B. The migration ends in a
 `select` of booleans; all of them should be true.
 
 Two devices means two *different signed-in browsers*, not two tabs. Two tabs
