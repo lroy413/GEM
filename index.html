@@ -10,7 +10,7 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
 <meta name="apple-mobile-web-app-title" content="GEM">
 <meta name="format-detection" content="telephone=no">
-<meta name="gem-build" content="f28fd01f2450">
+<meta name="gem-build" content="02a9d8f20fc4">
 <link rel="manifest" href="/manifest.webmanifest">
 <link rel="icon" href="/icons/icon-192.png" sizes="192x192" type="image/png">
 <link rel="apple-touch-icon" href="/icons/icon-180.png">
@@ -1921,6 +1921,20 @@ tr:hover .r-acts,.ev-card:hover .r-acts,.table-card:hover .r-acts,
   color:var(--ink-soft);line-height:1.6}
 .vb-note b{font-size:9.5px;letter-spacing:1.6px;text-transform:uppercase;color:var(--gold);
   font-weight:600;margin-right:8px}
+/* ---- setting the event's cover photo ----
+   A preview, not a backdrop. The picture itself belongs on the dashboard hero,
+   which was built around one; the band is four corners of dense copy and a
+   photograph behind it costs more legibility than it buys. */
+.vb-thumb{width:38px;height:38px;flex:0 0 38px;border-radius:10px;border:1px solid var(--line);
+  background-size:cover;background-position:center;box-shadow:var(--shadow-sm)}
+.vb-cover-row{display:flex;align-items:center;gap:11px;margin-top:15px;flex-wrap:wrap}
+.vb-cover{cursor:pointer;font-size:11.5px;font-weight:600;color:var(--ink-soft);
+  background:rgba(255,255,255,.82);border:1px solid var(--line);border-radius:999px;padding:5px 12px}
+.vb-cover:hover{color:var(--gold);border-color:var(--gold)}
+.vb-cover:focus-visible{outline:2px solid var(--gold);outline-offset:2px}
+.vb-cover-x{background:none;border:0;padding:0;cursor:pointer;font-size:11.5px;color:var(--muted)}
+.vb-cover-x:hover{color:var(--gold)}
+.vb-cover-n{font-style:normal;font-size:11.5px;color:var(--muted)}
 
 /* collapsible workspace sections */
 .ev-col{display:flex;flex-direction:column;gap:20px}
@@ -2944,6 +2958,12 @@ function normalize(d){
     if(!e.venueContact)e.venueContact={name:'',role:'',phone:'',email:''};
     if(e.venueNotes===undefined)e.venueNotes='';
     if(e.startTime===undefined)e.startTime='';
+    /* The event's own cover image, held as a data URL like every other photo,
+       with photoPath naming it in Storage once it has been pushed. Absent one,
+       evPhoto() falls back to the primary's and then the client's, so a
+       weekend photographed once still looks right on every card. */
+    if(e.photo===undefined)e.photo=null;
+    if(e.photoPath===undefined)e.photoPath=null;
     e.guests.forEach(function(g){ if(g.tableId===undefined)g.tableId=null; });
     if(!e.design){
       var seed=DEFAULT.events[i];
@@ -3403,15 +3423,14 @@ function heroStack(list){
   }
   var i=Math.min(state.heroIdx||0,list.length-1);
   var e=list[i];
-  var lead=leadForEvent(e);
   var tint=eventTint(e.id);
   var pct=evPct(e);
   var kids=evChildren(e.id);
   var next3=(e.timeline||[]).slice(0,3);
-  /* The couple's photo if there is one, otherwise the event's own colour.
-     Deliberately not a stock image — a placeholder that pretends to be content
-     looks worse than an honest wash. */
-  var photo=(lead&&lead.photo)||null;
+  /* The event's own cover, the primary's, then the client's — evPhoto() picks.
+     Each card in the deck can now carry its own picture, which is the whole
+     point of the stack: four events, four photographs, not one repeated. */
+  var photo=evPhoto(e);
   return '<div class="hero-wrap">'+
     /* The cards behind, purely as depth. */
     (list.length>1?'<div class="hero-behind" aria-hidden="true">'+
@@ -3828,6 +3847,38 @@ function wireEvents(){
   });
   var ev=state.eventId?evById(state.eventId):null;
   if(ev)wireCustomFields(ev);
+
+  /* ---- cover photo ----
+     1200px, not the 320 a client's thumbnail gets: this one is stretched
+     across the full width of the dashboard hero, where 320 is visibly soft.
+     render() re-wires this view, so these are .onX= assignments — attaching
+     with addEventListener here would stack a handler on every save. */
+  var cin=$('#evCoverInput'), clbl=$('#evCover'), cclr=$('#evCoverClear');
+  if(cin)cin.onchange=function(){
+    var f=cin.files&&cin.files[0]; cin.value='';
+    if(!f||!ev)return;
+    if(!/^image\//.test(f.type)){toast('Choose an image file.');return;}
+    shrinkImage(f,1200,function(dataUrl){
+      if(!dataUrl){toast('Could not read that image.');return;}
+      var prev=ev.photo, prevPath=ev.photoPath;
+      /* Clearing photoPath is what makes the new picture upload: mediaUpload()
+         only sends records that have pixels and no path yet, so leaving the
+         old key here would keep the old object on every other device. */
+      ev.photo=dataUrl; ev.photoPath=null;
+      if(!save()){ ev.photo=prev; ev.photoPath=prevPath; }
+      render();
+    });
+  };
+  if(clbl)clbl.onkeydown=function(e){
+    if((e.key==='Enter'||e.key===' ')&&cin){ e.preventDefault(); cin.click(); }
+  };
+  /* Removing the event's own picture falls back to the client's, which is why
+     this is Remove and not Delete — the band rarely ends up empty. */
+  if(cclr)cclr.onclick=function(){
+    if(!ev)return;
+    ev.photo=null; ev.photoPath=null;
+    afterChange();
+  };
   var add=function(sel,fn){ var b=document.querySelector(sel); if(b)b.onclick=function(e){e.stopPropagation();fn();}; };
   add('[data-addtl]',function(){
     openEditor({title:'Add Moment',sub:ev&&ev.title,saveLabel:'Add',
@@ -3958,6 +4009,10 @@ function viewEventDetail(id){
   var diets=roster.filter(function(g){return g.diet;});
   var seated=attending.filter(function(g){return gTable(g,e);}).length;
   var addr=addrLines(e.venueAddress);
+  /* The cover the band will wear. ownCover distinguishes "this event has a
+     picture" from "it is borrowing one" — only the former can be removed, and
+     saying which is which stops the Remove button looking broken. */
+  var cover=evPhoto(e), ownCover=!!e.photo;
   var mapQ=encodeURIComponent([e.venue].concat(addr).join(', '));
 
   /* The weekend, as a strip across the top. Present whenever the event is part
@@ -3989,6 +4044,21 @@ function viewEventDetail(id){
       (addr.length?'<div class="vb-addr">'+addr.map(esc).join('<br>')+'</div>'
                   :'<div class="vb-addr muted">No address on file</div>')+
       (addr.length?'<a class="vb-map" href="https://maps.google.com/?q='+mapQ+'" target="_blank" rel="noopener">Open in Maps ›</a>':'')+
+      /* A thumbnail here, not a wash behind the band. The band carries copy in
+         all four corners — venue contact, date, site notes — and the hero's
+         left-to-right scrim leaves the right-hand column unprotected, so a
+         photograph behind it put the coordinator's phone number on top of a
+         picture. The dashboard hero is the surface built to wear one; this is
+         only where you set it, so it shows what you set. */
+      '<div class="vb-cover-row">'+
+        (cover?'<span class="vb-thumb" style="background-image:url('+cover+')" aria-hidden="true"></span>':'')+
+        '<label class="vb-cover" id="evCover" tabindex="0">'+
+          '<input type="file" id="evCoverInput" accept="image/*" hidden>'+
+          (ownCover?'Replace cover photo':'Add a cover photo')+
+        '</label>'+
+        (ownCover?'<button type="button" class="vb-cover-x" id="evCoverClear">Remove</button>':'')+
+        (cover&&!ownCover?'<em class="vb-cover-n">Showing the client’s photo</em>':'')+
+      '</div>'+
     '</div>'+
     '<div class="vb-side">'+
       '<div class="vb-when"><span class="vb-day">'+fmtDate(e.date)+'</span>'+
@@ -8839,6 +8909,18 @@ function evChildren(id){
 /* A dangling parentId — the primary deleted on another device before this one
    pulled — must not make the event vanish, so it falls back to itself. */
 function evPrimary(e){ return (e&&e.parentId&&evById(e.parentId))||e||null; }
+/* The picture for an event, in the order a planner would expect: its own
+   cover first, then the primary's — a weekend is usually photographed once —
+   and the client's photo last. Deliberately never a stock image: an honest
+   colour wash reads better than a placeholder pretending to be content. */
+function evPhoto(e){
+  if(!e)return null;
+  if(e.photo)return e.photo;
+  var p=evPrimary(e);
+  if(p&&p!==e&&p.photo)return p.photo;
+  var l=leadForEvent(e);
+  return (l&&l.photo)||null;
+}
 function evBlock(e){ var p=evPrimary(e); return p?[p].concat(evChildren(p.id)):[]; }
 function evPrimaries(){ return db.events.filter(function(e){return !evIsSub(e);}); }
 /* ---- invitations ----
@@ -9437,6 +9519,11 @@ function mediaItems(){
     out.push({id:l.id,owner:l,field:'photo',pathField:'photoPath',eventId:null,boardId:null});
   });
   (db.events||[]).forEach(function(e){
+    /* The event's cover, keyed by the event id exactly as a lead's is keyed by
+       the lead's. eventId is set so mediaKey() files it under the event rather
+       than under /leads/ — which is also what lets that event's couple read
+       it, since the storage policy reads the second path segment. */
+    out.push({id:e.id,owner:e,field:'photo',pathField:'photoPath',eventId:e.id,boardId:null});
     ((((e.design||{}).boards)||[])).forEach(function(b){
       (b.images||[]).forEach(function(im){
         out.push({id:im.id,owner:im,field:'src',pathField:'path',eventId:e.id,boardId:b.id,caption:im.caption});
@@ -10091,6 +10178,7 @@ function sbPush(opts){
       event_type:s(e.eventType)||'Wedding',
       role_label:par&&e.role==='custom'?s(e.roleLabel):'',
       venue_address:e.venueAddress||{},venue_contact:e.venueContact||{},venue_notes:s(e.venueNotes),
+      photo_path:nn(e.photoPath),
       floor:{w:num(f.w)||60,h:num(f.h)||40,unit:f.unit||'ft',snap:f.snap!==false,showChairs:f.showChairs!==false}}; })],
     ['vendors',V.map(function(v){ return {id:v.id,org_id:org,name:s(v.name),category:s(v.cat),contact:s(v.contact),
       email:s(v.email),phone:s(v.phone),notes:s(v.notes),preferred:!!v.preferred,rating:num(v.rating)}; })],
@@ -10152,6 +10240,11 @@ function sbPush(opts){
       if(st[0]==='leads')st[1].forEach(function(r){
         var l=L.find(function(x){return x.id===r.id;}); if(l)r.photo_path=nn(l.photoPath);
       });
+      /* Events carry a cover of their own now, stamped by the same
+         mediaUpload() run — same refresh, same reason. */
+      if(st[0]==='events')st[1].forEach(function(r){
+        var e=E.find(function(x){return x.id===r.id;}); if(e)r.photo_path=nn(e.photoPath);
+      });
     });
     var im2=[];
     E.forEach(function(e){ ((((e.design||{}).boards)||[])).forEach(function(b){
@@ -10169,8 +10262,39 @@ function sbPush(opts){
         if(d)r.body=JSON.stringify({text:s(d.body),file:d.file||null});
       });
     }); });
+
+    /* The stamps above can be the ONLY change a table has. Its payload was
+       hashed before mediaUpload() ran, when the path was still null, so it
+       matched the previous hash and was left out of live — and the path went
+       nowhere until some unrelated edit pushed the table again. On a second
+       device that reads as a photo that never arrived. Re-hash the four
+       tables that carry a storage reference and take the ones that moved.
+       Rebuilt in steps order, never appended: live is upserted in order and
+       a child must not overtake the parent it points at. */
+    var want={}; live.forEach(function(st){ want[st[0]]=true; });
+    var grew=false;
+    ['leads','events','board_images','documents'].forEach(function(name){
+      var st=null;
+      steps.forEach(function(x){ if(x[0]===name)st=x; });
+      if(!st)return;
+      var h=sbHash(st[1]);
+      nextH[name]=h;
+      if(prevH[name]!==h&&!want[name]){ want[name]=true; grew=true; }
+    });
+    if(grew){
+      live.length=0;
+      steps.forEach(function(st){ if(want[st[0]])live.push(st); });
+    }
+    SB_SYNC.wrote=live.length;
   });
-  live.forEach(function(st){ chain=chain.then(function(){ return sbUpsert(st[0],st[1]); }); });
+  /* Built inside a .then, not alongside the chain: the block above can add a
+     table to live, and a forEach out here would already have closed over the
+     list as it stood before the uploads ran. */
+  chain=chain.then(function(){
+    var up=Promise.resolve();
+    live.forEach(function(st){ up=up.then(function(){ return sbUpsert(st[0],st[1]); }); });
+    return up;
+  });
 
   /* Prune in reverse, so children go before the parents they point at. An
      untouched table already matches, so it needs no prune. */
@@ -10230,6 +10354,9 @@ function sbPull(){
         });
         return {id:e.id,leadId:e.lead_id,title:e.title,date:e.event_date,venue:e.venue,loc:e.location,
           startTime:e.start_time,venueAddress:e.venue_address||{},venueContact:e.venue_contact||{},venueNotes:e.venue_notes,
+          /* photo stays empty; mediaDownload() fills it from Storage after,
+             the same way a lead's and a board image's are filled. */
+          photo:null,photoPath:e.photo_path||null,
           parentId:e.parent_event_id||null,role:e.event_role||'primary',sort:e.sort_order||0,
           eventType:e.event_type||'Wedding',
           roleLabel:e.role_label||'',
