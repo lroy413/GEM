@@ -10,7 +10,7 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
 <meta name="apple-mobile-web-app-title" content="GEM">
 <meta name="format-detection" content="telephone=no">
-<meta name="gem-build" content="cb7a78f99b1f">
+<meta name="gem-build" content="f28fd01f2450">
 <link rel="manifest" href="/manifest.webmanifest">
 <link rel="icon" href="/icons/icon-192.png" sizes="192x192" type="image/png">
 <link rel="apple-touch-icon" href="/icons/icon-180.png">
@@ -4949,11 +4949,38 @@ function vendorTeamMarkup(ev,editable){
     (editable?'<div class="sec-actions"><button class="btn btn-ghost btn-sm" data-addbooking="'+esc(ev.id)+'">＋ Book a vendor</button>'+
       '<span class="sec-badge" style="margin-left:auto">'+money(total)+' total</span></div>':'');
 }
+var VENDOR_CATS=['Florals','Catering','Photography','Videography','Music','Rentals','Cake',
+  'Venue','Beauty','Transport','Stationery','Lighting','Planning','Other'];
+/* The vendor's own details, shared by the directory form and the booking form
+   so a vendor created from a client file is a full directory record, not a
+   stub that has to be filled in again later. */
+function vendorFields(v,showIf){
+  return [
+    {id:'name',label:'Business name',value:v&&v.name,required:true,full:true,showIf:showIf},
+    {id:'cat',label:'Category',type:'select',value:(v&&v.cat)||'Florals',options:VENDOR_CATS,showIf:showIf},
+    {id:'contact',label:'Contact name',value:v&&v.contact,showIf:showIf},
+    {id:'email',label:'Email',type:'email',value:v&&v.email,showIf:showIf},
+    {id:'phone',label:'Phone',type:'tel',value:v&&v.phone,showIf:showIf}
+  ];
+}
+function newVendorFrom(v){
+  var rec={id:uid('vn'),name:(v.name||'').trim(),cat:v.cat||'Other',
+    contact:(v.contact||'').trim(),email:(v.email||'').trim(),phone:(v.phone||'').trim(),
+    notes:'',preferred:false,rating:0};
+  db.vendors.push(rec);
+  return rec;
+}
+
 function openBookingModal(eventId,existing){
   var b=existing||null;
-  var opts=db.vendors.slice().sort(function(a,c){return a.name.localeCompare(c.name);})
-    .map(function(v){return {value:v.id,label:v.name+(v.cat?' · '+v.cat:'')};});
-  if(!opts.length){ toast('Add a vendor to the directory first.'); return; }
+  var dir=db.vendors.slice().sort(function(a,c){return a.name.localeCompare(c.name);});
+  /* An empty directory used to end here with a toast telling you to go and
+     build one first — which, from a client file, reads as the button doing
+     nothing. You can create the vendor from right here now, and it lands in
+     the directory as well as on this event. */
+  var opts=[{value:'__new',label:'＋ Add a new vendor…'}].concat(
+    dir.map(function(v){return {value:v.id,label:v.name+(v.cat?' · '+v.cat:'')};}));
+  var isNew=function(vals){ return vals.vendorId==='__new'; };
   openEditor({
     title:b?'Edit Booking':'Book a Vendor',
     sub:(evById(eventId)||{}).title,
@@ -4961,17 +4988,25 @@ function openBookingModal(eventId,existing){
     saveLabel:b?'Save changes':'Book vendor',
     onDelete:b?function(){ closeModal(); deleteRecord('booking',b.id); }:null,
     fields:[
-      {id:'vendorId',label:'Vendor',type:'select',value:b&&b.vendorId,options:opts,required:true,full:true},
+      {id:'vendorId',label:'Vendor',type:'select',value:(b&&b.vendorId)||(dir.length?dir[0].id:'__new'),
+       options:opts,required:true,full:true}
+    ].concat(vendorFields(null,isNew)).concat([
       {id:'status',label:'Status',type:'select',value:b&&b.status,
        options:Object.keys(VSTATUS).map(function(k){return {value:k,label:VSTATUS[k].lbl};})},
       {id:'fee',label:'Fee',type:'number',value:b&&b.fee},
       {id:'notes',label:'Notes',type:'textarea',value:b&&b.notes,full:true}
-    ],
+    ]),
     onSave:function(v){
-      if(b){ Object.assign(b,v); }
-      else { db.bookings.push({id:uid('bk'),eventId:eventId,vendorId:v.vendorId,
+      var vid=v.vendorId;
+      if(vid==='__new'){
+        if(!(v.name||'').trim()){ toast('Give the vendor a name.'); return; }
+        vid=newVendorFrom(v).id;
+      }
+      if(b){ b.vendorId=vid; b.status=v.status; b.fee=v.fee; b.notes=v.notes; }
+      else { db.bookings.push({id:uid('bk'),eventId:eventId,vendorId:vid,
                                status:v.status||'quote',fee:v.fee,notes:v.notes}); }
       closeModal(); afterChange();
+      if(v.vendorId==='__new')toast('Added to your directory and booked to this event ✦');
     }
   });
 }
@@ -7306,23 +7341,37 @@ function openTableModal(){
   };
 }
 function openVendorModal(){
-  md.className='modal';md.innerHTML='<h3>Add Vendor</h3><p class="sub">Adds to your directory — book them to an event from a client file.</p>'+
-    '<div class="field"><label>Business name</label><input id="f_vname" placeholder="e.g. Fern & Fable Florals"></div>'+
-    '<div class="field"><label>Category</label><select id="f_vcat"><option>Florals</option><option>Catering</option><option>Photography</option><option>Music</option><option>Rentals</option><option>Cake</option><option>Venue</option><option>Beauty</option><option>Transport</option><option>Other</option></select></div>'+
-    '<div class="field"><label>Contact name</label><input id="f_vcontact" placeholder="e.g. Rosa Mendez"></div>'+
-    '<div class="field"><label>Email</label><input id="f_vemail" type="email" placeholder="hello@vendor.com"></div>'+
-    '<div class="field"><label>Phone</label><input id="f_vphone" placeholder="(707) 555-0142"></div>'+
-
-    '<div class="modal-actions"><button class="btn btn-ghost" id="mCancel">Cancel</button><button class="btn btn-gold" id="mSave">Add Vendor</button></div>';
-  ov.classList.add('show');
-  $('#mCancel').onclick=closeModal;
-  $('#mSave').onclick=function(){
-    var n=$('#f_vname').value.trim(); if(!n){$('#f_vname').focus();return;}
-    db.vendors.push({id:uid('vn'),name:n,cat:$('#f_vcat').value,contact:$('#f_vcontact').value.trim(),
-      email:$('#f_vemail').value.trim(),phone:$('#f_vphone').value.trim(),
-      notes:'',preferred:false,rating:0});
-    save();closeModal();setView('vendors');
-  };
+  /* The directory form can book at the same time. Adding a florist is almost
+     always adding a florist FOR something, and making that a second trip
+     through a different screen was the long way round. */
+  var evOpts=[{value:'',label:'Not yet — just the directory'}].concat(
+    db.events.slice().sort(function(a,b){return (a.date||'')<(b.date||'')?-1:1;})
+      .map(function(e){return {value:e.id,label:(evIsSub(e)?'└ ':'')+e.title+' · '+fmtDate(e.date)};}));
+  var booking=function(vals){ return !!vals.bookTo; };
+  openEditor({
+    title:'Add Vendor',
+    sub:'Goes into your directory, and onto an event if you pick one.',
+    twoCol:true,
+    saveLabel:'Add vendor',
+    fields:vendorFields(null).concat([
+      {id:'bookTo',label:'Book to an event',type:'select',value:'',options:evOpts,full:true},
+      {id:'status',label:'Status',type:'select',value:'quote',
+       options:Object.keys(VSTATUS).map(function(k){return {value:k,label:VSTATUS[k].lbl};}),
+       showIf:booking},
+      {id:'fee',label:'Fee',type:'number',value:0,showIf:booking}
+    ]),
+    onSave:function(v){
+      var rec=newVendorFrom(v);
+      if(v.bookTo){
+        db.bookings.push({id:uid('bk'),eventId:v.bookTo,vendorId:rec.id,
+          status:v.status||'quote',fee:v.fee,notes:''});
+      }
+      closeModal(); save();
+      var ev=v.bookTo?evById(v.bookTo):null;
+      toast(ev?(rec.name+' added and booked to '+ev.title+' ✦'):(rec.name+' added to your directory ✦'));
+      setView('vendors');
+    }
+  });
 }
 /* Pass a board to pin the colour to that board; omit for the event palette. */
 function openSwatchModal(board){
