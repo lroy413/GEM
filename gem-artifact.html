@@ -2411,33 +2411,71 @@ html,body{max-width:100%;overflow-x:hidden}
       x.fillText('G',size/2,size/2+size*0.02);
       return c.toDataURL('image/png');
     };
-    var manifest={
-      name:'GEM · Glimmer Events Management',
-      short_name:'GEM',
-      description:'Wedding and event planning for Glimmer Events Management.',
-      start_url:'.', scope:'.', display:'standalone', orientation:'any',
-      background_color:'#FAF2F3', theme_color:'#F2DFE1',
-      icons:[{src:icon(192),sizes:'192x192',type:'image/png',purpose:'any'},
-             {src:icon(512),sizes:'512x512',type:'image/png',purpose:'any'},
-             {src:icon(512),sizes:'512x512',type:'image/png',purpose:'maskable'}]
+    /* Fill only what the wrapper did NOT provide. This used to append every
+       tag unconditionally, so on gemevents.app — where the built <head>
+       already carries the real manifest, the designed icons and the apple
+       metas — the page ended up with two of each. That is not merely untidy:
+       Safari picks the LAST apple-touch-icon when none of them declare a
+       size, so the home screen icon was this canvas-drawn "G" rather than the
+       designed one. The generated icons are a fallback for the artifact host,
+       which owns <head> and serves no files of its own. */
+    var head=document.head;
+    var lacks=function(sel){ return !head.querySelector(sel); };
+    if(lacks('link[rel="manifest"]')){
+      var manifest={
+        name:'GEM · Glimmer Events Management',
+        short_name:'GEM',
+        description:'Wedding and event planning for Glimmer Events Management.',
+        start_url:'.', scope:'.', display:'standalone', orientation:'any',
+        background_color:'#FAF2F3', theme_color:'#F2DFE1',
+        icons:[{src:icon(192),sizes:'192x192',type:'image/png',purpose:'any'},
+               {src:icon(512),sizes:'512x512',type:'image/png',purpose:'any'},
+               {src:icon(512),sizes:'512x512',type:'image/png',purpose:'maskable'}]
+      };
+      var link=document.createElement('link');
+      link.rel='manifest';
+      link.href=URL.createObjectURL(new Blob([JSON.stringify(manifest)],{type:'application/manifest+json'}));
+      head.appendChild(link);
+    }
+    var meta=function(name,content){
+      if(!lacks('meta[name="'+name+'"]'))return;
+      var m=document.createElement('meta'); m.name=name; m.content=content; head.appendChild(m);
     };
-    var link=document.createElement('link');
-    link.rel='manifest';
-    link.href=URL.createObjectURL(new Blob([JSON.stringify(manifest)],{type:'application/manifest+json'}));
-    document.head.appendChild(link);
-    var tc=document.createElement('meta'); tc.name='theme-color'; tc.content='#F2DFE1';
-    document.head.appendChild(tc);
-    var ac=document.createElement('meta'); ac.name='apple-mobile-web-app-capable'; ac.content='yes';
-    document.head.appendChild(ac);
-    var at=document.createElement('meta'); at.name='apple-mobile-web-app-title'; at.content='GEM';
-    document.head.appendChild(at);
-    var ai=document.createElement('link'); ai.rel='apple-touch-icon'; ai.href=icon(180);
-    document.head.appendChild(ai);
+    meta('theme-color','#F2DFE1');
+    meta('apple-mobile-web-app-capable','yes');
+    meta('apple-mobile-web-app-title','GEM');
+    if(lacks('link[rel="apple-touch-icon"]')){
+      var ai=document.createElement('link'); ai.rel='apple-touch-icon'; ai.href=icon(180);
+      head.appendChild(ai);
+    }
     // A real origin can register the served worker; blob/file cannot.
     if('serviceWorker' in navigator && location.protocol==='https:'){
       navigator.serviceWorker.register('/sw.js').catch(function(){ /* not deployed yet */ });
     }
   }catch(e){ /* PWA is an enhancement — never block the app */ }
+})();
+
+/* ---- installing to the home screen ----
+   Chrome fires beforeinstallprompt once the app qualifies. It is deliberately
+   NOT preventDefault()ed: suppressing it hides Chrome's own install affordance,
+   and trading that for a control buried in Settings would be a worse deal than
+   the browser's. This only adds a second way in. Safari never fires it at all,
+   so on iOS the Settings row explains the Share-sheet route rather than
+   offering a button that cannot work. */
+var INSTALL_PROMPT=null;
+function isInstalled(){
+  try{
+    return (window.matchMedia&&window.matchMedia('(display-mode: standalone)').matches)
+           ||navigator.standalone===true;
+  }catch(e){ return false; }
+}
+(function installable(){
+  var refresh=function(){
+    /* Only worth a repaint if the row that shows this is on screen. */
+    if(typeof state!=='undefined'&&state.view==='settings'&&state.settingsPage==='data')render();
+  };
+  addEventListener('beforeinstallprompt',function(e){ INSTALL_PROMPT=e; refresh(); });
+  addEventListener('appinstalled',function(){ INSTALL_PROMPT=null; refresh(); });
 })();
 
 /* The artifact wrapper owns <head>, so a hand-written <meta name="viewport">
@@ -6304,12 +6342,27 @@ function settingsPage(k){
       '<p class="set-intro">Everything currently lives in this browser. Connecting Supabase moves it to your account and syncs across devices.</p>'+
       '<div class="set-card">'+
         setRow('Stored on this device','<b>'+used+' KB</b>',counts)+
+        setRow('Install on this device',installControl(),installHint())+
         setRow('App version','<code class="build-id">'+esc(buildStamp()||'dev')+'</code>',
           buildStamp()?'Reload the page to pick up a newer one':'Running from source, not a deployed build')+
         setRow('Export everything','<button class="btn btn-ghost btn-sm" id="s_export">Download JSON</button>','A full backup you can re-import')+
         setRow('Import a backup','<button class="btn btn-ghost btn-sm" id="s_import">Choose file</button>','Replaces what is here now')+
         setRow('Reset to sample data','<button class="btn btn-danger btn-sm" id="s_reset">Reset</button>','Clears your work and restores the demo')+
       '</div><input type="file" id="s_importFile" accept="application/json,.json" hidden></div>';
+  }
+  /* Three states, because the browsers genuinely differ: Chrome can be asked
+     to install from a button, Safari cannot be asked at all, and an app that
+     is already installed should say so rather than offer to do it twice. */
+  function installControl(){
+    if(isInstalled())return '<span class="pill gold">Installed</span>';
+    if(INSTALL_PROMPT)return '<button class="btn btn-gold btn-sm" id="s_install">Install</button>';
+    return '<span class="pill">Add to Home Screen</span>';
+  }
+  function installHint(){
+    if(isInstalled())return 'Running as an installed app, in its own window';
+    if(INSTALL_PROMPT)return 'Its own window, its own icon, and it still works at a venue with no signal';
+    return IS_APPLE?'On iPhone and iPad: Share → Add to Home Screen. Safari offers no in-app button.'
+                   :'Use your browser’s menu — look for Install or Add to Home Screen.';
   }
   if(k==='about'){
     return back+'<div class="set-page">'+
@@ -6890,6 +6943,17 @@ function wireSettings(){
     };
   });
   // data
+  var inst=$('#s_install');
+  if(inst)inst.onclick=function(){
+    var ev=INSTALL_PROMPT;
+    if(!ev)return;
+    /* A captured prompt may only be shown once. Dropping the reference here
+       means the button goes away with it; Chrome fires a fresh event if the
+       user dismisses the dialog and the app is still eligible. */
+    INSTALL_PROMPT=null;
+    try{ ev.prompt(); }catch(e){}
+    if(ev.userChoice&&ev.userChoice.then)ev.userChoice.then(function(){ render(); },function(){});
+  };
   var ex=$('#s_export');
   if(ex)ex.onclick=function(){
     var blob=new Blob([JSON.stringify({exported:new Date().toISOString(),data:db,settings:prefs()},null,2)],
@@ -10608,11 +10672,38 @@ var PORTAL_ONLY=false;
 try{ PORTAL_ONLY=portalHostMatch(); }catch(e){}
 if(PORTAL_ONLY)document.body.classList.add('portal-only');
 
+/* A manifest shortcut is only a URL — the manifest offers /?view=pipeline and
+   two others, and nothing ever read the parameter, so long-pressing the icon
+   on Android gave three shortcuts that all opened the dashboard. Only the
+   destinations the nav itself offers are accepted, so a hand-typed ?view=
+   cannot reach something that is not a real top-level view. */
+function shortcutView(){
+  var m=/[?&]view=([a-z]+)/i.exec(location.search||'');
+  if(!m)return null;
+  var want=String(m[1]).toLowerCase(), ok=null;
+  document.querySelectorAll('.nav-item').forEach(function(n){
+    if(n.dataset.view===want)ok=want;
+  });
+  return ok;
+}
+
 loadStages(); applyPrefs(); applyBrand(); paintIdentity();
 /* Photos live in IndexedDB now, so put them back on the records. Async: it
    re-renders once they land. */
 try{ mediaRehydrate(); }catch(e){}
-setView(PORTAL_ONLY?'portal':(prefs().landing||'dashboard'));
+/* PORTAL_ONLY wins over the parameter: a couple's host must not be steerable
+   into the studio's views by editing the URL. */
+setView(PORTAL_ONLY?'portal':(shortcutView()||prefs().landing||'dashboard'));
+/* Drop ?view= once it has been honoured, so a later reload lands on the normal
+   landing view instead of staying pinned to whichever shortcut was tapped. */
+try{
+  var _qs=new URLSearchParams(location.search);
+  if(_qs.has('view')){
+    _qs.delete('view');
+    var _q=_qs.toString();
+    history.replaceState(null,'',location.pathname+(_q?'?'+_q:''));
+  }
+}catch(e){}
 
 /* First visit gets the walkthrough; afterwards it's on demand. */
 $('#helpBtn').onclick=function(){ startTour('basics'); };
