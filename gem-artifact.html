@@ -2800,6 +2800,19 @@ function hasSampleData(){
    place with the button gone, because hasSampleData() then found nothing. */
 function sampleHit(k,r){ return !!r.sample||(SAMPLE_IDS[k]||[]).indexOf(r.id)>=0; }
 
+/* Anything on this device that is NOT the seeded sample. This is what decides
+   whether a first sync may pull without asking: a device holding only the
+   sample has nothing of its own to lose, and a device holding real work must
+   never be overwritten because a timer fired. Deliberately generous about what
+   counts as work — every collection, not just the ones with sample ids — so
+   the answer errs towards "leave it alone". */
+function hasOwnWork(){
+  return ['leads','events','vendors','bookings','invoices','documents',
+          'questionnaires','messages','submissions'].some(function(k){
+    return (db[k]||[]).some(function(r){ return !sampleHit(k,r); });
+  });
+}
+
 function removeSampleData(){
   var n=0;
   /* Work out which events are going first: sub-events and anything hanging off
@@ -3042,6 +3055,9 @@ function saveLocal(){
    saveLocal() directly, so a sync can never schedule another sync. */
 function save(){
   var ok=saveLocal();
+  /* Marked before the push is even scheduled, and cleared only when one
+     succeeds. While this is set, nothing will pull over the top of it. */
+  if(ok&&typeof setSbDirty==='function')setSbDirty(true);
   if(ok&&typeof sbAutoQueue==='function')sbAutoQueue();
   return ok;
 }
@@ -5982,6 +5998,12 @@ function prefs(){
     portalHost:d.portalHost||'',
     sbUrl:d.sbUrl||'https://dqntxdhzcieycifzjzwc.supabase.co',
     sbKey:d.sbKey||'sb_publishable_QnAyHvcBW3lzbK3JAYFACw_U-a4hkbA',
+    /* Was never named here, so Settings → Connection → "Sync automatically"
+       turned off, saved, looked right — and came back on at the next reload,
+       because prefs() rebuilds a whitelisted object and drops the rest. The
+       same trap that cost an afternoon with dashOrder. It matters more now
+       that the switch governs automatic PULLS as well as pushes. */
+    autoSync:d.autoSync!==false,
     team:d.team||[
       {id:uid('tm'),name:'Glimmer M.',email:'hello@gemevents.app',role:'owner'},
       {id:uid('tm'),name:'Rosa Mendez',email:'rosa@gemevents.app',role:'planner'}
@@ -10007,7 +10029,17 @@ function sbAfterSignIn(){
   /* An invited couple is only linked to their wedding once they have signed in
      at least once — the invitation is stored against their email and claimed
      here. Safe and cheap for staff, who simply have none to claim. */
-  return sbClaimInvites();
+  return sbClaimInvites().then(function(n){
+    /* Then bring the studio down. Signing in is exactly when someone expects
+       their work to appear — most of all in a freshly installed app, which
+       starts with its own empty storage and no idea any of this exists.
+       sbSyncDown() decides whether that is safe; it declines and warns if this
+       device is holding anything of its own. */
+    return sbResolveOrg().then(function(id){
+      if(!id)return n;
+      return sbSyncDown().then(function(){ return n; });
+    }).catch(function(){ return n; });
+  });
 }
 function sbSignIn(email){
   var cfg=sbCfg();
@@ -10201,6 +10233,15 @@ function sbHash(o){
   var t=JSON.stringify(o)||'', h=5381, i=t.length;
   while(i)h=(h*33^t.charCodeAt(--i))>>>0;
   return h;
+}
+/* Does this device hold edits the studio has not seen? Persisted, not held in
+   memory: a phone edited at a venue with no signal and then closed would come
+   back with the flag reset, and an automatic pull would quietly overwrite the
+   very work that had not been sent yet. */
+var SB_DIRTY_KEY='gem-sb-dirty';
+function sbDirty(){ try{ return localStorage.getItem(SB_DIRTY_KEY)==='1'; }catch(e){ return false; } }
+function setSbDirty(on){
+  try{ on?localStorage.setItem(SB_DIRTY_KEY,'1'):localStorage.removeItem(SB_DIRTY_KEY); }catch(e){}
 }
 function sbVer(){ var v=null; try{ v=localStorage.getItem('gem-sb-ver'); }catch(e){} return v===null?null:Number(v); }
 function setSbVer(v){ try{ v===null?localStorage.removeItem('gem-sb-ver'):localStorage.setItem('gem-sb-ver',String(v)); }catch(e){} }
@@ -10471,6 +10512,10 @@ function sbPush(opts){
     mediaPrune(keep);
     setSbHashes(nextH);
     setSbVer(SB_SYNC.claimed);
+    /* Everything local is now on the server, so an automatic pull is safe
+       again. Cleared here rather than on entry: a push that fails half way
+       must leave the device marked as holding work. */
+    setSbDirty(false);
     SB_STATE.lastSync=new Date().toISOString(); SB_STATE.lastError=null;
     try{ localStorage.setItem('gem-sb-last',SB_STATE.lastSync); }catch(e){}
     return true;
@@ -10570,6 +10615,7 @@ function sbPull(){
     /* Fresh from the server: nothing is locally dirty, and this device is now
        level with the version it just read. */
     setSbHashes({});
+    setSbDirty(false);
     setSbVer(R.org_prefs[0]?Number(R.org_prefs[0].sync_version||0):null);
     SB_STATE.lastSync=new Date().toISOString();
     try{ localStorage.setItem('gem-sb-last',SB_STATE.lastSync); }catch(e){}
@@ -10624,22 +10670,86 @@ function sbCheckRemote(){
   if(!sbReady()||!SB_STATE.org)return Promise.resolve(null);
   return sbRest('org_prefs?select=sync_version&org_id=eq.'+SB_STATE.org).then(function(r){
     if(!r||!r[0])return null;
-    var remote=Number(r[0].sync_version||0), local=sbVer();
-    if(local!==null&&remote>local)sbSetStatus('warn','Another device has newer work — pull from Settings › Connection');
-    return remote;
+    return Number(r[0].sync_version||0);
   }).catch(function(){ return null; });
+}
+
+/* ---- coming down from the studio ----
+   Pushing has always been automatic; pulling never was. An installed app on a
+   phone therefore sat on whatever it last had until somebody remembered to
+   open Settings and press Pull — which is not a thing anyone remembers at a
+   venue. These two functions close that half of the loop.
+
+   The rule is narrow on purpose: a pull REPLACES this device, so it only ever
+   happens automatically when there is provably nothing here to lose. Every
+   other case still asks a human, because the alternative is silently choosing
+   a winner between two people's work. */
+function sbAutoPull(msg){
+  if(!sbReady()||!SB_STATE.org||SB_SYNC.busy)return Promise.resolve(false);
+  SB_SYNC.busy=true; sbSetStatus('busy',msg||'Getting the latest…');
+  return sbPull().then(function(){
+    sbSetStatus('ok','Up to date');
+    setTimeout(function(){ if(SB_SYNC.status==='ok')sbSetStatus('idle',''); },2200);
+    if(typeof render==='function')render();
+    return true;
+  }).catch(function(e){
+    sbSetStatus('warn',e.message||'Could not get the latest');
+    return false;
+  }).then(function(r){ SB_SYNC.busy=false; return r; });
+}
+
+function sbSyncDown(){
+  if(!sbReady()||!SB_STATE.org||SB_SYNC.busy||!sbAuto())return Promise.resolve(false);
+  return sbCheckRemote().then(function(remote){
+    if(remote===null)return false;
+    var local=sbVer();
+
+    /* Never synced on this device. This is the installed app on a phone, or a
+       new browser: the studio is the truth and there is nothing here but the
+       sample. Pull without asking — the alternative is what the sample lock
+       exists to prevent, someone typing into a device whose every push
+       gem_claim_sync will refuse. */
+    if(local===null){
+      if(remote>0&&!hasOwnWork())return sbAutoPull('Getting your studio…');
+      if(remote>0)sbSetStatus('warn','This device has work your studio has not seen — open Settings › Connection');
+      return false;
+    }
+
+    if(remote<=local)return false;
+
+    /* Behind, and everything here has already been sent. Replacing this device
+       with the server cannot cost anything. */
+    if(!sbDirty()&&!SB_SYNC.timer)return sbAutoPull();
+
+    /* Behind AND holding unsent edits — two people have diverged, and picking
+       a winner is not the app's call. */
+    sbSetStatus('warn','This device has unsent edits and another is ahead — open Settings › Connection');
+    return false;
+  });
 }
 function sbWatch(){
   window.addEventListener('online',function(){
-    if(sbReady()&&SB_STATE.org){ sbSetStatus('idle',''); sbAutoQueue(); }
+    if(!sbReady()||!SB_STATE.org)return;
+    sbSetStatus('idle','');
+    /* Send what is waiting first, then take what arrived while we were out.
+       The other order would pull over edits made offline. */
+    if(SB_SYNC.timer||sbDirty())sbAutoQueue(); else sbSyncDown();
   });
   window.addEventListener('offline',function(){
     if(sbReady())sbSetStatus('off','Offline — will sync when you reconnect');
   });
   document.addEventListener('visibilitychange',function(){
     if(document.visibilityState!=='visible'||!sbReady()||!SB_STATE.org)return;
-    sbCheckRemote();
+    sbSyncDown();
   });
+  /* NEXT.md described "polling on focus plus a timer"; only the focus half was
+     ever wired. Three minutes is slow enough to be free and quick enough that
+     a planner switching from laptop to phone finds the phone already current.
+     Only while the tab is actually visible — a backgrounded phone should not
+     be waking up to poll. */
+  setInterval(function(){
+    if(document.visibilityState==='visible')sbSyncDown();
+  },180000);
   /* Flush anything still pending rather than lose it on close. */
   window.addEventListener('pagehide',function(){
     if(SB_SYNC.timer){ clearTimeout(SB_SYNC.timer); sbSyncNow(); }
@@ -10648,12 +10758,21 @@ function sbWatch(){
 
 
 /* A magic-link return must be banked before the first paint. */
-try{ sbCaptureRedirect(); }catch(e){}
+var SB_FRESH_LINK=false;
+try{ SB_FRESH_LINK=sbCaptureRedirect(); }catch(e){}
 /* Resolve the studio once at boot so a background push has somewhere to go
    without waiting for the Connection page to be opened. */
 try{
   sbWatch();
-  if(sbReady())sbResolveOrg().then(function(id){ if(id)sbCheckRemote(); }).catch(function(){});
+  if(sbReady()){
+    /* A magic-link arrival has to go through the whole post-sign-in path, not
+       just the version check. Only sbClaimInvites() attaches an invited couple
+       to their wedding, and nothing on this route was calling it — they
+       followed the link, signed in successfully, and landed in an empty app.
+       Password sign-in always ran it; the link never did. */
+    if(SB_FRESH_LINK)sbAfterSignIn().then(function(){ render(); }).catch(function(){});
+    else sbResolveOrg().then(function(id){ if(id)sbSyncDown(); }).catch(function(){});
+  }
 }catch(e){}
 
 /* Branding and stages were only ever applied by their own edit handlers, so

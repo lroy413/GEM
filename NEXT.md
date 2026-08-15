@@ -93,6 +93,18 @@ shape and the Postgres schema.
   its own room for free.
 - **event_clients** + **event_client_invites** — portal access. See §4.
 
+### Sync, in one paragraph
+
+Pushing is automatic: `save()` marks the device dirty and schedules a push four
+seconds later. Pulling is automatic **only where it cannot lose anything** —
+`sbSyncDown()` pulls when this device has never synced and holds nothing but the
+sample, or when it is behind with nothing unsent. A device that is behind *and*
+holding unsent edits is a real conflict and still asks a human. The dirty flag
+lives in `localStorage`, not memory, because a phone edited offline and closed
+would otherwise come back looking clean and get pulled over. `gem_claim_sync`
+backs all of this from the server side: it refuses a push from a device that has
+never pulled, which is what stops a fresh install overwriting the studio.
+
 ### Three traps that have caused real bugs
 
 1. **`sbMigrateIds()` rewrites every id on the first push.** Anything holding a
@@ -209,8 +221,9 @@ exists.
 - **Let the couple invite their partner.** `gem_invite_partner` and
   `sbInvitePartner()` both exist; nothing calls the wrapper, and the portal
   already tells the couple they can add someone. `VERIFY.md` §F2.
-- **Realtime** — deliberately not doing it. Polling on focus plus a timer covers
-  1–3 devices.
+- **Realtime** — deliberately not doing it. Polling on focus plus a three-minute
+  timer covers 1–3 devices. Both halves are wired now; for a long time only the
+  focus half was, and it only *warned* rather than pulling.
 - **PDF export** — print sheets go through the browser dialog, where every
   platform offers Save as PDF.
 
