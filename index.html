@@ -10,7 +10,7 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
 <meta name="apple-mobile-web-app-title" content="GEM">
 <meta name="format-detection" content="telephone=no">
-<meta name="gem-build" content="5757a03a716d">
+<meta name="gem-build" content="5bc03c8d9931">
 <link rel="manifest" href="/manifest.webmanifest">
 <link rel="icon" href="/icons/icon-192.png" sizes="192x192" type="image/png">
 <link rel="apple-touch-icon" href="/icons/icon-180.png">
@@ -1199,6 +1199,28 @@ td.inv-col{text-align:center;width:1%}
   background:var(--pink-100);border:1px solid var(--line);border-radius:6px;padding:3px 8px;
   color:var(--ink-soft);user-select:all}
 /* --- the sample wedding, plainly marked --- */
+/* Storage has stopped accepting writes. Deliberately loud, fixed to the top and
+   not dismissable: the alternative is what already happened once — an afternoon
+   of work typed into a page that could not keep any of it. */
+.save-alarm{
+  position:fixed;top:0;left:0;right:0;z-index:120;
+  background:#8E2F39;color:#fff;font-size:13px;line-height:1.5;
+  padding:calc(10px + env(safe-area-inset-top)) 18px 10px;
+  box-shadow:0 2px 12px rgba(0,0,0,.28);
+}
+.save-alarm b{font-weight:700}
+.save-alarm button{
+  margin-left:8px;background:rgba(255,255,255,.16);color:#fff;border:1px solid rgba(255,255,255,.5);
+  border-radius:999px;padding:3px 11px;font-size:12px;font-weight:600;cursor:pointer;
+}
+.save-alarm button:hover{background:rgba(255,255,255,.28)}
+.diag{padding:14px 16px;border-radius:var(--radius);font-size:13px;line-height:1.6;border:1px solid var(--line)}
+.diag.ok{background:rgba(143,191,159,.14);border-color:rgba(143,191,159,.5)}
+.diag.bad{background:rgba(142,47,57,.09);border-color:rgba(142,47,57,.42)}
+.diag code{font-size:12px;background:rgba(0,0,0,.06);padding:1px 5px;border-radius:5px}
+.diag-t td{font-size:12px;padding:6px 10px;vertical-align:top}
+.diag-t td:first-child{color:var(--muted);white-space:nowrap;width:1%}
+.diag-t td:last-child{word-break:break-word}
 .samp-banner{display:flex;align-items:center;flex-wrap:wrap;gap:12px;margin:0 0 18px;padding:13px 16px;
   background:linear-gradient(135deg,#FFFDF9,#FBF3E8);border:1px solid var(--gold-line);
   border-left:3px solid var(--gold);border-radius:var(--radius)}
@@ -3049,6 +3071,41 @@ function normalize(d){
 db=normalize(db);
 /* Returns false when the browser refuses the write (quota) so callers can
    tell the user instead of silently losing their work. */
+/* The last local write that failed, kept so the interface can keep saying so.
+   A toast was the wrong instrument entirely: it clears after two seconds and
+   the next forty edits vanish just as quietly. A tester spent an afternoon
+   entering clients and a timeline that were never on disk, watched every one
+   of them appear on screen, and found the sample wedding back on reload —
+   because only the quota case was ever reported, and 58 of the 60 save() call
+   sites ignore the return value and re-render as though the write had worked. */
+var SAVE_FAIL=null;
+function paintSaveAlarm(){
+  if(!document.body)return;
+  var el=document.getElementById('saveAlarm');
+  if(!SAVE_FAIL){ if(el)el.remove(); return; }
+  if(!el){
+    el=document.createElement('div');
+    el.id='saveAlarm'; el.className='save-alarm';
+    el.setAttribute('role','alert');
+    document.body.appendChild(el);
+  }
+  /* Whether the work has anywhere else to go changes what this bar should say
+     — and it is the difference between "you are about to lose an afternoon"
+     and "you are covered". */
+  var toStudio=(typeof sbReady==='function'&&sbReady()&&
+                typeof SB_STATE!=='undefined'&&!!SB_STATE.org);
+  el.innerHTML='<b>Nothing is being saved on this device.</b> '+
+    (SAVE_FAIL.quota
+      ? 'Storage is full. Export a backup now, then remove a few reference photos.'
+      : 'This browser is refusing to store data ('+esc(SAVE_FAIL.name)+'). '+
+        'Private browsing and blocked site data both do this.')+
+    ' '+(toStudio
+      ? 'You are signed in, so your work is still going to your studio.'
+      : 'Sign in, or export a backup, before you close this tab.')+
+    ' <button type="button" id="saveAlarmGo">Run diagnostics</button>';
+  var b=document.getElementById('saveAlarmGo');
+  if(b)b.onclick=function(){ setView('settings',{settingsPage:'data'}); };
+}
 function saveLocal(){
   try{
     if(typeof mediaStash==='function')mediaStash();
@@ -3060,11 +3117,20 @@ function saveLocal(){
       }
       return v;
     }));
+    /* Recovered — clear the alarm. */
+    if(SAVE_FAIL){ SAVE_FAIL=null; paintSaveAlarm(); }
     return true; }
   catch(e){
-    if(e&&(e.name==='QuotaExceededError'||e.code===22||e.code===1014)){
-      toast('Storage full — remove a few reference photos to save.');
-    }
+    /* Every failure is reported now, not just the quota one. A SecurityError
+       from blocked site data, a zero quota in a private window, a partitioned
+       origin — all of them used to return false in complete silence. */
+    SAVE_FAIL={
+      name:(e&&e.name)||'Error',
+      msg:(e&&e.message)||String(e),
+      quota:!!(e&&(e.name==='QuotaExceededError'||e.code===22||e.code===1014)),
+      at:new Date().toISOString()
+    };
+    paintSaveAlarm();
     return false;
   }
 }
@@ -3076,11 +3142,105 @@ function save(){
   /* Marked before the push is even scheduled, and cleared only when one
      succeeds. While this is set, nothing will pull over the top of it. */
   if(ok&&typeof setSbDirty==='function')setSbDirty(true);
-  if(ok&&typeof sbAutoQueue==='function')sbAutoQueue();
+  /* Queued whether or not the local write worked — and ESPECIALLY when it did
+     not. A browser refusing to store data is the one situation where the studio
+     is the only place the work can go, and gating this on `ok` meant a
+     signed-in tester whose storage was blocked kept nothing at all: not on the
+     device, and not on the server either. */
+  if(typeof sbAutoQueue==='function')sbAutoQueue();
   return ok;
 }
 function storageUsed(){
   try{ return new Blob([localStorage.getItem(KEY)||'']).size; }catch(e){ return 0; }
+}
+
+/* ---- why did my work disappear? ----
+   Built for one question a tester could not answer from the screen: is this
+   browser actually keeping anything? The load path parses the key, falls back
+   to null, and takes DEFAULT when that is null — so
+   the sample wedding coming back means the key was ABSENT or unparseable, not
+   that records were lost one by one. That narrows the causes to writes that
+   never landed, storage cleared underneath the app, or a different storage
+   container than the one the work went into. Every field below distinguishes
+   between those three. */
+function storageDiag(){
+  var d={};
+  d.when=new Date().toISOString();
+  d.build=(typeof buildStamp==='function'&&buildStamp())||'dev (running from source)';
+  d.origin=location.origin;
+  d.host=location.hostname;
+  d.protocol=location.protocol;
+  /* An installed app has its own storage container, separate from the browser
+     that installed it. Work entered in Safari is genuinely not in the home
+     screen app, and vice versa — this line is how you tell which one you are
+     looking at. */
+  d.context=(typeof isInstalled==='function'&&isInstalled())?'installed app (its own storage)':'browser tab';
+
+  /* The live test. Not "is localStorage defined" — whether a write survives a
+     read, right now, with the real exception name if it does not. */
+  try{
+    var probe='gem-diag-probe';
+    localStorage.setItem(probe,'ok');
+    d.canStore=localStorage.getItem(probe)==='ok';
+    localStorage.removeItem(probe);
+  }catch(e){
+    d.canStore=false;
+    d.storeError=((e&&e.name)||'Error')+': '+((e&&e.message)||String(e));
+  }
+
+  var raw=null;
+  try{ raw=localStorage.getItem(KEY); }catch(e){}
+  d.workspaceKey=KEY;
+  d.workspaceOnDisk=!!raw;
+  d.workspaceBytes=raw?new Blob([raw]).size:0;
+  if(raw){
+    try{
+      var p=JSON.parse(raw);
+      d.onDiskCounts=(p.leads||[]).length+' clients · '+(p.events||[]).length+' events · '+
+        (p.invoices||[]).length+' invoices';
+    }catch(e){ d.onDiskCounts='UNPARSEABLE — this is why the sample came back'; }
+  }
+  d.inMemoryCounts=(db.leads||[]).length+' clients · '+(db.events||[]).length+' events';
+  d.sampleStillPresent=(typeof hasSampleData==='function')?hasSampleData():null;
+  d.workOfItsOwn=(typeof hasOwnWork==='function')?hasOwnWork():null;
+  d.lastWriteFailure=SAVE_FAIL?(SAVE_FAIL.name+' at '+SAVE_FAIL.at+' — '+SAVE_FAIL.msg):'none this session';
+  d.indexedDB=!!window.indexedDB;
+
+  d.signedIn=(typeof sbAuthed==='function')&&sbAuthed();
+  d.studioResolved=!!(typeof SB_STATE!=='undefined'&&SB_STATE.org);
+  d.syncedAtVersion=(typeof sbVer==='function')?sbVer():null;
+  d.unsentWork=(typeof sbDirty==='function')?sbDirty():null;
+  d.autoSync=(typeof sbAuto==='function')?sbAuto():null;
+  d.lastSync=(typeof SB_STATE!=='undefined'&&SB_STATE.lastSync)||'never';
+  d.userAgent=navigator.userAgent;
+
+  /* Quota and eviction protection are async, so the whole thing is a promise. */
+  var jobs=[];
+  if(navigator.storage&&navigator.storage.estimate){
+    jobs.push(navigator.storage.estimate().then(function(e){
+      d.quotaBytes=e.quota||0; d.usedBytes=e.usage||0;
+    }).catch(function(){}));
+  }
+  if(navigator.storage&&navigator.storage.persisted){
+    /* Unpersisted storage is what a browser evicts first when it wants space,
+       and on iOS it is also what a long gap between visits clears. */
+    jobs.push(navigator.storage.persisted().then(function(v){ d.evictionProtected=v; }).catch(function(){}));
+  }
+  return Promise.all(jobs).then(function(){ return d; });
+}
+
+/* Ask the browser not to evict this origin. Chrome decides silently on
+   engagement, Safari largely ignores it — but where it is honoured it removes a
+   whole class of "my work vanished after a few days". Only asked once there is
+   real work to protect, so a first look at the sample does not spend it. */
+function requestPersistence(){
+  try{
+    if(!navigator.storage||!navigator.storage.persist||!navigator.storage.persisted)return;
+    if(typeof hasOwnWork==='function'&&!hasOwnWork())return;
+    navigator.storage.persisted().then(function(already){
+      if(!already)navigator.storage.persist().catch(function(){});
+    }).catch(function(){});
+  }catch(e){}
 }
 
 /* ---------- helpers ---------- */
@@ -6388,7 +6548,16 @@ function settingsPage(k){
         setRow('Export everything','<button class="btn btn-ghost btn-sm" id="s_export">Download JSON</button>','A full backup you can re-import')+
         setRow('Import a backup','<button class="btn btn-ghost btn-sm" id="s_import">Choose file</button>','Replaces what is here now')+
         setRow('Reset to sample data','<button class="btn btn-danger btn-sm" id="s_reset">Reset</button>','Clears your work and restores the demo')+
-      '</div><input type="file" id="s_importFile" accept="application/json,.json" hidden></div>';
+      '</div>'+
+      /* Put where someone already goes when they are worried about their data,
+         and phrased as the question they actually have. */
+      '<div class="fig-head" style="margin:22px 0 8px">Is my work being saved?</div>'+
+      '<div class="set-card">'+
+        setRow('Storage check','<button class="btn btn-ghost btn-sm" id="s_diag">Run check</button>',
+          'Tests whether this browser is really keeping your work, and says what to send us if not')+
+      '</div>'+
+      '<div id="diagOut"></div>'+
+      '<input type="file" id="s_importFile" accept="application/json,.json" hidden></div>';
   }
   /* Three states, because the browsers genuinely differ: Chrome can be asked
      to install from a button, Safari cannot be asked at all, and an app that
@@ -6983,6 +7152,62 @@ function wireSettings(){
     };
   });
   // data
+  var dg=$('#s_diag');
+  if(dg)dg.onclick=function(){
+    var out=$('#diagOut'); if(!out)return;
+    out.innerHTML='<div class="set-note">Checking…</div>';
+    storageDiag().then(function(d){
+      /* The verdict first, in the words someone would use themselves. Whatever
+         is wrong, the report underneath is what gets sent on. */
+      var kb=function(n){ return n?Math.round(n/1024).toLocaleString()+' KB':'0 KB'; };
+      var verdict,tone;
+      if(!d.canStore){
+        tone='bad';
+        verdict='<b>This browser is not storing anything.</b> Nothing typed here will '+
+          'survive a reload. '+(d.storeError?'It reports: <code>'+esc(d.storeError)+'</code>. ':'')+
+          'Private browsing, or site data blocked for this address, both do this.';
+      } else if(!d.workspaceOnDisk){
+        tone='bad';
+        verdict='<b>Storage works, but nothing is saved yet.</b> Writes are accepted, '+
+          'so if work has just disappeared it was cleared underneath the app — '+
+          'private browsing, a "clear history" sweep, or this being a different '+
+          'place than the work was entered ('+esc(d.context)+').';
+      } else if(d.lastWriteFailure!=='none this session'){
+        tone='bad';
+        verdict='<b>A save failed in this session.</b> '+esc(d.lastWriteFailure);
+      } else {
+        tone='ok';
+        verdict='<b>Your work is being saved.</b> '+esc(d.onDiskCounts||'')+
+          ' on disk, '+kb(d.workspaceBytes)+'.'+
+          (d.evictionProtected===false?' This browser has not granted eviction protection, so a long gap between visits could still clear it — sign in so there is a copy in your studio.':'');
+      }
+      var rows=Object.keys(d).map(function(k){
+        var v=d[k];
+        if(k==='quotaBytes'||k==='usedBytes'||k==='workspaceBytes')v=kb(v);
+        return '<tr><td>'+esc(k)+'</td><td>'+esc(String(v))+'</td></tr>';
+      }).join('');
+      out.innerHTML='<div class="diag '+tone+'">'+verdict+'</div>'+
+        '<div class="set-card" style="margin-top:12px"><div class="tbl-wrap">'+
+          '<table class="diag-t"><tbody>'+rows+'</tbody></table></div></div>'+
+        '<div class="sec-actions" style="padding:10px 2px">'+
+          '<button class="btn btn-ghost btn-sm" id="s_diagCopy">Copy this report</button>'+
+          '<button class="btn btn-ghost btn-sm" id="s_diagExport">Export a backup now</button>'+
+        '</div>';
+      var cp=$('#s_diagCopy');
+      if(cp)cp.onclick=function(){
+        var txt=JSON.stringify(d,null,2);
+        (navigator.clipboard?navigator.clipboard.writeText(txt):Promise.reject())
+          .then(function(){ toast('Report copied — paste it to us ✦'); })
+          .catch(function(){ toast('Select the table and copy it manually.'); });
+      };
+      /* Offered right here because the moment someone runs this is the moment a
+         backup is worth most, and Export is otherwise further up the page. */
+      var xp=$('#s_diagExport');
+      if(xp)xp.onclick=function(){ var b=$('#s_export'); if(b)b.click(); };
+    }).catch(function(e){
+      out.innerHTML='<div class="diag bad">Could not complete the check: '+esc(e.message||String(e))+'</div>';
+    });
+  };
   var inst=$('#s_install');
   if(inst)inst.onclick=function(){
     var ev=INSTALL_PROMPT;
@@ -10141,7 +10366,12 @@ function sbUserId(){
 }
 function sbResolveOrg(){
   return sbRest('org_members?select=org_id&limit=1').then(function(r){
-    SB_STATE.org=(r&&r[0])?r[0].org_id:null; return SB_STATE.org;
+    SB_STATE.org=(r&&r[0])?r[0].org_id:null;
+    /* The save alarm says something quite different once the work has somewhere
+       else to go, and at boot it is painted before this has resolved — so a
+       signed-in planner was being told to sign in. */
+    if(SAVE_FAIL&&typeof paintSaveAlarm==='function')paintSaveAlarm();
+    return SB_STATE.org;
   });
 }
 function sbCreateOrg(name){
@@ -10257,7 +10487,13 @@ function sbHash(o){
    back with the flag reset, and an automatic pull would quietly overwrite the
    very work that had not been sent yet. */
 var SB_DIRTY_KEY='gem-sb-dirty';
-function sbDirty(){ try{ return localStorage.getItem(SB_DIRTY_KEY)==='1'; }catch(e){ return false; } }
+function sbDirty(){
+  /* A device that cannot write cannot persist this flag either, so hold it in
+     memory instead: work living only in the page's memory must still never be
+     pulled over by the automatic sync. */
+  if(typeof SAVE_FAIL!=='undefined'&&SAVE_FAIL)return true;
+  try{ return localStorage.getItem(SB_DIRTY_KEY)==='1'; }catch(e){ return false; }
+}
 function setSbDirty(on){
   try{ on?localStorage.setItem(SB_DIRTY_KEY,'1'):localStorage.removeItem(SB_DIRTY_KEY); }catch(e){}
 }
@@ -10828,6 +11064,21 @@ loadStages(); applyPrefs(); applyBrand(); paintIdentity();
 /* Photos live in IndexedDB now, so put them back on the records. Async: it
    re-renders once they land. */
 try{ mediaRehydrate(); }catch(e){}
+/* Find out at boot whether this browser will keep anything, rather than after
+   an afternoon of typing. A probe write costs nothing and catches the private
+   window and the blocked-site-data case before any work is entered. */
+try{
+  var _probe='gem-boot-probe';
+  localStorage.setItem(_probe,'ok');
+  if(localStorage.getItem(_probe)!=='ok')throw new Error('write did not survive a read');
+  localStorage.removeItem(_probe);
+}catch(e){
+  SAVE_FAIL={name:(e&&e.name)||'Error',msg:(e&&e.message)||String(e),
+             quota:!!(e&&(e.name==='QuotaExceededError'||e.code===22||e.code===1014)),
+             at:new Date().toISOString()};
+  paintSaveAlarm();
+}
+try{ requestPersistence(); }catch(e){}
 /* PORTAL_ONLY wins over the parameter: a couple's host must not be steerable
    into the studio's views by editing the URL. */
 setView(PORTAL_ONLY?'portal':(shortcutView()||prefs().landing||'dashboard'));
