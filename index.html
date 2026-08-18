@@ -10,7 +10,7 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
 <meta name="apple-mobile-web-app-title" content="GEM">
 <meta name="format-detection" content="telephone=no">
-<meta name="gem-build" content="5bc03c8d9931">
+<meta name="gem-build" content="47750ab95a79">
 <link rel="manifest" href="/manifest.webmanifest">
 <link rel="icon" href="/icons/icon-192.png" sizes="192x192" type="image/png">
 <link rel="apple-touch-icon" href="/icons/icon-180.png">
@@ -7175,6 +7175,14 @@ function wireSettings(){
       } else if(d.lastWriteFailure!=='none this session'){
         tone='bad';
         verdict='<b>A save failed in this session.</b> '+esc(d.lastWriteFailure);
+      } else if(d.signedIn&&!d.studioResolved){
+        /* The state that decides whether anything is recoverable after the
+           browser clears its storage, so it outranks the good news. */
+        tone='bad';
+        verdict='<b>Saved here, but backed up nowhere.</b> '+esc(d.onDiskCounts||'')+
+          ' on disk — but this account has no studio, so none of it has ever '+
+          'reached Supabase. If this browser clears its storage, it is gone. '+
+          'Settings › Connection › Studio › Create.';
       } else {
         tone='ok';
         verdict='<b>Your work is being saved.</b> '+esc(d.onDiskCounts||'')+
@@ -10894,14 +10902,31 @@ function sbSetStatus(st,msg){
   el.textContent=msg||'';
 }
 function sbAuto(){ return prefs().autoSync!==false; }
+/* Signed in, but the account was never attached to a studio — gem_create_org()
+   has not been run for it. Every push is skipped in that state, and it used to
+   be skipped in total silence: the only sign was a "none yet" pill on a
+   settings page nobody opens when they believe they are already syncing. Being
+   signed in is exactly what makes someone stop worrying about their data, so
+   this is the one state that most needs to be loud.
+   A portal client legitimately has no studio, but the pill is hidden outright
+   on the portal host, so this cannot reach them there. */
+function sbNoStudioWarn(){
+  if(typeof PORTAL_ONLY!=='undefined'&&PORTAL_ONLY)return false;
+  if(!sbReady()||SB_STATE.org)return false;
+  sbSetStatus('warn','Signed in, but no studio yet — nothing is being backed up. Settings › Connection');
+  return true;
+}
 function sbAutoQueue(){
-  if(!sbReady()||!SB_STATE.org||!sbAuto())return;
+  if(!sbReady())return;
+  if(!SB_STATE.org){ sbNoStudioWarn(); return; }
+  if(!sbAuto())return;
   clearTimeout(SB_SYNC.timer);
   /* Coalesce a burst of edits into one push rather than one per keystroke. */
   SB_SYNC.timer=setTimeout(sbSyncNow,4000);
 }
 function sbSyncNow(){
-  if(!sbReady()||!SB_STATE.org)return Promise.resolve(false);
+  if(!sbReady())return Promise.resolve(false);
+  if(!SB_STATE.org){ sbNoStudioWarn(); return Promise.resolve(false); }
   if(SB_SYNC.busy){ SB_SYNC.queued=true; return Promise.resolve(false); }
   if(!navigator.onLine){ sbSetStatus('off','Offline — will sync when you reconnect'); return Promise.resolve(false); }
   SB_SYNC.busy=true; sbSetStatus('busy','Syncing…');
@@ -11025,7 +11050,7 @@ try{
        followed the link, signed in successfully, and landed in an empty app.
        Password sign-in always ran it; the link never did. */
     if(SB_FRESH_LINK)sbAfterSignIn().then(function(){ render(); }).catch(function(){});
-    else sbResolveOrg().then(function(id){ if(id)sbSyncDown(); }).catch(function(){});
+    else sbResolveOrg().then(function(id){ if(id)sbSyncDown(); else sbNoStudioWarn(); }).catch(function(){});
   }
 }catch(e){}
 
