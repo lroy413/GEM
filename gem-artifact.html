@@ -1006,6 +1006,9 @@ tbody tr:hover{background:var(--pink-50)}
 .tl::before{content:"";position:absolute;left:7px;top:6px;bottom:6px;width:2px;background:var(--gold-soft)}
 .tl-item{position:relative;padding:0 0 20px 0}
 .tl-item::before{content:"";position:absolute;left:-24px;top:3px;width:14px;height:14px;border-radius:50%;background:var(--card);border:3px solid var(--gold)}
+/* The start comes off the event's own Start time field rather than out of the
+   running order, so it reads as given rather than typed: a filled dot. */
+.tl-item.anchor::before{background:var(--gold)}
 .tl-item .time{font-size:12px;font-weight:600;color:var(--gold);letter-spacing:.5px;font-variant-numeric:tabular-nums}
 .tl-item .ev{font-size:14.5px;font-weight:600;margin-top:2px}
 .tl-item .ds{font-size:12.5px;color:var(--muted);margin-top:1px}
@@ -1154,6 +1157,104 @@ tbody tr:hover{background:var(--pink-50)}
 }
 
 /* event chooser cards */
+/* --- The venue directory ---
+   Wider than a client card and shorter, because a venue is read as a list of
+   facts rather than looked at: the photograph is a strip across the top, and
+   the capacity and the count of events it has held sit on one line at the
+   bottom where they can be compared down the column. */
+.vn-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(292px,1fr));gap:16px}
+.vn-card{display:flex;flex-direction:column;text-align:left;padding:0;overflow:hidden;cursor:pointer;
+  background:var(--card);border:1px solid var(--line);border-radius:var(--radius);
+  box-shadow:var(--shadow-sm);
+  transition:transform .16s var(--ease),box-shadow .16s var(--ease),border-color .16s var(--ease)}
+.vn-card:hover{transform:translateY(-3px);box-shadow:var(--shadow);border-color:var(--gold-line)}
+.vn-card:focus-visible{outline:none;box-shadow:var(--ring)}
+/* A place with no photograph yet is the normal state of a directory somebody
+   has just started, so it gets a quiet tile rather than a slab of poster gold.
+   Same lesson as the archive cards: the house gold is a metal, and at the size
+   of a card it stops reading as one. */
+.vn-face{position:relative;height:118px;flex:0 0 auto;
+  background:linear-gradient(160deg,var(--pink-100),var(--card));
+  border-bottom:1px solid var(--line);
+  background-size:cover;background-position:center;
+  display:flex;align-items:center;justify-content:center}
+.vn-face.has-photo{border-bottom-color:transparent}
+.vn-mark{font-size:26px;color:var(--gold);opacity:.42}
+.vn-star{position:absolute;top:9px;right:11px;font-size:13px;color:var(--gold);
+  background:var(--card);border:1px solid var(--gold-line);
+  border-radius:var(--radius-pill);padding:2px 8px;line-height:1.5}
+.vn-face.has-photo .vn-star{color:#fff;background:rgba(18,12,15,.5);border-color:rgba(255,255,255,.28)}
+/* And the detail band, for the same reason. Ink rather than gold, with the
+   mark as a watermark so the empty half is textured rather than blank. */
+.dh-band:not(.has-photo).vn-band{background:linear-gradient(165deg,#4A3A40,#241A1E)}
+/* .dh-band>* sets position:relative at the same specificity and later in the
+   sheet, so this has to out-rank it or the watermark becomes a flex item and
+   shoves the name to the far side of the band. */
+.dh-band .vn-band-mark{position:absolute;left:0;right:0;top:0;height:58%;z-index:0;
+  display:flex;align-items:center;justify-content:center;
+  font-size:62px;color:rgba(255,255,255,.13);pointer-events:none}
+.vn-body{display:flex;flex-direction:column;padding:13px 15px 14px;min-width:0}
+.vn-n{font-family:var(--serif);font-size:18px;font-weight:600;letter-spacing:-.01em;line-height:1.2;
+  overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.vn-m{font-size:11px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);
+  margin-top:5px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.vn-f{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-top:11px;
+  padding-top:11px;border-top:1px solid var(--line);font-size:12px;color:var(--muted)}
+.vn-c{flex:0 0 auto;font-weight:600;color:var(--ink-soft)}
+.cl-head .v-search{flex:1;min-width:180px}
+@media (max-width:560px){
+  .vn-grid{grid-template-columns:1fr}
+}
+
+/* --- The archive: a gallery, not a table ---
+   Past work is the thing a studio is actually selling, so it gets photographs
+   at a size you can see and almost no chrome around them. A card with no cover
+   falls back to the event's own tint rather than to grey, so a mixed year
+   still reads as one set instead of as a set with holes in it. */
+.arc-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(268px,1fr));gap:18px}
+.arc-year{grid-column:1/-1;display:flex;align-items:center;gap:16px;margin:16px 0 0;
+  font-family:var(--serif);font-size:19px;font-weight:600;letter-spacing:.01em;color:var(--ink-soft)}
+.arc-year::after{content:"";flex:1;height:1px;background:var(--line)}
+.arc-year:first-child{margin-top:0}
+.arc-card{position:relative;display:block;width:100%;padding:0;overflow:hidden;text-align:left;
+  aspect-ratio:4/5;cursor:pointer;background-size:cover;background-position:center;
+  border:1px solid var(--line);border-radius:var(--radius-lg);box-shadow:var(--shadow-sm);
+  transition:transform .18s var(--ease),box-shadow .18s var(--ease)}
+.arc-card:hover{transform:translateY(-3px);box-shadow:var(--shadow)}
+.arc-card:focus-visible{outline:none;box-shadow:var(--ring)}
+/* A separate element rather than ::after, so the tint fallback can carry a
+   lighter veil than a photograph needs without a second selector fighting it. */
+.arc-veil{position:absolute;inset:0;pointer-events:none;
+  background:linear-gradient(180deg,rgba(18,12,15,0) 30%,rgba(18,12,15,.34) 58%,rgba(18,12,15,.82) 100%)}
+/* EVENT_TINTS were drawn for dots and chart keys. At the size of a card they
+   are a slab of poster colour next to a photograph, so the tint sits under
+   ink here rather than beside it: the same identity, read as a tinted
+   charcoal, and white type stays legible over all of them. */
+.arc-card:not(.has-photo) .arc-veil{
+  background:linear-gradient(180deg,rgba(36,26,31,.66) 0%,rgba(30,21,25,.78) 55%,rgba(23,16,19,.91) 100%)}
+/* Something in the empty half, or a card with no photograph is a hole in the
+   grid. Set in the same face as the name, at the weight of a watermark. */
+.arc-mono{position:absolute;left:0;right:0;top:0;height:62%;z-index:1;
+  display:flex;align-items:center;justify-content:center;
+  font-family:var(--serif);font-size:66px;font-weight:600;letter-spacing:.06em;
+  color:rgba(255,255,255,.17);pointer-events:none}
+.arc-tx{position:absolute;left:0;right:0;bottom:0;z-index:1;display:flex;flex-direction:column;
+  min-width:0;padding:16px 17px 15px}
+.arc-k{font-size:9.5px;letter-spacing:1.9px;text-transform:uppercase;font-weight:600;color:var(--gold)}
+.arc-n{font-family:var(--serif);font-size:23px;font-weight:600;line-height:1.14;letter-spacing:-.012em;
+  margin-top:6px;color:#fff;text-shadow:0 1px 12px rgba(0,0,0,.36);
+  display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:2;overflow:hidden}
+.arc-m{font-size:12px;color:rgba(255,255,255,.9);margin-top:5px;text-shadow:0 1px 8px rgba(0,0,0,.4);
+  overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.arc-s{margin-top:9px;font-size:11.5px;color:rgba(255,255,255,.8);text-shadow:0 1px 8px rgba(0,0,0,.4)}
+.arc-s b{font-weight:600;color:#fff}
+.arc-s i{font-style:normal;opacity:.5;margin:0 7px}
+@media (max-width:560px){
+  .arc-grid{grid-template-columns:repeat(auto-fill,minmax(158px,1fr));gap:12px}
+  .arc-n{font-size:17px}
+  .arc-mono{font-size:46px}
+  .arc-tx{padding:12px 13px 12px}
+}
 /* --- clients as cards: the same records, read by face rather than by row --- */
 .cl-head{display:flex;align-items:center;justify-content:space-between;gap:14px;flex-wrap:wrap}
 .cl-head .seg{margin-bottom:16px}
@@ -2134,16 +2235,38 @@ tr:hover .r-acts,.ev-card:hover .r-acts,.table-card:hover .r-acts,
 .detail-head.has-photo{display:block;padding:0;overflow:hidden;background:var(--card);
   border:1px solid var(--line);border-radius:var(--radius-lg);box-shadow:var(--shadow-sm)}
 .dh-band{position:relative;display:flex;align-items:flex-end;justify-content:space-between;gap:24px;
-  min-height:330px;padding:26px 28px;background-size:cover;background-position:center;cursor:pointer}
+  min-height:320px;padding:26px 28px;background-size:cover;background-position:center}
 .dh-band::after{content:"";position:absolute;inset:0;pointer-events:none;
   background:linear-gradient(180deg,rgba(18,12,15,0) 34%,rgba(18,12,15,.36) 64%,rgba(18,12,15,.78) 100%)}
 .dh-band>*{position:relative;z-index:1}
-.dh-band-ed{position:absolute;top:16px;right:18px;z-index:2;font-size:11px;font-weight:600;color:#fff;
+/* No cover means no photograph to give room to — 320px of flat wash is a
+   void, not a banner. */
+.dh-band:not(.has-photo){min-height:252px}
+.dh-band-acts{position:absolute;top:16px;right:18px;z-index:2;display:flex;gap:8px}
+.dh-band-ed{font-size:11px;font-weight:600;color:#fff;cursor:pointer;
   background:rgba(18,12,15,.42);border:1px solid rgba(255,255,255,.3);border-radius:var(--radius-pill);
   padding:5px 12px;opacity:0;transition:opacity .16s var(--ease)}
-.dh-band:hover .dh-band-ed,.dh-band:focus-visible .dh-band-ed{opacity:1}
-.dh-band:focus-visible{outline:none;box-shadow:inset 0 0 0 2px var(--gold)}
-.dh-band-tx{display:flex;flex-direction:column;min-width:0}
+/* Kept visible while focused as well as hovered, or the only way to reach the
+   cover from a keyboard is to tab to a control you cannot see. */
+.dh-band:hover .dh-band-ed,.dh-band-ed:focus-visible{opacity:1}
+.dh-band-ed:focus-visible{outline:none;box-shadow:0 0 0 2px var(--gold)}
+/* The portrait, at the shape a portrait wants: the same circle as the card
+   grid, sitting on the band rather than being stretched into it. */
+.dh-face{position:relative;flex:0 0 auto;width:104px;height:104px;border-radius:50%;padding:0;
+  background-size:cover;background-position:center;cursor:pointer;
+  border:3px solid rgba(255,255,255,.86);box-shadow:0 10px 28px rgba(18,12,15,.34);
+  display:flex;align-items:center;justify-content:center}
+.dh-face>span:first-child{font-family:var(--serif);font-size:33px;font-weight:600;letter-spacing:.03em;
+  color:var(--ink)}
+.dh-face.has-photo>span:first-child{display:none}
+.dh-face-ed{position:absolute;right:-2px;bottom:-2px;width:28px;height:28px;border-radius:50%;
+  display:flex;align-items:center;justify-content:center;font-size:12px;color:#fff;
+  background:rgba(18,12,15,.66);border:1px solid rgba(255,255,255,.34);
+  opacity:0;transition:opacity .16s var(--ease)}
+.dh-band:hover .dh-face-ed,.dh-face:focus-visible .dh-face-ed{opacity:1}
+.dh-face:focus-visible{outline:none;box-shadow:0 0 0 3px var(--gold)}
+.dh-band-tx{display:flex;align-items:flex-end;gap:20px;min-width:0}
+.dh-band-id{display:flex;flex-direction:column;min-width:0;padding-bottom:4px}
 .dh-band-k{font-size:9.5px;letter-spacing:1.9px;text-transform:uppercase;color:var(--gold);font-weight:600}
 .dh-band-n{font-family:var(--serif);font-size:46px;font-weight:600;line-height:1.04;margin-top:6px;
   letter-spacing:-.014em;color:#fff;text-shadow:0 1px 14px rgba(0,0,0,.32)}
@@ -2153,9 +2276,18 @@ tr:hover .r-acts,.ev-card:hover .r-acts,.table-card:hover .r-acts,
 .dh-band-v .dh-l{color:rgba(255,255,255,.8)}
 .dh-strip{display:flex;align-items:center;flex-wrap:wrap;gap:8px 10px;padding:13px 20px}
 @media (max-width:700px){
-  .dh-band{min-height:230px;padding:18px 20px;flex-direction:column;align-items:flex-start;gap:14px}
+  /* Stacked, and anchored to the BOTTOM: the action pills are always visible
+     on a touch screen, and content starting at the top ran straight under
+     them. Top padding keeps the eyebrow clear of the pills either way. */
+  .dh-band{min-height:252px;padding:56px 20px 18px;flex-direction:column;
+    justify-content:flex-end;align-items:flex-start;gap:12px}
   .dh-band-n{font-size:30px}
   .dh-band-v{align-items:flex-start;text-align:left}
+  .dh-band-tx{align-items:center;gap:14px}
+  .dh-face{width:76px;height:76px;border-width:2px}
+  .dh-face>span:first-child{font-size:25px}
+  /* On a phone there is no hover to reveal them with. */
+  .dh-band-ed,.dh-face-ed{opacity:1}
 }
 .main.evfocus .page-head{display:none}
 .main.evfocus .topbar{margin-bottom:14px;justify-content:flex-end}
@@ -2637,6 +2769,8 @@ html,body{max-width:100%;overflow-x:hidden}
         <div class="nav-item" data-view="guests" tabindex="0"><span class="ic">▤</span><span class="lbl">Guests &amp; RSVP</span></div>
         <div class="nav-item" data-view="seating" tabindex="0"><span class="ic">◍</span><span class="lbl">Seating Chart</span></div>
         <div class="nav-item" data-view="vendors" tabindex="0"><span class="ic">❖</span><span class="lbl">Vendors</span></div>
+        <div class="nav-item" data-view="venues" tabindex="0"><span class="ic">◇</span><span class="lbl">Venues</span></div>
+        <div class="nav-item" data-view="archive" tabindex="0"><span class="ic">▦</span><span class="lbl">Archive</span></div>
         <div class="nav-item" data-view="design" tabindex="0"><span class="ic">◈</span><span class="lbl">Design Studio</span></div>
       </div></div>
     </div>
@@ -3022,7 +3156,7 @@ function isSampleRecord(kind,id){
   if(coll){
     var r=(db[coll]||[]).find(function(x){return x.id===id;});
     if(!r)return false;
-    if(r.sample||(SAMPLE_IDS[coll]||[]).indexOf(id)>=0)return true;
+    if(sampleHit(coll,r))return true;
     if(r.eventId)return isSampleEvent(db.events.find(function(x){return x.id===r.eventId;}));
     return false;
   }
@@ -3057,11 +3191,11 @@ function adoptSample(){
   var n=0;
   Object.keys(SAMPLE_IDS).forEach(function(k){
     (db[k]||[]).forEach(function(r){
-      if(SAMPLE_IDS[k].indexOf(r.id)>=0||r.sample){ r.sample=false; r.adopted=true; n++; }
+      if(sampleHit(k,r)){ r.sample=false; r.adopted=true; n++; }
     });
   });
   SAMPLE_FLAGGED.forEach(function(k){
-    (db[k]||[]).forEach(function(r){ if(r.sample){ r.sample=false; r.adopted=true; n++; } });
+    (db[k]||[]).forEach(function(r){ if(sampleHit(k,r)){ r.sample=false; r.adopted=true; n++; } });
   });
   /* The id lists are how an un-flagged record is still recognised as sample,
      so they have to stop matching too. */
@@ -3110,7 +3244,34 @@ function hasSampleData(){
    the id lists match nothing. Checking only the ids — which is what this did —
    deleted the sample vendors, reported a count, and left the wedding itself in
    place with the button gone, because hasSampleData() then found nothing. */
-function sampleHit(k,r){ return !!r.sample||(SAMPLE_IDS[k]||[]).indexOf(r.id)>=0; }
+function sampleHit(k,r){
+  return !!r.sample||(SAMPLE_IDS[k]||[]).indexOf(r.id)>=0||samplePrint(k,r);
+}
+/* And the fingerprints, for when the flag is gone as well as the id. `sample`
+   is a local boolean; migration 18 gives it a column, but a studio that pulled
+   before that has demo records carrying nothing at all — they come back down
+   from Supabase as ordinary data, so Remove found nothing and a planner
+   starting their own vendor list was left with six invented florists in it.
+   Name plus address, because a record the studio has actually edited then
+   stops matching, which is the right outcome: once it is theirs, it stays. */
+var SAMPLE_PRINTS={
+  vendors:[
+    'fern & fable florals|rosa@fernfable.co',
+    'hearth & vine catering|events@hearthvine.com',
+    'aurelio photography|hello@aureliophoto.com',
+    'the copper quartet|book@copperquartet.com',
+    'lumen event rentals|orders@lumenrentals.com',
+    'gilded cake studio|tomas@gildedcake.com'
+  ],
+  leads:['priya & sam|priya.sharma@example.com']
+};
+function samplePrint(k,r){
+  if(!r||r.adopted||sampleAdopted())return false;
+  var list=SAMPLE_PRINTS[k];
+  if(!list)return false;
+  return list.indexOf(String(r.name||r.names||'').trim().toLowerCase()+'|'+
+                      String(r.email||'').trim().toLowerCase())>=0;
+}
 
 /* Anything on this device that is NOT the seeded sample. This is what decides
    whether a first sync may pull without asking: a device holding only the
@@ -3158,6 +3319,12 @@ function removeSampleData(){
   var goneEvents={};
   (db.events||[]).forEach(function(e){ if(isSampleEvent(e))goneEvents[e.id]=true; });
   var inGone=function(id){ return !!goneEvents[id]; };
+  /* And which vendors, before anything is filtered — 'vendors' is one of the
+     SAMPLE_IDS collections, so by the time the loop below has run the records
+     are already gone and there is nothing left to ask. A booking pointing at a
+     vendor no longer in the directory is a row the screen cannot draw. */
+  var goneVendors={};
+  (db.vendors||[]).forEach(function(v){ if(sampleHit('vendors',v))goneVendors[v.id]=true; });
 
   Object.keys(SAMPLE_IDS).forEach(function(k){
     if(!db[k])return;
@@ -3171,13 +3338,23 @@ function removeSampleData(){
       return !drop;
     });
   });
-  SAMPLE_FLAGGED.forEach(function(k){
-    if(!db[k])return;
-    db[k]=db[k].filter(function(r){
-      if(r.sample||(r.eventId&&inGone(r.eventId))){ n++; return false; }
+  if(db.bookings){
+    db.bookings=db.bookings.filter(function(r){
+      if(sampleHit('bookings',r)||goneVendors[r.vendorId]||(r.eventId&&inGone(r.eventId))){ n++; return false; }
       return true;
     });
-  });
+  }
+  /* The sample's venue was lifted into the directory exactly the way a real
+     one is, so it goes with the sample — but only when nothing of the studio's
+     own is still held there. A studio that genuinely works at the place the
+     sample names keeps it. */
+  if(db.venues){
+    db.venues=db.venues.filter(function(v){
+      if(String(v.name||'').trim().toLowerCase()!=='the glass conservatory')return true;
+      if(eventsAtVenue(v.id).length)return true;
+      n++; return false;
+    });
+  }
   /* Invitations point at a guest and an event that have both just gone. */
   if(db.invites)db.invites=db.invites.filter(function(i){ return !inGone(i.eventId); });
   /* Release anything still pointing at a record that has just gone, or the
@@ -3239,11 +3416,66 @@ function propagateLeadRename(lead,oldName){
   return n;
 }
 
+/* Set by normalize() when it builds the directory for the first time, so boot
+   can write it down. If the lift is not persisted, a studio that then adds one
+   venue by hand has a d.venues array on the next load — and the guard above
+   sees it and never rebuilds the rest, quietly emptying the directory. */
+var VENUES_LIFTED=false;
+/* Names a studio types when it does not yet know where. They must never become
+   a directory entry, or every workspace grows a venue called TBD.
+   A declaration, not a var: normalize() runs at boot and reads this, so it has
+   to hoist — the same trap FT() and IN() carry a note about further down. */
+function venueVague(n){
+  return ['tbd','tba','to be confirmed','to be decided','to be determined',
+          'unknown','n/a','na','-','\u2014','?'].indexOf(String(n||'').trim().toLowerCase())>=0;
+}
 function normalize(d){
   if(!d.leads)d.leads=[];
   if(!d.events)d.events=[];
   /* Invitations to sub-events. Flat, like bookings — see inviteOf(). */
   if(!d.invites)d.invites=[];
+  /* A venue is a place, not a string. It used to be free text on each event
+     with its address, coordinator and load-in rules in three more columns
+     beside it — so a weekend at one estate stored the same address four times
+     and nothing recorded that they were the same address. Lifted into a
+     directory exactly the way vendors were, and once only: the flag is the
+     existence of the array, so a studio that has deleted every venue does not
+     get them rebuilt from under them on the next load. */
+  if(!d.venues){
+    VENUES_LIFTED=true;
+    d.venues=[];
+    var vBy={};
+    (d.events||[]).forEach(function(e){
+      var nm=String(e.venue||'').trim();
+      if(!nm||venueVague(nm))return;
+      var key=nm.toLowerCase(), v=vBy[key];
+      if(!v){
+        v={id:uid('vn'),name:nm,kind:'',address:{},contact:{},website:'',
+           seated:0,standing:0,notes:'',spaces:[],photo:null,photoPath:null,preferred:false};
+        vBy[key]=v; d.venues.push(v);
+      }
+      /* The richest event wins each field: a blank address must not overwrite
+         one that four events ago actually had the street on it. */
+      if(!Object.keys(v.address).length&&e.venueAddress&&
+         Object.keys(e.venueAddress).some(function(k){return e.venueAddress[k];}))v.address=e.venueAddress;
+      if(!v.contact.name&&e.venueContact&&e.venueContact.name)v.contact=e.venueContact;
+      if(!v.notes&&e.venueNotes)v.notes=e.venueNotes;
+      if(!e.venueId)e.venueId=v.id;
+    });
+  }
+  d.venues.forEach(function(v){
+    if(!v.address)v.address={};
+    if(!v.contact)v.contact={};
+    if(!v.spaces)v.spaces=[];
+    if(v.kind===undefined)v.kind='';
+    if(v.website===undefined)v.website='';
+    if(v.notes===undefined)v.notes='';
+    if(v.seated===undefined)v.seated=0;
+    if(v.standing===undefined)v.standing=0;
+    if(v.preferred===undefined)v.preferred=false;
+    if(v.photo===undefined)v.photo=null;
+    if(v.photoPath===undefined)v.photoPath=null;
+  });
   /* Backfill the invoice→client join once, by the name match that used to be
      the only link. After this a rename is safe. */
   (d.invoices||[]).forEach(function(x){
@@ -3280,6 +3512,9 @@ function normalize(d){
     d.vendors=directory;
   }
   d.vendors.forEach(function(v){
+    /* "Beauty" became "Hair & Makeup"; anything already filed under the old
+       name comes across rather than falling off the end of the select. */
+    if(v.cat==='Beauty')v.cat='Hair & Makeup';
     if(v.preferred===undefined)v.preferred=false;
     if(v.rating===undefined)v.rating=0;
     if(v.notes===undefined)v.notes='';
@@ -3290,6 +3525,11 @@ function normalize(d){
   if(!d.submissions)d.submissions=DEFAULT.submissions.slice();
   if(!d.messages)d.messages=DEFAULT.messages.slice();
   d.leads.forEach(function(l){
+    /* The file's banner, separate from the portrait since they are cropped for
+       different shapes. Undefined means "has never been set", which is what
+       leadCover() reads as "use the event's". */
+    if(l.cover===undefined)l.cover=null;
+    if(l.coverPath===undefined)l.coverPath=null;
     if(l.photo===undefined)l.photo=null;
     ['partnerA','partnerB','email','altEmail','phone','preferred','source','notes','pronounsA','pronounsB']
       .forEach(function(k){ if(l[k]===undefined)l[k]=''; });
@@ -3343,6 +3583,7 @@ function normalize(d){
     if(!e.venueAddress)e.venueAddress={line1:'',line2:'',city:'',region:'',postal:'',country:''};
     if(!e.venueContact)e.venueContact={name:'',role:'',phone:'',email:''};
     if(e.venueNotes===undefined)e.venueNotes='';
+    if(e.venueId===undefined)e.venueId=null;
     if(e.startTime===undefined)e.startTime='';
     /* The event's own cover image, held as a data URL like every other photo,
        with photoPath naming it in Storage once it has been pushed. Absent one,
@@ -3367,6 +3608,8 @@ function normalize(d){
   return d;
 }
 db=normalize(db);
+/* saveLocal() is a function declaration below, so it is already hoisted. */
+if(VENUES_LIFTED){ try{ saveLocal(); }catch(e){} }
 /* Returns false when the browser refuses the write (quota) so callers can
    tell the user instead of silently losing their work. */
 /* The last local write that failed, kept so the interface can keep saying so.
@@ -3557,7 +3800,7 @@ function uid(prefix){
 }
 var _justDragged=false;   // set during HTML5 drag so drop doesn't also navigate
 var _now=new Date();
-var state={view:'dashboard',eventId:null,clientId:null,boardId:null,qId:null,settingsPage:null,helpOpen:null,seatMode:'plan',floorSel:null,chkTab:'planner',chkOpen:null,heroIdx:0,activeEventId:(db.events[0]||{}).id,
+var state={view:'dashboard',eventId:null,clientId:null,boardId:null,qId:null,venueId:null,settingsPage:null,helpOpen:null,seatMode:'plan',floorSel:null,chkTab:'planner',chkOpen:null,heroIdx:0,activeEventId:(db.events[0]||{}).id,
            calY:_now.getFullYear(),calM:_now.getMonth()};
 function activeEvent(){return db.events.find(function(e){return e.id===state.activeEventId;})||db.events[0];}
 
@@ -3634,6 +3877,29 @@ function pageHead(v){
     var n2=db.vendors.length;
     return [lab,n2?(n2+' in your directory'):'No vendors yet',sub];
   }
+  if(v==='venues'){
+    var vn=venueById(state.venueId);
+    if(vn){
+      var nh=eventsAtVenue(vn.id).filter(function(e){return !evIsSub(e);}).length;
+      /* A place with neither a kind nor a city still has a fact worth the
+         line: how much work you have actually done there. */
+      return [lab,vn.name,[vn.kind,(vn.address||{}).city].filter(Boolean).join(' \u00b7 ')||
+              (nh?(nh+' event'+(nh===1?'':'s')+' here'):'Nothing booked here yet')];
+    }
+    var nv=(db.venues||[]).length;
+    if(!nv)return [lab,'No venues yet',sub];
+    var pref=(db.venues||[]).filter(function(x){return x.preferred;}).length;
+    return [lab,nv+' place'+(nv===1?'':'s')+' you work',
+            pref?(pref+' on your preferred list'):sub];
+  }
+  if(v==='archive'){
+    var pastN=archiveEvents().length;
+    if(!pastN)return [lab,'Nothing wrapped yet',sub];
+    var yrs={}; archiveEvents().forEach(function(e){ yrs[String(e.date).slice(0,4)]=1; });
+    var ny=Object.keys(yrs).length;
+    return [lab,pastN+' event'+(pastN===1?'':'s')+' delivered',
+            ny>1?('Across '+ny+' years'):sub];
+  }
   if(v==='finance'){
     var inv=db.invoices||[];
     var paid=inv.filter(function(x){return x.status==='paid';}).reduce(function(a,x){return a+x.amount;},0);
@@ -3655,8 +3921,10 @@ var TITLES={
   guests:['Guests & RSVP','Track replies, meals, and dietary needs.'],
   seating:['Seating Chart',''],
   vendors:['Vendors','Your trusted roster and booking status.'],
+  venues:['Venues','Every place you work, and what you know about it.'],
   design:['Design Studio','Palettes, mood boards, and décor sign-off.'],
   calendar:['Calendar','Every event and deadline in one month view.'],
+  archive:['Archive','The work, after the work.'],
   documents:['Contracts & Docs','Proposals and agreements, with signature status.'],
   portal:['Client Portal','Exactly what your couple sees when they log in.'],
   settings:['Settings','Your studio, this app, and how to use it.'],
@@ -3674,6 +3942,7 @@ function setView(v,opts){
   if(opts&&opts.clientId!==undefined)state.clientId=opts.clientId;
   if(opts&&opts.boardId!==undefined)state.boardId=opts.boardId;
   if(opts&&opts.qId!==undefined)state.qId=opts.qId;
+  if(opts&&opts.venueId!==undefined)state.venueId=opts.venueId;
   if(opts&&opts.settingsPage!==undefined){state.settingsPage=opts.settingsPage;state.helpOpen=null;}
   document.querySelectorAll('.nav-item').forEach(function(n){n.classList.toggle('active',n.dataset.view===v);});
   var sb=document.getElementById('settingsBtn');
@@ -3714,8 +3983,13 @@ function setView(v,opts){
     var evc=db.events.find(function(x){return x.id===state.eventId;});
     evf=!!(evc&&evPhoto(evc));
   }else if(v==='clients'&&state.clientId){
-    var clc=db.leads.find(function(x){return x.id===state.clientId;});
-    evf=!!(clc&&clc.photo);
+    /* Used to ask whether the client had a photograph, because the band only
+       appeared when they did. The band is always there now — cover, event
+       cover or their own wash — so the page header above it is always the
+       name said twice in a smaller voice. */
+    evf=!!db.leads.find(function(x){return x.id===state.clientId;});
+  }else if(v==='venues'&&state.venueId){
+    evf=!!venueById(state.venueId);
   }
   document.querySelector('.main').classList.toggle('evfocus',evf);
   // Board-style views fill the window; document-style views scroll normally.
@@ -3833,6 +4107,8 @@ function render(){
     else { state.boardId=null; el.innerHTML=viewDesign(); wireDesign(); }
   }
   else if(state.view==='calendar'){ el.innerHTML=viewCalendar(); }
+  else if(state.view==='archive'){ el.innerHTML=viewArchive(); }
+  else if(state.view==='venues'){ el.innerHTML=viewVenues(); wireVenues(); }
   else if(state.view==='documents'){ el.innerHTML=viewDocuments(); wireDocuments(); }
   else if(state.view==='portal'){ el.innerHTML=viewPortal(); wirePortal(); }
   else if(state.view==='finance')el.innerHTML=viewFinance();
@@ -4040,7 +4316,7 @@ function heroStack(list){
   var tint=eventTint(e.id);
   var pct=evPct(e);
   var kids=evChildren(e.id);
-  var next3=(e.timeline||[]).slice(0,3);
+  var next3=tlRows(e).slice(0,3);
   /* The event's own cover, the primary's, then the client's — evPhoto() picks.
      Each card in the deck can now carry its own picture, which is the whole
      point of the stack: four events, four photographs, not one repeated. */
@@ -4288,6 +4564,59 @@ function wireBoard(){
   }
 }
 
+/* --- The archive: the work, after the work ---
+   The product ended at the event. Everything a studio is actually selling —
+   what last September looked like, the venues they know, the day as it turned
+   out — had nowhere to live, and mood boards are an input rather than a
+   record. This is the screen a planner shows a prospective client, and it
+   costs almost nothing: the data is already here and every event has a cover.
+   Primaries only, newest first — a weekend is one job, not four. */
+function archiveEvents(){
+  return evPrimaries().filter(function(e){
+    return e.date&&daysAway(e.date)<0;
+  }).sort(function(a,b){ return a.date<b.date?1:-1; });
+}
+/* Initials off an event title rather than off a couple's name, so the little
+   words do not get a letter: "Midsummer at Ellery" is ME, not MA. The pattern
+   is a literal inside the function on purpose — a var up here would be
+   undefined for any render that beat its assignment. */
+function evMono(e){
+  var w=String((e&&e.title)||'').split(/[\s&\u00b7,\-\u2013\u2014]+/).filter(function(x){
+    return x&&!/^(a|an|and|at|by|de|for|in|la|le|of|on|the|to|von|with)$/i.test(x);
+  });
+  return (w.slice(0,2).map(function(x){return x.charAt(0);}).join('')||'\u2014').toUpperCase();
+}
+function viewArchive(){
+  var past=archiveEvents();
+  if(!past.length)return emptyState('Nothing wrapped yet. Events move here on their own once the day has passed.');
+  var year=null, out='';
+  past.forEach(function(e){
+    var y=String(e.date).slice(0,4);
+    if(y!==year){ year=y; out+='<div class="arc-year">'+esc(y)+'</div>'; }
+    var cov=evPhoto(e), lead=leadForEvent(e), kids=evChildren(e.id);
+    var roster=rosterFor(e), came=roster.filter(function(g){return gRsvp(g,e)==='yes';}).length;
+    /* An empty venue on a past event reads worse than no venue at all: "to be
+       confirmed" about a day that has already happened. */
+    var meta=[fmtDate(e.date)];
+    if(e.venue&&String(e.venue).trim())meta.push(esc(e.venue));
+    var stat=[];
+    if(came)stat.push('<b>'+came+'</b> guests');
+    if(lead&&lead.value)stat.push('<b>'+money(lead.value)+'</b>');
+    out+='<button class="arc-card'+(cov?' has-photo':'')+'" data-openevent="'+esc(e.id)+'"'+
+      (cov?' style="background-image:url('+cov+')"':' style="background:'+eventTint(e.id)+'"')+'>'+
+      (cov?'':'<span class="arc-mono">'+esc(evMono(e))+'</span>')+
+      '<span class="arc-veil"></span>'+
+      '<span class="arc-tx">'+
+        '<span class="arc-k">'+esc(evType(e))+(kids.length?' · '+(kids.length+1)+' events':'')+'</span>'+
+        '<span class="arc-n">'+esc(e.title)+'</span>'+
+        '<span class="arc-m">'+meta.join(' · ')+'</span>'+
+        (stat.length?'<span class="arc-s">'+stat.join('<i>·</i>')+'</span>':'')+
+      '</span>'+
+    '</button>';
+  });
+  return '<div class="arc-grid">'+out+'</div>';
+}
+
 /* --- Clients --- */
 /* "Ava & Julian" is two people, so two letters. Split on the ampersand as well
    as on spaces, or every couple in the grid reads AJ-less and identical. */
@@ -4312,6 +4641,18 @@ function leadWash(id){
   var ids=db.leads.map(function(x){return x.id;}).sort();
   var i=ids.indexOf(id);
   return LEAD_WASHES[(i<0?0:i)%LEAD_WASHES.length];
+}
+/* The banner for a client file. Their own if they have chosen one, otherwise
+   the event's cover — the same photograph nine times out of ten, and being
+   asked for it twice is a chore. Deliberately NOT evPhoto(), which falls back
+   to the client's portrait: a head-and-shoulders picture cropped to a wide
+   band is precisely the stretched, badly-cut header this replaces. */
+function leadCover(l){
+  if(!l)return null;
+  if(l.cover)return l.cover;
+  var e=eventForLead(l);
+  if(!e)return null;
+  return e.photo||((evPrimary(e)||{}).photo)||null;
 }
 function leadsByDate(){
   return db.leads.slice().sort(function(a,b){return a.date<b.date?-1:1;});
@@ -4391,7 +4732,7 @@ function viewClientDetail(id){
   var owed=invs.filter(function(x){return x.status==='due'||x.status==='over';}).reduce(function(a,x){return a+x.amount;},0);
   var away=daysAway(l.date);
 
-  var initials=leadInitials(l);
+  var initials=leadInitials(l), cover=leadCover(l), wash=leadWash(l.id);
   /* One gapped column rather than a margin on each block. The event workspace
      already does this with .ev-col; here every block carried its own inline
      margin-bottom, so evSection() — which has none, because in the workspace
@@ -4400,58 +4741,58 @@ function viewClientDetail(id){
   '<div class="detail-col">'+
   sampleBanner()+
   /* Their photograph, given the page rather than a corner of it. A client file
-   is about one couple; a 76px tile beside a page title says "record", and a
-   banner says "them". The tile is still the answer when there is no
-   photograph — an initials medallion is a finished thing, not a gap — so the
-   old head stays for that case rather than leaving a grey slab. */
-  (l.photo
-   ? '<div class="detail-head has-photo">'+
-       '<label class="dh-band" id="clientPhoto" tabindex="0" title="Replace the photograph" '+
-         'style="background-image:url('+l.photo+')">'+
-         '<input type="file" id="clientPhotoInput" accept="image/*" hidden>'+
-         '<span class="dh-band-ed">✎ Replace</span>'+
-         '<span class="dh-band-tx">'+
+     is about one couple; a 76px tile beside a page title says "record", and a
+     banner says "them".
+
+     Two pictures, because they are two different jobs. The portrait is a
+     portrait — a phone photograph of a couple, tall, their faces in the middle
+     — and stretching it across a 330px band cropped their heads off and left
+     the rest soft. So the band gets a cover in the shape a cover is used at,
+     defaulting to the event's own so nobody has to choose the same photograph
+     twice, and the portrait stays a portrait: a medallion on the band, the
+     same circle it has in the card grid.
+
+     With no cover the band takes the client's wash — the DARK half of the
+     pair, the one the medallion uses, so the white type over it needs no
+     second set of rules. One band, one set of colours, photograph or not. */
+  '<div class="detail-head has-photo">'+
+     '<div class="dh-band'+(cover?' has-photo':'')+'" '+
+       (cover?'style="background-image:url('+cover+')"':'style="background:'+wash[1]+'"')+'>'+
+       '<input type="file" id="clientCoverInput" accept="image/*" hidden>'+
+       '<input type="file" id="clientPhotoInput" accept="image/*" hidden>'+
+       '<span class="dh-band-acts">'+
+         '<button type="button" class="dh-band-ed" id="clientCover">✎ '+
+           (cover?'Replace cover':'Add a cover')+'</button>'+
+         (l.cover?'<button type="button" class="dh-band-ed" id="clientCoverClear" '+
+           'title="Go back to the event’s cover">Use the event’s</button>':'')+
+       '</span>'+
+       '<span class="dh-band-tx">'+
+         '<button type="button" class="dh-face'+(l.photo?' has-photo':'')+'" id="clientPhoto" '+
+           'title="'+(l.photo?'Replace the portrait':'Add a portrait')+'" '+
+           (l.photo?'style="background-image:url('+l.photo+')"':'style="background:'+wash[0]+'"')+'>'+
+           (l.photo?'':'<span>'+esc(initials)+'</span>')+
+           '<span class="dh-face-ed">✎</span>'+
+         '</button>'+
+         '<span class="dh-band-id">'+
            '<span class="dh-band-k">'+esc(l.type||'Client')+'</span>'+
            '<span class="dh-band-n">'+esc(l.names)+'</span>'+
            '<span class="dh-band-m">'+fmtDate(l.date)+' · '+esc(venueName(l.venue))+'</span>'+
          '</span>'+
-         '<span class="dh-band-v">'+
-           '<span class="dh-v">'+money(l.value)+'</span>'+
-           '<span class="dh-l">contract value</span>'+
-         '</span>'+
-       '</label>'+
-       '<div class="dh-strip">'+
-         '<span class="pill" style="background:'+s.color+'22;color:'+s.color+'">'+s.name+'</span>'+
-         (l.guests?'<span class="pill">'+l.guests+' guests</span>':'')+
-         (away>=0?'<span class="pill gold">'+away+' days away</span>':'<span class="pill">Completed</span>')+
-         '<span style="flex:1"></span>'+
-         '<button class="btn btn-quiet btn-sm" id="editClient">✎ Edit details</button>'+
-         '<button class="btn btn-quiet btn-sm" id="clientBible">◈ Export bible</button>'+
-       '</div>'+
-     '</div>'
-   : '<div class="detail-head">'+
-    '<div class="dh-main">'+
-      '<div class="dh-id">'+
-        '<label class="dh-photo" id="clientPhoto" tabindex="0" title="Upload a photo">'+
-          '<input type="file" id="clientPhotoInput" accept="image/*" hidden>'+
-          '<span>'+esc(initials)+'</span>'+
-          '<span class="dh-photo-ed">✎</span>'+
-        '</label>'+
-        '<div>'+
-          '<div class="dh-name">'+esc(l.names)+'</div>'+
-          '<div class="dh-meta">'+esc(l.type)+' · '+fmtDate(l.date)+' · '+esc(venueName(l.venue))+'</div>'+
-          '<div class="dh-tags">'+
-            '<span class="pill" style="background:'+s.color+'22;color:'+s.color+'">'+s.name+'</span>'+
-            (l.guests?'<span class="pill">'+l.guests+' guests</span>':'')+
-            (away>=0?'<span class="pill gold">'+away+' days away</span>':'<span class="pill">Completed</span>')+
-          '</div>'+
-        '</div>'+
-      '</div>'+
-    '</div>'+
-    '<div class="dh-value"><span class="dh-v">'+money(l.value)+'</span><span class="dh-l">contract value</span>'+
-      '<button class="btn btn-ghost btn-sm" id="editClient" style="margin-top:10px">✎ Edit details</button>'+
-      '<button class="btn btn-ghost btn-sm" id="clientBible" style="margin-top:8px">◈ Export bible</button></div>'+
-  '</div>')+
+       '</span>'+
+       '<span class="dh-band-v">'+
+         '<span class="dh-v">'+money(l.value)+'</span>'+
+         '<span class="dh-l">contract value</span>'+
+       '</span>'+
+     '</div>'+
+     '<div class="dh-strip">'+
+       '<span class="pill" style="background:'+s.color+'22;color:'+s.color+'">'+s.name+'</span>'+
+       (l.guests?'<span class="pill">'+l.guests+' guests</span>':'')+
+       (away>=0?'<span class="pill gold">'+away+' days away</span>':'<span class="pill">Completed</span>')+
+       '<span style="flex:1"></span>'+
+       '<button class="btn btn-quiet btn-sm" id="editClient">✎ Edit details</button>'+
+       '<button class="btn btn-quiet btn-sm" id="clientBible">◈ Export bible</button>'+
+     '</div>'+
+   '</div>'+
   '<div class="stat-row">'+
     stat('Collected',money(paid),invs.filter(function(x){return x.status==='paid';}).length+' payments','up')+
     stat('Outstanding',money(owed),owed?'awaiting payment':'all settled')+
@@ -4860,9 +5201,9 @@ function viewEventDetail(id){
 
   '<div class="grid-2" style="align-items:start">'+
     '<div class="ev-col">'+
-      evSection('timeline','Day-of Timeline',e.timeline.length,
+      evSection('timeline','Day-of Timeline',tlRows(e).length,
         '<div style="padding:20px 22px"><div class="tl">'+
-          (e.timeline.length?e.timeline.map(function(t){return '<div class="tl-item"><div class="time">'+esc(t.t)+'</div><div class="ev">'+esc(t.ev)+rowActions('timeline',t.id)+'</div><div class="ds">'+esc(t.ds)+'</div></div>';}).join(''):'<div class="empty-hint">No running order yet.</div>')+
+          (tlRows(e).length?tlMarkup(e,true):'<div class="empty-hint">No running order yet.</div>')+
         '</div><button class="btn btn-ghost btn-sm" data-addtl="1" style="margin-top:14px">＋ Add moment</button></div>')+
 
       evSection('vendors','Vendor Team',vend.length,
@@ -5692,6 +6033,281 @@ function eventForLead(lead){
          db.events.find(function(e){return e.leadId===lead.id;})||
          db.events.find(function(e){return e.title===lead.names;})||null;
 }
+/* ---- Venues: the directory, and one place ----
+   A venue is the thing a studio accumulates knowledge about. Which gate the
+   florist can get a truck through, what time the noise has to stop, how many
+   the orangery actually seats once the band is in it — all of it was living in
+   a note on one night's event, where the next wedding at the same estate could
+   not see it. Here it belongs to the place and is true every time. */
+function viewVenues(){
+  if(state.venueId&&venueById(state.venueId))return viewVenueDetail(state.venueId);
+  var q=(state.venueQ||'').toLowerCase();
+  var list=(db.venues||[]).filter(function(v){
+    if(!q)return true;
+    return [v.name,v.kind,v.notes,(v.address||{}).city,(v.contact||{}).name]
+      .join(' ').toLowerCase().indexOf(q)>-1;
+  }).sort(function(a,b){
+    if(a.preferred!==b.preferred)return a.preferred?-1:1;
+    return a.name.localeCompare(b.name);
+  });
+  var head='<div class="cl-head">'+
+    '<input class="v-search" id="venueSearch" placeholder="Search venues\u2026" '+
+      'value="'+esc(state.venueQ||'')+'" aria-label="Search venues">'+
+    '<button class="btn btn-gold btn-sm" id="addVenue">\uff0b Add a venue</button>'+
+  '</div>';
+  if(!(db.venues||[]).length){
+    return head+emptyState('No venues yet. Any place you have already typed on an event '+
+      'is here the moment you add it \u2014 or start one from scratch.');
+  }
+  if(!list.length)return head+emptyState('Nothing matches \u201c'+esc(state.venueQ||'')+'\u201d.');
+  return head+'<div class="vn-grid">'+list.map(function(v){
+    var n=eventsAtVenue(v.id).length, cap=venueCap(v), city=(v.address||{}).city||'';
+    return '<button class="vn-card" data-venue="'+esc(v.id)+'">'+
+      '<span class="vn-face'+(v.photo?' has-photo':'')+'"'+
+        (v.photo?' style="background-image:url('+v.photo+')"':'')+'>'+
+        (v.photo?'':'<span class="vn-mark">\u25c7</span>')+
+        (v.preferred?'<span class="vn-star" title="Preferred">\u2605</span>':'')+
+      '</span>'+
+      '<span class="vn-body">'+
+        '<span class="vn-n">'+esc(v.name)+'</span>'+
+        '<span class="vn-m">'+esc([v.kind,city].filter(Boolean).join(' \u00b7 ')||'\u2014')+'</span>'+
+        '<span class="vn-f">'+
+          '<span>'+esc(cap||'Capacity not set')+'</span>'+
+          '<span class="vn-c">'+n+' event'+(n===1?'':'s')+'</span>'+
+        '</span>'+
+      '</span>'+
+    '</button>';
+  }).join('')+'</div>';
+}
+function viewVenueDetail(id){
+  var v=venueById(id);
+  if(!v){ state.venueId=null; return viewVenues(); }
+  var held=eventsAtVenue(id).filter(function(e){return !evIsSub(e);})
+    .sort(function(a,b){return a.date<b.date?1:-1;});
+  var addr=addrLines(v.address), cap=venueCap(v);
+  var c=v.contact||{};
+  return '<button class="back-link" data-backvenue="1">\u2039 All venues</button>'+
+  '<div class="detail-col">'+
+    '<div class="detail-head has-photo">'+
+      '<div class="dh-band vn-band'+(v.photo?' has-photo':'')+'" '+
+        (v.photo?'style="background-image:url('+v.photo+')"':'')+'>'+
+        (v.photo?'':'<span class="vn-band-mark">\u25c7</span>')+
+        '<input type="file" id="venuePhotoInput" accept="image/*" hidden>'+
+        '<span class="dh-band-acts">'+
+          '<button type="button" class="dh-band-ed" id="venuePhoto">\u270e '+
+            (v.photo?'Replace photo':'Add a photo')+'</button>'+
+        '</span>'+
+        '<span class="dh-band-tx">'+
+          '<span class="dh-band-id">'+
+            '<span class="dh-band-k">'+esc(v.kind||'Venue')+'</span>'+
+            '<span class="dh-band-n">'+esc(v.name)+'</span>'+
+            '<span class="dh-band-m">'+esc(addr.join(' \u00b7 ')||'No address yet')+'</span>'+
+          '</span>'+
+        '</span>'+
+        (cap?'<span class="dh-band-v"><span class="dh-v">'+esc(cap.split(' \u00b7 ')[0].replace(' seated',''))+'</span>'+
+          '<span class="dh-l">seated</span></span>':'')+
+      '</div>'+
+      '<div class="dh-strip">'+
+        '<button class="pill'+(v.preferred?' gold':'')+'" id="venueFav">'+
+          (v.preferred?'\u2605 Preferred':'\u2606 Mark preferred')+'</button>'+
+        (cap?'<span class="pill">'+esc(cap)+'</span>':'')+
+        '<span class="pill">'+held.length+' event'+(held.length===1?'':'s')+'</span>'+
+        '<span style="flex:1"></span>'+
+        (addr.length?'<a class="btn btn-quiet btn-sm" target="_blank" rel="noopener" '+
+          'href="https://www.google.com/maps/search/?api=1&query='+
+          encodeURIComponent(v.name+' '+addr.join(' '))+'">\u25ce Open in Maps</a>':'')+
+        '<button class="btn btn-quiet btn-sm" id="editVenue">\u270e Edit details</button>'+
+      '</div>'+
+    '</div>'+
+    '<div class="grid-2" style="align-items:start">'+
+      '<div class="ev-col">'+
+        evSection('vnspaces','Spaces',(v.spaces||[]).length,
+          '<div style="padding:18px 22px">'+
+          ((v.spaces||[]).length
+            ?'<div class="tbl-wrap"><table><thead><tr><th>Room</th><th>Seated</th><th>Standing</th><th>Note</th><th></th></tr></thead><tbody>'+
+              v.spaces.map(function(sp){
+                return '<tr><td><b>'+esc(sp.name)+'</b></td><td>'+(sp.seated||'\u2014')+'</td>'+
+                  '<td>'+(sp.standing||'\u2014')+'</td><td>'+esc(sp.note||'')+'</td>'+
+                  '<td style="text-align:right">'+rowActions('space',sp.id)+'</td></tr>';
+              }).join('')+'</tbody></table></div>'
+            :'<div class="empty-hint">The orangery, the lawn, the long gallery \u2014 whatever this place '+
+             'can actually give you, with what each one holds.</div>')+
+          '<button class="btn btn-ghost btn-sm" data-addspace="1" style="margin-top:14px">\uff0b Add a space</button>'+
+          '</div>')+
+        evSection('vnnotes','Site Notes',v.notes?1:0,
+          '<div style="padding:18px 22px">'+
+            '<textarea class="notes-box" id="venueNotes" rows="5" '+
+              'placeholder="Load-in gates, curfews, parking, power, wet-weather plan \u2014 the things that are true every time you work here.">'+
+              esc(v.notes||'')+'</textarea>'+
+            '<div class="hint" id="venueNotesSaved">Saves as you type.</div>'+
+          '</div>')+
+      '</div>'+
+      '<div class="ev-col">'+
+        evSection('vncontact','Coordinator',c.name?1:0,
+          '<div style="padding:18px 22px">'+
+          (c.name
+            ?'<div class="vc-n">'+esc(c.name)+'</div><div class="vc-r">'+esc(c.role||'')+'</div>'+
+             '<div class="vc-l">'+
+               (c.phone?'<a href="tel:'+esc(String(c.phone).replace(/[^\d+]/g,''))+'">'+esc(c.phone)+'</a>':'')+
+               (c.email?'<a href="mailto:'+esc(c.email)+'">'+esc(c.email)+'</a>':'')+
+             '</div>'
+            :'<div class="empty-hint">No coordinator on file. Add one under Edit details.</div>')+
+          (v.website?'<div class="vc-l" style="margin-top:10px"><a href="'+esc(v.website)+'" target="_blank" rel="noopener">'+esc(v.website)+'</a></div>':'')+
+          '</div>')+
+        evSection('vnevents','Events Here',held.length,
+          held.length
+            ?'<div class="tbl-wrap"><table><tbody>'+held.map(function(e){
+                return '<tr><td><button class="link-btn" data-openevent="'+esc(e.id)+'">'+esc(e.title)+'</button>'+
+                  '<div class="v-sub">'+fmtDate(e.date)+'</div></td>'+
+                  '<td style="text-align:right"><span class="pill">'+esc(evType(e))+'</span></td></tr>';
+              }).join('')+'</tbody></table></div>'
+            :'<div class="empty-hint" style="padding:22px">Nothing booked here yet.</div>')+
+      '</div>'+
+    '</div>'+
+  '</div>';
+}
+function openVenueModal(v){
+  var isNew=!v;
+  var a=(v&&v.address)||{}, c=(v&&v.contact)||{};
+  openEditor({
+    title:isNew?'Add a Venue':'Edit Venue', twoCol:true,
+    saveLabel:isNew?'Add venue':'Save changes',
+    onDelete:isNew?null:function(){ closeModal(); deleteRecord('venue',v.id); },
+    deleteLabel:v&&v.name,
+    fields:[
+      {id:'name',label:'Venue name',value:v&&v.name,required:true,full:true},
+      /* A combo rather than a select for the same reason vendor categories
+         are: a studio works at barns, beaches, museums and somebody's farm. */
+      {id:'kind',label:'Kind',type:'combo',value:v&&v.kind,options:venueKinds(),
+       placeholder:'Estate, barn, hotel, museum\u2026'},
+      {id:'website',label:'Website',value:v&&v.website,placeholder:'https://'},
+      {id:'seated',label:'Seats (dining)',type:'number',value:v&&v.seated},
+      {id:'standing',label:'Holds (standing)',type:'number',value:v&&v.standing},
+      {id:'line1',label:'Address',value:a.line1,full:true},
+      {id:'line2',label:'Address line 2',value:a.line2,full:true},
+      {id:'city',label:'City',value:a.city},
+      {id:'region',label:'State / region',value:a.region},
+      {id:'postal',label:'Postcode',value:a.postal},
+      {id:'country',label:'Country',value:a.country},
+      {id:'cname',label:'Coordinator',value:c.name},
+      {id:'crole',label:'Their role',value:c.role,placeholder:'Venue Coordinator'},
+      {id:'cphone',label:'Phone',type:'tel',value:c.phone},
+      {id:'cemail',label:'Email',type:'email',value:c.email}
+    ],
+    onSave:function(x){
+      var nm=(x.name||'').trim();
+      if(!nm){ toast('Give the venue a name.'); return; }
+      /* One record per place. Two "Ashcombe Barn"s in a directory is the exact
+         duplication this feature exists to end, so a clash is refused rather
+         than merged — merging would have to choose whose address to keep. */
+      var clash=(db.venues||[]).find(function(y){
+        return y.name.trim().toLowerCase()===nm.toLowerCase()&&(!v||y.id!==v.id); });
+      if(clash){ toast('\u201c'+clash.name+'\u201d is already in your venues.'); return; }
+      var rec=v||{id:uid('vn'),spaces:[],photo:null,photoPath:null,preferred:false};
+      var oldName=rec.name;
+      rec.name=nm; rec.kind=(x.kind||'').trim(); rec.website=(x.website||'').trim();
+      rec.seated=Math.max(0,x.seated||0); rec.standing=Math.max(0,x.standing||0);
+      rec.address={line1:x.line1||'',line2:x.line2||'',city:x.city||'',
+                   region:x.region||'',postal:x.postal||'',country:x.country||''};
+      rec.contact={name:x.cname||'',role:x.crole||'',phone:x.cphone||'',email:x.cemail||''};
+      if(isNew){ rec.notes=''; db.venues.push(rec); }
+      /* Renaming the place renames it everywhere it is used. Events linked by
+         id follow on their own; the cached name on each one has to be told. */
+      else if(oldName&&oldName!==nm){
+        db.events.forEach(function(e){ if(venueFor(e)===rec)e.venue=nm; });
+      }
+      closeModal(); afterChange();
+      toast(isNew?(nm+' added to your venues \u2726'):'Venue updated \u2726');
+    }
+  });
+}
+function openSpaceModal(v,sp){
+  if(!v)return;
+  var isNew=!sp;
+  openEditor({
+    title:isNew?'Add a Space':'Edit Space', sub:v.name, twoCol:true,
+    saveLabel:isNew?'Add':'Save changes',
+    onDelete:isNew?null:function(){ closeModal(); deleteRecord('space',sp.id); },
+    deleteLabel:sp&&sp.name,
+    fields:[
+      {id:'name',label:'Name',value:sp&&sp.name,required:true,full:true,
+       placeholder:'The Orangery'},
+      {id:'seated',label:'Seats',type:'number',value:sp&&sp.seated},
+      {id:'standing',label:'Standing',type:'number',value:sp&&sp.standing},
+      {id:'note',label:'Note',value:sp&&sp.note,full:true,
+       placeholder:'Low beams at the north end \u2014 no uplighters'}
+    ],
+    onSave:function(x){
+      if(!(x.name||'').trim()){ toast('Give the space a name.'); return; }
+      var rec=sp||{id:uid('sp')};
+      rec.name=x.name.trim(); rec.seated=Math.max(0,x.seated||0);
+      rec.standing=Math.max(0,x.standing||0); rec.note=(x.note||'').trim();
+      if(isNew)v.spaces.push(rec);
+      closeModal(); afterChange();
+    }
+  });
+}
+/* What we know of, plus whatever this studio has typed — the same self-tending
+   list the vendor categories use. */
+function venueKinds(){
+  var out=['Estate','Barn','Hotel','Winery','Museum','Garden','Beach','Private home',
+           'Restaurant','Gallery','Ballroom','Church','Farm','Marquee'];
+  (db.venues||[]).forEach(function(v){
+    var k=String(v.kind||'').trim();
+    if(k&&out.indexOf(k)<0)out.push(k);
+  });
+  out.push('Other');
+  return out;
+}
+function wireVenues(){
+  var q=$('#venueSearch');
+  if(q)q.oninput=function(){ var pos=q.selectionStart; state.venueQ=q.value;
+    render(); var n=$('#venueSearch'); if(n){ n.focus(); n.setSelectionRange(pos,pos); } };
+  var add=$('#addVenue');
+  if(add)add.onclick=function(){ openVenueModal(null); };
+  /* Through setView, not render(): the page header is painted there, and a
+     detail screen that sets its own state and re-renders keeps the directory's
+     header above it. */
+  document.querySelectorAll('[data-venue]').forEach(function(b){
+    b.onclick=function(){ setView('venues',{venueId:b.dataset.venue}); };
+  });
+  var back=$('[data-backvenue]');
+  if(back)back.onclick=function(){ setView('venues',{venueId:null}); };
+
+  var v=venueById(state.venueId);
+  if(!v)return;
+  var ed=$('#editVenue');   if(ed)ed.onclick=function(){ openVenueModal(v); };
+  var sp=$('[data-addspace]'); if(sp)sp.onclick=function(){ openSpaceModal(v,null); };
+  var fav=$('#venueFav');
+  if(fav)fav.onclick=function(){ v.preferred=!v.preferred; afterChange(); };
+  var pin=$('#venuePhotoInput'), pbtn=$('#venuePhoto');
+  if(pbtn&&pin)pbtn.onclick=function(){ pin.click(); };
+  if(pin)pin.onchange=function(){
+    var f=pin.files&&pin.files[0]; pin.value='';
+    if(!f)return;
+    if(!/^image\//.test(f.type)){ toast('Choose an image file.'); return; }
+    openPhotoCrop(f,{aspect:16/9,out:1440,title:'Frame the photo',
+                     sub:'The header on '+v.name+' and its tile in the directory.'},
+      function(dataUrl){
+        var prev=v.photo, prevPath=v.photoPath;
+        v.photo=dataUrl; v.photoPath=null;
+        if(!save()){ v.photo=prev; v.photoPath=prevPath; return; }
+        closeModal(); render(); toast('Photo updated \u2726');
+      });
+  };
+  var nt=$('#venueNotes');
+  if(nt){
+    var t=null;
+    nt.oninput=function(){
+      clearTimeout(t);
+      t=setTimeout(function(){
+        v.notes=nt.value; save();
+        var h=$('#venueNotesSaved');
+        if(h){ h.textContent='Saved \u2713'; setTimeout(function(){h.textContent='Saves as you type.';},1400); }
+      },400);
+    };
+  }
+}
 function stars(n){
   var out='';
   for(var i=1;i<=5;i++)out+='<span class="star'+(i<=n?' on':'')+'">★</span>';
@@ -5800,22 +6416,42 @@ function vendorTeamMarkup(ev,editable){
     (editable?'<div class="sec-actions"><button class="btn btn-ghost btn-sm" data-addbooking="'+esc(ev.id)+'">＋ Book a vendor</button>'+
       '<span class="sec-badge" style="margin-left:auto">'+money(total)+' total</span></div>':'');
 }
+/* "Beauty" was one box for a trade a planner books by name — the hair and
+   make-up team is on the call sheet, in the timeline and in the getting-ready
+   room, and it is not the same booking as a spa. Renamed rather than added
+   alongside, so there are not two boxes for the same vendor; normalize()
+   carries anything already filed under the old name across. */
 var VENDOR_CATS=['Florals','Catering','Photography','Videography','Music','Rentals','Cake',
-  'Venue','Beauty','Transport','Stationery','Lighting','Planning','Other'];
+  'Venue','Hair & Makeup','Transport','Stationery','Lighting','Planning','Other'];
+/* What we ship, plus every category the directory is actually using. Built
+   from the vendors rather than stored as a preference, so a category the
+   studio invented appears the moment they type it and stops being offered
+   once the last vendor filed under it has gone — there is no list to curate
+   and nothing to prune. 'Other' stays at the end where it belongs. */
+function vendorCats(){
+  var out=VENDOR_CATS.filter(function(c){ return c!=='Other'; });
+  (db.vendors||[]).forEach(function(v){
+    var c=String(v.cat||'').trim();
+    if(c&&c!=='Other'&&out.indexOf(c)<0)out.push(c);
+  });
+  out.push('Other');
+  return out;
+}
 /* The vendor's own details, shared by the directory form and the booking form
    so a vendor created from a client file is a full directory record, not a
    stub that has to be filled in again later. */
 function vendorFields(v,showIf){
   return [
     {id:'name',label:'Business name',value:v&&v.name,required:true,full:true,showIf:showIf},
-    {id:'cat',label:'Category',type:'select',value:(v&&v.cat)||'Florals',options:VENDOR_CATS,showIf:showIf},
+    {id:'cat',label:'Category',type:'combo',value:(v&&v.cat)||'',options:vendorCats(),
+     placeholder:'Florals, Hair & Makeup, Officiant…',showIf:showIf},
     {id:'contact',label:'Contact name',value:v&&v.contact,showIf:showIf},
     {id:'email',label:'Email',type:'email',value:v&&v.email,showIf:showIf},
     {id:'phone',label:'Phone',type:'tel',value:v&&v.phone,showIf:showIf}
   ];
 }
 function newVendorFrom(v){
-  var rec={id:uid('vn'),name:(v.name||'').trim(),cat:v.cat||'Other',
+  var rec={id:uid('vn'),name:(v.name||'').trim(),cat:(v.cat||'').trim()||'Other',
     contact:(v.contact||'').trim(),email:(v.email||'').trim(),phone:(v.phone||'').trim(),
     notes:'',preferred:false,rating:0};
   db.vendors.push(rec);
@@ -6397,6 +7033,57 @@ function wireDocuments(){
 }
 
 /* A venue is often booked after the client. Say so rather than leaving a gap. */
+function venueById(id){ return id?(db.venues||[]).find(function(v){return v.id===id;})||null:null; }
+/* The record behind an event, if there is one. venueId first — the name on the
+   event is a cache, the way an invoice's client name is a cache of its lead —
+   then a name match, so an event typed before the directory existed still
+   finds its place. */
+function venueFor(e){
+  if(!e)return null;
+  var v=venueById(e.venueId);
+  if(v)return v;
+  var nm=String(e.venue||'').trim().toLowerCase();
+  if(!nm)return null;
+  return (db.venues||[]).find(function(x){return String(x.name).trim().toLowerCase()===nm;})||null;
+}
+/* What to call the place. The record wins where there is one, so renaming a
+   venue in the directory reaches every event at once. */
+function venueOf(e){
+  var v=venueFor(e);
+  return v?v.name:String((e&&e.venue)||'').trim();
+}
+/* Address, contact and notes: the venue's if it has them, otherwise whatever
+   the event carried before there were venues at all. Nothing is lost, and an
+   event that has been given a better address than the directory keeps it. */
+function venueAddrOf(e){
+  var v=venueFor(e);
+  if(v&&v.address&&Object.keys(v.address).some(function(k){return v.address[k];}))return v.address;
+  return (e&&e.venueAddress)||{};
+}
+function venueContactOf(e){
+  var v=venueFor(e);
+  if(v&&v.contact&&v.contact.name)return v.contact;
+  return (e&&e.venueContact)||{};
+}
+function venueNotesOf(e){
+  var v=venueFor(e);
+  return (v&&v.notes)||(e&&e.venueNotes)||'';
+}
+function eventsAtVenue(id){
+  return db.events.filter(function(e){ var v=venueFor(e); return !!v&&v.id===id; });
+}
+/* The names already in the directory, for the event form's suggestions. */
+function venueNames(){
+  return (db.venues||[]).map(function(v){return v.name;})
+    .sort(function(a,b){return a.localeCompare(b);});
+}
+function venueCap(v){
+  if(!v)return '';
+  var p=[];
+  if(v.seated)p.push(v.seated+' seated');
+  if(v.standing)p.push(v.standing+' standing');
+  return p.join(' \u00b7 ');
+}
 function venueName(v){ return (v&&String(v).trim())?v:'Venue to be confirmed'; }
 function venueDot(v,tail){ var n=(v&&String(v).trim())?v:''; 
   return n?(n+(tail?' · '+tail:'')):(tail||'Venue to be confirmed'); }
@@ -6510,12 +7197,37 @@ function wireClientDetail(){
   };
 
   var photo=$('#clientPhoto'), pin=$('#clientPhotoInput');
+  if(photo&&pin)photo.onclick=function(){ pin.click(); };
+  /* The band's own picture: 16:9 at 1440, exactly what the event cover is
+     cropped to, so the two are interchangeable and "use the event's" is a
+     swap rather than a different-shaped photograph. */
+  var cin=$('#clientCoverInput'), cbtn=$('#clientCover'), cclr=$('#clientCoverClear');
+  if(cbtn&&cin)cbtn.onclick=function(){ cin.click(); };
+  if(cin)cin.onchange=function(){
+    var f=cin.files&&cin.files[0]; cin.value='';
+    if(!f)return;
+    if(!/^image\//.test(f.type)){toast('Choose an image file.');return;}
+    openPhotoCrop(f,{aspect:16/9,out:1440,title:'Frame the cover',
+                     sub:'This fills the top of '+l.names+'\u2019s file.'},
+      function(dataUrl){
+        var prev=l.cover, prevPath=l.coverPath;
+        /* Clearing coverPath is what makes the new picture upload: mediaUpload()
+           only sends records that have pixels and no path yet. */
+        l.cover=dataUrl; l.coverPath=null;
+        if(!save()){ l.cover=prev; l.coverPath=prevPath; return; }
+        closeModal(); render(); toast('Cover updated \u2726');
+      });
+  };
+  if(cclr)cclr.onclick=function(){
+    l.cover=null; l.coverPath=null;
+    save(); render(); toast('Back to the event\u2019s cover');
+  };
   if(pin)pin.onchange=function(){
     var f=pin.files&&pin.files[0]; pin.value='';
     if(!f)return;
     if(!/^image\//.test(f.type)){toast('Choose an image file.');return;}
-    openPhotoCrop(f,{title:'Frame the photo',
-                     sub:'This is how '+l.names+' appears on their file and in the card grid.'},
+    openPhotoCrop(f,{title:'Frame the portrait',
+                     sub:'The circle on their file and the tile in the card grid.'},
       function(dataUrl){
         var prev=l.photo, prevPath=l.photoPath;
         /* Clearing photoPath is what makes the new picture upload. mediaUpload()
@@ -6528,9 +7240,7 @@ function wireClientDetail(){
         closeModal(); render(); toast('Photo updated ✦');
       });
   };
-  if(photo)photo.addEventListener('keydown',function(e){
-    if(e.key==='Enter'||e.key===' '){e.preventDefault();pin.click();}
-  });
+
 
   wireCustomFields(l);
   var notes=$('#clientNotes');
@@ -7288,6 +7998,13 @@ function settingsPage(k){
         setRow('Export everything','<button class="btn btn-ghost btn-sm" id="s_export">Download JSON</button>','A full backup you can re-import')+
         setRow('Import a backup','<button class="btn btn-ghost btn-sm" id="s_import">Choose file</button>','Replaces what is here now')+
         setRow('Reset to sample data','<button class="btn btn-danger btn-sm" id="s_reset">Reset</button>','Clears your work and restores the demo')+
+        /* This used to live only on the Getting started page, filed under the
+           tours it illustrates, which is not where anyone goes looking for
+           "get the demo out of my studio". */
+        (hasSampleData()?setRow('Sample wedding',
+          '<button class="btn btn-danger btn-sm" id="wipeSample2">Remove</button>',
+          'Priya &amp; Sam and everything attached — the six sample vendors out of your '+
+          'directory, and the guests, documents and invoices'):'')+
       '</div>'+
       /* Put where someone already goes when they are worried about their data,
          and phrased as the question they actually have. */
@@ -7347,8 +8064,9 @@ function toursPage(){
       '<div class="set-card" style="margin-top:22px">'+
         setRow('Sample wedding',
                '<button class="btn btn-danger btn-sm" id="wipeSample">Remove</button>',
-               'Priya &amp; Sam and everything attached — vendors, guests, documents and invoices. '+
-               'The tours still run on an empty studio, they just have less to point at.')+
+               'Priya &amp; Sam and everything attached — the six sample vendors out of your '+
+               'directory, and the guests, documents and invoices. The tours still run on an '+
+               'empty studio, they just have less to point at.')+
       '</div>'
      /* It used to say "Sample data removed — everything here is your own",
         which the app cannot actually know. The demo is recognised by a local
@@ -7874,7 +8592,7 @@ function wireSettings(){
     });
   };
 
-  var ws=$('#wipeSample');
+  var ws=$('#wipeSample')||$('#wipeSample2');
   if(ws)ws.onclick=function(){
     confirmDelete('the sample wedding and everything attached to it',function(){
       var n=removeSampleData();
@@ -8306,14 +9024,12 @@ function viewPortal(){
             '<span class="pw-t">'+esc(x.title)+'</span>'+
             '<span class="pw-d">'+fmtDate(x.date)+(x.startTime?' · '+esc(x.startTime):'')+'</span></div>'+
           (x.venue?'<div class="pw-v">'+esc(venueDot(x.venue,x.loc))+'</div>':'')+
-          ((x.timeline||[]).length
-            ?'<div class="tl">'+x.timeline.map(function(t){
-                return '<div class="tl-item"><div class="time">'+esc(t.t)+'</div><div class="ev">'+esc(t.ev)+'</div><div class="ds">'+esc(t.ds)+'</div></div>';
-              }).join('')+'</div>'
+          (tlRows(x).length
+            ?'<div class="tl">'+tlMarkup(x)+'</div>'
             :'<div class="empty-hint" style="padding:10px 0">Running order to come.</div>')+
         '</div>';
       }).join('')
-      :'<div class="tl">'+e.timeline.map(function(t){return '<div class="tl-item"><div class="time">'+esc(t.t)+'</div><div class="ev">'+esc(t.ev)+'</div><div class="ds">'+esc(t.ds)+'</div></div>';}).join('')+'</div>')+
+      :'<div class="tl">'+tlMarkup(e)+'</div>')+
     '</div></div>'+
     '<div>'+
       '<div class="card" style="margin-bottom:20px"><div class="card-h"><h3>To Review</h3><span class="pill gold">'+pct+'%</span></div><div style="padding:8px 22px 16px">'+
@@ -8941,6 +9657,18 @@ function openEditor(o){
           var val=(typeof op==='object')?op.value:op, lab=(typeof op==='object')?op.label:op;
           return '<option value="'+esc(val)+'"'+(String(v)===String(val)?' selected':'')+'>'+esc(lab)+'</option>';
         }).join('')+'</select>';
+      /* An input with suggestions behind it rather than a select. Every list
+         in this app that describes a trade, a room or a kind of thing is a
+         list somebody's studio will eventually need to add to, and a select
+         says no. This says "here is what we know of" and takes anything. */
+      else if(f.type==='combo'){
+        var lid=id+'_list';
+        ctl='<input id="'+id+'" list="'+lid+'" value="'+esc(v)+'"'+
+          (f.placeholder?' placeholder="'+esc(f.placeholder)+'"':'')+'>'+
+          '<datalist id="'+lid+'">'+(f.options||[]).map(function(op){
+            return '<option value="'+esc((typeof op==='object')?op.value:op)+'"></option>';
+          }).join('')+'</datalist>';
+      }
       else ctl='<input id="'+id+'" type="'+(f.type||'text')+'" value="'+esc(v)+'"'+
         (f.placeholder?' placeholder="'+esc(f.placeholder)+'"':'')+'>';
       return '<div class="field" data-fid="'+f.id+'"'+(f.full?' style="grid-column:1/-1"':'')+'><label for="'+id+'">'+esc(f.label)+
@@ -9568,7 +10296,7 @@ function printSheet(kind,ev){
   if(kind==='timeline'){
     title='Day-of Timeline';
     body='<table class="pr-t"><thead><tr><th style="width:110px">Time</th><th>Moment</th><th>Detail</th></tr></thead><tbody>'+
-      ev.timeline.map(function(t){return '<tr><td><b>'+esc(t.t)+'</b></td><td>'+esc(t.ev)+'</td><td>'+esc(t.ds||'')+'</td></tr>';}).join('')+
+      tlRows(ev).map(function(t){return '<tr><td><b>'+esc(t.t)+'</b></td><td>'+esc(t.ev)+'</td><td>'+esc(t.ds||'')+'</td></tr>';}).join('')+
       '</tbody></table>';
   } else if(kind==='weekend'){
     /* The sheet a coordinator actually carries: every event of the weekend in
@@ -9581,9 +10309,9 @@ function printSheet(kind,ev){
         ' <span>'+fmtDate(x.date)+(x.startTime?' · '+esc(x.startTime):'')+'</span></h3>'+
         '<div class="pr-note">'+esc(venueName(x.venue))+(xa.length?' · '+esc(xa.join(', ')):'')+
           ' · '+rosterFor(x).filter(function(g){return gRsvp(g,x)==='yes';}).length+' attending</div>'+
-        ((x.timeline||[]).length
+        (tlRows(x).length
           ?'<table class="pr-t"><thead><tr><th style="width:110px">Time</th><th>Moment</th><th>Detail</th></tr></thead><tbody>'+
-            x.timeline.map(function(t){return '<tr><td><b>'+esc(t.t)+'</b></td><td>'+esc(t.ev)+'</td><td>'+esc(t.ds||'')+'</td></tr>';}).join('')+
+            tlRows(x).map(function(t){return '<tr><td><b>'+esc(t.t)+'</b></td><td>'+esc(t.ev)+'</td><td>'+esc(t.ds||'')+'</td></tr>';}).join('')+
             '</tbody></table>'
           :'<div class="pr-note">No running order yet.</div>')+
       '</div>';
@@ -9828,9 +10556,9 @@ function bibleBlocks(ev,opts){
     push({h1:'Running order'});
     wk.forEach(function(x){
       push({h2:roleLabel(x,true)+' — '+x.title+' · '+fmtDate(x.date)});
-      if(!(x.timeline||[]).length){ push({p:'No running order yet.'}); return; }
+      if(!tlRows(x).length){ push({p:'No running order yet.'}); return; }
       push({table:{head:['Time','Moment','Detail'],
-        rows:x.timeline.map(function(t){ return [t.t||'',t.ev||'',t.ds||'']; })}});
+        rows:tlRows(x).map(function(t){ return [t.t||'',t.ev||'',t.ds||'']; })}});
     });
   }
   if(want('guests')){
@@ -10864,7 +11592,11 @@ function recordCtx(kind,id){
     timeline:{list:ev&&ev.timeline,label:'timeline item',ev:ev},
     checklist:{list:ev&&ev.checklist,label:'task',ev:ev},
     budget:{list:ev&&ev.budget,label:'budget line',ev:ev},
-    decor:{list:ev&&ev.design&&ev.design.decor,label:'décor item',ev:ev}
+    decor:{list:ev&&ev.design&&ev.design.decor,label:'décor item',ev:ev},
+    venue:{list:db.venues,label:'venue'},
+    /* A space belongs to whichever venue is open, the way a table belongs to
+       whichever event is. */
+    space:{list:(venueById(state.venueId)||{}).spaces,label:'space'}
   };
   var m=maps[kind]; if(!m||!m.list)return null;
   m.item=m.list.find(function(x){return x.id===id;});
@@ -10902,6 +11634,13 @@ function deleteRecord(kind,id){
        orphans them, and a push would then fail the foreign key. */
     if(kind==='guest'){ db.invites=(db.invites||[]).filter(function(i){return i.guestId!==id;}); }
     if(kind==='vendor'){ db.bookings=db.bookings.filter(function(b){return b.vendorId!==id;}); }
+    /* Removing a place from the directory must never remove the events held
+       there. The name stays on each event and goes on being authoritative,
+       exactly as it did before venues existed. */
+    if(kind==='venue'){
+      db.events.forEach(function(e){ if(e.venueId===id)e.venueId=null; });
+      if(state.venueId===id)state.venueId=null;
+    }
     if(kind==='event'){ db.bookings=db.bookings.filter(function(b){return b.eventId!==id;}); }
     if(kind==='lead'){ db.events.forEach(function(e){ if(e.leadId===id)e.leadId=null; });
       /* An invoice matches on leadId when it has one and falls back to the
@@ -10945,9 +11684,12 @@ function editRecord(kind,id){
         if(v.seats<seated){ toast('That table already seats '+seated+'.'); return; }
         it.name=v.name; it.seats=Math.max(1,v.seats); closeModal(); afterChange(); }});},
     booking:function(){ openBookingModal(it.eventId,it); },
+    venue:function(){ openVenueModal(it); },
+    space:function(){ openSpaceModal(venueById(state.venueId),it); },
     vendor:function(){ openEditor({title:'Edit Vendor',twoCol:true,onDelete:del,deleteLabel:it.name,
       fields:[{id:'name',label:'Business name',value:it.name,required:true},
-              {id:'cat',label:'Category',value:it.cat},
+              {id:'cat',label:'Category',type:'combo',value:it.cat,options:vendorCats(),
+               placeholder:'Florals, Hair & Makeup, Officiant\u2026'},
               {id:'contact',label:'Contact name',value:it.contact},
               {id:'email',label:'Email',type:'email',value:it.email},
               {id:'phone',label:'Phone',type:'tel',value:it.phone},
@@ -11017,11 +11759,43 @@ function editRecord(kind,id){
 function toMinutes(t){
   var m=/(\d{1,2}):(\d{2})\s*(AM|PM)?/i.exec(String(t||'').trim());
   if(!m)return 1e9;
-  var h=Number(m[1])%12, mi=Number(m[2]);
-  if(m[3]&&/pm/i.test(m[3]))h+=12;
+  var h=Number(m[1]), mi=Number(m[2]);
+  /* With a meridiem, 12 is the odd one: 12:30 AM is half past midnight.
+     Without one it was typed as 24-hour — folding 16:00 down to 4:00 sorted
+     the reception in before breakfast, which is what this used to do. */
+  if(m[3])h=(h%12)+(/pm/i.test(m[3])?12:0);
   return h*60+mi;
 }
 function sortTimeline(ev){ if(ev)ev.timeline.sort(function(a,b){return toMinutes(a.t)-toMinutes(b.t);}); }
+/* The start time is entered on the event, and until now it lived only in the
+   header: the running order underneath began at whatever moment the planner
+   happened to type first, which is not the same thing as when the day starts.
+   So the start is a row on the timeline — derived rather than stored, so it
+   moves when the field moves and cannot drift out of step with it, and it
+   stands aside if the planner has already written their own moment at that
+   time. Unparseable times sort to the end in toMinutes(), so a start nobody
+   can parse goes to the front by hand: whatever it says, it is the start. */
+function tlRows(e){
+  var rows=(e&&e.timeline||[]).slice();
+  var t=e&&e.startTime&&String(e.startTime).trim();
+  if(!t)return rows;
+  var at=toMinutes(t);
+  if(at<1e9&&rows.some(function(r){return toMinutes(r.t)===at;}))return rows;
+  var row={t:t,ev:(evIsSub(e)?roleLabel(e,false):evType(e))+' begins',ds:'',anchor:true};
+  if(at>=1e9){ rows.unshift(row); return rows; }
+  rows.push(row);
+  rows.sort(function(a,b){return toMinutes(a.t)-toMinutes(b.t);});
+  return rows;
+}
+function tlMarkup(e,acts){
+  return tlRows(e).map(function(t){
+    return '<div class="tl-item'+(t.anchor?' anchor':'')+'">'+
+      '<div class="time">'+esc(t.t)+'</div>'+
+      '<div class="ev">'+esc(t.ev)+(acts&&!t.anchor?rowActions('timeline',t.id):'')+'</div>'+
+      (t.ds?'<div class="ds">'+esc(t.ds)+'</div>':'')+
+    '</div>';
+  }).join('');
+}
 
 /* ============================================================
  * CSV guest import — nobody types a 200-person list by hand.
@@ -11191,7 +11965,8 @@ var SAMPLE_SAFE=['[data-openevent]','[data-client]','[data-back]','[data-backdes
   '[data-clientview]','[data-bibaud]','[data-bibsec]','#bibPdf','#bibDoc','#bibMail','#bibAll','#clientBible',
   '[data-board]','[data-q]','[data-adopt]','[data-sampleinfo]','.ev-card','.ev-sub','.ew-b','.wk-row',
   '#evSwitch','#printEvent','#exportGuests','#exportInv','#calPrev','#calNext','#calToday',
-  '#seatPickCancel','#sampleAdopt','#sampleRemove','.back-link','.srch-row','.tour-x'].join(',');
+  '#seatPickCancel','#sampleAdopt','#sampleRemove','.back-link','.srch-row','.tour-x',
+  '[data-venue]','[data-backvenue]'].join(',');
 function sampleBlock(e){
   var el=e.target;
   if(!el||!el.closest)return;
@@ -11395,6 +12170,15 @@ function mediaItems(){
      record to say it ever had one — the lookup is by id against IndexedDB. */
   (db.leads||[]).forEach(function(l){
     out.push({id:l.id,owner:l,field:'photo',pathField:'photoPath',eventId:null,boardId:null});
+    /* The file's banner is a second object on the same record, so it needs an
+       id of its own: mediaKey() files by id and IndexedDB is keyed by it. */
+    out.push({id:l.id+'-cover',owner:l,field:'cover',pathField:'coverPath',eventId:null,boardId:null});
+  });
+  /* A venue's photograph is the studio's, not a client's — mediaKey() files it
+     under <org>/venues/<id> and the storage policy's client branch cannot
+     match that segment, so it never reaches a portal. */
+  (db.venues||[]).forEach(function(v){
+    out.push({id:v.id,owner:v,field:'photo',pathField:'photoPath',eventId:null,boardId:null,venue:true});
   });
   (db.events||[]).forEach(function(e){
     /* The event's cover, keyed by the event id exactly as a lead's is keyed by
@@ -11568,7 +12352,8 @@ function sbStorage(path,opts){
 /* Object keys:  <org>/leads/<leadId>   client photos, staff only
                  <org>/<eventId>/<imageId>   event media, staff + that couple */
 function mediaKey(org,m){
-  return m.eventId?(org+'/'+m.eventId+'/'+m.id):(org+'/leads/'+m.id);
+  if(m.eventId)return org+'/'+m.eventId+'/'+m.id;
+  return org+'/'+(m.venue?'venues':'leads')+'/'+m.id;
 }
 /* Upload anything that has pixels but no path yet. Runs before the table push
    so the rows can carry their storage_path in the same run. */
@@ -11925,9 +12710,12 @@ function sbMigrateIds(){
     });
     var n=uuidv4(); map[o.id]=n; o.id=n;
   }
-  ['leads','vendors','bookings','invoices','documents','messages','submissions'].forEach(function(k){
+  ['leads','vendors','venues','bookings','invoices','documents','messages','submissions'].forEach(function(k){
     (db[k]||[]).forEach(reid);
   });
+  /* A venue's spaces are rows inside the record rather than rows of their own,
+     but they still travel with it and still need ids the server will accept. */
+  (db.venues||[]).forEach(function(v){ (v.spaces||[]).forEach(reid); });
   if(db.leadForm)reid(db.leadForm);
   (db.questionnaires||[]).forEach(function(q){
     reid(q);
@@ -11959,6 +12747,9 @@ function sbMigrateIds(){
        else. Left alone, the first push would send a child whose parent id no
        longer exists and the whole weekend would come apart. */
     fix(e,'parentId');
+    /* The event points at its place. Miss this and the first push sends a
+       venue_id the server has never heard of — the same trap as parentId. */
+    fix(e,'venueId');
     (e.guests||[]).forEach(function(g){ fix(g,'tableId'); });
     (e.budget||[]).forEach(function(b){ fix(b,'tagEventId'); });
     if(e.design)(e.design.decor||[]).forEach(function(d){ fix(d,'vendorId'); });
@@ -11978,7 +12769,7 @@ function sbMigrateIds(){
      push sent every invoice pointing at a lead id that no longer existed. */
   (db.invoices||[]).forEach(function(r){ fix(r,'leadId'); });
   (db.submissions||[]).forEach(function(s){ fix(s,'leadId'); });
-  ['activeEventId','eventId','clientId','boardId','qId'].forEach(function(k){ fix(state,k); });
+  ['activeEventId','eventId','clientId','boardId','qId','venueId'].forEach(function(k){ fix(state,k); });
   return Object.keys(map).length;
 }
 
@@ -12140,6 +12931,39 @@ function sbPrune(table,keepIds,scope,allowEmpty){
   return sbRest(q,{method:'DELETE',prefer:'return=minimal'});
 }
 
+/* Does this studio's database have leads.cover_path yet? A client file's own
+   banner needs a column, and a build reaches a studio before its migration
+   does — every push carrying a column the table does not have fails whole,
+   which is exactly what left a studio "ahead" holding a half-written state.
+   So the answer is no until proven otherwise, and it is proven asynchronously:
+   the payload is built synchronously, so the first push after upgrading asks
+   the question and the next one acts on the answer. A cover therefore lands in
+   Supabase one push late, which is a fair price. */
+var SB_COVER_COL=null;
+/* And the same question for the venue directory, asked the same way and for
+   the same reason: migration 21 may not have been run yet, and a payload
+   naming a table that is not there fails the whole push. Venues stay local
+   until the answer is yes, which is a feature that does not sync rather than
+   a studio that cannot. */
+var SB_VENUE_TBL=null;
+function sbVenueTbl(){
+  if(SB_VENUE_TBL===null){
+    SB_VENUE_TBL=false;
+    sbRest('venues?select=id&limit=1')
+      .then(function(){ SB_VENUE_TBL=true; })
+      .catch(function(){ SB_VENUE_TBL=false; });
+  }
+  return SB_VENUE_TBL;
+}
+function sbCoverCol(){
+  if(SB_COVER_COL===null){
+    SB_COVER_COL=false;
+    sbRest('leads?select=cover_path&limit=1')
+      .then(function(){ SB_COVER_COL=true; })
+      .catch(function(){ SB_COVER_COL=false; });
+  }
+  return SB_COVER_COL;
+}
 function sbPush(opts){
   var org=SB_STATE.org;
   if(!org)return Promise.reject(new Error('No studio yet.'));
@@ -12175,6 +12999,9 @@ function sbPush(opts){
   };
   var L=notSample(db.leads,'lead'), E=notSample(db.events,'event'),
       V=notSample(db.vendors,'vendor'), B=notSample(db.bookings,'booking');
+  /* A venue is never sample: the directory is lifted out of whatever events a
+     device holds, and the sample's own venue goes when the sample does. */
+  var VN=db.venues||[];
   /* form_submissions.form_id is NOT NULL and points at lead_forms, so the form
      itself has to exist first — it was never being pushed at all. */
   var lf=db.leadForm||null;
@@ -12238,12 +13065,21 @@ function sbPush(opts){
     });
   });
 
+  var coverCol=sbCoverCol(), venueTbl=sbVenueTbl();
   var steps=[
     ['leads',L.map(function(l){ return {id:l.id,org_id:org,names:s(l.names),event_type:s(l.type),event_date:nn(l.date),
       venue:s(l.venue),value:num(l.value),stage:s(l.stage)||'inquiry',guest_count:num(l.guests),email:s(l.email),
       phone:s(l.phone),notes:s(l.notes),partner_a:s(l.partnerA),partner_b:s(l.partnerB),pronouns_a:s(l.pronounsA),
       pronouns_b:s(l.pronounsB),alt_email:s(l.altEmail),preferred_contact:s(l.preferred),source:s(l.source),
-      address:l.address||{},photo_path:nn(l.photoPath)}; })],
+      address:l.address||{},photo_path:nn(l.photoPath),
+      cover_path:coverCol?nn(l.coverPath):undefined}; })],
+    /* Before events, which name one. Sent only when the table is known to be
+       there; an empty step is skipped by the hash check below anyway, so a
+       studio without migration 21 simply never mentions venues. */
+    ['venues',VN.map(function(v){ return {id:v.id,org_id:org,name:s(v.name),kind:s(v.kind),
+      address:v.address||{},contact:v.contact||{},website:s(v.website),
+      seated:num(v.seated),standing:num(v.standing),notes:s(v.notes),
+      spaces:v.spaces||[],photo_path:nn(v.photoPath),preferred:!!v.preferred}; })],
     /* Primaries first. events_parent_guard is a BEFORE ROW trigger, so it runs
        as each row lands rather than at the end of the statement — a child sent
        ahead of its parent is refused for pointing at an event that does not
@@ -12262,6 +13098,7 @@ function sbPush(opts){
       role_label:par&&e.role==='custom'?s(e.roleLabel):'',
       venue_address:e.venueAddress||{},venue_contact:e.venueContact||{},venue_notes:s(e.venueNotes),
       photo_path:nn(e.photoPath),
+      venue_id:venueTbl?nn(e.venueId):undefined,
       floor:{w:num(f.w)||60,h:num(f.h)||40,unit:f.unit||'ft',snap:f.snap!==false,showChairs:f.showChairs!==false}}; })],
     ['vendors',V.map(function(v){ return {id:v.id,org_id:org,name:s(v.name),category:s(v.cat),contact:s(v.contact),
       email:s(v.email),phone:s(v.phone),notes:s(v.notes),preferred:!!v.preferred,rating:num(v.rating)}; })],
@@ -12301,6 +13138,11 @@ function sbPush(opts){
       payload:x,names:s(x.names),email:s(x.email),phone:s(x.phone),
       event_date:nn(x.date),status:x.status||'new'}; }):[]]
   ];
+  /* Dropped outright rather than left empty when migration 21 has not been
+     run. An empty step is harmless on the way up — sbUpsert() short-circuits —
+     but "make Supabase match this device" prunes by table name, and that would
+     send a DELETE to an endpoint that is not there and fail the whole mirror. */
+  if(!venueTbl)steps=steps.filter(function(st){ return st[0]!=='venues'; });
 
   /* Only write what moved. A full push ignores the hashes — that is what the
      manual button means by "make Supabase match this device". */
@@ -12326,12 +13168,20 @@ function sbPush(opts){
              .then(function(){ return docUpload(org); }).then(function(){
     steps.forEach(function(st){
       if(st[0]==='leads')st[1].forEach(function(r){
-        var l=L.find(function(x){return x.id===r.id;}); if(l)r.photo_path=nn(l.photoPath);
+        var l=L.find(function(x){return x.id===r.id;});
+        if(!l)return;
+        r.photo_path=nn(l.photoPath);
+        /* The file's banner is a second object on the same record, uploaded by
+           the same run — and only sent at all once the column is known. */
+        if(coverCol)r.cover_path=nn(l.coverPath);
       });
       /* Events carry a cover of their own now, stamped by the same
          mediaUpload() run — same refresh, same reason. */
       if(st[0]==='events')st[1].forEach(function(r){
         var e=E.find(function(x){return x.id===r.id;}); if(e)r.photo_path=nn(e.photoPath);
+      });
+      if(st[0]==='venues')st[1].forEach(function(r){
+        var vv=VN.find(function(x){return x.id===r.id;}); if(vv)r.photo_path=nn(vv.photoPath);
       });
     });
     var im2=[];
@@ -12520,8 +13370,15 @@ function sbPull(opts){
          'floor_items','event_palette','design_boards','board_swatches','board_ideas','board_images','decor_items',
          'vendors','vendor_bookings','invoices','documents','questionnaires','questions','answers',
          'messages','form_submissions','lead_forms','org_prefs'];
-  return Promise.all(t.map(function(n){ return sbRest(n+'?select=*'); })).then(function(res){
+  /* Venues is asked for on its own and forgiven, rather than added to the list
+     above: one 404 in a Promise.all fails the entire pull, and a studio that
+     has not run migration 21 would stop syncing altogether. */
+  var venuesReq=sbRest('venues?select=*').then(function(r){ SB_VENUE_TBL=true; return r||[]; })
+                                         .catch(function(){ return null; });
+  return Promise.all(t.map(function(n){ return sbRest(n+'?select=*'); }).concat([venuesReq]))
+    .then(function(res){
     var R={}; t.forEach(function(n,i){ R[n]=res[i]||[]; });
+    var venueRows=res[t.length];
     var of=function(rows,id){ return rows.filter(function(r){return r.event_id===id;}); };
 
     var next={
@@ -12529,7 +13386,8 @@ function sbPull(opts){
         value:Number(l.value),stage:l.stage,guests:l.guest_count,email:l.email,phone:l.phone,notes:l.notes,
         partnerA:l.partner_a,partnerB:l.partner_b,pronounsA:l.pronouns_a,pronounsB:l.pronouns_b,
         altEmail:l.alt_email,preferred:l.preferred_contact,source:l.source,address:l.address||{},
-        photo:null,photoPath:l.photo_path||null}; }),
+        photo:null,photoPath:l.photo_path||null,
+        cover:null,coverPath:l.cover_path||null}; }),
       events:R.events.map(function(e){
         var boards=R.design_boards.filter(function(b){return b.event_id===e.id;}).map(function(b){
           return {id:b.id,title:b.title,tone:b.tone,note:b.note,
@@ -12545,6 +13403,7 @@ function sbPull(opts){
           /* photo stays empty; mediaDownload() fills it from Storage after,
              the same way a lead's and a board image's are filled. */
           photo:null,photoPath:e.photo_path||null,
+          venueId:e.venue_id||null,
           parentId:e.parent_event_id||null,role:e.event_role||'primary',sort:e.sort_order||0,
           eventType:e.event_type||'Wedding',
           roleLabel:e.role_label||'',
@@ -12565,6 +13424,14 @@ function sbPull(opts){
       }),
       vendors:R.vendors.map(function(v){ return {id:v.id,name:v.name,cat:v.category,contact:v.contact,email:v.email,
         phone:v.phone,notes:v.notes||'',preferred:!!v.preferred,rating:v.rating||0}; }),
+      /* null means the table is not there — keep whatever this device has
+         rather than replacing a working local directory with nothing. An
+         empty array from a studio that HAS the table is a real answer and
+         does replace it. */
+      venues:venueRows===null?(db.venues||[]):venueRows.map(function(v){
+        return {id:v.id,name:v.name,kind:v.kind||'',address:v.address||{},contact:v.contact||{},
+          website:v.website||'',seated:v.seated||0,standing:v.standing||0,notes:v.notes||'',
+          spaces:v.spaces||[],photo:null,photoPath:v.photo_path||null,preferred:!!v.preferred}; }),
       invites:(R.guest_invites||[]).map(function(i){ return {id:i.id,guestId:i.guest_id,eventId:i.event_id,
         tableId:i.table_id||null,rsvp:i.rsvp||'invited',meal:i.meal||''}; }),
       bookings:R.vendor_bookings.map(function(b){ return {id:b.id,vendorId:b.vendor_id,eventId:b.event_id,

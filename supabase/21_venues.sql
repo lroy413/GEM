@@ -1,6 +1,6 @@
 -- ============================================================
--- GEM · 20 — a venue is a place, not a string
--- Run AFTER 19_sync_runs.sql. Safe to re-run. NOT YET RUN — the venue
+-- GEM · 21 — a venue is a place, not a string
+-- Run AFTER 20_client_cover.sql. Safe to re-run. NOT YET RUN — the venue
 -- feature it belongs to is unfinished; this file is here, numbered, and inert.
 --
 -- Until now a venue was free text on each event, with its address, its
@@ -45,8 +45,16 @@ create table if not exists venues (
   created_at    timestamptz not null default now(),
   updated_at    timestamptz not null default now()
 );
-create index if not exists venues_org_idx  on venues (org_id, name);
-create unique index if not exists venues_org_name_key on venues (org_id, lower(name));
+create index if not exists venues_org_idx on venues (org_id, name);
+-- Deliberately NOT unique, and it was: a device that already holds a venue of
+-- its own for a name the server also has would have its whole push rejected by
+-- the constraint, because the upsert resolves on the primary key and cannot
+-- see an expression index. Two rows called the same thing is a tidiness
+-- problem; a push that fails is the failure mode this sync was rebuilt to
+-- prevent. The client refuses a duplicate name at the point of typing, which
+-- is where the question belongs.
+drop index if exists venues_org_name_key;
+create index if not exists venues_org_lname_idx on venues (org_id, lower(name));
 
 comment on column venues.spaces is
   'Rooms within the venue: [{id,name,seated,standing,note}]. The event''s own '
@@ -74,32 +82,16 @@ alter table events add column if not exists venue_id uuid references venues(id) 
 create index if not exists events_venue_idx on events (venue_id);
 
 
--- ---------- 3 · backfill, once ----------
--- One venue per distinct name per org, taking its detail from the first event
--- that actually filled any in. Guarded on both sides so a second run is a
--- no-op rather than a second copy.
-insert into venues (org_id, name, address, contact, notes)
-select distinct on (e.org_id, lower(btrim(e.venue)))
-       e.org_id, btrim(e.venue), e.venue_address, e.venue_contact, e.venue_notes
-  from events e
- where coalesce(btrim(e.venue),'') <> ''
-   and lower(btrim(e.venue)) not in ('tbd','tba','to be confirmed','to be decided')
-   and not exists (select 1 from venues v
-                    where v.org_id = e.org_id
-                      and lower(v.name) = lower(btrim(e.venue)))
- -- the richest row wins: an address is worth more than a blank one
- order by e.org_id, lower(btrim(e.venue)),
-          (case when e.venue_address <> '{}'::jsonb then 0 else 1 end),
-          (case when e.venue_contact <> '{}'::jsonb then 0 else 1 end),
-          e.created_at;
-
-update events e
-   set venue_id = v.id
-  from venues v
- where e.venue_id is null
-   and v.org_id = e.org_id
-   and lower(v.name) = lower(btrim(e.venue));
-
+-- ---------- 3 · no backfill here, on purpose ----------
+-- An earlier draft lifted one venue per distinct name per org straight out of
+-- the events. It worked, and it was wrong: the app does the identical lift in
+-- normalize() the moment it loads, with ids it owns, and then pushes them. Two
+-- backfills means two rows per place with different ids — and, with the unique
+-- index this file used to create, a push that 409s and takes the studio's sync
+-- down with it. One source, and it is the device.
+--
+-- So a studio that runs this sees an empty venues table until the next push,
+-- which is a few seconds later and carries the whole directory.
 
 -- ---------- 4 · who may see a place ----------
 alter table venues enable row level security;
@@ -136,9 +128,8 @@ select
   (select relrowsecurity and relforcerowsecurity from pg_class
      where relname = 'venues')                                               as rls_forced,
   (select count(*) from pg_indexes
-     where tablename = 'venues' and indexname = 'venues_org_name_key')   = 1 as name_unique,
-  -- nothing should be left pointing at a name we have a record for
-  (select count(*) from events e join venues v
-      on v.org_id = e.org_id and lower(v.name) = lower(btrim(e.venue))
-    where e.venue_id is null)                                            = 0 as backfill_complete,
-  (select count(*) from venues)                                              as venues_now;
+     where tablename = 'venues' and indexname = 'venues_org_lname_idx') = 1 as name_index,
+  (select count(*) from pg_indexes
+     where tablename = 'venues' and indexname = 'venues_org_name_key')  = 0 as no_unique_index,
+  -- expected to be 0 until the next push; the app carries the directory up
+  (select count(*) from venues)                                             as venues_now;
