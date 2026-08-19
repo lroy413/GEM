@@ -20,7 +20,18 @@ runs local-first in the browser and syncs to Supabase when connected.
 | Database | Supabase, project `dqntxdhzcieycifzjzwc` |
 | Which build is live? | Settings → Data & storage → **App version**, or `curl -s https://gemevents.app/ \| grep gem-build` |
 
-Migrations **01–15 are all run** against the live project.
+Migrations **01–16 are all run** against the live project — 16 on 19 Aug 2026,
+verifying all true. The database is now ahead of production: `events.photo_path`
+exists and nothing writes to it until this build ships, which is the safe
+direction. Deploying before the migration would not have been: the events
+payload carries that key on every row whether or not the event has a cover, so
+PostgREST would have refused *every* events push.
+
+This build also carries six bug fixes — `BUGS.md` is the report they came from.
+One of them changes what the invoices payload contains: `lead_id` is finally
+populated, having gone up null on every push since the first sync. That column
+has existed since migration 01, so it needs nothing new — but it does mean the
+first push after this build writes a join the database has never held.
 
 ---
 
@@ -73,6 +84,9 @@ shape and the Postgres schema.
   Corporate, Conference, Gala, Birthday…) decides which sub-event roles the app
   offers and what it calls the client — the couple, the client, the host, the
   family. `event_role` is constrained; `event_type` deliberately is not.
+  `photo_path` is the event's own cover; `evPhoto()` falls back to the
+  primary's and then the client's, so read a cover through it and never off
+  `e.photo` directly.
 - **guests** belong to the **primary**, and their `rsvp`/`tableId` mean "the
   main event". **guest_invites** carries an invitation to each sub-event with
   its own rsvp, seat and meal. `rosterFor(ev)` and `gRsvp/gTable/gMeal/gSet`
@@ -85,7 +99,19 @@ shape and the Postgres schema.
   its own room for free.
 - **event_clients** + **event_client_invites** — portal access. See §4.
 
-### Two traps that have caused real bugs
+### Sync, in one paragraph
+
+Pushing is automatic: `save()` marks the device dirty and schedules a push four
+seconds later. Pulling is automatic **only where it cannot lose anything** —
+`sbSyncDown()` pulls when this device has never synced and holds nothing but the
+sample, or when it is behind with nothing unsent. A device that is behind *and*
+holding unsent edits is a real conflict and still asks a human. The dirty flag
+lives in `localStorage`, not memory, because a phone edited offline and closed
+would otherwise come back looking clean and get pulled over. `gem_claim_sync`
+backs all of this from the server side: it refuses a push from a device that has
+never pulled, which is what stops a fresh install overwriting the studio.
+
+### Three traps that have caused real bugs
 
 1. **`sbMigrateIds()` rewrites every id on the first push.** Anything holding a
    reference must be fixed there: `leadId`, `parentId`, `tagEventId`,
@@ -94,11 +120,29 @@ shape and the Postgres schema.
 2. **Events must be pushed parents-first.** `events_parent_guard` is a BEFORE
    ROW trigger, so it fires as each row lands, not at end of statement. The
    payload is sorted accordingly.
+3. **A photo is the one change that happens after its table was hashed.**
+   `sbPush()` decides which tables to write by hashing each payload, and
+   `mediaUpload()` stamps `photo_path` afterwards — so a table whose only
+   change was a new picture hashed identical to last time and was skipped, and
+   the path went nowhere until an unrelated edit pushed that table again. The
+   four tables carrying a storage reference are re-hashed after the uploads and
+   taken if they moved. Anything else stamped post-hash needs the same
+   treatment, and the upsert chain has to be built after that check, not
+   alongside it.
 
 ---
 
 ## 3 · Things worth knowing before you change the UI
 
+- **First run is a gate, then the tour.** `openWelcomeGate()` asks for an
+  account or guest before anything else, and `closeModal()` refuses while it is
+  up — a scrim click that quietly meant "guest" is the outcome it exists to
+  prevent. It hands off to the tour on the way out, so the tour no longer
+  starts on its own except when the question has already been answered
+  (`gem-welcome`). A couple on the portal host is never asked, and neither is
+  anyone already signed in. Both it and Settings › Connection sign in through
+  `sbAuthGo()` — put anything that must happen on sign-in there, not in either
+  screen.
 - **`prefs()` rebuilds a whitelisted object.** A key not named there is written
   to storage and silently dropped on load. This cost an afternoon with
   `dashOrder`.
@@ -156,6 +200,14 @@ revoke.
 Everything here is reasoned about and unit-exercised locally, but has never
 made a real round trip. These are the highest-value things to test next.
 
+**`VERIFY.md` is the runbook for this section** — the same list, turned into
+click-by-click steps with the SQL to confirm each one and a note on what a
+failure points at. Its §F carries two things found while writing it: a couple's
+*first* visit to the portal host lands on the studio's app, because portal-only
+mode is decided from a local pref an empty browser does not have; and the
+couple has no UI for inviting their partner, though the function behind it
+exists.
+
 - **`guest_invites` push → pull on a second device.** Do the invitations and
   the per-event seating survive?
 - **A couple signing into the portal.** Migration 10 redefined
@@ -174,14 +226,19 @@ made a real round trip. These are the highest-value things to test next.
 
 - **Branded email** — Resend or similar + SPF/DKIM on `gemevents.app`, then
   Supabase SMTP. Blocks the portal invitations being useful.
-- **Per-event imagery** — the one remaining item from the dashboard review. The
-  hero is where it belongs; the question of which event takes precedence is
-  answered by the deck (date order) rather than by picking a favourite.
-- **Drag to reorder the dashboard.** The modules are already an ordered list in
-  prefs with up/down controls in Settings → Appearance; drag is a small change
-  on top.
-- **Realtime** — deliberately not doing it. Polling on focus plus a timer covers
-  1–3 devices.
+- **The portal's first thirty seconds.** Portal-only mode is decided at boot by
+  matching `location.hostname` against `prefs().portalHost`, which is a local
+  preference — so a couple's first ever visit to `portal.gemevents.app` gets the
+  studio's dashboard, sample wedding and onboarding tour included. It rights
+  itself on the second load, once a pull has brought the pref down. The portal
+  host needs to know it is the portal without having been told by a previous
+  visit. See `VERIFY.md` §F1.
+- **Let the couple invite their partner.** `gem_invite_partner` and
+  `sbInvitePartner()` both exist; nothing calls the wrapper, and the portal
+  already tells the couple they can add someone. `VERIFY.md` §F2.
+- **Realtime** — deliberately not doing it. Polling on focus plus a three-minute
+  timer covers 1–3 devices. Both halves are wired now; for a long time only the
+  focus half was, and it only *warned* rather than pulling.
 - **PDF export** — print sheets go through the browser dialog, where every
   platform offers Save as PDF.
 
