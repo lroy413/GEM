@@ -10,7 +10,7 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
 <meta name="apple-mobile-web-app-title" content="GEM">
 <meta name="format-detection" content="telephone=no">
-<meta name="gem-build" content="4bd31022a077">
+<meta name="gem-build" content="062d45fe7b2d">
 <link rel="manifest" href="/manifest.webmanifest">
 <link rel="icon" href="/icons/icon-192.png" sizes="192x192" type="image/png">
 <link rel="apple-touch-icon" href="/icons/icon-180.png">
@@ -681,12 +681,23 @@ body.portal-only .main{margin-left:0!important}
   font-size:12.5px;font-weight:500;letter-spacing:.01em;border:1px solid var(--line);
   background:var(--card);box-shadow:var(--shadow-lg);opacity:0;transform:translateY(6px);
   pointer-events:none;transition:opacity .22s var(--ease),transform .22s var(--ease);max-width:min(340px,calc(100vw - 36px))}
+/* A warning has no timeout — it should not vanish while you are reading it —
+   so it needs a way out instead. Without one it sat over the tab bar on a
+   phone until the app was closed. */
+.sb-pill.can-close{pointer-events:auto;cursor:pointer;padding-right:34px}
+.sb-pill .sb-x{position:absolute;top:50%;right:11px;transform:translateY(-50%);
+  width:18px;height:18px;display:grid;place-items:center;border-radius:50%;
+  font-size:13px;line-height:1;color:var(--muted)}
+.sb-pill.can-close:hover .sb-x{color:var(--ink)}
 .sb-pill.show{opacity:1;transform:none}
 .sb-pill.busy{color:var(--ink-soft)}
 .sb-pill.ok{color:#4B7C5C;border-color:rgba(143,191,159,.5)}
 .sb-pill.warn{color:#9C4B4B;border-color:rgba(200,90,90,.42)}
 .sb-pill.off{color:var(--muted)}
-@media (max-width:700px){ .sb-pill{left:14px;right:14px;bottom:14px;text-align:center} }
+/* Above the tab bar and the home indicator, not on top of them. */
+@media (max-width:700px){
+  .sb-pill{left:14px;right:14px;bottom:calc(84px + env(safe-area-inset-bottom,0px));text-align:center}
+}
 .sb-msg{margin-top:14px;padding:11px 13px;border-radius:11px;font-size:12.5px;line-height:1.5;border:1px solid var(--line)}
 .sb-msg.ok{background:rgba(143,191,159,.13);border-color:rgba(143,191,159,.4)}
 .sb-msg.bad{background:rgba(200,90,90,.10);border-color:rgba(200,90,90,.34)}
@@ -1911,7 +1922,11 @@ td.inv-col{text-align:center;width:1%}
   /* The drawer's own footer sits where the bar is, so give it the same
      clearance the page gets. The bar stays ABOVE the drawer on purpose:
      tapping More again is how you close it. */
+  /* .side-foot is position:sticky;bottom:0 inside a 100vh scroller, so it
+     sticks to the SCROLLPORT and padding on the container cannot lift it —
+     it has to be told where the bar is. */
   #sidebar{padding-bottom:calc(78px + env(safe-area-inset-bottom,0px))}
+  .side-foot{bottom:calc(76px + env(safe-area-inset-bottom,0px))}
 }
 /* Printing a page should not print its navigation. */
 @media print{ .tabbar{display:none!important} }
@@ -7914,6 +7929,9 @@ function prefs(){
        same trap that cost an afternoon with dashOrder. It matters more now
        that the switch governs automatic PULLS as well as pushes. */
     autoSync:d.autoSync!==false,
+    /* Whitelisted like everything else here, or it is dropped on the next
+       rebuild — the trap autoSync and dashOrder both fell into. */
+    tourDone:!!d.tourDone,
     team:d.team||[
       {id:uid('tm'),name:'Glimmer M.',email:'hello@gemevents.app',role:'owner'},
       {id:uid('tm'),name:'Rosa Mendez',email:'rosa@gemevents.app',role:'planner'}
@@ -10113,8 +10131,24 @@ function closeGate(){ md.className='modal'; ov.classList.remove('show'); }
 
 /* The tour is what the gate was standing in front of, so it runs on the way
    out — but only if it has never run, the same rule as before. */
-function afterGate(){
-  try{ if(!localStorage.getItem(TOUR_KEY)) setTimeout(function(){ startTour(); },320); }catch(e){}
+/* The tour is for somebody's first time in GEM, and it was firing for anybody
+   whose BROWSER had not seen it — so signing in to an existing studio on a new
+   phone got the whole walkthrough again. Two changes: signing in says outright
+   that this is not a first run, and tourDone rides in the synced preferences
+   so a studio that has finished it stays finished everywhere. */
+function markTourDone(){
+  try{ localStorage.setItem(TOUR_KEY,'1'); }catch(e){}
+  var q=prefs();
+  if(!q.tourDone){ q.tourDone=true; savePrefs(); }
+}
+function tourAlreadyDone(){
+  try{ if(localStorage.getItem(TOUR_KEY))return true; }catch(e){}
+  return !!prefs().tourDone;
+}
+function afterGate(opts){
+  /* "I already have one" is a person who has used this before. */
+  if(opts&&opts.existing){ markTourDone(); return; }
+  if(!tourAlreadyDone()) setTimeout(function(){ startTour(); },320);
 }
 
 function gateChoice(){
@@ -10188,9 +10222,9 @@ function gateGo(mode,btn){
     }
     setWelcome('account');
     closeGate();
-    toast('Signed in ✦');
+    toast(mode==='in'?'Signed in ✦':'Account created ✦');
     render();
-    afterGate();
+    afterGate({existing:mode==='in'});
   }).catch(function(e){
     gateSay('bad',e.message);
     btn.disabled=false;
@@ -10324,6 +10358,9 @@ function endTour(completed){
   if(v)v.remove();
   document.body.classList.remove('tour-on');
   try{ localStorage.setItem(TOUR_KEY,completed?'done':'skipped'); }catch(e){}
+  /* Skipping counts too: somebody who closed it on a laptop has said no, and
+     saying no again on their phone is the same annoyance twice. */
+  markTourDone();
   if(completed){
     toursDone[tourKeyRunning]=true; saveTours();
     var t=TOURS[tourKeyRunning];
@@ -13668,12 +13705,26 @@ function restoreSnapshot(){
    less than this device is possible — someone deleted a client elsewhere — but
    losing a whole client file to an automatic background sync is not something
    to discover later, so it stops and says so instead. */
+/* What this device would LOSE by accepting the studio's copy — and the word
+   that matters is "lose", which the sample is not.
+
+   This counted raw lengths. A device with no saved work seeds the demo: one
+   client, its events, four documents, six vendors. So the first sign-in on a
+   new phone compared 4 sample documents and 6 sample vendors against a studio
+   that correctly has neither, announced "the studio has 4 documents and 6
+   vendors fewer than this device", and REFUSED the pull — at the one moment a
+   new device most needs one. The planner was then looking at the sample,
+   believing it was their studio, with a warning they could not clear.
+
+   The sample is not work. It is never pushed, so the studio is right not to
+   have it, and a device holding only the sample has nothing to protect. */
 function pullLoss(next){
   var out=[];
-  [['leads','client'],['events','event'],['invoices','invoice'],
-   ['documents','document'],['vendors','vendor']].forEach(function(pair){
-    var before=(db[pair[0]]||[]).length, after=(next[pair[0]]||[]).length;
-    if(before>after)out.push({what:pair[1],before:before,after:after,lost:before-after});
+  [['leads','client','lead'],['events','event','event'],['invoices','invoice','invoice'],
+   ['documents','document','document'],['vendors','vendor','vendor']].forEach(function(t){
+    var mine=(db[t[0]]||[]).filter(function(r){ return !isSampleRecord(t[2],r.id); }).length;
+    var after=(next[t[0]]||[]).length;
+    if(mine>after)out.push({what:t[1],before:mine,after:after,lost:mine-after});
   });
   return out;
 }
@@ -13799,6 +13850,9 @@ function sbPull(opts){
       var sp=R.org_prefs[0];
       settings=Object.assign(prefs(),sp.prefs||{},{stages:sp.stages,templates:sp.templates,fields:sp.fields});
       try{ localStorage.setItem(SET_KEY,JSON.stringify(settings)); }catch(e){}
+      /* The studio has finished or dismissed the tour, so this device has too
+         — even if its own storage has never seen it. */
+      if(settings.tourDone){ try{ localStorage.setItem(TOUR_KEY,'done'); }catch(e){} }
       loadStages();
     }
     saveLocal();
@@ -13818,16 +13872,40 @@ function sbPull(opts){
 
 /* ---------- automatic sync ---------- */
 var SB_SYNC={timer:null,busy:false,queued:false,claimed:null,wrote:0,status:'idle',onePhase:false,runId:null,counts:{}};
+/* Messages the person has waved away. An automatic pull runs on focus and on
+   a three-minute timer, so a warning dismissed once would otherwise be back
+   before you had finished reading the screen behind it. Session-only on
+   purpose: a reload is a fresh look at the problem, and the condition is
+   still there to report. */
+var SB_MUTED={};
 function sbSetStatus(st,msg){
   SB_SYNC.status=st; SB_SYNC.msg=msg||'';
   var el=document.getElementById('sbPill');
+  /* A warning is not a toast: it has no timeout, because it should not vanish
+     while it is being read. So it gets a way out instead — and one that is
+     remembered, or the next tick puts it straight back. */
+  var closable=(st==='warn'||st==='off');
+  if(closable&&SB_MUTED[msg||'']){ if(el)el.className='sb-pill idle'; return; }
   if(!el){
     if(st==='idle')return;
     el=document.createElement('div'); el.id='sbPill'; el.className='sb-pill';
     document.body.appendChild(el);
   }
-  el.className='sb-pill '+st+(st==='idle'?'':' show');
+  el.className='sb-pill '+st+(st==='idle'?'':' show')+(closable?' can-close':'');
   el.textContent=msg||'';
+  if(closable){
+    var x=document.createElement('span');
+    x.className='sb-x'; x.setAttribute('aria-hidden','true'); x.textContent='\u00d7';
+    el.appendChild(x);
+    el.setAttribute('role','button');
+    el.setAttribute('tabindex','0');
+    el.setAttribute('aria-label','Dismiss: '+(msg||''));
+    el.onclick=function(){ SB_MUTED[msg||'']=true; sbSetStatus('idle',''); };
+    el.onkeydown=function(e){ if(e.key==='Enter'||e.key===' '){ e.preventDefault(); el.onclick(); } };
+  }else{
+    el.removeAttribute('role'); el.removeAttribute('tabindex');
+    el.removeAttribute('aria-label'); el.onclick=null; el.onkeydown=null;
+  }
 }
 function sbAuto(){ return prefs().autoSync!==false; }
 /* Signed in, but the account was never attached to a studio — gem_create_org()

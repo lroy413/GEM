@@ -161,6 +161,34 @@ never pulled, which is what stops a fresh install overwriting the studio.
 
 ## 3 · Things worth knowing before you change the UI
 
+- **`pullLoss()` counts WORK, not records.** A device with nothing saved seeds
+  the demo — one client, its events, four documents, six vendors — so counting
+  raw lengths made a brand-new phone look like it was holding six vendors the
+  studio had lost. The guard then refused the pull, at the one moment a new
+  device most needs one, and left the planner looking at the sample believing
+  it was their studio. The sample is never pushed, so the studio is *right* not
+  to have it; anything compared against the server has to be filtered through
+  `isSampleRecord()` first. `scratchpad/pullloss.mjs` covers the three cases
+  that matter: sample only, real work the studio lacks, and both together.
+
+- **A warning with no timeout needs a way out.** `sbSetStatus('warn', …)`
+  deliberately never clears itself — a message about your data should not
+  vanish while you are reading it — which meant on a phone it sat over the tab
+  bar until the app was closed. Warnings are dismissible now, and the dismissed
+  TEXT is remembered in `SB_MUTED` for the session, because auto-pull runs on
+  focus and on a three-minute timer and would otherwise put it straight back. A
+  different message still gets through; a reload still reports the condition.
+- **The tour is for a person's first time, not a browser's.** It used to fire
+  whenever `gem-tour-done` was missing from localStorage, so signing in to an
+  existing studio on a new phone replayed the whole thing. Taking the "I already
+  have one" door marks it done outright, skipping counts the same as finishing,
+  and `tourDone` rides in the synced prefs so a pull tells a fresh device the
+  studio has already been shown around.
+- **`position:sticky; bottom:0` sticks to the SCROLLPORT.** `.side-foot` lives
+  inside a `height:100vh` sidebar, so `padding-bottom` on the container could
+  never lift it clear of the tab bar — it has to be given the bar's height as
+  its own `bottom`. That is why the settings gear was unreachable on a phone.
+
 - **The phone navigates from the bottom.** `.tabbar` is five fixed tabs plus
   More, which opens the same drawer the desktop rail lives in — so there is one
   set of destinations, not two to keep in step. Deliberately NOT a horizontally
