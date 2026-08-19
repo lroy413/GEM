@@ -161,6 +161,25 @@ never pulled, which is what stops a fresh install overwriting the studio.
 
 ## 3 · Things worth knowing before you change the UI
 
+- **The phone navigates from the bottom.** `.tabbar` is five fixed tabs plus
+  More, which opens the same drawer the desktop rail lives in — so there is one
+  set of destinations, not two to keep in step. Deliberately NOT a horizontally
+  scrolling row of nineteen: what is off the end of a scroller is invisible and
+  you can never learn where a thing lives, which is why every platform's tab
+  bar caps at five. The bar sits ABOVE the drawer on purpose (tapping More
+  again closes it), so the drawer carries its own `padding-bottom` to keep its
+  footer reachable, and `.main` carries the same to clear the bar.
+- **`env(safe-area-inset-bottom)` on anything pinned to the bottom.** Without it
+  the tab labels sit under the iPhone home indicator.
+- **A scroll box inside a scrolling page is the worst thing on a touch screen.**
+  `.tasks` scrolls on desktop and is `max-height:none` below 860px; what keeps
+  the phone page bounded there is the render cap, not the box.
+- **The To Do list renders at most 20 rows** (`TASK_CAP`), allocated in order of
+  urgency — overdue, today, this week, later. A group past the budget still
+  draws its heading and its true count, because "LATER 31" is information; it
+  just does not draw thirty-one rows. A line at the foot says what was held
+  back so the number on the badge and the rows on screen never disagree.
+
 - **`1fr` is `minmax(auto, 1fr)`, and that `auto` is the column's MIN-CONTENT
   width.** Put one `white-space:nowrap` string in a grid cell and that column
   grows to fit the whole string, pushing every other column off the screen.
