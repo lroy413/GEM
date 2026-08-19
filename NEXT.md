@@ -134,6 +134,43 @@ never pulled, which is what stops a fresh install overwriting the studio.
 
 ## 3 · Things worth knowing before you change the UI
 
+- **The title bar names the work, not the screen.** `pageHead(v)` returns
+  `[eyebrow, headline, sub]` — the screen's own name goes in the eyebrow at
+  label size, and the headline says what is true today (the countdown, what is
+  in the pipeline, who has replied). A screen with nothing true to say returns
+  an empty eyebrow and keeps its name as the headline rather than inventing
+  something; add to `pageHead()`, not to `TITLES`.
+- **The sidebar lock-up is a wordmark, not a tile.** A letter in a gilded
+  square is what an app shows when no logo is set, so `applyBrand()` puts
+  `no-logo` on `.brand` and the tile survives only in the collapsed rail and
+  wherever a real logo exists. `.brand .sub` must never regain
+  `text-overflow:ellipsis` — it was truncating the studio's own name.
+- **The bible is one content model, three renderers.** `bibleBlocks()` builds a
+  list of blocks; `bibleHtml()` prints them (and so makes the PDF),
+  `bibleDocx()` packs them into a real `.docx`, and `bibleEmail()` writes the
+  covering note. Add a section in `BIBLE_SECTIONS` and `bibleBlocks()` only —
+  never in a renderer, which is where the two copies would drift apart.
+  A section marked `planner:true` is withheld from a client's copy **whatever
+  is ticked**, and that list follows `02_rls.sql`, not taste.
+- **A `.docx` is a ZIP of XML, and `CT_RPr`/`CT_PPr` are sequences.** Element
+  order inside `w:rPr` and `w:pPr` is part of the schema: Word forgives a wrong
+  order, stricter readers reject the whole file. The order in `wRun()` and
+  `wPara()` is the schema's; keep it.
+- **Photographs are framed, not just shrunk.** `openPhotoCrop(file,opts,done)`
+  hands back a square JPEG at whatever size `opts.out` asks for (512 by
+  default) after the person has dragged and zoomed the picture under a fixed
+  circle. What it exports is the **square** the circle sits in, not the circle:
+  the same pixels serve the round avatar, the client card and the dashboard
+  hero through `evPhoto()`, and each masks it its own way. Anything that takes
+  a photograph of a person should go through it rather than calling
+  `shrinkImage()` directly.
+- **Replacing a photograph must null its `photoPath`.** `mediaUpload()` only
+  sends records with pixels and no path, so a new picture left beside the old
+  key never uploads and every other device keeps the old one. The event cover
+  always did this; the client photo did not until 19 Aug.
+- **Clients read as a list or as cards** (`prefs().clientView`, in the
+  whitelist). Cards deliberately carry no edit/delete: `.r-act` is always
+  visible in touch mode, which put a permanent ✕ on every face in the grid.
 - **First run is a gate, then the tour.** `openWelcomeGate()` asks for an
   account or guest before anything else, and `closeModal()` refuses while it is
   up — a scrim click that quietly meant "guest" is the outcome it exists to

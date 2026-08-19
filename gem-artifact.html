@@ -117,18 +117,27 @@ html.no-motion body::before{opacity:.3}
   border-bottom:1px solid var(--line);position:relative}
 .brand::after{content:"";position:absolute;left:10px;right:10px;bottom:-1px;height:1px;
   background:linear-gradient(90deg,var(--gold-line),transparent 62%)}
+/* A letter in a gilded tile is what every app shows when you have NOT given it
+   a logo — a placeholder, dressed up. So the expanded sidebar carries a
+   wordmark instead, and the tile survives only where a single mark is the
+   right answer: the collapsed rail, and wherever a real logo has been set. */
 .brand .mark{
-  width:46px;height:46px;border-radius:14px;
+  width:38px;height:38px;border-radius:11px;
   background:var(--gold-grad);
   display:grid;place-items:center;
-  font-family:var(--serif);font-size:25px;font-weight:600;color:#fff;
+  font-family:var(--serif);font-size:21px;font-weight:600;color:#fff;
   border:1px solid var(--gold-deep);
-  box-shadow:inset 0 1px 0 rgba(255,255,255,.5), 0 4px 14px rgba(143,113,48,.30);
-  text-shadow:0 1px 1px rgba(105,82,32,.3);
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.45), 0 2px 8px rgba(143,113,48,.18);
+  flex:0 0 auto;
 }
-.brand .name{font-family:var(--serif);font-size:28px;font-weight:600;letter-spacing:.06em;line-height:1}
-.brand .sub{font-size:9px;letter-spacing:2.4px;text-transform:uppercase;color:var(--muted);margin-top:5px;
-  font-weight:500;max-width:172px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.brand.no-logo .mark{display:none}
+.app.rail .brand.no-logo .mark{display:grid}
+.brand .name{font-family:var(--serif);font-size:23px;font-weight:600;letter-spacing:.17em;
+  line-height:1;text-transform:uppercase}
+/* Never truncated. A visible ellipsis in a studio's own name reads as a bug,
+   and it was the first text on the screen — "GLIMMER EVENTS MAN…". */
+.brand .sub{font-size:9px;letter-spacing:.19em;text-transform:uppercase;color:var(--muted);margin-top:7px;
+  font-weight:500;line-height:1.65}
 /* ---- collapsible nav groups ---- */
 .nav-group{display:flex;flex-direction:column}
 .nav-label{
@@ -289,6 +298,12 @@ html.no-motion body::before{opacity:.3}
 .topbar{display:flex;align-items:center;justify-content:space-between;margin-bottom:28px;gap:24px;flex-wrap:wrap}
 .page-title{font-family:var(--serif);font-size:40px;font-weight:600;line-height:1.02;text-wrap:balance;letter-spacing:-.012em}
 .page-sub{color:var(--muted);font-size:13.5px;margin-top:7px;letter-spacing:0}
+/* The screen's own name lives here, at label size — you clicked it in the nav
+   to get here, so it does not need to be the largest thing on the page. The
+   headline says what is actually true today. */
+.page-eyebrow{font-size:10px;letter-spacing:.2em;text-transform:uppercase;color:var(--gold-deep);
+  font-weight:700;margin-bottom:9px;line-height:1}
+.page-eyebrow:empty{display:none}
 
 /* Every toolbar control shares one height and sits on one baseline. */
 #pgActions{display:flex;align-items:center;gap:10px;flex-wrap:wrap;justify-content:flex-end}
@@ -740,7 +755,11 @@ body.portal-only .main{margin-left:0!important}
 .due.none{background:transparent;color:var(--muted);opacity:.7}
 .all-clear{display:flex;flex-direction:column;align-items:center;gap:9px;padding:38px 20px;
   color:var(--muted);font-size:13px;text-align:center}
-.all-clear>:first-child{font-size:20px;color:var(--gold)}
+/* The sparkle, and only the sparkle. This was `.all-clear > :first-child`,
+   which was written for the ✦ — but the ✦ is a bare text node, so the selector
+   landed on the SENTENCE instead: the message came out 20px gold and the mark
+   came out 13px grey, precisely the wrong way round. */
+.all-clear .ac-ic{font-size:19px;color:var(--gold);line-height:1}
 
 /* ---- waiting on ---- */
 .waits{padding:6px 0 8px;max-height:min(58vh,540px);overflow-y:auto}
@@ -938,9 +957,12 @@ tbody tr:hover{background:var(--pink-50)}
 .s-draft{background:var(--pink-100);color:var(--ink-soft);border-color:var(--line)}
 
 /* progress */
-.bar{height:7px;border-radius:var(--radius-pill);background:var(--pink-100);overflow:hidden;
+/* 4px, a flat fill and a hairline track. A 7px pill with a three-stop gold
+   gradient is the most generic component a web app owns, and at this size the
+   gradient was never visible anyway — it only read as "widget". */
+.bar{height:4px;border-radius:2px;background:var(--line);overflow:hidden;
   box-shadow:inset 0 1px 2px rgba(59,46,51,.05)}
-.bar > i{display:block;height:100%;background:var(--gold-grad);border-radius:var(--radius-pill);
+.bar > i{display:block;height:100%;background:var(--gold-deep);border-radius:2px;
   box-shadow:inset 0 1px 0 rgba(255,255,255,.3);transition:width .4s var(--ease)}
 
 /* timeline */
@@ -1096,6 +1118,88 @@ tbody tr:hover{background:var(--pink-50)}
 }
 
 /* event chooser cards */
+/* --- clients as cards: the same records, read by face rather than by row --- */
+.cl-head{display:flex;align-items:center;justify-content:space-between;gap:14px;flex-wrap:wrap}
+.cl-head .seg{margin-bottom:16px}
+.cl-count{font-size:12px;color:var(--muted);margin-bottom:16px}
+.cl-cards{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:16px}
+.cl-card{position:relative;background:var(--card);border:1px solid var(--line);border-radius:var(--radius);
+  overflow:hidden;box-shadow:var(--shadow-sm);cursor:pointer;
+  transition:transform .16s var(--ease),box-shadow .16s var(--ease),border-color .16s var(--ease)}
+.cl-card:hover{transform:translateY(-3px);box-shadow:var(--shadow);border-color:var(--gold-line)}
+.cl-card:focus-visible{outline:none;box-shadow:var(--ring)}
+.cl-face{position:relative;aspect-ratio:1;overflow:hidden;background:var(--pink-100)}
+.cl-face img{width:100%;height:100%;object-fit:cover;display:block}
+/* No photograph is a normal state, not a missing one, so it gets a finished
+   tile rather than a grey box: the couple's initials on a wash of the house
+   palette. Assigned by position for the same reason EVENT_TINTS is — a hash
+   collides, and two files side by side in the same colour looks like a bug. */
+/* A medallion on a wash, rather than initials on a slab of gold: it echoes the
+   circle you framed the photograph in, and it leaves the tile quiet enough
+   that a grid of them does not shout. */
+.cl-mono{width:100%;height:100%;display:flex;align-items:center;justify-content:center}
+.cl-mono i{width:47%;aspect-ratio:1;border-radius:50%;display:flex;align-items:center;justify-content:center;
+  font-family:var(--serif);font-style:normal;font-size:clamp(19px,4.6vw,28px);font-weight:600;
+  letter-spacing:.03em;color:#fff;
+  box-shadow:0 8px 20px rgba(59,46,51,.16),inset 0 1px 0 rgba(255,255,255,.22)}
+/* A scrim only under the chip, so a pale photograph cannot swallow the date. */
+/* Only over a photograph: a scrim on the pale wash would be a grey smudge. */
+.cl-face.has-photo::after{content:"";position:absolute;left:0;right:0;bottom:0;height:52%;pointer-events:none;
+  background:linear-gradient(180deg,rgba(28,20,24,0),rgba(28,20,24,.45))}
+.cl-when{position:absolute;left:12px;bottom:10px;z-index:1;font-size:11px;font-weight:600;
+  letter-spacing:.04em;text-transform:uppercase;color:var(--ink-soft)}
+.cl-face.has-photo .cl-when{color:#fff;text-shadow:0 1px 3px rgba(0,0,0,.45)}
+.cl-samp{position:absolute;top:10px;left:11px;z-index:2}
+.cl-body{padding:14px 15px 15px}
+.cl-name{font-family:var(--serif);font-size:18px;font-weight:600;letter-spacing:-.01em;line-height:1.2;
+  overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.cl-sub{font-size:11px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);margin-top:5px}
+.cl-foot{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-top:11px;
+  padding-top:11px;border-top:1px solid var(--line)}
+.cl-foot .val{font-size:13px}
+.cl-sub{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+@media (max-width:560px){
+  .cl-cards{grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:12px}
+  .cl-name{font-size:16px}
+  /* Two cards to a phone screen leaves no room for "Wedding · " as well as
+     the date, and the date is the half that earns its place. */
+  .cl-type{display:none}
+  .cl-body{padding:12px 13px 13px}
+}
+
+/* --- framing a photograph: drag the picture under a fixed circle --- */
+.crop-stage{position:relative;width:100%;max-width:320px;aspect-ratio:1;margin:0 auto;
+  border-radius:var(--radius);overflow:hidden;background:#241B1F;
+  touch-action:none;user-select:none;-webkit-user-select:none;cursor:grab}
+.crop-stage.dragging{cursor:grabbing}
+.crop-stage img{position:absolute;top:0;left:0;transform-origin:0 0;-webkit-user-drag:none;display:block}
+.crop-ring{position:absolute;inset:0;pointer-events:none}
+/* One element does both jobs: the ring itself, and — through a shadow larger
+   than the stage — the dimming of everything outside it. */
+.crop-ring::after{content:"";position:absolute;inset:8px;border-radius:50%;
+  border:2px solid rgba(255,255,255,.92);box-shadow:0 0 0 9999px rgba(22,15,18,.66)}
+.crop-stage:focus-visible{outline:none;box-shadow:var(--ring)}
+.crop-zoom{display:flex;align-items:center;gap:12px;max-width:320px;margin:16px auto 0}
+.crop-zoom input[type=range]{flex:1;accent-color:var(--gold);height:22px;cursor:pointer}
+.cz-i{color:var(--ink-soft);line-height:1;font-size:15px;font-weight:600;width:14px;text-align:center;
+  user-select:none}
+.cz-i.lg{font-size:19px}
+.crop-hint{max-width:320px;margin:10px auto 0;font-size:11.5px;color:var(--muted);text-align:center;line-height:1.5}
+
+/* --- the bible picker --- */
+.modal-bible{max-width:540px}
+.bib-hint{font-size:12px;color:var(--muted);line-height:1.55;margin:-6px 0 14px}
+.bib-list{display:flex;flex-direction:column;gap:1px;border:1px solid var(--line);border-radius:var(--radius-sm);
+  overflow:hidden;background:var(--line);max-height:44vh;overflow-y:auto}
+.bib-row{display:grid;grid-template-columns:auto 1fr auto;align-items:center;gap:11px;padding:10px 13px;
+  background:var(--card);cursor:pointer;transition:background .12s}
+.bib-row:hover{background:var(--pink-50)}
+.bib-row.on{background:linear-gradient(90deg,var(--pink-50),var(--card))}
+.bib-row input{width:16px;height:16px;accent-color:var(--gold);cursor:pointer}
+.bib-row b{display:block;font-size:13px;font-weight:600}
+.bib-row em{display:block;font-style:normal;font-size:11.5px;color:var(--muted);margin-top:1px}
+.bib-tag{font-size:9.5px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--gold);
+  white-space:nowrap}
 .ev-cards{display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:16px}
 .ev-card{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);overflow:hidden;box-shadow:var(--shadow-sm);cursor:pointer;transition:transform .14s,box-shadow .14s}
 .ev-card:hover{transform:translateY(-3px);box-shadow:var(--shadow)}
@@ -1291,7 +1395,7 @@ td.inv-col{text-align:center;width:1%}
   padding:3px 11px}
 .hr-i b{font-size:11px;color:var(--tint);font-weight:700}
 .hero-prog{display:flex;align-items:center;gap:10px;margin-top:auto;padding-top:10px;max-width:340px}
-.hero-prog .bar{flex:1;height:6px}
+.hero-prog .bar{flex:1;height:4px}
 .hero-prog .bar i{background:var(--tint)}
 .hero-prog span{font-size:11px;color:var(--muted);white-space:nowrap}
 .hero-side{display:flex;flex-direction:column;align-items:center;justify-content:center;
@@ -2407,6 +2511,7 @@ html,body{max-width:100%;overflow-x:hidden}
       <div style="display:flex;align-items:center;gap:14px">
         <button class="menu-btn" id="menuBtn" aria-label="Toggle menu">☰</button>
         <div>
+          <div class="page-eyebrow" id="pgEyebrow"></div>
           <h1 class="page-title" id="pgTitle">Dashboard</h1>
           <div class="page-sub" id="pgSub"></div>
         </div>
@@ -3294,9 +3399,81 @@ Object.defineProperty(window,'isTouch',{get:isTouchMode});
 /* The dashboard subtitle was a hardcoded string, so it read correctly on the
    day it was written and drifted ever after. Compute it from the real date —
    in the viewer's own timezone, since new Date() is local. */
-function dayLine(){
-  return new Date().toLocaleDateString('en-US',
-    {weekday:'long',month:'long',day:'numeric'})+' · A calm day of details.';
+/* The date alone. It used to arrive with " · A calm day of details." glued on,
+   because both were one subtitle; they are an eyebrow and a subtitle now. */
+function dateLine(){
+  return new Date().toLocaleDateString('en-US',{weekday:'long',month:'long',day:'numeric'});
+}
+/* ---- what the page is actually about ----
+   The title bar used to say the name of the screen you had just clicked, at
+   40px, with the only sentence carrying information set beneath it at a third
+   the size. So the screen's name moves to an eyebrow and the headline says
+   what is true right now: how long until the next event, how much is in the
+   pipeline, how many have replied. Screens with nothing true to say keep their
+   name as the headline rather than inventing something. */
+function nextPrimary(){
+  /* daysAway(), not a date-string compare — todayISO() lives inside
+     wireDocuments() and is not reachable from here. */
+  var soon=null;
+  evPrimaries().forEach(function(e){
+    if(!e.date||daysAway(e.date)<0)return;
+    if(!soon||e.date<soon.date)soon=e;
+  });
+  return soon;
+}
+function countdownLine(){
+  var e=nextPrimary();
+  if(!e)return 'A clear diary';
+  var d=daysAway(e.date);
+  if(d<=0)return 'Today · '+e.title;
+  if(d===1)return 'Tomorrow · '+e.title;
+  if(d<14)return d+' days to '+e.title;
+  var w=Math.round(d/7);
+  return w+' week'+(w===1?'':'s')+' to '+e.title;
+}
+function pageHead(v){
+  var lab=(TITLES[v]||['',''])[0], sub=(TITLES[v]||['',''])[1];
+  /* [eyebrow, headline, sub] — an empty eyebrow hides itself. */
+  if(v==='dashboard')
+    return [dateLine(),countdownLine(),'A calm day of details.'];
+  if(v==='clients'&&!state.clientId){
+    var n=db.leads.length;
+    return [lab,n?(n+' client file'+(n===1?'':'s')):'No clients yet',sub];
+  }
+  if(v==='events'&&!state.eventId){
+    var ps=evPrimaries().length, subs=db.events.length-ps;
+    return [lab,ps?(ps+' event'+(ps===1?'':'s')+' in play'):'No events yet',
+            subs?(subs+' sub-event'+(subs===1?'':'s')+' inside them'):sub];
+  }
+  if(v==='pipeline'){
+    var open=db.leads.filter(function(l){return l.stage!=='wrapped'&&l.stage!=='lost';});
+    var val=open.reduce(function(a,l){return a+(Number(l.value)||0);},0);
+    return [lab,open.length?(open.length+' live, '+money(val)+' in play'):'Nothing in the pipeline',
+            isTouchMode()?'Use a card’s menu to move it through your booking flow.'
+                         :'Drag a card between stages to move it through your flow.'];
+  }
+  if(v==='guests'){
+    var ev=activeEvent();
+    if(!ev)return [lab,'No events yet',sub];
+    var r=rosterFor(ev), yes=r.filter(function(g){return gRsvp(g,ev)==='yes';}).length;
+    return [lab,r.length?(yes+' of '+r.length+' have replied yes'):'No guests yet',ev.title];
+  }
+  if(v==='vendors'){
+    var n2=db.vendors.length;
+    return [lab,n2?(n2+' in your directory'):'No vendors yet',sub];
+  }
+  if(v==='finance'){
+    var inv=db.invoices||[];
+    var paid=inv.filter(function(x){return x.status==='paid';}).reduce(function(a,x){return a+x.amount;},0);
+    var owed=inv.filter(function(x){return x.status==='due'||x.status==='over';}).reduce(function(a,x){return a+x.amount;},0);
+    return [lab,inv.length?(money(paid)+' collected · '+money(owed)+' out'):'No invoices yet',sub];
+  }
+  if(v==='documents'){
+    var d2=db.documents||[], wait=d2.filter(function(x){return x.status==='sent';}).length;
+    return [lab,d2.length?(wait?(wait+' awaiting signature'):(d2.length+' document'+(d2.length===1?'':'s')+', all settled'))
+                        :'No documents yet',sub];
+  }
+  return ['',lab,sub];
 }
 var TITLES={
   dashboard:['Dashboard',''],
@@ -3330,36 +3507,36 @@ function setView(v,opts){
   var sb=document.getElementById('settingsBtn');
   if(sb)sb.classList.toggle('on',v==='settings');
   if(typeof markActiveGroup==='function')markActiveGroup();
-  var t=(TITLES[v]||['','']).slice();
-  if(v==='dashboard')t[1]=dayLine();
-  if(v==='pipeline')t[1]=isTouchMode()?'Use a card’s menu to move it through your booking flow.'
-                                     :'Drag a card between stages to move it through your flow.';
-  if(v==='seating')t[1]=(state.seatMode||'plan')==='plan'
+  var t=pageHead(v);
+  if(v==='seating')t[2]=(state.seatMode||'plan')==='plan'
     ? 'Arrange the room — drag tables and fixtures into place.'
     : (isTouchMode()?'Use a guest’s menu to seat them at a table.'
                     :'Drag a guest to a table to seat them.');
-  // Detail screens borrow the title bar to name what you're looking at.
+  /* A detail screen is the clearest case of the same rule: what you are
+     looking at is the headline, and what kind of thing it is is the label. */
   if(v==='clients'&&state.clientId){
     var cl=db.leads.find(function(x){return x.id===state.clientId;});
-    if(cl)t=[cl.names,'Client file · '+cl.type];
+    if(cl)t=['Client file',cl.names,cl.type+(cl.date?' · '+fmtDate(cl.date):'')];
   }else if(v==='events'&&state.eventId){
     var evx=db.events.find(function(x){return x.id===state.eventId;});
-    if(evx)t=[evx.title,'Event workspace · '+evx.venue];
+    if(evx)t=[evIsSub(evx)?roleLabel(evx,true):'Event workspace',evx.title,
+              venueName(evx.venue)+(evx.date?' · '+fmtDate(evx.date):'')];
   }else if(v==='design'&&state.boardId){
     var bd=findBoard(state.boardId);
-    if(bd)t=[bd.title,'Mood board · '+((activeEvent()||{}).title||'')];
+    if(bd)t=['Mood board',bd.title,(activeEvent()||{}).title||''];
   }else if(v==='settings'&&state.settingsPage){
     var sp=null;
     SET_PAGES.forEach(function(g){g.items.forEach(function(it){ if(it.k===state.settingsPage)sp=it; });});
-    if(sp)t=[sp.t,sp.d];
+    if(sp)t=['Settings',sp.t,sp.d];
   }else if(v==='questionnaires'&&state.qId){
     var qd=db.questionnaires.find(function(x){return x.id===state.qId;});
-    if(qd)t=[qd.title,'Questionnaire'];
+    if(qd)t=['Questionnaire',qd.title,''];
   }
   // Board-style views fill the window; document-style views scroll normally.
   var fills=(v==='pipeline'&&!state.clientId)||(v==='messages');
   document.querySelector('.main').classList.toggle('fill',!!fills);
-  $('#pgTitle').textContent=t[0]; $('#pgSub').textContent=t[1];
+  $('#pgEyebrow').textContent=t[0]||'';
+  $('#pgTitle').textContent=t[1]; $('#pgSub').textContent=t[2]||'';
   $('#pgActions').innerHTML=actionsFor(v);
   wireActions();
   render();
@@ -3453,6 +3630,7 @@ function render(){
   else if(state.view==='clients'){
     el.innerHTML= state.clientId?viewClientDetail(state.clientId):viewClients();
     if(state.clientId){wireClientDetail();wireSampleBanner();}
+    else wireClients();
   }
   else if(state.view==='inquiries'){ el.innerHTML=viewInquiries(); wireInquiries(); }
   else if(state.view==='questionnaires'){ el.innerHTML=viewQuestionnaires(); wireQuestionnaires(); }
@@ -3621,7 +3799,7 @@ function viewDashboard(){
         group('Today',today,'today','now')+
         group(horizon===7?'This week':'Next '+horizon+' days',week,'week')+
         group('Later',later,'later')+
-        (tasks.length?'':'<div class="all-clear">✦<span>Everything is done. Enjoy the quiet.</span></div>')+
+        (tasks.length?'':'<div class="all-clear"><span class="ac-ic">✦</span><span>Everything is done. Enjoy the quiet.</span></div>')+
       '</div></div>'+
 
     // ---- waiting on others ----
@@ -3631,7 +3809,7 @@ function viewDashboard(){
           '<span class="w-dot '+w.tone+'"></span>'+
           '<div><div class="w-t">'+esc(w.t)+'</div><div class="w-m">'+esc(w.m)+'</div></div>'+
           '<span class="w-go">›</span></div>';
-      }).join(''):'<div class="all-clear">✦<span>Nothing pending. You are all caught up.</span></div>')+'</div></div>'+
+      }).join(''):'<div class="all-clear"><span class="ac-ic">✦</span><span>Nothing pending. You are all caught up.</span></div>')+'</div></div>'+
     '</div>';
   }
 
@@ -3925,13 +4103,91 @@ function wireBoard(){
 }
 
 /* --- Clients --- */
+/* "Ava & Julian" is two people, so two letters. Split on the ampersand as well
+   as on spaces, or every couple in the grid reads AJ-less and identical. */
+function leadInitials(l){
+  return String((l&&l.names)||'').split(/[\s&]+/).filter(Boolean).slice(0,2)
+    .map(function(w){return w[0];}).join('').toUpperCase()||'—';
+}
+/* Washes for a client with no photograph, in the house palette rather than a
+   rainbow: champagne, blush, sage, slate. By position for the same reason
+   EVENT_TINTS is — a hash collides, and two files side by side in the same
+   colour reads as a bug rather than as a choice. */
+/* [tile wash, medallion]. Both stops of every medallion clear 4.6:1 against
+   the white initials — the light-to-dark gradient this started as put white
+   text on #D9B978 at the top, which is 1.9:1 and unreadable. */
+var LEAD_WASHES=[
+  ['#F7F0E1','linear-gradient(145deg,#8D6A22,#6F5319)'],
+  ['#FBEFF1','linear-gradient(145deg,#9E6470,#7E4C57)'],
+  ['#EFF3EC','linear-gradient(145deg,#5E7A55,#47603F)'],
+  ['#EFF1F6','linear-gradient(145deg,#5C6C80,#455465)']
+];
+function leadWash(id){
+  var ids=db.leads.map(function(x){return x.id;}).sort();
+  var i=ids.indexOf(id);
+  return LEAD_WASHES[(i<0?0:i)%LEAD_WASHES.length];
+}
+function leadsByDate(){
+  return db.leads.slice().sort(function(a,b){return a.date<b.date?-1:1;});
+}
+function clientViewMode(){ return prefs().clientView==='cards'?'cards':'list'; }
+
 function viewClients(){
+  var mode=clientViewMode(), rows=leadsByDate();
+  var head='<div class="cl-head">'+
+    '<div class="seg" role="tablist" aria-label="How to show your clients">'+
+      [['list','List'],['cards','Cards']].map(function(m){
+        return '<button class="seg-b'+(mode===m[0]?' on':'')+'" data-clientview="'+m[0]+'" '+
+          'role="tab" aria-selected="'+(mode===m[0])+'">'+m[1]+'</button>';
+      }).join('')+
+    '</div>'+
+    '<div class="cl-count">'+rows.length+' client'+(rows.length===1?'':'s')+'</div>'+
+  '</div>';
+  if(!rows.length)return head+emptyState('No clients yet.');
+  return head+(mode==='cards'?clientCards(rows):clientTable(rows));
+}
+function clientTable(rows){
   return '<div class="card"><div class="tbl-wrap"><table><thead><tr><th>Client</th><th>Type</th><th>Event Date</th><th>Venue</th><th>Stage</th><th style="text-align:right">Value</th></tr></thead><tbody>'+
-    db.leads.slice().sort(function(a,b){return a.date<b.date?-1:1;}).map(function(l){var s=stageOf(l.stage);
+    rows.map(function(l){var s=stageOf(l.stage);
       return '<tr class="row-link" data-client="'+esc(l.id)+'" tabindex="0" role="link"><td><b>'+esc(l.names)+'</b>'+
       (isSampleLead(l)?' <span class="samp-tag mini">Sample</span>':'')+'</td><td>'+esc(l.type)+'</td><td>'+fmtDate(l.date)+'</td><td>'+esc(l.venue||'—')+'</td>'+
       '<td><span class="pill" style="background:'+s.color+'22;color:'+s.color+'">'+s.name+'</span></td><td style="text-align:right"><span class="val">'+money(l.value)+'</span>'+rowActions('lead',l.id)+'</td></tr>';
     }).join('')+'</tbody></table></div></div>';
+}
+function clientCards(rows){
+  return '<div class="cl-cards">'+rows.map(function(l){
+    var s=stageOf(l.stage), away=daysAway(l.date);
+    return '<div class="cl-card" data-client="'+esc(l.id)+'" tabindex="0" role="link" '+
+      'aria-label="'+esc(l.names)+', '+esc(fmtDate(l.date))+'">'+
+      '<div class="cl-face'+(l.photo?' has-photo':'')+'">'+
+        (l.photo
+          ? '<img src="'+esc(l.photo)+'" alt="">'
+          : (function(w){ return '<div class="cl-mono" style="background:'+w[0]+'">'+
+                 '<i style="background:'+w[1]+'">'+esc(leadInitials(l))+'</i></div>'; })(leadWash(l.id)))+
+        /* No edit/delete here on purpose. In touch mode .r-act is always
+           visible, which put a permanent ✕ on every face in the grid — it
+           reads as "close this" and sits on top of the one thing the card is
+           for, which is opening the file. Editing lives inside. */
+        (isSampleLead(l)?'<span class="samp-tag mini cl-samp">Sample</span>':'')+
+        '<span class="cl-when">'+(l.date?(away>=0?away+' days away':'Completed'):'No date yet')+'</span>'+
+      '</div>'+
+      '<div class="cl-body">'+
+        '<div class="cl-name">'+esc(l.names)+'</div>'+
+        '<div class="cl-sub"><span class="cl-type">'+esc(l.type||'Event')+' · </span>'+fmtDate(l.date)+'</div>'+
+        '<div class="cl-foot">'+
+          '<span class="pill" style="background:'+s.color+'22;color:'+s.color+'">'+s.name+'</span>'+
+          '<span class="val">'+money(l.value)+'</span>'+
+        '</div>'+
+      '</div>'+
+    '</div>';
+  }).join('')+'</div>';
+}
+function wireClients(){
+  document.querySelectorAll('[data-clientview]').forEach(function(b){
+    b.onclick=function(){
+      var q=prefs(); q.clientView=b.dataset.clientview; savePrefs(); render();
+    };
+  });
 }
 
 /* --- Client detail --- */
@@ -3949,7 +4205,7 @@ function viewClientDetail(id){
   var owed=invs.filter(function(x){return x.status==='due'||x.status==='over';}).reduce(function(a,x){return a+x.amount;},0);
   var away=daysAway(l.date);
 
-  var initials=l.names.split(/[\s&]+/).filter(Boolean).slice(0,2).map(function(w){return w[0];}).join('').toUpperCase();
+  var initials=leadInitials(l);
   return '<button class="back-link" data-back="clients">‹ All clients</button>'+
   sampleBanner()+
   '<div class="detail-head">'+
@@ -3972,7 +4228,8 @@ function viewClientDetail(id){
       '</div>'+
     '</div>'+
     '<div class="dh-value"><span class="dh-v">'+money(l.value)+'</span><span class="dh-l">contract value</span>'+
-      '<button class="btn btn-ghost btn-sm" id="editClient" style="margin-top:10px">✎ Edit details</button></div>'+
+      '<button class="btn btn-ghost btn-sm" id="editClient" style="margin-top:10px">✎ Edit details</button>'+
+      '<button class="btn btn-ghost btn-sm" id="clientBible" style="margin-top:8px">◈ Export bible</button></div>'+
   '</div>'+
   '<div class="stat-row">'+
     stat('Collected',money(paid),invs.filter(function(x){return x.status==='paid';}).length+' payments','up')+
@@ -5461,6 +5718,142 @@ function shrinkImage(file,maxDim,cb){
   fr.onerror=function(){ cb(null); };
   fr.readAsDataURL(file);
 }
+/* ============================================================
+ * Framing a photograph
+ *
+ * shrinkImage() scales a picture down and keeps whatever shape it arrived in,
+ * which is right for a mood board and wrong for a face: a client photo is
+ * displayed through a circle on the file header and a square in the card grid,
+ * so a landscape group shot got cropped to its middle by object-fit and the
+ * couple ended up as two shoulders. There was no way to say otherwise.
+ *
+ * Here the circle is fixed and the picture moves under it — drag, or zoom with
+ * the slider, the wheel, or the arrow keys. What is exported is the SQUARE the
+ * circle sits in, not the circle: the same pixels serve the round avatar, the
+ * card tile and, through evPhoto(), the dashboard hero, and each masks the
+ * square its own way. The circle is the guide, not the crop.
+ * ============================================================ */
+function openPhotoCrop(file,opts,done){
+  opts=opts||{};
+  var OUT=opts.out||512;
+  /* Bound the working image before it is ever decoded into the page: a modern
+     phone camera file is 4000px wide and there is no reason to hold that. */
+  shrinkImage(file,1400,function(url){
+    if(!url){ toast('Could not read that image.'); return; }
+    var img=new Image();
+    img.onerror=function(){ toast('Could not read that image.'); };
+    img.onload=function(){ cropStage(img,url); };
+    img.src=url;
+  });
+
+  function cropStage(img,url){
+    md.className='modal';
+    md.innerHTML='<h3>'+esc(opts.title||'Frame the photo')+'</h3>'+
+      '<p class="sub">'+esc(opts.sub||'Drag the picture to move it, and zoom to fill the circle.')+'</p>'+
+      '<div class="crop-stage" id="cropStage" tabindex="0" role="application" '+
+        'aria-label="Drag to reposition the photograph, arrow keys to nudge">'+
+        '<img id="cropImg" alt="" draggable="false">'+
+        '<div class="crop-ring"></div>'+
+      '</div>'+
+      '<div class="crop-zoom">'+
+        '<span class="cz-i" aria-hidden="true">−</span>'+
+        '<input type="range" id="cropZoom" min="1" max="3" step="0.01" value="1" aria-label="Zoom">'+
+        '<span class="cz-i lg" aria-hidden="true">+</span>'+
+      '</div>'+
+      '<div class="crop-hint">Everything inside the circle is what people will see.</div>'+
+      '<div class="modal-actions">'+
+        '<button class="btn btn-ghost" id="cropCancel">Cancel</button>'+
+        '<button class="btn btn-gold" id="cropSave">Use photo</button>'+
+      '</div>';
+    ov.classList.add('show');
+
+    var stage=$('#cropStage'), el=$('#cropImg'), zin=$('#cropZoom');
+    var nw=img.naturalWidth||img.width, nh=img.naturalHeight||img.height;
+    el.src=url; el.style.width=nw+'px'; el.style.height=nh+'px';
+
+    /* S is measured, not assumed: the stage is a percentage of a modal that is
+       itself a percentage of the viewport, so it is a different number on a
+       phone than on a desktop and the export maths depends on it. */
+    var S=stage.clientWidth||320;
+    /* At zoom 1 the shorter side exactly fills the stage, so there is never a
+       gap to drag into — the picture always covers. */
+    var kFit=S/Math.min(nw,nh), k=kFit, ox=0, oy=0;
+
+    function clamp(){
+      var dw=nw*k, dh=nh*k;
+      ox=Math.min(0,Math.max(S-dw,ox));
+      oy=Math.min(0,Math.max(S-dh,oy));
+    }
+    function paint(){
+      clamp();
+      el.style.transform='translate('+ox+'px,'+oy+'px) scale('+k+')';
+    }
+    /* Start centred — the middle of a photograph is where the subject usually
+       is, and it is the framing someone is least surprised by. */
+    ox=(S-nw*k)/2; oy=(S-nh*k)/2; paint();
+
+    function zoomTo(z){
+      var k2=kFit*Math.max(1,Math.min(3,z));
+      if(k2===k)return;
+      /* Hold the centre of the circle still. Zooming from the top-left corner
+         instead would walk the subject out of frame every time. */
+      var r=k2/k;
+      ox=S/2-(S/2-ox)*r;
+      oy=S/2-(S/2-oy)*r;
+      k=k2; paint();
+    }
+    zin.oninput=function(){ zoomTo(Number(zin.value)||1); };
+
+    var drag=null;
+    stage.addEventListener('pointerdown',function(e){
+      drag={x:e.clientX,y:e.clientY,ox:ox,oy:oy};
+      stage.classList.add('dragging');
+      try{ stage.setPointerCapture(e.pointerId); }catch(err){}
+    });
+    stage.addEventListener('pointermove',function(e){
+      if(!drag)return;
+      e.preventDefault();
+      ox=drag.ox+(e.clientX-drag.x); oy=drag.oy+(e.clientY-drag.y);
+      paint();
+    });
+    function endDrag(){ drag=null; stage.classList.remove('dragging'); }
+    stage.addEventListener('pointerup',endDrag);
+    stage.addEventListener('pointercancel',endDrag);
+    stage.addEventListener('wheel',function(e){
+      e.preventDefault();
+      var z=(k/kFit)*(e.deltaY>0?0.94:1.06);
+      zin.value=String(Math.max(1,Math.min(3,z)));
+      zoomTo(z);
+    },{passive:false});
+    /* A trackpad is not the only way in. Arrows nudge, +/- zoom. */
+    stage.addEventListener('keydown',function(e){
+      var step=e.shiftKey?20:6, used=true;
+      if(e.key==='ArrowLeft')ox-=step;
+      else if(e.key==='ArrowRight')ox+=step;
+      else if(e.key==='ArrowUp')oy-=step;
+      else if(e.key==='ArrowDown')oy+=step;
+      else if(e.key==='+'||e.key==='='){ zin.value=String(Math.min(3,(k/kFit)+0.1)); zoomTo(Number(zin.value)); }
+      else if(e.key==='-'||e.key==='_'){ zin.value=String(Math.max(1,(k/kFit)-0.1)); zoomTo(Number(zin.value)); }
+      else used=false;
+      if(used){ e.preventDefault(); paint(); }
+    });
+
+    $('#cropCancel').onclick=closeModal;
+    $('#cropSave').onclick=function(){
+      /* The visible square, back in the source image's own coordinates. */
+      var cv=document.createElement('canvas');
+      cv.width=OUT; cv.height=OUT;
+      var ctx=cv.getContext('2d');
+      ctx.drawImage(img,(-ox)/k,(-oy)/k,S/k,S/k,0,0,OUT,OUT);
+      var out=null;
+      try{ out=cv.toDataURL('image/jpeg',0.86); }catch(err){ out=null; }
+      if(!out){ toast('Could not save that image.'); return; }
+      done(out);
+    };
+    stage.focus();
+  }
+}
+
 function wireBoardDetail(){
   var b=findBoard(state.boardId); if(!b)return;
   var input=$('#imgInput'), dz=$('#dropzone');
@@ -5836,18 +6229,34 @@ function wireClientDetail(){
   var ec=$('#editClient'), ct=$('#editContact');
   if(ec)ec.onclick=function(){openClientModal(l);};
   if(ct)ct.onclick=function(){openClientModal(l);};
+  var cb=$('#clientBible');
+  if(cb)cb.onclick=function(){
+    var bev=eventForLead(l);
+    /* The bible is assembled around an event — dates, running order, guests,
+       seating all hang off one. Say that, rather than toasting something the
+       button could equally have meant. */
+    if(!bev){ toast('Create an event for '+l.names+' first — the bible is built around one.'); return; }
+    openBibleModal(bev);
+  };
 
   var photo=$('#clientPhoto'), pin=$('#clientPhotoInput');
   if(pin)pin.onchange=function(){
     var f=pin.files&&pin.files[0]; pin.value='';
     if(!f)return;
     if(!/^image\//.test(f.type)){toast('Choose an image file.');return;}
-    shrinkImage(f,320,function(dataUrl){
-      if(!dataUrl){toast('Could not read that image.');return;}
-      var prev=l.photo; l.photo=dataUrl;
-      if(!save()){ l.photo=prev; }
-      render();
-    });
+    openPhotoCrop(f,{title:'Frame the photo',
+                     sub:'This is how '+l.names+' appears on their file and in the card grid.'},
+      function(dataUrl){
+        var prev=l.photo, prevPath=l.photoPath;
+        /* Clearing photoPath is what makes the new picture upload. mediaUpload()
+           only sends records that have pixels and no path yet, so leaving the
+           old key here would keep the OLD photograph on every other device —
+           the same trap the event cover already had a comment about, which this
+           handler never got. */
+        l.photo=dataUrl; l.photoPath=null;
+        if(!save()){ l.photo=prev; l.photoPath=prevPath; return; }
+        closeModal(); render(); toast('Photo updated ✦');
+      });
   };
   if(photo)photo.addEventListener('keydown',function(e){
     if(e.key==='Enter'||e.key===' '){e.preventDefault();pin.click();}
@@ -6147,6 +6556,9 @@ function applyBrand(){
       m.style.backgroundSize='cover'; m.style.backgroundPosition='center'; m.textContent=''; }
     else { m.style.background=''; m.style.backgroundImage=''; m.textContent=(p.bizName||'G').trim()[0].toUpperCase(); }
   });
+  /* A real logo is a brand; an initial in a tile is a placeholder. The class
+     is what hides the second one everywhere except the collapsed rail. */
+  document.querySelectorAll('.brand').forEach(function(b){ b.classList.toggle('no-logo',!p.logo); });
   var nm=document.querySelector('.brand .name');
   if(nm)nm.textContent=p.brandMark||'GEM';
 }
@@ -6193,6 +6605,7 @@ function prefs(){
        back as the default on the next reload. */
     dashOrder:Array.isArray(d.dashOrder)?d.dashOrder:null,
     dashHidden:d.dashHidden||{},
+    clientView:d.clientView==='cards'?'cards':'list',
     portalDocs:d.portalDocs!==false,
     portalPayments:d.portalPayments!==false,
     portalQuestionnaires:d.portalQuestionnaires!==false,
@@ -8947,7 +9360,8 @@ function openPrintMenu(ev){
     (evIsSub(ev)?esc(roleLabel(ev))+' · ':'')+esc(ev.title)+
     ' · opens your print dialog, where you can save as PDF.</p>'+
     '<div class="print-grid">'+
-      ([['timeline','Day-of Timeline','The running order for your vendor team'],
+      ([['bible','The Bible','Everything you have, as one document — yours or theirs'],
+       ['timeline','Day-of Timeline','The running order for your vendor team'],
        ['guests','Guest List','Every guest with RSVP, meal and table'],
        ['seating','Seating Chart','Table by table, with dietary flags'],
        ['vendors','Vendor Contact Sheet','Numbers you need on the day'],
@@ -8962,8 +9376,537 @@ function openPrintMenu(ev){
   ov.classList.add('show');
   $('#mCancel').onclick=closeModal;
   md.querySelectorAll('[data-print]').forEach(function(b){
-    b.onclick=function(){ var k=b.dataset.print; closeModal(); setTimeout(function(){printSheet(k,ev);},180); };
+    b.onclick=function(){ var k=b.dataset.print; closeModal();
+      /* The bible asks who it is for and what goes in it, so it opens its own
+         picker rather than going straight to the printer like a sheet does. */
+      setTimeout(function(){ if(k==='bible')openBibleModal(ev); else printSheet(k,ev); },180); };
   });
+}
+
+/* ============================================================
+ * The Bible — one document, assembled from the workspace
+ *
+ * A planner's binder and a client's keepsake are the same facts arranged for
+ * two different readers, so this builds ONE structure — a list of blocks —
+ * and renders it three ways: to the print dialog (where every platform offers
+ * Save as PDF), to a real .docx, and to an email covering note. Writing the
+ * sections once is the whole point; a second copy of "the guest list, but for
+ * Word" is where the two would drift.
+ *
+ * What a client may see is not a matter of taste. It follows the same line the
+ * database draws in 02_rls.sql and MIGRATION.md §4: no budget, no vendor fees,
+ * no private notes — ever, whatever is ticked.
+ * ============================================================ */
+var BIBLE_SECTIONS=[
+  {k:'overview', t:'Overview',      d:'The essentials, on one page'},
+  {k:'contacts', t:'Key contacts',  d:'Client, venue and your studio'},
+  {k:'weekend',  t:'The weekend',   d:'Every event in order, with its venue'},
+  {k:'timeline', t:'Running order', d:'Hour by hour, for each event'},
+  {k:'guests',   t:'Guest list',    d:'RSVP, meal, dietary needs and table'},
+  {k:'seating',  t:'Seating',       d:'Table by table, with dietary flags'},
+  {k:'tasks',    t:'Checklist',     d:'What is done, and what is left'},
+  {k:'design',   t:'Design',        d:'Palette, mood boards and décor'},
+  {k:'docs',     t:'Documents',     d:'Contracts and proposals, with status'},
+  {k:'money',    t:'Payments',      d:'Invoices, paid and outstanding'},
+  {k:'budget',   t:'Budget',        d:'Estimated against actual, line by line', planner:true},
+  {k:'vendors',  t:'Vendor team',   d:'Contacts, status and fees',              planner:true},
+  {k:'notes',    t:'Private notes', d:'Your own notes on this client',          planner:true}
+];
+function bibleDefaults(aud){
+  var on={};
+  BIBLE_SECTIONS.forEach(function(s){
+    if(s.planner&&aud!=='planner')return;
+    /* A client's copy opens without the guest list and seating ticked: it is
+       the half most often still moving, and it is theirs to ask for. */
+    on[s.k]=!(aud==='client'&&(s.k==='guests'||s.k==='seating'));
+  });
+  return on;
+}
+
+/* ---------- the content, as blocks ---------- */
+/* h1 chapter · h2 heading · p paragraph · note callout · kv facts · table */
+function bibleBlocks(ev,opts){
+  var planner=opts.audience==='planner';
+  var pick=opts.sections||{};
+  var wk=evBlock(ev).slice().sort(function(a,b){return (a.date||'')<(b.date||'')?-1:1;});
+  var lead=leadForEvent(ev);
+  var B=[];
+  var want=function(k){ var s=BIBLE_SECTIONS.find(function(x){return x.k===k;});
+    if(s&&s.planner&&!planner)return false;      // never, whatever is ticked
+    return !!pick[k]; };
+  var push=function(){ [].slice.call(arguments).forEach(function(b){ if(b)B.push(b); }); };
+
+  if(want('overview')){
+    var away=daysAway(ev.date);
+    var kv=[['Event',ev.title],['Type',evType(ev)],['Date',fmtDate(ev.date)+(ev.startTime?' · '+ev.startTime+' start':'')],
+            ['Venue',venueName(ev.venue)+(ev.loc?', '+ev.loc:'')],
+            ['Countdown',ev.date?(away>=0?away+' days away':'Completed'):'No date set'],
+            ['Guests',rosterFor(ev).filter(function(g){return gRsvp(g,ev)==='yes';}).length+' attending of '+rosterFor(ev).length+' invited'],
+            ['Planning',evPct(ev)+'% complete']];
+    if(planner&&lead)kv.push(['Contract value',money(lead.value)],['Stage',(stageOf(lead.stage)||{}).name||'']);
+    push({h1:'Overview'},{kv:kv});
+    if(wk.length>1)push({note:'This is a weekend of '+wk.length+' events. Everything below covers all of them unless it says otherwise.'});
+  }
+  if(want('contacts')){
+    var rows=[];
+    if(lead){
+      rows.push(['Client',lead.names,[lead.email,lead.phone].filter(Boolean).join(' · ')||'—']);
+      if(lead.partnerA)rows.push(['',lead.partnerA+(lead.pronounsA?' ('+lead.pronounsA+')':''),'']);
+      if(lead.partnerB)rows.push(['',lead.partnerB+(lead.pronounsB?' ('+lead.pronounsB+')':''),'']);
+    }
+    wk.forEach(function(x){
+      var c=x.venueContact||{};
+      if(c.name||c.email||c.phone)
+        rows.push([roleLabel(x,true)+' venue',venueName(x.venue)+(c.name?' · '+c.name:''),
+                   [c.email,c.phone].filter(Boolean).join(' · ')||'—']);
+    });
+    var pf=prefs();
+    rows.push(['Your studio',pf.bizName+(pf.plannerName?' · '+pf.plannerName:''),
+               [pf.bizEmail,pf.bizPhone].filter(Boolean).join(' · ')||'—']);
+    push({h1:'Key contacts'},{table:{head:['','Who','Reach them on'],rows:rows}});
+  }
+  if(want('weekend')){
+    push({h1:wk.length>1?'The weekend':'The event'},
+         {table:{head:['','Event','Date','Venue','Attending'],rows:wk.map(function(x){
+           return [roleLabel(x,true),x.title,fmtDate(x.date)+(x.startTime?' · '+x.startTime:''),
+                   venueName(x.venue)+(x.loc?', '+x.loc:''),
+                   String(rosterFor(x).filter(function(g){return gRsvp(g,x)==='yes';}).length)];
+         })}});
+    wk.forEach(function(x){
+      var a=addrLines(x.venueAddress);
+      if(a.length||x.venueNotes)
+        push({h2:roleLabel(x,true)+' · '+venueName(x.venue)},
+             a.length?{p:a.join(', ')}:null,
+             x.venueNotes?{note:x.venueNotes}:null);
+    });
+  }
+  if(want('timeline')){
+    push({h1:'Running order'});
+    wk.forEach(function(x){
+      push({h2:roleLabel(x,true)+' — '+x.title+' · '+fmtDate(x.date)});
+      if(!(x.timeline||[]).length){ push({p:'No running order yet.'}); return; }
+      push({table:{head:['Time','Moment','Detail'],
+        rows:x.timeline.map(function(t){ return [t.t||'',t.ev||'',t.ds||'']; })}});
+    });
+  }
+  if(want('guests')){
+    push({h1:'Guest list'});
+    wk.forEach(function(x){
+      var r=rosterFor(x);
+      push({h2:roleLabel(x,true)+' — '+r.filter(function(g){return gRsvp(g,x)==='yes';}).length+
+               ' attending of '+r.length});
+      if(!r.length){ push({p:'Nobody on this list yet.'}); return; }
+      push({table:{head:['Guest','Party','RSVP','Meal','Dietary','Table'],
+        rows:r.map(function(g){
+          var tb=(x.tables||[]).find(function(t){return t.id===gTable(g,x);});
+          return [g.name||'',g.party||'',(RSVP[gRsvp(g,x)]||{}).lbl||'',gMeal(g,x)||'',g.diet||'',tb?tb.name:''];
+        })}});
+    });
+  }
+  if(want('seating')){
+    push({h1:'Seating'});
+    wk.forEach(function(x){
+      if(!(x.tables||[]).length)return;
+      push({h2:roleLabel(x,true)+' — '+x.tables.length+' table'+(x.tables.length===1?'':'s')});
+      x.tables.forEach(function(t){
+        var at=seatedAt(x,t.id);
+        push({h2n:t.name+'  ·  '+at.length+' of '+t.seats},
+             {p:at.length?at.map(function(g){
+               return g.name+(g.diet?' ('+g.diet+')':'');
+             }).join(' · '):'Empty.'});
+      });
+    });
+  }
+  if(want('tasks')){
+    push({h1:'Checklist'});
+    wk.forEach(function(x){
+      var items=(x.checklist||[]).filter(function(c){
+        return planner||c.owner==='client';         // a client's copy is their own list
+      });
+      if(!items.length)return;
+      push({h2:roleLabel(x,true)+' — '+items.filter(function(c){return c.done;}).length+' of '+items.length+' done'});
+      push({table:{head:planner?['','Task','Category','Due','Owner']:['','Task','Category','Due'],
+        rows:items.map(function(c){
+          var row=[c.done?'✓':'☐',c.lbl||'',c.cat||'',c.due?fmtDate(c.due):''];
+          if(planner)row.push(c.owner==='client'?'Client':'Studio');
+          return row;
+        })}});
+    });
+  }
+  if(want('design')){
+    var d=evPrimary(ev).design||{};
+    push({h1:'Design'});
+    if((d.palette||[]).length)
+      push({h2:'Palette'},{p:d.palette.map(function(c){return c.name+' ('+String(c.hex).toUpperCase()+')';}).join(' · ')});
+    (d.boards||[]).forEach(function(b){
+      push({h2:b.title+(b.note?' — '+b.note:'')});
+      if((b.swatches||[]).length)push({p:'Swatches: '+b.swatches.map(function(c){return c.name;}).join(' · ')});
+      if((b.ideas||[]).length)push({p:b.ideas.map(function(i){return '· '+(i.body||i.text||'');}).join('\n')});
+      if((b.images||[]).length)push({p:b.images.length+' reference photograph'+(b.images.length===1?'':'s')+' on this board.'});
+    });
+    if((d.decor||[]).length)
+      push({h2:'Décor and rentals'},
+           {table:{head:planner?['Item','Vendor','Status']:['Item','Status'],
+             rows:d.decor.map(function(x){
+               return planner?[x.item||'',x.vendor||'',(DECOR[x.status]||{}).lbl||x.status||'']
+                             :[x.item||'',(DECOR[x.status]||{}).lbl||x.status||''];
+             })}});
+  }
+  if(want('docs')){
+    var ids=wk.map(function(x){return x.id;});
+    var docs=(db.documents||[]).filter(function(x){
+      return ids.indexOf(x.eventId)>-1&&(planner||x.status!=='draft');   // never a draft, to a client
+    });
+    push({h1:'Documents'});
+    push(docs.length
+      ?{table:{head:['Document','Type','Status','Sent','Signed'],rows:docs.map(function(x){
+          return [x.title||'',x.type||'',x.status||'',x.sent?fmtDate(x.sent):'',x.signed?fmtDate(x.signed):''];
+        })}}
+      :{p:'Nothing yet.'});
+  }
+  if(want('money')){
+    var inv=invoicesForLead(lead);
+    var paid=inv.filter(function(x){return x.status==='paid';}).reduce(function(a,x){return a+x.amount;},0);
+    var owed=inv.filter(function(x){return x.status==='due'||x.status==='over';}).reduce(function(a,x){return a+x.amount;},0);
+    push({h1:'Payments'},
+         {kv:[['Collected',money(paid)],['Outstanding',money(owed)]]});
+    push(inv.length
+      ?{table:{head:['Invoice','Amount','Due','Status'],rows:inv.map(function(x){
+          return [x.num||'',money(x.amount),x.due?fmtDate(x.due):'',x.status||''];
+        })}}
+      :{p:'No invoices yet.'});
+  }
+  if(want('budget')){
+    var b=evPrimary(ev).budget||[];
+    var est=b.reduce(function(a,x){return a+(Number(x.est)||0);},0);
+    var act=b.reduce(function(a,x){return a+(Number(x.act)||0);},0);
+    push({h1:'Budget'},{kv:[['Estimated',money(est)],['Actual',money(act)],['Difference',money(est-act)]]});
+    push(b.length
+      ?{table:{head:['Line','For','Estimated','Actual'],rows:b.map(function(x){
+          var tag=x.tagEventId?evById(x.tagEventId):null;
+          return [x.cat||'',tag?roleLabel(tag,true):'The weekend',money(x.est),money(x.act)];
+        })}}
+      :{p:'No budget lines yet.'});
+  }
+  if(want('vendors')){
+    var ids2=wk.map(function(x){return x.id;});
+    var bk=(db.bookings||[]).filter(function(x){return ids2.indexOf(x.eventId)>-1;});
+    push({h1:'Vendor team'});
+    push(bk.length
+      ?{table:{head:['Vendor','Category','Contact','Status','Fee'],rows:bk.map(function(x){
+          var v=vendorById(x.vendorId)||{};
+          return [v.name||'—',v.cat||'',[v.contact,v.phone,v.email].filter(Boolean).join(' · '),
+                  (VSTATUS[x.status]||{}).lbl||x.status||'',money(x.fee)];
+        })}}
+      :{p:'Nobody booked yet.'});
+  }
+  if(want('notes')&&lead&&String(lead.notes||'').trim())
+    push({h1:'Private notes'},{p:lead.notes});
+  return B;
+}
+
+/* ---------- renderer 1 · the printed page (and therefore the PDF) ---------- */
+function bibleHtml(blocks){
+  return blocks.map(function(b){
+    if(b.h1)  return '<h2 class="pr-title bib-ch">'+esc(b.h1)+'</h2>';
+    if(b.h2)  return '<h3 class="bib-h">'+esc(b.h2)+'</h3>';
+    if(b.h2n) return '<div class="bib-sub">'+esc(b.h2n)+'</div>';
+    if(b.note)return '<div class="pr-note">'+esc(b.note)+'</div>';
+    if(b.p)   return '<p class="bib-p">'+esc(b.p).replace(/\n/g,'<br>')+'</p>';
+    if(b.kv)  return '<table class="pr-t bib-kv"><tbody>'+b.kv.map(function(r){
+                 return '<tr><th>'+esc(r[0])+'</th><td>'+esc(r[1])+'</td></tr>'; }).join('')+'</tbody></table>';
+    if(b.table)return '<table class="pr-t"><thead><tr>'+b.table.head.map(function(h){
+                 return '<th>'+esc(h)+'</th>'; }).join('')+'</tr></thead><tbody>'+
+                 b.table.rows.map(function(r){ return '<tr>'+r.map(function(c,i){
+                   return '<td>'+(i===0?'<b>'+esc(c)+'</b>':esc(c))+'</td>'; }).join('')+'</tr>'; }).join('')+
+                 '</tbody></table>';
+    return '';
+  }).join('');
+}
+
+/* ---------- renderer 2 · a real .docx ---------- */
+/* A .docx is a ZIP of XML. Nothing here is compressed — stored entries need
+   only a CRC, which is thirty lines, where deflate would be a library. The
+   file is a few hundred KB of text at worst and opens in Word, Pages, Google
+   Docs and LibreOffice alike. */
+var CRC_T=null;
+function crc32(bytes){
+  if(!CRC_T){
+    CRC_T=[];
+    for(var n=0;n<256;n++){
+      var c=n;
+      for(var k=0;k<8;k++)c=(c&1)?(0xEDB88320^(c>>>1)):(c>>>1);
+      CRC_T[n]=c>>>0;
+    }
+  }
+  var crc=0xFFFFFFFF;
+  for(var i=0;i<bytes.length;i++)crc=(CRC_T[(crc^bytes[i])&0xFF]^(crc>>>8))>>>0;
+  return (crc^0xFFFFFFFF)>>>0;
+}
+function zipStore(files){
+  var enc=new TextEncoder(), parts=[], central=[], offset=0;
+  var u8=function(n){ return [n&255]; };
+  var u16=function(n){ return [n&255,(n>>8)&255]; };
+  var u32=function(n){ return [n&255,(n>>>8)&255,(n>>>16)&255,(n>>>24)&255]; };
+  /* One timestamp for the whole archive: the DOS field has two-second
+     resolution and nothing reads it, but a file with 1980 on it looks broken. */
+  var now=new Date();
+  var dt=u16(((now.getHours()&31)<<11)|((now.getMinutes()&63)<<5)|((now.getSeconds()/2)&31))
+    .concat(u16((((now.getFullYear()-1980)&127)<<9)|(((now.getMonth()+1)&15)<<5)|(now.getDate()&31)));
+  files.forEach(function(f){
+    var name=enc.encode(f.name), body=enc.encode(f.body), crc=crc32(body);
+    var head=[0x50,0x4B,0x03,0x04].concat(u16(20),u16(0x0800),u16(0),dt,
+      u32(crc),u32(body.length),u32(body.length),u16(name.length),u16(0));
+    parts.push(new Uint8Array(head),name,body);
+    central.push([0x50,0x4B,0x01,0x02].concat(u16(20),u16(20),u16(0x0800),u16(0),dt,
+      u32(crc),u32(body.length),u32(body.length),u16(name.length),
+      u16(0),u16(0),u16(0),u16(0),u32(0),u32(offset)));
+    central.push(name);
+    offset+=head.length+name.length+body.length;
+  });
+  var cd=[], cdLen=0;
+  central.forEach(function(c){
+    var a=(c instanceof Uint8Array)?c:new Uint8Array(c);
+    cd.push(a); cdLen+=a.length;
+  });
+  var end=new Uint8Array([0x50,0x4B,0x05,0x06].concat(u16(0),u16(0),
+    u16(files.length),u16(files.length),u32(cdLen),u32(offset),u16(0)));
+  var total=offset+cdLen+end.length, out=new Uint8Array(total), at=0;
+  parts.concat(cd,[end]).forEach(function(a){ out.set(a,at); at+=a.length; });
+  return out;
+}
+function xmlEsc(s){
+  return String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;')
+    .replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+/* Direct formatting rather than a styles part: one fewer file to keep in step,
+   and Word renders it identically. Sizes are half-points. */
+function wRun(text,o){
+  o=o||{};
+  return String(text==null?'':text).split('\n').map(function(line,i){
+    return (i?'<w:r><w:br/></w:r>':'')+
+      /* The order of these is not cosmetic. CT_RPr is a SEQUENCE, so a
+         consumer that validates — LibreOffice does, Word does not — refuses
+         the whole file if sz comes before color. rFonts, b, i, caps, color,
+         spacing, sz, szCs is the schema's order, and the only correct one. */
+      '<w:r><w:rPr>'+
+      (o.serif?'<w:rFonts w:ascii="Georgia" w:hAnsi="Georgia"/>':'<w:rFonts w:ascii="Calibri" w:hAnsi="Calibri"/>')+
+      (o.b?'<w:b/>':'')+(o.i?'<w:i/>':'')+(o.caps?'<w:caps/>':'')+
+      (o.color?'<w:color w:val="'+o.color+'"/>':'')+
+      (o.caps?'<w:spacing w:val="30"/>':'')+
+      '<w:sz w:val="'+(o.sz||20)+'"/><w:szCs w:val="'+(o.sz||20)+'"/>'+
+      '</w:rPr><w:t xml:space="preserve">'+xmlEsc(line)+'</w:t></w:r>';
+  }).join('');
+}
+function wPara(text,o){
+  o=o||{};
+  /* CT_PPr is a sequence too: pageBreakBefore, pBdr, shd, spacing. */
+  return '<w:p><w:pPr>'+
+    (o.page?'<w:pageBreakBefore/>':'')+
+    (o.rule?'<w:pBdr><w:bottom w:val="single" w:sz="6" w:space="4" w:color="'+o.rule+'"/></w:pBdr>':'')+
+    (o.shade?'<w:shd w:val="clear" w:fill="'+o.shade+'"/>':'')+
+    '<w:spacing w:before="'+(o.before||0)+'" w:after="'+(o.after===undefined?120:o.after)+'"/>'+
+    '</w:pPr>'+wRun(text,o)+'</w:p>';
+}
+function wCell(text,o,w){
+  return '<w:tc><w:tcPr><w:tcW w:w="'+(w||0)+'" w:type="'+(w?'pct':'auto')+'"/>'+
+    (o&&o.shade?'<w:shd w:val="clear" w:fill="'+o.shade+'"/>':'')+'</w:tcPr>'+
+    wPara(text,Object.assign({after:40,sz:18},o||{}))+'</w:tc>';
+}
+function wTable(head,rows,accent){
+  var b=function(n){ return '<w:'+n+' w:val="single" w:sz="4" w:space="0" w:color="DCD2D5"/>'; };
+  return '<w:tbl><w:tblPr><w:tblW w:w="5000" w:type="pct"/><w:tblBorders>'+
+      b('top')+b('left')+b('bottom')+b('right')+b('insideH')+b('insideV')+
+    '</w:tblBorders></w:tblPr>'+
+    '<w:tr><w:trPr><w:tblHeader/></w:trPr>'+head.map(function(h){
+      return wCell(h,{b:true,sz:15,caps:true,color:accent,shade:'FAF5F2'});
+    }).join('')+'</w:tr>'+
+    rows.map(function(r){
+      return '<w:tr>'+r.map(function(c,i){ return wCell(c,{b:i===0}); }).join('')+'</w:tr>';
+    }).join('')+'</w:tbl>'+wPara('',{after:120});
+}
+function bibleDocx(blocks,meta){
+  var accent=(prefs().accent||'#B08D3E').replace('#','').toUpperCase();
+  var body=
+    wPara(meta.brand,{caps:true,b:true,sz:16,color:accent,after:60})+
+    wPara(meta.title,{serif:true,b:true,sz:52,after:60})+
+    wPara(meta.sub,{sz:22,color:'6B5B61',after:40})+
+    wPara(meta.stamp,{sz:18,color:'8B7B80',rule:accent,after:320})+
+    blocks.map(function(bl){
+      if(bl.h1)  return wPara(bl.h1,{serif:true,b:true,sz:34,color:accent,before:360,after:140,rule:'E6DADD'});
+      if(bl.h2)  return wPara(bl.h2,{serif:true,b:true,sz:24,before:220,after:80});
+      if(bl.h2n) return wPara(bl.h2n,{b:true,sz:19,before:120,after:40});
+      if(bl.note)return wPara(bl.note,{i:true,sz:19,shade:'FAF5F2',after:140});
+      if(bl.p)   return wPara(bl.p,{sz:20});
+      if(bl.kv)  return wTable(['',''],bl.kv.map(function(r){return [r[0],r[1]];}),accent);
+      if(bl.table)return wTable(bl.table.head,bl.table.rows,accent);
+      return '';
+    }).join('')+
+    wPara(meta.foot,{sz:16,color:'8B7B80',before:360,rule:'E6DADD'});
+
+  var doc='<?xml version="1.0" encoding="UTF-8" standalone="yes"?>'+
+    '<w:document xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main"><w:body>'+
+    body+
+    '<w:sectPr><w:pgSz w:w="11906" w:h="16838"/>'+
+    '<w:pgMar w:top="1134" w:right="1021" w:bottom="1134" w:left="1021" w:header="709" w:footer="709"/>'+
+    '</w:sectPr></w:body></w:document>';
+
+  return zipStore([
+    {name:'[Content_Types].xml',body:'<?xml version="1.0" encoding="UTF-8" standalone="yes"?>'+
+      '<Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types">'+
+      '<Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/>'+
+      '<Default Extension="xml" ContentType="application/xml"/>'+
+      '<Override PartName="/word/document.xml" ContentType="application/vnd.openxmlformats-officedocument.wordprocessingml.document.main+xml"/>'+
+      '</Types>'},
+    {name:'_rels/.rels',body:'<?xml version="1.0" encoding="UTF-8" standalone="yes"?>'+
+      '<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">'+
+      '<Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/officeDocument" Target="word/document.xml"/>'+
+      '</Relationships>'},
+    {name:'word/document.xml',body:doc}
+  ]);
+}
+
+/* ---------- the three ways out ---------- */
+function bibleMeta(ev,opts){
+  var pf=prefs(), lead=leadForEvent(ev);
+  return {
+    brand:pf.bizName||'',
+    title:(lead?lead.names:ev.title),
+    sub:evType(ev)+' · '+fmtDate(ev.date)+' · '+venueName(ev.venue),
+    stamp:(opts.audience==='planner'?'Planning bible':'Your planning bible')+
+          ' · prepared '+fmtDate(new Date().toISOString().slice(0,10)),
+    foot:'Prepared by '+(pf.bizName||'')+
+      (pf.bizEmail?' · '+pf.bizEmail:'')+(pf.bizPhone?' · '+pf.bizPhone:''),
+    file:String((lead?lead.names:ev.title)||'bible').replace(/[^A-Za-z0-9]+/g,'-')
+      .replace(/^-|-$/g,'').toLowerCase()+'-bible'
+  };
+}
+function biblePrint(ev,opts){
+  var blocks=bibleBlocks(ev,opts), meta=bibleMeta(ev,opts), pf=prefs();
+  var w=document.getElementById('printFrame');
+  if(!w){ w=document.createElement('iframe'); w.id='printFrame';
+    w.style.cssText='position:fixed;right:0;bottom:0;width:0;height:0;border:0;visibility:hidden';
+    document.body.appendChild(w); }
+  var doc=w.contentDocument;
+  doc.open();
+  doc.write('<!doctype html><meta charset="utf-8"><title>'+esc(meta.title)+' — bible</title>'+
+    '<style>'+printCss()+bibleCss()+'</style><body>'+
+    '<div class="bib-cover">'+
+      (pf.logo?'<img class="bib-logo" src="'+pf.logo+'" alt="">':'')+
+      '<div class="pr-brand">'+esc(meta.brand)+'</div>'+
+      '<h1>'+esc(meta.title)+'</h1>'+
+      '<div class="bib-sub2">'+esc(meta.sub)+'</div>'+
+      '<div class="bib-stamp">'+esc(meta.stamp)+'</div>'+
+    '</div>'+
+    bibleHtml(blocks)+
+    '<div class="pr-foot">'+esc(meta.foot)+'</div></body>');
+  doc.close();
+  setTimeout(function(){ w.contentWindow.focus(); w.contentWindow.print(); },260);
+}
+function bibleSave(ev,opts){
+  var bytes=bibleDocx(bibleBlocks(ev,opts),bibleMeta(ev,opts));
+  var name=bibleMeta(ev,opts).file+'.docx';
+  var blob=new Blob([bytes],{type:'application/vnd.openxmlformats-officedocument.wordprocessingml.document'});
+  var url=URL.createObjectURL(blob), a=document.createElement('a');
+  a.href=url; a.download=name; document.body.appendChild(a); a.click();
+  setTimeout(function(){ a.remove(); URL.revokeObjectURL(url); },400);
+  return name;
+}
+/* A browser cannot put a file into a mail client, so this does the honest
+   thing: saves the document, then opens a message already written, ready for
+   it to be dragged in. Pretending otherwise would just lose the attachment. */
+function bibleEmail(ev,opts){
+  var meta=bibleMeta(ev,opts), lead=leadForEvent(ev), name=bibleSave(ev,opts);
+  var to=(opts.audience==='client'&&lead&&lead.email)?lead.email:'';
+  var on=BIBLE_SECTIONS.filter(function(s){ return (opts.sections||{})[s.k]&&!(s.planner&&opts.audience!=='planner'); });
+  var body=[
+    (lead?'Hello '+lead.names+',':'Hello,'),'',
+    'Attached is the planning bible for '+meta.title+' — '+meta.sub+'.','',
+    'It covers:',
+    on.map(function(s){ return '  · '+s.t; }).join('\n'),'',
+    'Any questions at all, just reply to this message.','',
+    prefs().plannerName||prefs().bizName||''
+  ].join('\n');
+  var href='mailto:'+encodeURIComponent(to)+
+    '?subject='+encodeURIComponent(meta.title+' — planning bible')+
+    '&body='+encodeURIComponent(body);
+  setTimeout(function(){ location.href=href; },600);
+  toast(name+' saved — attach it to the message that just opened ✦');
+}
+function bibleCss(){ return ''+
+ '.bib-cover{text-align:center;padding:26px 0 30px;border-bottom:2px solid '+accentHex()+';margin-bottom:26px}'+
+ '.bib-logo{width:54px;height:54px;object-fit:cover;border-radius:11px;margin:0 auto 12px;display:block}'+
+ '.bib-cover h1{font-family:Georgia,serif;font-size:34px;margin:8px 0 6px;font-weight:600;letter-spacing:-.01em}'+
+ '.bib-sub2{font-size:13px;color:#5e4e54}'+
+ '.bib-stamp{font-size:10px;letter-spacing:1.6px;text-transform:uppercase;color:#8b7b80;margin-top:10px}'+
+ '.bib-ch{font-size:20px;margin:26px 0 12px;padding-bottom:7px;border-bottom:1px solid #e6dadd;'+
+   'color:'+accentHex()+';break-after:avoid}'+
+ '.bib-h{font-family:Georgia,serif;font-size:14.5px;font-weight:600;margin:15px 0 7px;break-after:avoid}'+
+ '.bib-sub{font-size:11.5px;font-weight:700;margin:9px 0 3px}'+
+ '.bib-p{font-size:12px;margin:0 0 9px;white-space:pre-line}'+
+ '.bib-kv th{width:150px;text-align:left;font-size:8.5px;letter-spacing:1.3px;text-transform:uppercase;'+
+   'color:#7b6a70;vertical-align:top;padding:7px 8px;border-bottom:1px solid #eee3e5}'+
+ '.bib-kv td{font-size:12.5px}';
+}
+
+/* ---------- the picker ---------- */
+function openBibleModal(ev){
+  if(!ev){ toast('Open an event or a client first ✦'); return; }
+  var state={audience:'planner',sections:bibleDefaults('planner')};
+  md.className='modal modal-bible';
+  function draw(){
+    var avail=BIBLE_SECTIONS.filter(function(s){ return !(s.planner&&state.audience!=='planner'); });
+    md.innerHTML='<h3>Export the bible</h3>'+
+      '<p class="sub">Everything you have on '+esc((leadForEvent(ev)||{}).names||ev.title)+
+        ', gathered into one document.</p>'+
+      '<div class="seg" role="tablist" aria-label="Who this copy is for">'+
+        [['planner','My copy'],['client','Client copy']].map(function(a){
+          return '<button class="seg-b'+(state.audience===a[0]?' on':'')+'" data-bibaud="'+a[0]+'" '+
+            'role="tab" aria-selected="'+(state.audience===a[0])+'">'+a[1]+'</button>';
+        }).join('')+
+      '</div>'+
+      '<div class="bib-hint">'+(state.audience==='planner'
+        ? 'Everything, including budget, vendor fees and your private notes.'
+        : 'Their copy. Budget, vendor fees, private notes and unsent drafts are left out — the same line the portal draws.')+
+      '</div>'+
+      '<div class="bib-list">'+avail.map(function(s){
+        return '<label class="bib-row'+(state.sections[s.k]?' on':'')+'">'+
+          '<input type="checkbox" data-bibsec="'+s.k+'"'+(state.sections[s.k]?' checked':'')+'>'+
+          '<span><b>'+esc(s.t)+'</b><em>'+esc(s.d)+'</em></span>'+
+          (s.planner?'<span class="bib-tag">Yours only</span>':'')+
+        '</label>';
+      }).join('')+'</div>'+
+      '<div class="modal-actions wrap">'+
+        '<button class="link-btn ma-lead" id="bibAll">'+
+          (avail.every(function(s){return state.sections[s.k];})?'Clear all':'Select all')+'</button>'+
+        '<button class="btn btn-ghost" id="bibMail">✉ Email</button>'+
+        '<button class="btn btn-ghost" id="bibDoc">⬇ Word</button>'+
+        '<button class="btn btn-gold" id="bibPdf">⎙ Print / PDF</button>'+
+      '</div>';
+    md.querySelectorAll('[data-bibaud]').forEach(function(b){
+      b.onclick=function(){ state.audience=b.dataset.bibaud; state.sections=bibleDefaults(state.audience); draw(); };
+    });
+    md.querySelectorAll('[data-bibsec]').forEach(function(c){
+      c.onchange=function(){ state.sections[c.dataset.bibsec]=c.checked;
+        c.closest('.bib-row').classList.toggle('on',c.checked); };
+    });
+    $('#bibAll').onclick=function(){
+      var all=avail.every(function(s){return state.sections[s.k];});
+      avail.forEach(function(s){ state.sections[s.k]=!all; });
+      draw();
+    };
+    var go=function(fn){ return function(){
+      if(!Object.keys(state.sections).some(function(k){return state.sections[k];})){
+        toast('Tick at least one section.'); return;
+      }
+      closeModal(); setTimeout(function(){ fn(ev,state); },180);
+    }; };
+    $('#bibPdf').onclick=go(biblePrint);
+    $('#bibDoc').onclick=go(function(e,o){ toast(bibleSave(e,o)+' saved ✦'); });
+    $('#bibMail').onclick=go(bibleEmail);
+  }
+  draw();
+  ov.classList.add('show');
 }
 
 /* ============================================================
@@ -9901,6 +10844,7 @@ function toast(msg){
    sample freely; only the writes are stopped. */
 var SAMPLE_SAFE=['[data-openevent]','[data-client]','[data-back]','[data-backdesign]','[data-backq]',
   '[data-ev]','[data-evtoggle]','[data-seatmode]','[data-setup]','[data-print]','[data-gotoev]',
+  '[data-clientview]','[data-bibaud]','[data-bibsec]','#bibPdf','#bibDoc','#bibMail','#bibAll','#clientBible',
   '[data-board]','[data-q]','[data-adopt]','[data-sampleinfo]','.ev-card','.ev-sub','.ew-b','.wk-row',
   '#evSwitch','#printEvent','#exportGuests','#exportInv','#calPrev','#calNext','#calToday',
   '#seatPickCancel','#sampleAdopt','#sampleRemove','.back-link','.srch-row','.tour-x'].join(',');
