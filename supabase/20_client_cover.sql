@@ -1,4 +1,6 @@
--- 21 · A client file's own banner
+-- ============================================================
+-- GEM · 20 — a client file's own banner
+-- Run AFTER 19_sync_runs.sql. Safe to re-run.
 --
 -- The client record already carries photo_path: a portrait, cropped to a
 -- circle, shown as a tile in the card grid. The file's header was using that

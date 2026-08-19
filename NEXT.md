@@ -29,16 +29,26 @@ Supabase roles is enough to run the whole set end to end and exercise the
 functions. That is how 17, 18 and 19 were checked. Do this rather than
 reasoning about SQL.
 
-`20_venues.sql` is written, numbered and **inert** — the venue feature it
-belongs to is unfinished, and nothing in the app references it.
-
-`21_client_cover.sql` adds `leads.cover_path`, for the client file's own
+`20_client_cover.sql` adds `leads.cover_path`, for the client file's own
 banner. Unlike `16`, this one is safe to ship ahead of: the client asks the
 database once whether the column is there and omits `cover_path` from the
 payload until it has seen it, so a studio that has not run 21 simply does not
 sync covers. That guard is `sbCoverCol()`, and it exists because the events
 payload carried `photo_path` on every row whether or not an event had a cover,
 which made PostgREST refuse *every* events push for weeks.
+
+`21_venues.sql` belongs to the venue feature and is run with it.
+
+**19 was half-applied for a day.** The table landed and the policies, grants
+and `gem_sync_health()` did not, because what reached the studio was an
+abridged snippet rather than the file. If you are ever tempted to post "the
+essentials" of a migration, don't: the front half of every one of these files
+creates tables and the back half secures them.
+
+**Verifying a function exists:** `to_regproc()` takes a bare NAME. Hand it a
+signature with parentheses and it returns null whether or not the function is
+there, which is how a healthy database was mistaken for a broken one. Use
+`to_regprocedure('f(uuid)')`, or query `pg_proc` by `proname`.
 
 This build also carries six bug fixes — `BUGS.md` is the report they came from.
 One of them changes what the invoices payload contains: `lead_id` is finally

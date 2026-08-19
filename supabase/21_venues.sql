@@ -1,6 +1,6 @@
 -- ============================================================
--- GEM · 20 — a venue is a place, not a string
--- Run AFTER 19_sync_runs.sql. Safe to re-run. NOT YET RUN — the venue
+-- GEM · 21 — a venue is a place, not a string
+-- Run AFTER 20_client_cover.sql. Safe to re-run. NOT YET RUN — the venue
 -- feature it belongs to is unfinished; this file is here, numbered, and inert.
 --
 -- Until now a venue was free text on each event, with its address, its
