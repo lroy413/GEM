@@ -146,6 +146,12 @@ never pulled, which is what stops a fresh install overwriting the studio.
 
 ## 3 · Things worth knowing before you change the UI
 
+- **Every push writes a row to `sync_runs`.** Opened after the claim, closed
+  after the commit — so a run that dies leaves `finished_at` null and the
+  unfinished state records itself, rather than depending on a client that is by
+  definition no longer running. `gem_sync_health(org)` is the five numbers;
+  `unfinished_24h` above zero means pushes are dying partway. Logging is never
+  allowed to fail a sync: a studio without migration 19 simply gets no log.
 - **The sample flag does not survive a round trip.** It is a local boolean with
   no column behind it, so a demo record pulled back from Supabase arrives as
   ordinary data: `hasSampleData()` goes quiet, the banner stops appearing and

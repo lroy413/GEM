@@ -131,6 +131,30 @@ html.no-motion body::before{opacity:.3}
   flex:0 0 auto;
 }
 .brand.no-logo .mark{display:none}
+/* The event you are working on, at the top of the rail. The sidebar had no
+   sense of place at all — four collapsed group headers and nothing saying
+   which job you were in the middle of. */
+.nav-ev{display:flex;align-items:center;gap:10px;width:100%;margin:2px 0 10px;padding:8px 10px;
+  background:var(--card);border:1px solid var(--line);border-radius:var(--radius);
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.6),var(--shadow-sm);
+  cursor:pointer;font:inherit;text-align:left;
+  transition:border-color .14s var(--ease),transform .14s var(--ease),box-shadow .14s var(--ease)}
+.nav-ev:hover{border-color:var(--gold-line);transform:translateY(-1px);box-shadow:var(--shadow)}
+.nav-ev:focus-visible{outline:none;box-shadow:var(--ring)}
+.nav-ev.on{border-color:var(--gold)}
+.ne-th{width:34px;height:34px;flex:0 0 34px;border-radius:9px;background-size:cover;
+  background-position:center;border:1px solid var(--line)}
+.ne-mono{display:flex;align-items:center;justify-content:center;color:#fff;
+  font-family:var(--serif);font-size:16px;font-weight:600;border-color:transparent}
+.ne-tx{display:flex;flex-direction:column;gap:1px;min-width:0}
+.ne-n{font-size:12.5px;font-weight:600;color:var(--ink);
+  overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.ne-d{font-size:10.5px;color:var(--muted);white-space:nowrap}
+/* Collapsed to a rail, the picture is the whole of it. */
+.app.rail .nav-ev{justify-content:center;padding:8px 0;background:none;border-color:transparent;
+  box-shadow:none}
+.app.rail .nav-ev:hover{transform:none;box-shadow:none}
+.app.rail .ne-tx{display:none}
 .app.rail .brand.no-logo .mark{display:grid}
 .brand .name{font-family:var(--serif);font-size:23px;font-weight:600;letter-spacing:.17em;
   line-height:1;text-transform:uppercase}
@@ -2094,26 +2118,44 @@ tr:hover .r-acts,.ev-card:hover .r-acts,.table-card:hover .r-acts,
   background:linear-gradient(180deg,rgba(18,12,15,0) 34%,rgba(18,12,15,.36) 64%,rgba(18,12,15,.78) 100%)}
 .vb-banner > *{position:relative;z-index:1}
 .vb-banner .vb-k{color:rgba(255,255,255,.82)}
-.vb-banner .vb-name{color:#fff;margin-top:5px;text-shadow:0 1px 12px rgba(0,0,0,.28)}
+.vb-banner .vb-name{color:#fff;margin-top:5px;font-size:40px;text-shadow:0 1px 14px rgba(0,0,0,.3)}
+.vb-where{color:rgba(255,255,255,.92);font-size:14px;margin-top:7px;
+  text-shadow:0 1px 10px rgba(0,0,0,.34)}
+/* With a banner this size the page header above would be saying the same thing
+   twice, in a smaller voice. The actions stay — Print and Edit still belong at
+   the top — but the title block goes. */
+.main.evfocus .page-head{display:none}
+.main.evfocus .topbar{margin-bottom:14px;justify-content:flex-end}
+.main.evfocus .menu-btn{margin-right:auto}
+@media (max-width:700px){ .vb-banner .vb-name{font-size:28px} }
 .vb-banner .vb-name.tbc{color:rgba(255,255,255,.72)}
 .vb-bwhen{display:flex;flex-direction:column;align-items:flex-end;gap:2px;text-align:right;color:#fff;
   white-space:nowrap}
 .vb-bwhen .vb-day{color:#fff}
 .vb-bwhen .vb-time{color:rgba(255,255,255,.82)}
 .vb-bwhen .vb-count{color:rgba(255,255,255,.9)}
-/* The two columns carry on underneath, on the card rather than the picture. */
-.venue-band.has-cover .vb-main,
-.venue-band.has-cover .vb-side{padding:20px 26px}
-.venue-band.has-cover .vb-side{padding-top:20px;align-items:flex-start;text-align:left;
-  border-top:1px solid var(--line)}
-.venue-band.has-cover .vb-note{padding:0 26px 20px;border-top:0}
-/* Nothing sits above it in this layout, so the rule was separating the contact
-   from the top of the card. */
+/* Underneath the picture, one slim bar rather than two stacked columns. The
+   address runs on a line, the cover controls sit at the end of it, and the
+   contact — when there is one — takes the right. A block of dense copy under a
+   full-bleed photograph reads as a slab; a single line reads as a caption. */
+.venue-band.has-cover{display:flex;flex-wrap:wrap;align-items:center}
+.venue-band.has-cover .vb-banner{flex:0 0 100%}
+.venue-band.has-cover .vb-main{flex:1 1 320px;display:flex;flex-wrap:wrap;align-items:center;
+  gap:6px 18px;padding:13px 26px}
+.venue-band.has-cover .vb-side{flex:0 0 auto;padding:13px 26px 13px 0;align-items:flex-start;
+  text-align:left;border-top:0}
+/* No contact on file leaves this genuinely empty — it should take no room. */
+.venue-band.has-cover .vb-side:empty{display:none}
+.venue-band.has-cover .vb-addr,
+.venue-band.has-cover .vb-map{margin-top:0}
+.venue-band.has-cover .vb-addr{font-size:12.5px}
+/* Pushed to the end of the line, so the bar reads left to right as
+   where it is · how to get there · the picture you set. */
+.venue-band.has-cover .vb-cover-row{margin-left:auto;margin-top:0}
 .venue-band.has-cover .vb-contact{border-top:0;padding-top:0}
-@media (min-width:861px){
-  .venue-band.has-cover .vb-main{float:left;width:58%;padding-right:0}
-  .venue-band.has-cover .vb-side{float:right;width:42%;border-top:0;padding-left:26px}
-  .venue-band.has-cover .vb-note{clear:both}
+.venue-band.has-cover .vb-note{flex:0 0 100%;padding:0 26px 14px;border-top:0;margin-top:-4px}
+@media (max-width:700px){
+  .venue-band.has-cover .vb-cover-row{margin-left:0}
 }
 @media (max-width:700px){ .vb-banner{min-height:190px} }
 .vb-k{font-size:9.5px;letter-spacing:1.9px;text-transform:uppercase;color:var(--gold);font-weight:600}
@@ -2539,6 +2581,7 @@ html,body{max-width:100%;overflow-x:hidden}
       </div>
     </div>
     <button class="srch-open" id="srchOpen" type="button"><span class="srch-ic">⌕</span><span>Search</span><kbd id="srchKbd">⌘K</kbd></button>
+    <div id="navEvent"></div>
     <div class="nav-group" data-group="workspace">
       <button class="nav-label" type="button" aria-expanded="true"><span>Workspace</span><span class="chev" aria-hidden="true"></span></button>
       <div class="nav-items"><div class="nav-items-inner">
@@ -2599,7 +2642,7 @@ html,body{max-width:100%;overflow-x:hidden}
     <div class="topbar">
       <div style="display:flex;align-items:center;gap:14px">
         <button class="menu-btn" id="menuBtn" aria-label="Toggle menu">☰</button>
-        <div>
+        <div class="page-head">
           <div class="page-eyebrow" id="pgEyebrow"></div>
           <h1 class="page-title" id="pgTitle">Dashboard</h1>
           <div class="page-sub" id="pgSub"></div>
@@ -3596,6 +3639,8 @@ function setView(v,opts){
   var sb=document.getElementById('settingsBtn');
   if(sb)sb.classList.toggle('on',v==='settings');
   if(typeof markActiveGroup==='function')markActiveGroup();
+  if(typeof openActiveGroup==='function')openActiveGroup();
+  if(typeof paintNavEvent==='function')paintNavEvent();
   var t=pageHead(v);
   if(v==='seating')t[2]=(state.seatMode||'plan')==='plan'
     ? 'Arrange the room — drag tables and fixtures into place.'
@@ -3621,6 +3666,15 @@ function setView(v,opts){
     var qd=db.questionnaires.find(function(x){return x.id===state.qId;});
     if(qd)t=['Questionnaire',qd.title,''];
   }
+  /* An event with a cover puts its own name on the photograph, so the page
+     header would only repeat it. Without one there is no banner to carry it
+     and the header stays. */
+  var evf=false;
+  if(v==='events'&&state.eventId){
+    var evc=db.events.find(function(x){return x.id===state.eventId;});
+    evf=!!(evc&&evPhoto(evc));
+  }
+  document.querySelector('.main').classList.toggle('evfocus',evf);
   // Board-style views fill the window; document-style views scroll normally.
   var fills=(v==='pipeline'&&!state.clientId)||(v==='messages');
   document.querySelector('.main').classList.toggle('fill',!!fills);
@@ -4661,10 +4715,17 @@ function viewEventDetail(id){
        sits on the card below it where nothing is competing with a picture.
        That was the objection to a backdrop here and it was a fair one; a
        banner answers it, where a wash behind everything did not. */
+    /* The event's name, not the venue's. This screen is about one job, and the
+       page header above it was saying so in 40px while the photograph said the
+       name of a building — so the header goes and the banner becomes it. The
+       venue keeps the line underneath, where it belongs as an answer to
+       "where", and the bar below still carries the address. */
     (cover?'<div class="vb-banner" style="background-image:url('+cover+')">'+
       '<div class="vb-btop">'+
-        '<div class="vb-k">Venue</div>'+
-        '<div class="vb-name'+(e.venue?'':' tbc')+'">'+esc(venueName(e.venue))+'</div>'+
+        '<div class="vb-k">'+esc(evIsSub(e)?roleLabel(e,true):evType(e))+'</div>'+
+        '<div class="vb-name">'+esc(e.title)+'</div>'+
+        '<div class="vb-where">'+esc(venueName(e.venue))+
+          (e.loc?' · '+esc(e.loc):'')+'</div>'+
       '</div>'+
       '<div class="vb-bwhen">'+
         '<span class="vb-day">'+fmtDate(e.date)+'</span>'+
@@ -4675,7 +4736,7 @@ function viewEventDetail(id){
     '<div class="vb-main">'+
       (cover?'':'<div class="vb-k">Venue</div>'+
         '<div class="vb-name'+(e.venue?'':' tbc')+'">'+esc(venueName(e.venue))+'</div>')+
-      (addr.length?'<div class="vb-addr">'+addr.map(esc).join('<br>')+'</div>'
+      (addr.length?'<div class="vb-addr">'+addr.map(esc).join(cover?' · ':'<br>')+'</div>'
                   :'<div class="vb-addr muted">No address on file</div>')+
       (addr.length?'<a class="vb-map" href="https://maps.google.com/?q='+mapQ+'" target="_blank" rel="noopener">Open in Maps ›</a>':'')+
       /* A thumbnail here, not a wash behind the band. The band carries copy in
@@ -7877,6 +7938,40 @@ function applyPrefs(){
   if(cv)cv.style.display=p.sparkles?'':'none';
   document.documentElement.classList.toggle('no-motion',!!p.reduceMotion);
   document.documentElement.classList.toggle('compact',p.density==='compact');
+}
+/* The rail said nothing about where you were. The event you are actually
+   working on now sits at the top of it with its cover and its countdown —
+   the anchor the audit found missing, and the one thing that makes four
+   collapsed group headers feel like a place rather than a menu. */
+function paintNavEvent(){
+  var host=document.getElementById('navEvent'); if(!host)return;
+  var e=activeEvent();
+  if(!e){ host.innerHTML=''; return; }
+  var cover=evPhoto(e), d=daysAway(e.date);
+  var when=e.date?(d>=0?(d===0?'Today':d===1?'Tomorrow':d+' days away'):'Completed'):'No date yet';
+  host.innerHTML='<button class="nav-ev'+(state.view==='events'&&state.eventId===e.id?' on':'')+'" '+
+    'data-openevent="'+esc(e.id)+'" title="'+esc(e.title)+'">'+
+    (cover?'<span class="ne-th" style="background-image:url('+cover+')"></span>'
+          :'<span class="ne-th ne-mono" style="background:'+eventTint(e.id)+'">'+
+             esc(String(e.title||'?').trim()[0]||'?').toUpperCase()+'</span>')+
+    '<span class="ne-tx"><span class="ne-n">'+esc(e.title)+'</span>'+
+      '<span class="ne-d">'+esc(when)+'</span></span>'+
+  '</button>';
+}
+/* Open the group you are in. Groups start closed on purpose — a calm index
+   rather than a wall of links — so this only opens the one holding the current
+   view, and only when its state has never been set by hand. Somebody who
+   collapsed a group deliberately keeps it collapsed; the gold marker still
+   says where they are. */
+function openActiveGroup(){
+  document.querySelectorAll('.nav-group').forEach(function(g){
+    if(!g.querySelector('.nav-item.active'))return;
+    if(navCollapsed[g.dataset.group]!==undefined)return;
+    g.classList.remove('collapsed');
+    var btn=g.querySelector('.nav-label');
+    if(btn)btn.setAttribute('aria-expanded','true');
+    g.querySelectorAll('.nav-item').forEach(function(i){ i.tabIndex=0; });
+  });
 }
 function paintIdentity(){
   var p=prefs();
@@ -11870,6 +11965,25 @@ function sbSyncErr(e){
   }
   return e;
 }
+/* One row per push attempt. Opened before anything is written and closed after
+   the commit, so a run that dies leaves a row with finished_at still null —
+   the unfinished state records itself rather than depending on a client that
+   is, by definition, no longer running to report it.
+   Never allowed to fail a sync: a studio that has not run 19 yet simply gets
+   no log, which is where everyone was yesterday. */
+function sbLogOpen(before){
+  var d='';
+  try{ d=(navigator.platform||'')+' · '+(navigator.userAgent.match(/(Chrome|Safari|Firefox|Edg)\/[\d.]+/)||[''])[0]; }catch(e){}
+  return sbRest('sync_runs',{method:'POST',prefer:'return=representation',
+    body:[{org_id:SB_STATE.org,user_id:sbUserId(),device:d.slice(0,120),version_before:before}]})
+    .then(function(r){ return (r&&r[0]&&r[0].id)||null; })
+    .catch(function(){ return null; });
+}
+function sbLogClose(id,fields){
+  if(!id)return Promise.resolve();
+  return sbRest('sync_runs?id=eq.'+id,{method:'PATCH',prefer:'return=minimal',
+    body:Object.assign({finished_at:new Date().toISOString()},fields)}).catch(function(){});
+}
 function sbBegin(){
   return sbRest('rpc/gem_begin_sync',{method:'POST',body:{p_org:SB_STATE.org,p_expect:sbVer()}})
     .then(function(v){ return Number(v); })
@@ -12105,7 +12219,11 @@ function sbPush(opts){
 
   /* Parents before children — every child carries an FK to the row above it. */
   SB_SYNC.onePhase=false;
-  var chain=sbBegin().then(function(v){ SB_SYNC.claimed=v; });
+  SB_SYNC.runId=null;
+  var chain=sbBegin().then(function(v){
+    SB_SYNC.claimed=v;
+    return sbLogOpen(v).then(function(id){ SB_SYNC.runId=id; });
+  });
   /* Photos first: mediaUpload() stamps photoPath/path onto the records, and
      the payloads above were built before that ran, so refresh the two that
      carry a storage reference. */
@@ -12175,6 +12293,10 @@ function sbPush(opts){
   /* Prune in reverse, so children go before the parents they point at. An
      untouched table already matches, so it needs no prune. */
   chain=chain.then(function(){
+    /* Recorded from the payload as built, so "this push carried no leads" is
+       answerable afterwards rather than inferred from what survived. */
+    SB_SYNC.counts={};
+    steps.forEach(function(st){ if(st[1].length)SB_SYNC.counts[st[0]]=st[1].length; });
     var back=Promise.resolve();
     live.slice().reverse().forEach(function(st){
       back=back.then(function(){ return sbPrune(st[0],st[1].map(function(r){return r.id;}),null,!!opts.full); });
@@ -12194,6 +12316,9 @@ function sbPush(opts){
     return sbCommit();
   }).then(function(v){
     setSbVer(v);
+    sbLogClose(SB_SYNC.runId,{outcome:'committed',version_after:v,
+      tables_written:SB_SYNC.wrote||0,counts:SB_SYNC.counts||{},
+      kept:SB_SKIPPED_PRUNE.slice()});
     /* Photos belonging to records that have since been deleted would sit in
        IndexedDB forever otherwise. */
     var keep={}; mediaItems().forEach(function(m){ keep[m.id]=true; });
@@ -12214,8 +12339,12 @@ function sbPush(opts){
     return true;
   }).catch(function(e){
     /* Hand the studio back before reporting, so the next attempt is not made
-       to wait out a lease held by a run that is already over. */
-    return sbAbort().then(function(){ throw e; });
+       to wait out a lease held by a run that is already over — and say in the
+       log what went wrong, while there is still something running to say it. */
+    return sbLogClose(SB_SYNC.runId,{outcome:'failed',note:String((e&&e.message)||e).slice(0,300),
+                                     counts:SB_SYNC.counts||{}})
+      .then(function(){ return sbAbort(); })
+      .then(function(){ throw e; });
   });
 }
 
@@ -12385,7 +12514,7 @@ function sbPull(opts){
 }
 
 /* ---------- automatic sync ---------- */
-var SB_SYNC={timer:null,busy:false,queued:false,claimed:null,wrote:0,status:'idle',onePhase:false};
+var SB_SYNC={timer:null,busy:false,queued:false,claimed:null,wrote:0,status:'idle',onePhase:false,runId:null,counts:{}};
 function sbSetStatus(st,msg){
   SB_SYNC.status=st; SB_SYNC.msg=msg||'';
   var el=document.getElementById('sbPill');
