@@ -106,6 +106,41 @@ Note `seatGuest()` enforces table capacity server-side and returns `{ok:false, r
 
 Every table is deny-by-default: RLS is enabled with no permissive fallback, so a table with no matching policy returns zero rows rather than leaking.
 
+
+## Telling Supabase what is already applied
+
+The repo is connected to Supabase, and the migrations now live in
+`supabase/migrations/` with the timestamped names the CLI and the GitHub
+integration expect. Pushing a new file there deploys it.
+
+**Before the first push Supabase acts on, run `SEED_MIGRATION_LEDGER.sql`
+once in the SQL editor.** It creates `supabase_migrations.schema_migrations`
+itself — that table does not exist until Supabase's own tooling applies a
+migration for the first time, so on a project adopted like this one it has to
+be made by hand. All twenty-one were applied by hand before the repo
+was connected, so `supabase_migrations.schema_migrations` has never heard of
+them; without the seed the integration treats every one as pending.
+
+That is not a tidiness step. **01-05 are not re-runnable.** They use bare
+`create table`, `create type` and `create policy`, so a second pass errors with
+"already exists". 06 onward were written defensively (`if not exists`,
+`create or replace`, `drop policy if exists` first) and survive a re-run.
+Applying the whole chain twice against a clean Postgres 16: first pass 21/21,
+second pass 16/21, failing on 01, 02, 03, 04 and 05.
+
+Nothing is destroyed by that failure — they error before writing — but the
+deploy halts and the ledger is left disagreeing with the database.
+
+**Never run `supabase db reset` against the linked project.** It drops the
+database and rebuilds it from these files. Every row in the studio goes with it.
+
+### Writing a new migration from here
+
+- Name it `<YYYYMMDDHHMMSS>_<nn>_<what_it_does>.sql`, timestamp ascending.
+- Make it re-runnable, the way 06-21 are. It costs a few characters and it is
+  the difference between a failed deploy and a no-op.
+- End it with a `select` of booleans that proves it did what it says.
+
 ## Gotchas
 
 - **`FORCE ROW LEVEL SECURITY`** is on for `leads`, `events`, `guests`, `invoices`, `vendors`. This subjects the *table owner* to RLS too, so seeding data as `postgres` in the SQL Editor will be filtered. Seed through the API as a signed-in user, or temporarily `alter table … no force row level security` while loading, then turn it back on.

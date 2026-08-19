@@ -10,7 +10,7 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
 <meta name="apple-mobile-web-app-title" content="GEM">
 <meta name="format-detection" content="telephone=no">
-<meta name="gem-build" content="062d45fe7b2d">
+<meta name="gem-build" content="3c0d07eaa4e9">
 <link rel="manifest" href="/manifest.webmanifest">
 <link rel="icon" href="/icons/icon-192.png" sizes="192x192" type="image/png">
 <link rel="apple-touch-icon" href="/icons/icon-180.png">
@@ -149,7 +149,7 @@ html.no-motion body::before{opacity:.3}
 /* ============ SIDEBAR ============ */
 .sidebar{
   width:274px;flex:0 0 274px;
-  padding:28px 16px 18px;
+  padding:28px 16px 104px;
   display:flex;flex-direction:column;gap:2px;
   border-right:1px solid var(--line);
   background:linear-gradient(180deg,#FFFDFB 0%,#FEFAF7 55%,#FCF5F3 100%);
@@ -281,6 +281,12 @@ html.no-motion body::before{opacity:.3}
    two utilities tucked in beside it. */
 /* Pinned to the bottom: with every group expanded the nav list scrolls,
    and the account should not scroll away with it. */
+/* The user chip is sticky, so on a list long enough to scroll it parks on top
+   of whatever is behind it — which was Analytics and Tax Tool, the last two.
+   The scroller needs room BELOW the footer for the list to travel past it:
+   about the footer's own height. (Padding on a scroll container adds
+   scrollable space; it cannot move a sticky child, which is why the earlier
+   attempt at this failed.) */
 .side-foot{margin-top:auto;padding:14px 0 2px;border-top:1px solid var(--line);
   position:sticky;bottom:0;z-index:2;
   background:linear-gradient(180deg,rgba(252,245,243,.82),#FCF5F3 34%);
@@ -1925,8 +1931,14 @@ td.inv-col{text-align:center;width:1%}
   /* .side-foot is position:sticky;bottom:0 inside a 100vh scroller, so it
      sticks to the SCROLLPORT and padding on the container cannot lift it —
      it has to be told where the bar is. */
-  #sidebar{padding-bottom:calc(78px + env(safe-area-inset-bottom,0px))}
-  .side-foot{bottom:calc(76px + env(safe-area-inset-bottom,0px))}
+  /* On a phone the drawer is a full-height panel you scroll anyway, so the
+     user chip does not need to follow you down it — and while it was sticky
+     it parked on top of the last two tools, which is how Analytics and Tax
+     Tool became unreachable. margin-top:auto means nothing ever follows it in
+     flow, so no amount of padding on the scroller could push them clear: the
+     fix is to let it sit at the end and scroll like everything else. */
+  .side-foot{position:static;margin-top:22px}
+  #sidebar{padding-bottom:calc(94px + env(safe-area-inset-bottom,0px))}
 }
 /* Printing a page should not print its navigation. */
 @media print{ .tabbar{display:none!important} }
@@ -3824,8 +3836,13 @@ function normalize(d){
     if(e.photoPath===undefined)e.photoPath=null;
     e.guests.forEach(function(g){ if(g.tableId===undefined)g.tableId=null; });
     if(!e.design){
-      var seed=DEFAULT.events[i];
-      e.design=seed&&seed.design?seed.design:{palette:[],boards:[],decor:[]};
+      /* Was DEFAULT.events[i] — the sample's design, handed to whatever event
+         happened to sit at the same INDEX. After a pull that is the studio's
+         own first event, which then wore the sample wedding's palette, its
+         mood boards and its décor list. Match on the sample's id instead, so
+         the seed only ever reaches the record it was written for. */
+      var seed=DEFAULT.events.find(function(x){ return x.id===e.id; });
+      e.design=(seed&&seed.design)?seed.design:{palette:[],boards:[],decor:[]};
     }
     if(!e.design.palette)e.design.palette=[];
     if(!e.design.boards)e.design.boards=[];
@@ -13846,14 +13863,26 @@ function sbPull(opts){
     }
     snapshotLocal(loss.length?('pull removed '+lossLine(loss)):'pull');
     db=next;
-    if(R.org_prefs[0]&&R.org_prefs[0].stages&&R.org_prefs[0].stages.length){
+    /* Was gated on stages being a non-empty array, so a studio that had never
+       renamed a pipeline stage got NONE of its preferences on a new device —
+       logo, colours, business name, the lot. Stages are one preference among
+       many and not the test for whether the rest exist. */
+    if(R.org_prefs[0]){
       var sp=R.org_prefs[0];
-      settings=Object.assign(prefs(),sp.prefs||{},{stages:sp.stages,templates:sp.templates,fields:sp.fields});
+      settings=Object.assign(prefs(),sp.prefs||{},{templates:sp.templates,fields:sp.fields});
+      if(sp.stages&&sp.stages.length)settings.stages=sp.stages;
       try{ localStorage.setItem(SET_KEY,JSON.stringify(settings)); }catch(e){}
       /* The studio has finished or dismissed the tour, so this device has too
          — even if its own storage has never seen it. */
       if(settings.tourDone){ try{ localStorage.setItem(TOUR_KEY,'done'); }catch(e){} }
       loadStages();
+      /* And PUT THEM ON THE SCREEN. The pull wrote the studio's branding into
+         settings and stopped there, so a new device kept the default gold and
+         no logo until the next reload — which looked exactly like branding
+         that had not synced at all. */
+      if(typeof applyPrefs==='function')applyPrefs();
+      if(typeof applyBrand==='function')applyBrand();
+      if(typeof paintIdentity==='function')paintIdentity();
     }
     saveLocal();
     /* Fresh from the server: nothing is locally dirty, and this device is now

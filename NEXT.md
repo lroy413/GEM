@@ -20,39 +20,34 @@ runs local-first in the browser and syncs to Supabase when connected.
 | Database | Supabase, project `dqntxdhzcieycifzjzwc` |
 | Which build is live? | Settings → Data & storage → **App version**, or `curl -s https://gemevents.app/ \| grep gem-build` |
 
-Migrations **01–19 are all run** against the live project, each verifying all
-true. **20 and 21 are not.**
+Migrations **01–21 are all run** against the live project, each verifying all
+true.
+
+**They live in `supabase/migrations/` now**, with the timestamped names the
+Supabase CLI and the GitHub integration expect, because the repo is connected
+to Supabase and pushing a migration there deploys it. `supabase/config.toml`
+carries the project ref.
+
+**Run `supabase/SEED_MIGRATION_LEDGER.sql` once before the first push Supabase
+acts on.** It creates `supabase_migrations.schema_migrations` as well as
+filling it: that table does not exist until Supabase's own tooling applies a
+migration for the first time, and on this project nothing ever has. All
+twenty-one were applied by hand in the SQL editor, so the ledger has no record
+of them and the
+integration would treat every one as pending. That matters more than it
+sounds: **01–05 are not re-runnable** — bare `create table` / `create type` /
+`create policy`, which error with "already exists" on a second pass. Only 06
+onward were written defensively. Applying the chain twice against a clean
+Postgres 16 gives 21/21 then 16/21. Nothing is destroyed, but the deploy halts.
+
+**Never run `supabase db reset` against the linked project.** It rebuilds the
+database from these files and takes the studio with it.
 
 **Migrations can be run before you ship them.** Postgres is installable in the
-dev container; a shim for `auth.uid()`, `storage.foldername()` and the three
-Supabase roles is enough to run the whole set end to end and exercise the
-functions. That is how 17, 18 and 19 were checked. Do this rather than
-reasoning about SQL.
-
-`20_client_cover.sql` adds `leads.cover_path`, for the client file's own
-banner. Unlike `16`, this one is safe to ship ahead of: the client asks the
-database once whether the column is there and omits `cover_path` from the
-payload until it has seen it, so a studio that has not run 21 simply does not
-sync covers. That guard is `sbCoverCol()`, and it exists because the events
-payload carried `photo_path` on every row whether or not an event had a cover,
-which made PostgREST refuse *every* events push for weeks.
-
-`21_venues.sql` carries the venue directory: a `venues` table, `events.venue_id`
-as a nullable FK with `on delete set null`, and RLS matching the rest. Safe to
-deploy ahead of — `sbVenueTbl()` probes for the table and the venues step is
-dropped from the payload until it answers yes, and `sbPull()` asks for venues
-separately so a 404 cannot fail the whole pull.
-
-**19 was half-applied for a day.** The table landed and the policies, grants
-and `gem_sync_health()` did not, because what reached the studio was an
-abridged snippet rather than the file. If you are ever tempted to post "the
-essentials" of a migration, don't: the front half of every one of these files
-creates tables and the back half secures them.
-
-**Verifying a function exists:** `to_regproc()` takes a bare NAME. Hand it a
-signature with parentheses and it returns null whether or not the function is
-there, which is how a healthy database was mistaken for a broken one. Use
-`to_regprocedure('f(uuid)')`, or query `pg_proc` by `proname`.
+dev container; a shim for `auth.uid()`, `auth.jwt()`, `storage.foldername()`,
+a `storage.buckets` table with `file_size_limit`, and the three Supabase roles
+is enough to run the whole chain end to end. Do this rather than reasoning
+about SQL — it is how the 01–05 problem above was found.
 
 This build also carries six bug fixes — `BUGS.md` is the report they came from.
 One of them changes what the invoices payload contains: `lead_id` is finally
@@ -160,6 +155,36 @@ never pulled, which is what stops a fresh install overwriting the studio.
 ---
 
 ## 3 · Things worth knowing before you change the UI
+
+- **Never index DEFAULT by position.** `normalize()` filled a missing `design`
+  from `DEFAULT.events[i]` — the sample's palette, mood boards and décor handed
+  to whatever event happened to sit at the same INDEX. After a pull that is the
+  studio's own first event. Match the seed by id; the sample's content must
+  only ever reach the sample's record.
+- **`auth.uid()` is NULL in the Supabase SQL editor.** It runs as `postgres`,
+  not as a signed-in user, so anything shaped like
+  `where user_id = auth.uid()` matches nothing and the query returns "success,
+  no rows" — which reads exactly like a clean bill of health. Pass the org id
+  literally, or select it from `orgs`. Same class of mistake as `to_regproc`
+  with a signature: a broken query whose failure is indistinguishable from a
+  good answer.
+
+- **A pull that writes preferences must also APPLY them.** `sbPull()` wrote the
+  studio's branding into `settings` and stopped, so a new device kept the
+  default gold and no logo until the next reload — indistinguishable from
+  branding that had never synced. It calls `applyPrefs()`, `applyBrand()` and
+  `paintIdentity()` now. It was also gated on `org_prefs.stages` being a
+  non-empty array, so a studio that had never renamed a pipeline stage received
+  NO preferences at all. Stages are one preference among many, not the test for
+  whether the rest exist.
+- **`margin-top:auto` plus `position:sticky` means nothing follows it in flow.**
+  `.side-foot` therefore overlays the items above it whenever the list is long
+  enough to scroll — Analytics and Tax Tool were unreachable on a phone — and
+  no amount of `padding-bottom` on the scroller can push them clear, because
+  the padding sits after an element that is already last. Below 860px it is
+  `position:static` and scrolls with everything else.
+  `scratchpad/navreach.mjs` opens every nav group, scrolls to the end and
+  asserts that no `.nav-item` is behind the footer or the tab bar.
 
 - **`pullLoss()` counts WORK, not records.** A device with nothing saved seeds
   the demo — one client, its events, four documents, six vendors — so counting
