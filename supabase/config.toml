@@ -1,0 +1,20 @@
+# Supabase CLI / GitHub integration config.
+#
+# The 21 migrations in ./migrations were applied by hand in the SQL editor
+# before this file existed, so Supabase's own ledger
+# (supabase_migrations.schema_migrations) has no record of them. Seed that
+# ledger ONCE — see MIGRATION.md, "Telling Supabase what is already applied" —
+# or the first sync will consider all twenty-one pending.
+#
+# Seeding the ledger is REQUIRED, not a tidiness step. 01-05 are NOT
+# re-runnable — they use bare `create table` / `create type` / `create policy`
+# and error with "already exists" on a second pass. Only 06 onward were written
+# defensively. So if Supabase ever treats all twenty-one as pending against
+# this project, the run fails on 01. Verified by applying the whole chain twice
+# against a clean Postgres: first pass 21/21, second pass 16/21.
+
+project_id = "dqntxdhzcieycifzjzwc"
+
+# No [db] block on purpose: major_version only matters for `supabase start`
+# (local dev), and stating the wrong one is worse than saying nothing. Add it
+# if you ever run the stack locally, matching the project's actual version.
