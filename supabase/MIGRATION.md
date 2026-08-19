@@ -114,7 +114,10 @@ The repo is connected to Supabase, and the migrations now live in
 integration expect. Pushing a new file there deploys it.
 
 **Before the first push Supabase acts on, run `SEED_MIGRATION_LEDGER.sql`
-once in the SQL editor.** All twenty-one were applied by hand before the repo
+once in the SQL editor.** It creates `supabase_migrations.schema_migrations`
+itself — that table does not exist until Supabase's own tooling applies a
+migration for the first time, so on a project adopted like this one it has to
+be made by hand. All twenty-one were applied by hand before the repo
 was connected, so `supabase_migrations.schema_migrations` has never heard of
 them; without the seed the integration treats every one as pending.
 

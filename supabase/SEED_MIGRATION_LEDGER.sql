@@ -1,11 +1,26 @@
--- Tell Supabase that the migrations in supabase/migrations are ALREADY
--- applied to this project. They were run by hand in the SQL editor before the
--- repo was connected, so Supabase's ledger has never heard of them.
+-- Adopt an existing database into Supabase's migration ledger.
 --
--- Run this ONCE, in the SQL editor, BEFORE the first push that Supabase acts
--- on. Without it the integration treats all twenty-one as pending.
+-- The twenty-one migrations in supabase/migrations were applied by hand in the
+-- SQL editor long before the repo was connected, so Supabase has no record of
+-- them. Without this, the integration treats all twenty-one as pending — and
+-- 01-05 are not re-runnable, so the deploy would fail on the first one.
 --
--- Safe to re-run: on conflict do nothing.
+-- The ledger table itself does not exist until Supabase's own tooling applies
+-- a migration for the first time, so this creates it. That is the same shape
+-- the CLI creates; the extra nullable columns are what newer versions add, and
+-- an unused nullable column cannot break anything.
+--
+-- Run once, in the SQL editor. Safe to re-run.
+
+create schema if not exists supabase_migrations;
+
+create table if not exists supabase_migrations.schema_migrations (
+  version         text not null primary key,
+  statements      text[],
+  name            text,
+  created_by      text,
+  idempotency_key text
+);
 
 insert into supabase_migrations.schema_migrations (version, name)
 values
@@ -32,5 +47,6 @@ values
   ('20260819102100','21_venues')
 on conflict (version) do nothing;
 
--- What the ledger holds now, in the order it will apply anything new:
+-- Expect 21 rows, ascending. Anything Supabase applies from here starts after
+-- the last one.
 select version, name from supabase_migrations.schema_migrations order by version;

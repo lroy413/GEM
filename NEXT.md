@@ -29,8 +29,11 @@ to Supabase and pushing a migration there deploys it. `supabase/config.toml`
 carries the project ref.
 
 **Run `supabase/SEED_MIGRATION_LEDGER.sql` once before the first push Supabase
-acts on.** All twenty-one were applied by hand in the SQL editor, so
-`supabase_migrations.schema_migrations` has no record of them and the
+acts on.** It creates `supabase_migrations.schema_migrations` as well as
+filling it: that table does not exist until Supabase's own tooling applies a
+migration for the first time, and on this project nothing ever has. All
+twenty-one were applied by hand in the SQL editor, so the ledger has no record
+of them and the
 integration would treat every one as pending. That matters more than it
 sounds: **01–05 are not re-runnable** — bare `create table` / `create type` /
 `create policy`, which error with "already exists" on a second pass. Only 06
