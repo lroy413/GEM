@@ -10,7 +10,7 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
 <meta name="apple-mobile-web-app-title" content="GEM">
 <meta name="format-detection" content="telephone=no">
-<meta name="gem-build" content="f6b609769422">
+<meta name="gem-build" content="1c082df3d1ed">
 <link rel="manifest" href="/manifest.webmanifest">
 <link rel="icon" href="/icons/icon-192.png" sizes="192x192" type="image/png">
 <link rel="apple-touch-icon" href="/icons/icon-180.png">
@@ -1275,7 +1275,13 @@ tbody tr:hover{background:var(--pink-50)}
 .ew-add{padding:6px 13px;border-radius:var(--radius-pill);border:1px dashed var(--line);background:transparent;
   cursor:pointer;font:inherit;font-size:12px;font-weight:600;color:var(--muted);transition:color .12s,border-color .12s}
 .ew-add:hover{color:var(--gold);border-color:var(--gold)}
-.wknd-bar.solo{background:transparent;border-style:dashed}
+/* A dashed box around a single optional action was the loudest thing on the
+   screen and it is the least important. A quiet line of text instead, so the
+   banner underneath gets the room. */
+.wknd-bar.solo{background:transparent;border:0;box-shadow:none;padding:0 2px;margin-bottom:12px;gap:12px}
+.wknd-bar.solo .ew-add{border:0;padding:2px 0;color:var(--ink-soft);font-weight:600}
+.wknd-bar.solo .ew-add:hover{color:var(--gold);background:none}
+@media (max-width:640px){ .wknd-bar.solo .ew-h{display:none} }
 .wknd-bar .ew-h{font-size:12px;color:var(--muted)}
 /* --- who is invited to what: one column per sub-event on the guest grid --- */
 .inv-note{margin:0 0 16px;padding:11px 15px;background:var(--card);border:1px solid var(--line);
@@ -2095,6 +2101,39 @@ tr:hover .r-acts,.ev-card:hover .r-acts,.table-card:hover .r-acts,
   padding:24px 26px;margin-bottom:20px;box-shadow:var(--shadow-sm);position:relative;overflow:hidden;
 }
 .venue-band::before{content:"";position:absolute;left:0;top:0;bottom:0;width:3px;background:var(--gold-grad)}
+/* With a cover the band becomes a banner: the photograph runs the full width,
+   the name and the countdown sit on it under a scrim, and everything that has
+   to stay readable moves to the card below. */
+.venue-band.has-cover{display:block;padding:0;background:var(--card)}
+.venue-band.has-cover::before{display:none}
+.vb-banner{position:relative;min-height:250px;background-size:cover;background-position:center;
+  display:flex;align-items:flex-end;justify-content:space-between;gap:24px;padding:24px 26px}
+.vb-banner::after{content:"";position:absolute;inset:0;pointer-events:none;
+  background:linear-gradient(180deg,rgba(18,12,15,0) 34%,rgba(18,12,15,.36) 64%,rgba(18,12,15,.78) 100%)}
+.vb-banner > *{position:relative;z-index:1}
+.vb-banner .vb-k{color:rgba(255,255,255,.82)}
+.vb-banner .vb-name{color:#fff;margin-top:5px;text-shadow:0 1px 12px rgba(0,0,0,.28)}
+.vb-banner .vb-name.tbc{color:rgba(255,255,255,.72)}
+.vb-bwhen{display:flex;flex-direction:column;align-items:flex-end;gap:2px;text-align:right;color:#fff;
+  white-space:nowrap}
+.vb-bwhen .vb-day{color:#fff}
+.vb-bwhen .vb-time{color:rgba(255,255,255,.82)}
+.vb-bwhen .vb-count{color:rgba(255,255,255,.9)}
+/* The two columns carry on underneath, on the card rather than the picture. */
+.venue-band.has-cover .vb-main,
+.venue-band.has-cover .vb-side{padding:20px 26px}
+.venue-band.has-cover .vb-side{padding-top:20px;align-items:flex-start;text-align:left;
+  border-top:1px solid var(--line)}
+.venue-band.has-cover .vb-note{padding:0 26px 20px;border-top:0}
+/* Nothing sits above it in this layout, so the rule was separating the contact
+   from the top of the card. */
+.venue-band.has-cover .vb-contact{border-top:0;padding-top:0}
+@media (min-width:861px){
+  .venue-band.has-cover .vb-main{float:left;width:58%;padding-right:0}
+  .venue-band.has-cover .vb-side{float:right;width:42%;border-top:0;padding-left:26px}
+  .venue-band.has-cover .vb-note{clear:both}
+}
+@media (max-width:700px){ .vb-banner{min-height:190px} }
 .vb-k{font-size:9.5px;letter-spacing:1.9px;text-transform:uppercase;color:var(--gold);font-weight:600}
 .vb-name{font-family:var(--serif);font-size:32px;font-weight:600;line-height:1.05;margin-top:6px;letter-spacing:-.012em}
 .vb-name.tbc{color:var(--muted);font-style:italic}
@@ -2120,9 +2159,9 @@ tr:hover .r-acts,.ev-card:hover .r-acts,.table-card:hover .r-acts,
 .vb-note b{font-size:9.5px;letter-spacing:1.6px;text-transform:uppercase;color:var(--gold);
   font-weight:600;margin-right:8px}
 /* ---- setting the event's cover photo ----
-   A preview, not a backdrop. The picture itself belongs on the dashboard hero,
-   which was built around one; the band is four corners of dense copy and a
-   photograph behind it costs more legibility than it buys. */
+   The thumbnail stays even now the band wears the picture: this row is where
+   you SET the cover, and a control that says "Replace cover photo" should show
+   which one it means without making you look up. */
 .vb-thumb{width:38px;height:38px;flex:0 0 38px;border-radius:10px;border:1px solid var(--line);
   background-size:cover;background-position:center;box-shadow:var(--shadow-sm)}
 .vb-cover-row{display:flex;align-items:center;gap:11px;margin-top:15px;flex-wrap:wrap}
@@ -4634,10 +4673,26 @@ function viewEventDetail(id){
   switcher+
 
   // ---- venue, given the prominence it deserves ----
-  '<div class="venue-band">'+
+  '<div class="venue-band'+(cover?' has-cover':'')+'">'+
+    /* With a cover the name and the countdown move ONTO the photograph, under
+       a bottom-up scrim, and the dense copy — address, contact, site notes —
+       sits on the card below it where nothing is competing with a picture.
+       That was the objection to a backdrop here and it was a fair one; a
+       banner answers it, where a wash behind everything did not. */
+    (cover?'<div class="vb-banner" style="background-image:url('+cover+')">'+
+      '<div class="vb-btop">'+
+        '<div class="vb-k">Venue</div>'+
+        '<div class="vb-name'+(e.venue?'':' tbc')+'">'+esc(venueName(e.venue))+'</div>'+
+      '</div>'+
+      '<div class="vb-bwhen">'+
+        '<span class="vb-day">'+fmtDate(e.date)+'</span>'+
+        (e.startTime?'<span class="vb-time">'+esc(e.startTime)+' start</span>':'')+
+        '<span class="vb-count">'+daysAway(e.date)+' days away</span>'+
+      '</div>'+
+    '</div>':'')+
     '<div class="vb-main">'+
-      '<div class="vb-k">Venue</div>'+
-      '<div class="vb-name'+(e.venue?'':' tbc')+'">'+esc(venueName(e.venue))+'</div>'+
+      (cover?'':'<div class="vb-k">Venue</div>'+
+        '<div class="vb-name'+(e.venue?'':' tbc')+'">'+esc(venueName(e.venue))+'</div>')+
       (addr.length?'<div class="vb-addr">'+addr.map(esc).join('<br>')+'</div>'
                   :'<div class="vb-addr muted">No address on file</div>')+
       (addr.length?'<a class="vb-map" href="https://maps.google.com/?q='+mapQ+'" target="_blank" rel="noopener">Open in Maps ›</a>':'')+
@@ -4658,9 +4713,9 @@ function viewEventDetail(id){
       '</div>'+
     '</div>'+
     '<div class="vb-side">'+
-      '<div class="vb-when"><span class="vb-day">'+fmtDate(e.date)+'</span>'+
+      (cover?'':'<div class="vb-when"><span class="vb-day">'+fmtDate(e.date)+'</span>'+
         (e.startTime?'<span class="vb-time">'+esc(e.startTime)+' start</span>':'')+
-        '<span class="vb-count">'+daysAway(e.date)+' days away</span></div>'+
+        '<span class="vb-count">'+daysAway(e.date)+' days away</span></div>')+
       (e.venueContact&&e.venueContact.name?
         '<div class="vb-contact"><div class="vc-k">Venue contact</div>'+
           '<div class="vc-n">'+esc(e.venueContact.name)+'</div>'+
