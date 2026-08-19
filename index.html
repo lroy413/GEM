@@ -10,7 +10,7 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
 <meta name="apple-mobile-web-app-title" content="GEM">
 <meta name="format-detection" content="telephone=no">
-<meta name="gem-build" content="41a5b239132f">
+<meta name="gem-build" content="65337e84e1e5">
 <link rel="manifest" href="/manifest.webmanifest">
 <link rel="icon" href="/icons/icon-192.png" sizes="192x192" type="image/png">
 <link rel="apple-touch-icon" href="/icons/icon-180.png">
@@ -1181,6 +1181,21 @@ tbody tr:hover{background:var(--pink-50)}
   user-select:none}
 .cz-i.lg{font-size:19px}
 .crop-hint{max-width:320px;margin:10px auto 0;font-size:11.5px;color:var(--muted);text-align:center;line-height:1.5}
+
+/* --- the bible picker --- */
+.modal-bible{max-width:540px}
+.bib-hint{font-size:12px;color:var(--muted);line-height:1.55;margin:-6px 0 14px}
+.bib-list{display:flex;flex-direction:column;gap:1px;border:1px solid var(--line);border-radius:var(--radius-sm);
+  overflow:hidden;background:var(--line);max-height:44vh;overflow-y:auto}
+.bib-row{display:grid;grid-template-columns:auto 1fr auto;align-items:center;gap:11px;padding:10px 13px;
+  background:var(--card);cursor:pointer;transition:background .12s}
+.bib-row:hover{background:var(--pink-50)}
+.bib-row.on{background:linear-gradient(90deg,var(--pink-50),var(--card))}
+.bib-row input{width:16px;height:16px;accent-color:var(--gold);cursor:pointer}
+.bib-row b{display:block;font-size:13px;font-weight:600}
+.bib-row em{display:block;font-style:normal;font-size:11.5px;color:var(--muted);margin-top:1px}
+.bib-tag{font-size:9.5px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--gold);
+  white-space:nowrap}
 .ev-cards{display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:16px}
 .ev-card{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);overflow:hidden;box-shadow:var(--shadow-sm);cursor:pointer;transition:transform .14s,box-shadow .14s}
 .ev-card:hover{transform:translateY(-3px);box-shadow:var(--shadow)}
@@ -4136,7 +4151,8 @@ function viewClientDetail(id){
       '</div>'+
     '</div>'+
     '<div class="dh-value"><span class="dh-v">'+money(l.value)+'</span><span class="dh-l">contract value</span>'+
-      '<button class="btn btn-ghost btn-sm" id="editClient" style="margin-top:10px">✎ Edit details</button></div>'+
+      '<button class="btn btn-ghost btn-sm" id="editClient" style="margin-top:10px">✎ Edit details</button>'+
+      '<button class="btn btn-ghost btn-sm" id="clientBible" style="margin-top:8px">◈ Export bible</button></div>'+
   '</div>'+
   '<div class="stat-row">'+
     stat('Collected',money(paid),invs.filter(function(x){return x.status==='paid';}).length+' payments','up')+
@@ -6136,6 +6152,15 @@ function wireClientDetail(){
   var ec=$('#editClient'), ct=$('#editContact');
   if(ec)ec.onclick=function(){openClientModal(l);};
   if(ct)ct.onclick=function(){openClientModal(l);};
+  var cb=$('#clientBible');
+  if(cb)cb.onclick=function(){
+    var bev=eventForLead(l);
+    /* The bible is assembled around an event — dates, running order, guests,
+       seating all hang off one. Say that, rather than toasting something the
+       button could equally have meant. */
+    if(!bev){ toast('Create an event for '+l.names+' first — the bible is built around one.'); return; }
+    openBibleModal(bev);
+  };
 
   var photo=$('#clientPhoto'), pin=$('#clientPhotoInput');
   if(pin)pin.onchange=function(){
@@ -9255,7 +9280,8 @@ function openPrintMenu(ev){
     (evIsSub(ev)?esc(roleLabel(ev))+' · ':'')+esc(ev.title)+
     ' · opens your print dialog, where you can save as PDF.</p>'+
     '<div class="print-grid">'+
-      ([['timeline','Day-of Timeline','The running order for your vendor team'],
+      ([['bible','The Bible','Everything you have, as one document — yours or theirs'],
+       ['timeline','Day-of Timeline','The running order for your vendor team'],
        ['guests','Guest List','Every guest with RSVP, meal and table'],
        ['seating','Seating Chart','Table by table, with dietary flags'],
        ['vendors','Vendor Contact Sheet','Numbers you need on the day'],
@@ -9270,8 +9296,537 @@ function openPrintMenu(ev){
   ov.classList.add('show');
   $('#mCancel').onclick=closeModal;
   md.querySelectorAll('[data-print]').forEach(function(b){
-    b.onclick=function(){ var k=b.dataset.print; closeModal(); setTimeout(function(){printSheet(k,ev);},180); };
+    b.onclick=function(){ var k=b.dataset.print; closeModal();
+      /* The bible asks who it is for and what goes in it, so it opens its own
+         picker rather than going straight to the printer like a sheet does. */
+      setTimeout(function(){ if(k==='bible')openBibleModal(ev); else printSheet(k,ev); },180); };
   });
+}
+
+/* ============================================================
+ * The Bible — one document, assembled from the workspace
+ *
+ * A planner's binder and a client's keepsake are the same facts arranged for
+ * two different readers, so this builds ONE structure — a list of blocks —
+ * and renders it three ways: to the print dialog (where every platform offers
+ * Save as PDF), to a real .docx, and to an email covering note. Writing the
+ * sections once is the whole point; a second copy of "the guest list, but for
+ * Word" is where the two would drift.
+ *
+ * What a client may see is not a matter of taste. It follows the same line the
+ * database draws in 02_rls.sql and MIGRATION.md §4: no budget, no vendor fees,
+ * no private notes — ever, whatever is ticked.
+ * ============================================================ */
+var BIBLE_SECTIONS=[
+  {k:'overview', t:'Overview',      d:'The essentials, on one page'},
+  {k:'contacts', t:'Key contacts',  d:'Client, venue and your studio'},
+  {k:'weekend',  t:'The weekend',   d:'Every event in order, with its venue'},
+  {k:'timeline', t:'Running order', d:'Hour by hour, for each event'},
+  {k:'guests',   t:'Guest list',    d:'RSVP, meal, dietary needs and table'},
+  {k:'seating',  t:'Seating',       d:'Table by table, with dietary flags'},
+  {k:'tasks',    t:'Checklist',     d:'What is done, and what is left'},
+  {k:'design',   t:'Design',        d:'Palette, mood boards and décor'},
+  {k:'docs',     t:'Documents',     d:'Contracts and proposals, with status'},
+  {k:'money',    t:'Payments',      d:'Invoices, paid and outstanding'},
+  {k:'budget',   t:'Budget',        d:'Estimated against actual, line by line', planner:true},
+  {k:'vendors',  t:'Vendor team',   d:'Contacts, status and fees',              planner:true},
+  {k:'notes',    t:'Private notes', d:'Your own notes on this client',          planner:true}
+];
+function bibleDefaults(aud){
+  var on={};
+  BIBLE_SECTIONS.forEach(function(s){
+    if(s.planner&&aud!=='planner')return;
+    /* A client's copy opens without the guest list and seating ticked: it is
+       the half most often still moving, and it is theirs to ask for. */
+    on[s.k]=!(aud==='client'&&(s.k==='guests'||s.k==='seating'));
+  });
+  return on;
+}
+
+/* ---------- the content, as blocks ---------- */
+/* h1 chapter · h2 heading · p paragraph · note callout · kv facts · table */
+function bibleBlocks(ev,opts){
+  var planner=opts.audience==='planner';
+  var pick=opts.sections||{};
+  var wk=evBlock(ev).slice().sort(function(a,b){return (a.date||'')<(b.date||'')?-1:1;});
+  var lead=leadForEvent(ev);
+  var B=[];
+  var want=function(k){ var s=BIBLE_SECTIONS.find(function(x){return x.k===k;});
+    if(s&&s.planner&&!planner)return false;      // never, whatever is ticked
+    return !!pick[k]; };
+  var push=function(){ [].slice.call(arguments).forEach(function(b){ if(b)B.push(b); }); };
+
+  if(want('overview')){
+    var away=daysAway(ev.date);
+    var kv=[['Event',ev.title],['Type',evType(ev)],['Date',fmtDate(ev.date)+(ev.startTime?' · '+ev.startTime+' start':'')],
+            ['Venue',venueName(ev.venue)+(ev.loc?', '+ev.loc:'')],
+            ['Countdown',ev.date?(away>=0?away+' days away':'Completed'):'No date set'],
+            ['Guests',rosterFor(ev).filter(function(g){return gRsvp(g,ev)==='yes';}).length+' attending of '+rosterFor(ev).length+' invited'],
+            ['Planning',evPct(ev)+'% complete']];
+    if(planner&&lead)kv.push(['Contract value',money(lead.value)],['Stage',(stageOf(lead.stage)||{}).name||'']);
+    push({h1:'Overview'},{kv:kv});
+    if(wk.length>1)push({note:'This is a weekend of '+wk.length+' events. Everything below covers all of them unless it says otherwise.'});
+  }
+  if(want('contacts')){
+    var rows=[];
+    if(lead){
+      rows.push(['Client',lead.names,[lead.email,lead.phone].filter(Boolean).join(' · ')||'—']);
+      if(lead.partnerA)rows.push(['',lead.partnerA+(lead.pronounsA?' ('+lead.pronounsA+')':''),'']);
+      if(lead.partnerB)rows.push(['',lead.partnerB+(lead.pronounsB?' ('+lead.pronounsB+')':''),'']);
+    }
+    wk.forEach(function(x){
+      var c=x.venueContact||{};
+      if(c.name||c.email||c.phone)
+        rows.push([roleLabel(x,true)+' venue',venueName(x.venue)+(c.name?' · '+c.name:''),
+                   [c.email,c.phone].filter(Boolean).join(' · ')||'—']);
+    });
+    var pf=prefs();
+    rows.push(['Your studio',pf.bizName+(pf.plannerName?' · '+pf.plannerName:''),
+               [pf.bizEmail,pf.bizPhone].filter(Boolean).join(' · ')||'—']);
+    push({h1:'Key contacts'},{table:{head:['','Who','Reach them on'],rows:rows}});
+  }
+  if(want('weekend')){
+    push({h1:wk.length>1?'The weekend':'The event'},
+         {table:{head:['','Event','Date','Venue','Attending'],rows:wk.map(function(x){
+           return [roleLabel(x,true),x.title,fmtDate(x.date)+(x.startTime?' · '+x.startTime:''),
+                   venueName(x.venue)+(x.loc?', '+x.loc:''),
+                   String(rosterFor(x).filter(function(g){return gRsvp(g,x)==='yes';}).length)];
+         })}});
+    wk.forEach(function(x){
+      var a=addrLines(x.venueAddress);
+      if(a.length||x.venueNotes)
+        push({h2:roleLabel(x,true)+' · '+venueName(x.venue)},
+             a.length?{p:a.join(', ')}:null,
+             x.venueNotes?{note:x.venueNotes}:null);
+    });
+  }
+  if(want('timeline')){
+    push({h1:'Running order'});
+    wk.forEach(function(x){
+      push({h2:roleLabel(x,true)+' — '+x.title+' · '+fmtDate(x.date)});
+      if(!(x.timeline||[]).length){ push({p:'No running order yet.'}); return; }
+      push({table:{head:['Time','Moment','Detail'],
+        rows:x.timeline.map(function(t){ return [t.t||'',t.ev||'',t.ds||'']; })}});
+    });
+  }
+  if(want('guests')){
+    push({h1:'Guest list'});
+    wk.forEach(function(x){
+      var r=rosterFor(x);
+      push({h2:roleLabel(x,true)+' — '+r.filter(function(g){return gRsvp(g,x)==='yes';}).length+
+               ' attending of '+r.length});
+      if(!r.length){ push({p:'Nobody on this list yet.'}); return; }
+      push({table:{head:['Guest','Party','RSVP','Meal','Dietary','Table'],
+        rows:r.map(function(g){
+          var tb=(x.tables||[]).find(function(t){return t.id===gTable(g,x);});
+          return [g.name||'',g.party||'',(RSVP[gRsvp(g,x)]||{}).lbl||'',gMeal(g,x)||'',g.diet||'',tb?tb.name:''];
+        })}});
+    });
+  }
+  if(want('seating')){
+    push({h1:'Seating'});
+    wk.forEach(function(x){
+      if(!(x.tables||[]).length)return;
+      push({h2:roleLabel(x,true)+' — '+x.tables.length+' table'+(x.tables.length===1?'':'s')});
+      x.tables.forEach(function(t){
+        var at=seatedAt(x,t.id);
+        push({h2n:t.name+'  ·  '+at.length+' of '+t.seats},
+             {p:at.length?at.map(function(g){
+               return g.name+(g.diet?' ('+g.diet+')':'');
+             }).join(' · '):'Empty.'});
+      });
+    });
+  }
+  if(want('tasks')){
+    push({h1:'Checklist'});
+    wk.forEach(function(x){
+      var items=(x.checklist||[]).filter(function(c){
+        return planner||c.owner==='client';         // a client's copy is their own list
+      });
+      if(!items.length)return;
+      push({h2:roleLabel(x,true)+' — '+items.filter(function(c){return c.done;}).length+' of '+items.length+' done'});
+      push({table:{head:planner?['','Task','Category','Due','Owner']:['','Task','Category','Due'],
+        rows:items.map(function(c){
+          var row=[c.done?'✓':'☐',c.lbl||'',c.cat||'',c.due?fmtDate(c.due):''];
+          if(planner)row.push(c.owner==='client'?'Client':'Studio');
+          return row;
+        })}});
+    });
+  }
+  if(want('design')){
+    var d=evPrimary(ev).design||{};
+    push({h1:'Design'});
+    if((d.palette||[]).length)
+      push({h2:'Palette'},{p:d.palette.map(function(c){return c.name+' ('+String(c.hex).toUpperCase()+')';}).join(' · ')});
+    (d.boards||[]).forEach(function(b){
+      push({h2:b.title+(b.note?' — '+b.note:'')});
+      if((b.swatches||[]).length)push({p:'Swatches: '+b.swatches.map(function(c){return c.name;}).join(' · ')});
+      if((b.ideas||[]).length)push({p:b.ideas.map(function(i){return '· '+(i.body||i.text||'');}).join('\n')});
+      if((b.images||[]).length)push({p:b.images.length+' reference photograph'+(b.images.length===1?'':'s')+' on this board.'});
+    });
+    if((d.decor||[]).length)
+      push({h2:'Décor and rentals'},
+           {table:{head:planner?['Item','Vendor','Status']:['Item','Status'],
+             rows:d.decor.map(function(x){
+               return planner?[x.item||'',x.vendor||'',(DECOR[x.status]||{}).lbl||x.status||'']
+                             :[x.item||'',(DECOR[x.status]||{}).lbl||x.status||''];
+             })}});
+  }
+  if(want('docs')){
+    var ids=wk.map(function(x){return x.id;});
+    var docs=(db.documents||[]).filter(function(x){
+      return ids.indexOf(x.eventId)>-1&&(planner||x.status!=='draft');   // never a draft, to a client
+    });
+    push({h1:'Documents'});
+    push(docs.length
+      ?{table:{head:['Document','Type','Status','Sent','Signed'],rows:docs.map(function(x){
+          return [x.title||'',x.type||'',x.status||'',x.sent?fmtDate(x.sent):'',x.signed?fmtDate(x.signed):''];
+        })}}
+      :{p:'Nothing yet.'});
+  }
+  if(want('money')){
+    var inv=invoicesForLead(lead);
+    var paid=inv.filter(function(x){return x.status==='paid';}).reduce(function(a,x){return a+x.amount;},0);
+    var owed=inv.filter(function(x){return x.status==='due'||x.status==='over';}).reduce(function(a,x){return a+x.amount;},0);
+    push({h1:'Payments'},
+         {kv:[['Collected',money(paid)],['Outstanding',money(owed)]]});
+    push(inv.length
+      ?{table:{head:['Invoice','Amount','Due','Status'],rows:inv.map(function(x){
+          return [x.num||'',money(x.amount),x.due?fmtDate(x.due):'',x.status||''];
+        })}}
+      :{p:'No invoices yet.'});
+  }
+  if(want('budget')){
+    var b=evPrimary(ev).budget||[];
+    var est=b.reduce(function(a,x){return a+(Number(x.est)||0);},0);
+    var act=b.reduce(function(a,x){return a+(Number(x.act)||0);},0);
+    push({h1:'Budget'},{kv:[['Estimated',money(est)],['Actual',money(act)],['Difference',money(est-act)]]});
+    push(b.length
+      ?{table:{head:['Line','For','Estimated','Actual'],rows:b.map(function(x){
+          var tag=x.tagEventId?evById(x.tagEventId):null;
+          return [x.cat||'',tag?roleLabel(tag,true):'The weekend',money(x.est),money(x.act)];
+        })}}
+      :{p:'No budget lines yet.'});
+  }
+  if(want('vendors')){
+    var ids2=wk.map(function(x){return x.id;});
+    var bk=(db.bookings||[]).filter(function(x){return ids2.indexOf(x.eventId)>-1;});
+    push({h1:'Vendor team'});
+    push(bk.length
+      ?{table:{head:['Vendor','Category','Contact','Status','Fee'],rows:bk.map(function(x){
+          var v=vendorById(x.vendorId)||{};
+          return [v.name||'—',v.cat||'',[v.contact,v.phone,v.email].filter(Boolean).join(' · '),
+                  (VSTATUS[x.status]||{}).lbl||x.status||'',money(x.fee)];
+        })}}
+      :{p:'Nobody booked yet.'});
+  }
+  if(want('notes')&&lead&&String(lead.notes||'').trim())
+    push({h1:'Private notes'},{p:lead.notes});
+  return B;
+}
+
+/* ---------- renderer 1 · the printed page (and therefore the PDF) ---------- */
+function bibleHtml(blocks){
+  return blocks.map(function(b){
+    if(b.h1)  return '<h2 class="pr-title bib-ch">'+esc(b.h1)+'</h2>';
+    if(b.h2)  return '<h3 class="bib-h">'+esc(b.h2)+'</h3>';
+    if(b.h2n) return '<div class="bib-sub">'+esc(b.h2n)+'</div>';
+    if(b.note)return '<div class="pr-note">'+esc(b.note)+'</div>';
+    if(b.p)   return '<p class="bib-p">'+esc(b.p).replace(/\n/g,'<br>')+'</p>';
+    if(b.kv)  return '<table class="pr-t bib-kv"><tbody>'+b.kv.map(function(r){
+                 return '<tr><th>'+esc(r[0])+'</th><td>'+esc(r[1])+'</td></tr>'; }).join('')+'</tbody></table>';
+    if(b.table)return '<table class="pr-t"><thead><tr>'+b.table.head.map(function(h){
+                 return '<th>'+esc(h)+'</th>'; }).join('')+'</tr></thead><tbody>'+
+                 b.table.rows.map(function(r){ return '<tr>'+r.map(function(c,i){
+                   return '<td>'+(i===0?'<b>'+esc(c)+'</b>':esc(c))+'</td>'; }).join('')+'</tr>'; }).join('')+
+                 '</tbody></table>';
+    return '';
+  }).join('');
+}
+
+/* ---------- renderer 2 · a real .docx ---------- */
+/* A .docx is a ZIP of XML. Nothing here is compressed — stored entries need
+   only a CRC, which is thirty lines, where deflate would be a library. The
+   file is a few hundred KB of text at worst and opens in Word, Pages, Google
+   Docs and LibreOffice alike. */
+var CRC_T=null;
+function crc32(bytes){
+  if(!CRC_T){
+    CRC_T=[];
+    for(var n=0;n<256;n++){
+      var c=n;
+      for(var k=0;k<8;k++)c=(c&1)?(0xEDB88320^(c>>>1)):(c>>>1);
+      CRC_T[n]=c>>>0;
+    }
+  }
+  var crc=0xFFFFFFFF;
+  for(var i=0;i<bytes.length;i++)crc=(CRC_T[(crc^bytes[i])&0xFF]^(crc>>>8))>>>0;
+  return (crc^0xFFFFFFFF)>>>0;
+}
+function zipStore(files){
+  var enc=new TextEncoder(), parts=[], central=[], offset=0;
+  var u8=function(n){ return [n&255]; };
+  var u16=function(n){ return [n&255,(n>>8)&255]; };
+  var u32=function(n){ return [n&255,(n>>>8)&255,(n>>>16)&255,(n>>>24)&255]; };
+  /* One timestamp for the whole archive: the DOS field has two-second
+     resolution and nothing reads it, but a file with 1980 on it looks broken. */
+  var now=new Date();
+  var dt=u16(((now.getHours()&31)<<11)|((now.getMinutes()&63)<<5)|((now.getSeconds()/2)&31))
+    .concat(u16((((now.getFullYear()-1980)&127)<<9)|(((now.getMonth()+1)&15)<<5)|(now.getDate()&31)));
+  files.forEach(function(f){
+    var name=enc.encode(f.name), body=enc.encode(f.body), crc=crc32(body);
+    var head=[0x50,0x4B,0x03,0x04].concat(u16(20),u16(0x0800),u16(0),dt,
+      u32(crc),u32(body.length),u32(body.length),u16(name.length),u16(0));
+    parts.push(new Uint8Array(head),name,body);
+    central.push([0x50,0x4B,0x01,0x02].concat(u16(20),u16(20),u16(0x0800),u16(0),dt,
+      u32(crc),u32(body.length),u32(body.length),u16(name.length),
+      u16(0),u16(0),u16(0),u16(0),u32(0),u32(offset)));
+    central.push(name);
+    offset+=head.length+name.length+body.length;
+  });
+  var cd=[], cdLen=0;
+  central.forEach(function(c){
+    var a=(c instanceof Uint8Array)?c:new Uint8Array(c);
+    cd.push(a); cdLen+=a.length;
+  });
+  var end=new Uint8Array([0x50,0x4B,0x05,0x06].concat(u16(0),u16(0),
+    u16(files.length),u16(files.length),u32(cdLen),u32(offset),u16(0)));
+  var total=offset+cdLen+end.length, out=new Uint8Array(total), at=0;
+  parts.concat(cd,[end]).forEach(function(a){ out.set(a,at); at+=a.length; });
+  return out;
+}
+function xmlEsc(s){
+  return String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;')
+    .replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+/* Direct formatting rather than a styles part: one fewer file to keep in step,
+   and Word renders it identically. Sizes are half-points. */
+function wRun(text,o){
+  o=o||{};
+  return String(text==null?'':text).split('\n').map(function(line,i){
+    return (i?'<w:r><w:br/></w:r>':'')+
+      /* The order of these is not cosmetic. CT_RPr is a SEQUENCE, so a
+         consumer that validates — LibreOffice does, Word does not — refuses
+         the whole file if sz comes before color. rFonts, b, i, caps, color,
+         spacing, sz, szCs is the schema's order, and the only correct one. */
+      '<w:r><w:rPr>'+
+      (o.serif?'<w:rFonts w:ascii="Georgia" w:hAnsi="Georgia"/>':'<w:rFonts w:ascii="Calibri" w:hAnsi="Calibri"/>')+
+      (o.b?'<w:b/>':'')+(o.i?'<w:i/>':'')+(o.caps?'<w:caps/>':'')+
+      (o.color?'<w:color w:val="'+o.color+'"/>':'')+
+      (o.caps?'<w:spacing w:val="30"/>':'')+
+      '<w:sz w:val="'+(o.sz||20)+'"/><w:szCs w:val="'+(o.sz||20)+'"/>'+
+      '</w:rPr><w:t xml:space="preserve">'+xmlEsc(line)+'</w:t></w:r>';
+  }).join('');
+}
+function wPara(text,o){
+  o=o||{};
+  /* CT_PPr is a sequence too: pageBreakBefore, pBdr, shd, spacing. */
+  return '<w:p><w:pPr>'+
+    (o.page?'<w:pageBreakBefore/>':'')+
+    (o.rule?'<w:pBdr><w:bottom w:val="single" w:sz="6" w:space="4" w:color="'+o.rule+'"/></w:pBdr>':'')+
+    (o.shade?'<w:shd w:val="clear" w:fill="'+o.shade+'"/>':'')+
+    '<w:spacing w:before="'+(o.before||0)+'" w:after="'+(o.after===undefined?120:o.after)+'"/>'+
+    '</w:pPr>'+wRun(text,o)+'</w:p>';
+}
+function wCell(text,o,w){
+  return '<w:tc><w:tcPr><w:tcW w:w="'+(w||0)+'" w:type="'+(w?'pct':'auto')+'"/>'+
+    (o&&o.shade?'<w:shd w:val="clear" w:fill="'+o.shade+'"/>':'')+'</w:tcPr>'+
+    wPara(text,Object.assign({after:40,sz:18},o||{}))+'</w:tc>';
+}
+function wTable(head,rows,accent){
+  var b=function(n){ return '<w:'+n+' w:val="single" w:sz="4" w:space="0" w:color="DCD2D5"/>'; };
+  return '<w:tbl><w:tblPr><w:tblW w:w="5000" w:type="pct"/><w:tblBorders>'+
+      b('top')+b('left')+b('bottom')+b('right')+b('insideH')+b('insideV')+
+    '</w:tblBorders></w:tblPr>'+
+    '<w:tr><w:trPr><w:tblHeader/></w:trPr>'+head.map(function(h){
+      return wCell(h,{b:true,sz:15,caps:true,color:accent,shade:'FAF5F2'});
+    }).join('')+'</w:tr>'+
+    rows.map(function(r){
+      return '<w:tr>'+r.map(function(c,i){ return wCell(c,{b:i===0}); }).join('')+'</w:tr>';
+    }).join('')+'</w:tbl>'+wPara('',{after:120});
+}
+function bibleDocx(blocks,meta){
+  var accent=(prefs().accent||'#B08D3E').replace('#','').toUpperCase();
+  var body=
+    wPara(meta.brand,{caps:true,b:true,sz:16,color:accent,after:60})+
+    wPara(meta.title,{serif:true,b:true,sz:52,after:60})+
+    wPara(meta.sub,{sz:22,color:'6B5B61',after:40})+
+    wPara(meta.stamp,{sz:18,color:'8B7B80',rule:accent,after:320})+
+    blocks.map(function(bl){
+      if(bl.h1)  return wPara(bl.h1,{serif:true,b:true,sz:34,color:accent,before:360,after:140,rule:'E6DADD'});
+      if(bl.h2)  return wPara(bl.h2,{serif:true,b:true,sz:24,before:220,after:80});
+      if(bl.h2n) return wPara(bl.h2n,{b:true,sz:19,before:120,after:40});
+      if(bl.note)return wPara(bl.note,{i:true,sz:19,shade:'FAF5F2',after:140});
+      if(bl.p)   return wPara(bl.p,{sz:20});
+      if(bl.kv)  return wTable(['',''],bl.kv.map(function(r){return [r[0],r[1]];}),accent);
+      if(bl.table)return wTable(bl.table.head,bl.table.rows,accent);
+      return '';
+    }).join('')+
+    wPara(meta.foot,{sz:16,color:'8B7B80',before:360,rule:'E6DADD'});
+
+  var doc='<?xml version="1.0" encoding="UTF-8" standalone="yes"?>'+
+    '<w:document xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main"><w:body>'+
+    body+
+    '<w:sectPr><w:pgSz w:w="11906" w:h="16838"/>'+
+    '<w:pgMar w:top="1134" w:right="1021" w:bottom="1134" w:left="1021" w:header="709" w:footer="709"/>'+
+    '</w:sectPr></w:body></w:document>';
+
+  return zipStore([
+    {name:'[Content_Types].xml',body:'<?xml version="1.0" encoding="UTF-8" standalone="yes"?>'+
+      '<Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types">'+
+      '<Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/>'+
+      '<Default Extension="xml" ContentType="application/xml"/>'+
+      '<Override PartName="/word/document.xml" ContentType="application/vnd.openxmlformats-officedocument.wordprocessingml.document.main+xml"/>'+
+      '</Types>'},
+    {name:'_rels/.rels',body:'<?xml version="1.0" encoding="UTF-8" standalone="yes"?>'+
+      '<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">'+
+      '<Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/officeDocument" Target="word/document.xml"/>'+
+      '</Relationships>'},
+    {name:'word/document.xml',body:doc}
+  ]);
+}
+
+/* ---------- the three ways out ---------- */
+function bibleMeta(ev,opts){
+  var pf=prefs(), lead=leadForEvent(ev);
+  return {
+    brand:pf.bizName||'',
+    title:(lead?lead.names:ev.title),
+    sub:evType(ev)+' · '+fmtDate(ev.date)+' · '+venueName(ev.venue),
+    stamp:(opts.audience==='planner'?'Planning bible':'Your planning bible')+
+          ' · prepared '+fmtDate(new Date().toISOString().slice(0,10)),
+    foot:'Prepared by '+(pf.bizName||'')+
+      (pf.bizEmail?' · '+pf.bizEmail:'')+(pf.bizPhone?' · '+pf.bizPhone:''),
+    file:String((lead?lead.names:ev.title)||'bible').replace(/[^A-Za-z0-9]+/g,'-')
+      .replace(/^-|-$/g,'').toLowerCase()+'-bible'
+  };
+}
+function biblePrint(ev,opts){
+  var blocks=bibleBlocks(ev,opts), meta=bibleMeta(ev,opts), pf=prefs();
+  var w=document.getElementById('printFrame');
+  if(!w){ w=document.createElement('iframe'); w.id='printFrame';
+    w.style.cssText='position:fixed;right:0;bottom:0;width:0;height:0;border:0;visibility:hidden';
+    document.body.appendChild(w); }
+  var doc=w.contentDocument;
+  doc.open();
+  doc.write('<!doctype html><meta charset="utf-8"><title>'+esc(meta.title)+' — bible</title>'+
+    '<style>'+printCss()+bibleCss()+'</style><body>'+
+    '<div class="bib-cover">'+
+      (pf.logo?'<img class="bib-logo" src="'+pf.logo+'" alt="">':'')+
+      '<div class="pr-brand">'+esc(meta.brand)+'</div>'+
+      '<h1>'+esc(meta.title)+'</h1>'+
+      '<div class="bib-sub2">'+esc(meta.sub)+'</div>'+
+      '<div class="bib-stamp">'+esc(meta.stamp)+'</div>'+
+    '</div>'+
+    bibleHtml(blocks)+
+    '<div class="pr-foot">'+esc(meta.foot)+'</div></body>');
+  doc.close();
+  setTimeout(function(){ w.contentWindow.focus(); w.contentWindow.print(); },260);
+}
+function bibleSave(ev,opts){
+  var bytes=bibleDocx(bibleBlocks(ev,opts),bibleMeta(ev,opts));
+  var name=bibleMeta(ev,opts).file+'.docx';
+  var blob=new Blob([bytes],{type:'application/vnd.openxmlformats-officedocument.wordprocessingml.document'});
+  var url=URL.createObjectURL(blob), a=document.createElement('a');
+  a.href=url; a.download=name; document.body.appendChild(a); a.click();
+  setTimeout(function(){ a.remove(); URL.revokeObjectURL(url); },400);
+  return name;
+}
+/* A browser cannot put a file into a mail client, so this does the honest
+   thing: saves the document, then opens a message already written, ready for
+   it to be dragged in. Pretending otherwise would just lose the attachment. */
+function bibleEmail(ev,opts){
+  var meta=bibleMeta(ev,opts), lead=leadForEvent(ev), name=bibleSave(ev,opts);
+  var to=(opts.audience==='client'&&lead&&lead.email)?lead.email:'';
+  var on=BIBLE_SECTIONS.filter(function(s){ return (opts.sections||{})[s.k]&&!(s.planner&&opts.audience!=='planner'); });
+  var body=[
+    (lead?'Hello '+lead.names+',':'Hello,'),'',
+    'Attached is the planning bible for '+meta.title+' — '+meta.sub+'.','',
+    'It covers:',
+    on.map(function(s){ return '  · '+s.t; }).join('\n'),'',
+    'Any questions at all, just reply to this message.','',
+    prefs().plannerName||prefs().bizName||''
+  ].join('\n');
+  var href='mailto:'+encodeURIComponent(to)+
+    '?subject='+encodeURIComponent(meta.title+' — planning bible')+
+    '&body='+encodeURIComponent(body);
+  setTimeout(function(){ location.href=href; },600);
+  toast(name+' saved — attach it to the message that just opened ✦');
+}
+function bibleCss(){ return ''+
+ '.bib-cover{text-align:center;padding:26px 0 30px;border-bottom:2px solid '+accentHex()+';margin-bottom:26px}'+
+ '.bib-logo{width:54px;height:54px;object-fit:cover;border-radius:11px;margin:0 auto 12px;display:block}'+
+ '.bib-cover h1{font-family:Georgia,serif;font-size:34px;margin:8px 0 6px;font-weight:600;letter-spacing:-.01em}'+
+ '.bib-sub2{font-size:13px;color:#5e4e54}'+
+ '.bib-stamp{font-size:10px;letter-spacing:1.6px;text-transform:uppercase;color:#8b7b80;margin-top:10px}'+
+ '.bib-ch{font-size:20px;margin:26px 0 12px;padding-bottom:7px;border-bottom:1px solid #e6dadd;'+
+   'color:'+accentHex()+';break-after:avoid}'+
+ '.bib-h{font-family:Georgia,serif;font-size:14.5px;font-weight:600;margin:15px 0 7px;break-after:avoid}'+
+ '.bib-sub{font-size:11.5px;font-weight:700;margin:9px 0 3px}'+
+ '.bib-p{font-size:12px;margin:0 0 9px;white-space:pre-line}'+
+ '.bib-kv th{width:150px;text-align:left;font-size:8.5px;letter-spacing:1.3px;text-transform:uppercase;'+
+   'color:#7b6a70;vertical-align:top;padding:7px 8px;border-bottom:1px solid #eee3e5}'+
+ '.bib-kv td{font-size:12.5px}';
+}
+
+/* ---------- the picker ---------- */
+function openBibleModal(ev){
+  if(!ev){ toast('Open an event or a client first ✦'); return; }
+  var state={audience:'planner',sections:bibleDefaults('planner')};
+  md.className='modal modal-bible';
+  function draw(){
+    var avail=BIBLE_SECTIONS.filter(function(s){ return !(s.planner&&state.audience!=='planner'); });
+    md.innerHTML='<h3>Export the bible</h3>'+
+      '<p class="sub">Everything you have on '+esc((leadForEvent(ev)||{}).names||ev.title)+
+        ', gathered into one document.</p>'+
+      '<div class="seg" role="tablist" aria-label="Who this copy is for">'+
+        [['planner','My copy'],['client','Client copy']].map(function(a){
+          return '<button class="seg-b'+(state.audience===a[0]?' on':'')+'" data-bibaud="'+a[0]+'" '+
+            'role="tab" aria-selected="'+(state.audience===a[0])+'">'+a[1]+'</button>';
+        }).join('')+
+      '</div>'+
+      '<div class="bib-hint">'+(state.audience==='planner'
+        ? 'Everything, including budget, vendor fees and your private notes.'
+        : 'Their copy. Budget, vendor fees, private notes and unsent drafts are left out — the same line the portal draws.')+
+      '</div>'+
+      '<div class="bib-list">'+avail.map(function(s){
+        return '<label class="bib-row'+(state.sections[s.k]?' on':'')+'">'+
+          '<input type="checkbox" data-bibsec="'+s.k+'"'+(state.sections[s.k]?' checked':'')+'>'+
+          '<span><b>'+esc(s.t)+'</b><em>'+esc(s.d)+'</em></span>'+
+          (s.planner?'<span class="bib-tag">Yours only</span>':'')+
+        '</label>';
+      }).join('')+'</div>'+
+      '<div class="modal-actions wrap">'+
+        '<button class="link-btn ma-lead" id="bibAll">'+
+          (avail.every(function(s){return state.sections[s.k];})?'Clear all':'Select all')+'</button>'+
+        '<button class="btn btn-ghost" id="bibMail">✉ Email</button>'+
+        '<button class="btn btn-ghost" id="bibDoc">⬇ Word</button>'+
+        '<button class="btn btn-gold" id="bibPdf">⎙ Print / PDF</button>'+
+      '</div>';
+    md.querySelectorAll('[data-bibaud]').forEach(function(b){
+      b.onclick=function(){ state.audience=b.dataset.bibaud; state.sections=bibleDefaults(state.audience); draw(); };
+    });
+    md.querySelectorAll('[data-bibsec]').forEach(function(c){
+      c.onchange=function(){ state.sections[c.dataset.bibsec]=c.checked;
+        c.closest('.bib-row').classList.toggle('on',c.checked); };
+    });
+    $('#bibAll').onclick=function(){
+      var all=avail.every(function(s){return state.sections[s.k];});
+      avail.forEach(function(s){ state.sections[s.k]=!all; });
+      draw();
+    };
+    var go=function(fn){ return function(){
+      if(!Object.keys(state.sections).some(function(k){return state.sections[k];})){
+        toast('Tick at least one section.'); return;
+      }
+      closeModal(); setTimeout(function(){ fn(ev,state); },180);
+    }; };
+    $('#bibPdf').onclick=go(biblePrint);
+    $('#bibDoc').onclick=go(function(e,o){ toast(bibleSave(e,o)+' saved ✦'); });
+    $('#bibMail').onclick=go(bibleEmail);
+  }
+  draw();
+  ov.classList.add('show');
 }
 
 /* ============================================================
@@ -10209,7 +10764,7 @@ function toast(msg){
    sample freely; only the writes are stopped. */
 var SAMPLE_SAFE=['[data-openevent]','[data-client]','[data-back]','[data-backdesign]','[data-backq]',
   '[data-ev]','[data-evtoggle]','[data-seatmode]','[data-setup]','[data-print]','[data-gotoev]',
-  '[data-clientview]',
+  '[data-clientview]','[data-bibaud]','[data-bibsec]','#bibPdf','#bibDoc','#bibMail','#bibAll','#clientBible',
   '[data-board]','[data-q]','[data-adopt]','[data-sampleinfo]','.ev-card','.ev-sub','.ew-b','.wk-row',
   '#evSwitch','#printEvent','#exportGuests','#exportInv','#calPrev','#calNext','#calToday',
   '#seatPickCancel','#sampleAdopt','#sampleRemove','.back-link','.srch-row','.tour-x'].join(',');
