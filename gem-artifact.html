@@ -2835,6 +2835,32 @@ function hasOwnWork(){
   });
 }
 
+/* Has this workspace been re-seeded from DEFAULT since it last synced?
+   Sample records carry their FIXED ids (l2, e1…) only when they have just come
+   out of DEFAULT. On any device that has synced, sbMigrateIds() rewrote those
+   to uuids and stamped sample:true, so the fixed ids match nothing. Fixed ids
+   PLUS a stored sync version therefore means one thing: local storage lost the
+   real workspace and the app is showing the template instead.
+
+   Pushing in that state is the worst thing the app can do. sbPush() prunes
+   every row the payload does not mention, so it would replace a studio's real
+   work with the sample wedding — and gem_claim_sync() cannot stop it, because
+   that guard only refuses a device with NO version at all. A tester lost her
+   clients and timeline exactly this way, and the sample's timeline is what was
+   left in the studio afterwards. */
+function sbLooksReseeded(){
+  if(typeof sbVer!=='function'||sbVer()===null)return false;
+  /* And nothing of its own alongside. Fixed ids next to real work is not a
+     re-seed — it is a backup restored from before this workspace first synced,
+     which someone chose deliberately and must not have pulled out from under
+     them. Only a workspace that is the template and nothing else qualifies. */
+  if(typeof hasOwnWork==='function'&&hasOwnWork())return false;
+  return Object.keys(SAMPLE_IDS).some(function(k){
+    var ids=SAMPLE_IDS[k]||[];
+    return (db[k]||[]).some(function(r){ return ids.indexOf(r.id)>=0; });
+  });
+}
+
 function removeSampleData(){
   var n=0;
   /* Work out which events are going first: sub-events and anything hanging off
@@ -10531,6 +10557,16 @@ function sbPush(opts){
   var org=SB_STATE.org;
   if(!org)return Promise.reject(new Error('No studio yet.'));
   opts=opts||{};
+  /* Checked before sbMigrateIds(), which would rewrite the very ids this reads
+     and destroy the evidence. Nothing about this push is safe to attempt: the
+     prune at the end deletes whatever the payload leaves out, so a workspace
+     that has reverted to the template would take the studio down with it. */
+  if(sbLooksReseeded()){
+    var lost=new Error('This device has lost its saved work and is showing the sample again. '+
+      'Pushing now would replace your studio with the sample — pull instead.');
+    lost.reseeded=true;
+    return Promise.reject(lost);
+  }
   sbMigrateIds();
   saveLocal();
 
@@ -10964,6 +11000,12 @@ function sbSyncDown(){
   return sbCheckRemote().then(function(remote){
     if(remote===null)return false;
     var local=sbVer();
+
+    /* Local storage lost the workspace and the template is standing in for it.
+       The studio still holds the real thing, and there is nothing here worth
+       keeping, so take it back — this is the recovery for the failure above,
+       and it runs whether or not the version numbers differ. */
+    if(sbLooksReseeded())return sbAutoPull('Restoring your work…');
 
     /* Never synced on this device. This is the installed app on a phone, or a
        new browser: the studio is the truth and there is nothing here but the
