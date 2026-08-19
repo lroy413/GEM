@@ -1883,7 +1883,7 @@ td.inv-col{text-align:center;width:1%}
    keeps scrolling visibly underneath rather than ending in a solid slab. */
 .tabbar{display:none;position:fixed;left:0;right:0;bottom:0;z-index:60;
   grid-template-columns:repeat(5,1fr);align-items:stretch;
-  padding:6px 4px calc(6px + env(safe-area-inset-bottom,0px));
+  padding:4px 4px calc(4px + env(safe-area-inset-bottom,0px));
   background:rgba(255,253,251,.84);
   -webkit-backdrop-filter:blur(22px) saturate(1.6);backdrop-filter:blur(22px) saturate(1.6);
   border-top:1px solid var(--line);
@@ -1893,12 +1893,12 @@ td.inv-col{text-align:center;width:1%}
 @supports not ((backdrop-filter:blur(1px)) or (-webkit-backdrop-filter:blur(1px))){
   .tabbar{background:var(--ivory)}
 }
-.tab{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;
-  min-height:46px;padding:5px 2px;border:0;background:none;cursor:pointer;
+.tab{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;
+  min-height:40px;padding:3px 2px;border:0;background:none;cursor:pointer;
   color:var(--muted);font-family:var(--sans);border-radius:12px;
   transition:color .14s var(--ease),background-color .14s var(--ease)}
-.tab-ic{width:21px;height:21px}
-.tab-l{font-size:9.5px;font-weight:600;letter-spacing:.02em;line-height:1}
+.tab-ic{width:19px;height:19px}
+.tab-l{font-size:9px;font-weight:600;letter-spacing:.02em;line-height:1}
 .tab:active{background:var(--pink-100)}
 .tab.active{color:var(--gold-deep)}
 .tab:focus-visible{outline:none;box-shadow:var(--ring)}
@@ -1913,6 +1913,19 @@ td.inv-col{text-align:center;width:1%}
   /* .side-foot is position:sticky;bottom:0 inside a 100vh scroller, so it
      sticks to the SCROLLPORT and padding on the container cannot lift it —
      it has to be told where the bar is. */
+  /* ---- the drawer's own header, on a phone ----
+     263px of an 844px screen went by before the first navigation item: a
+     28px inset, then a 100px wordmark block, then search, then the active
+     event. The wordmark is the part that earns least — you have just opened
+     the app, you know which one it is — so the subtitle goes, the type comes
+     down, and the padding tightens. First item at about 170px instead. */
+  #sidebar{padding-top:12px}
+  .sidebar .brand{padding:8px 10px 12px;margin-bottom:10px;gap:11px}
+  .sidebar .brand .name{font-size:19px;letter-spacing:.14em}
+  .sidebar .brand .sub{display:none}
+  .sidebar .brand .mark{width:34px;height:34px}
+  .sidebar .srch-open{margin-bottom:2px}
+
   /* On a phone the drawer is a full-height panel you scroll anyway, so the
      user chip does not need to follow you down it — and while it was sticky
      it parked on top of the last two tools, which is how Analytics and Tax
