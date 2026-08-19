@@ -20,12 +20,12 @@ runs local-first in the browser and syncs to Supabase when connected.
 | Database | Supabase, project `dqntxdhzcieycifzjzwc` |
 | Which build is live? | Settings → Data & storage → **App version**, or `curl -s https://gemevents.app/ \| grep gem-build` |
 
-Migrations **01–15 are all run** against the live project. **16 is not.**
-
-Run it **before** this build reaches production. It adds `events.photo_path`,
-and the events payload carries that key on every row whether or not anything
-has a cover — so until the column exists, PostgREST refuses *every* events
-push, not only the ones with a photograph. Migration first, then deploy.
+Migrations **01–16 are all run** against the live project — 16 on 19 Aug 2026,
+verifying all true. The database is now ahead of production: `events.photo_path`
+exists and nothing writes to it until this build ships, which is the safe
+direction. Deploying before the migration would not have been: the events
+payload carries that key on every row whether or not the event has a cover, so
+PostgREST would have refused *every* events push.
 
 This build also carries six bug fixes — `BUGS.md` is the report they came from.
 One of them changes what the invoices payload contains: `lead_id` is finally

@@ -6,7 +6,8 @@ on top of the eleven recovered commits described below. Line numbers are
 
 ## Migration status
 
-**`16_event_photos.sql` is the latest migration, and it has not been run.**
+**`16_event_photos.sql` is the latest migration, and it is now run** — 19 Aug
+2026, verifying all true.
 
 It was written in a session whose branch — `claude/gem-deployment-handoff-ojdskr`
 — was pushed and then never merged or opened as a pull request. Eleven commits
@@ -16,12 +17,14 @@ five sync commits (pull automatically where it cannot lose anything, refuse to
 push the sample over a studio, say so when an account has no studio, create the
 studio on sign-in). That branch is merged here.
 
-Run 16 **before this build reaches production**. It adds `events.photo_path`,
-and the events payload now carries that key on every row whether or not the
-event has a cover — so until the column exists, PostgREST refuses *every*
-events push, not only the ones with a photograph.
+It adds `events.photo_path`. Running it first was the gate on this build: the
+events payload carries that key on every row whether or not the event has a
+cover, so until the column existed PostgREST would have refused *every* events
+push, not only the ones with a photograph. That gate is now clear — the column
+exists and nothing writes to it until this build ships.
 
-Migrations 01–15 are run and remain correct. Nothing beyond 16 is needed: every
+Migrations 01–15 were already run and remain correct. Nothing beyond 16 is
+needed: every
 key in every payload `sbPush()` sends was matched against the columns created
 across `01`–`16`, and there is no drift left in either direction. Three columns
 the schema has and the app never fills — `documents.lead_id`,
