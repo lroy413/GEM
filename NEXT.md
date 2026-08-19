@@ -161,6 +161,22 @@ never pulled, which is what stops a fresh install overwriting the studio.
 
 ## 3 · Things worth knowing before you change the UI
 
+- **`1fr` is `minmax(auto, 1fr)`, and that `auto` is the column's MIN-CONTENT
+  width.** Put one `white-space:nowrap` string in a grid cell and that column
+  grows to fit the whole string, pushing every other column off the screen.
+  It happened twice — the week strip and the month calendar — and on a phone it
+  is invisible in testing unless you seed a long task title. Every grid whose
+  cells hold user text wants `repeat(N, minmax(0, 1fr))` and `min-width:0` on
+  the cell. `scripts`-free check: `scratchpad/fit.mjs` walks every screen at
+  360/390/430 and reports anything past the right edge.
+- **`text-overflow:ellipsis` does nothing to a flex container's own text.** It
+  needs the text in a child that can shrink — `.cal-ev` had the label as a bare
+  text node beside the dot, so it never clipped; it just widened.
+- **A month grid cannot carry labels at phone width.** A cell is about fifty
+  pixels, which holds a date and nothing else. Below 700px the chips are hidden,
+  the day shows coloured dots, and `.cal-agenda` lists the same month in full
+  underneath — built in the same loop as the grid so the two cannot drift.
+
 - **Two faces, both inlined, both OFL.** Cormorant Garamond 600 for display,
   Karla 400–800 for everything else. Karla is a VARIABLE file — one 24KB woff2
   covers the whole weight axis, declared `font-weight:400 800` with
