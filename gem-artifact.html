@@ -7154,7 +7154,14 @@ function toursPage(){
                'Priya &amp; Sam and everything attached — vendors, guests, documents and invoices. '+
                'The tours still run on an empty studio, they just have less to point at.')+
       '</div>'
-     :'<p class="set-note" style="margin-top:22px">Sample data removed — everything here is your own.</p>')+
+     /* It used to say "Sample data removed — everything here is your own",
+        which the app cannot actually know. The demo is recognised by a local
+        flag, and the flag does not survive a round trip through Supabase: a
+        pulled copy comes back as ordinary rows and this check goes quiet while
+        Priya & Sam is still sitting on the dashboard. Say only what is true. */
+     :'<p class="set-note" style="margin-top:22px">No sample data on this device. '+
+       'A copy that has been through your studio and back is ordinary data by then — '+
+       'delete it from the client file like anything else.</p>')+
   '</div>';
 }
 var HELP=[
@@ -8512,10 +8519,22 @@ function openClientModal(existing){
     '</div></div>'+
     (creating?'<label class="c-mk"><input type="checkbox" id="c_mkEvent" checked>'+
       '<span>Create the event too — the date above was doing nothing on its own.</span></label>':'')+
-    '<div class="modal-actions"><button class="btn btn-ghost" id="mCancel">Cancel</button>'+
+    /* Delete lives here because the card grid has no row actions — .r-act is
+       always visible in touch mode and put a permanent ✕ on every face — which
+       left anyone working in cards with no way to remove a client at all. The
+       client's own file is the right home for it either way. */
+    '<div class="modal-actions">'+
+      (creating?'':'<button class="btn btn-danger" id="mDeleteClient">Delete client</button><span style="flex:1"></span>')+
+      '<button class="btn btn-ghost" id="mCancel">Cancel</button>'+
       '<button class="btn btn-gold" id="mSave">'+(creating?'Create client':'Save changes')+'</button></div>';
   ov.classList.add('show');
   $('#mCancel').onclick=closeModal;
+  var dc=$('#mDeleteClient');
+  if(dc)dc.onclick=function(){
+    /* deleteRecord asks for confirmation and handles the cascade: the events
+       keep their own records but lose the client, and the open file closes. */
+    closeModal(); deleteRecord('lead',l.id);
+  };
   $('#mSave').onclick=function(){
     var n=$('#c_names').value.trim(); if(!n){$('#c_names').focus();return;}
     /* Held before the write so the rename can be followed through to the

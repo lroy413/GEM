@@ -23,6 +23,11 @@ runs local-first in the browser and syncs to Supabase when connected.
 Migrations **01–16 are all run** against the live project — 16 on 19 Aug 2026,
 verifying all true. **17 is not.**
 
+**Migrations can be run before you ship them.** Postgres is installable in the
+dev container; a shim for `auth.uid()`, `storage.foldername()` and the three
+Supabase roles is enough to run `01`–`18` end to end and exercise the functions.
+That is how 17 and 18 were checked. Do this rather than reasoning about SQL.
+
 Run `17_sync_two_phase.sql` before the build that goes with it. It splits the
 sync claim in two: the studio's version now moves only when a push *finishes*,
 where it used to move before a single row was written. The client falls back to
@@ -141,6 +146,13 @@ never pulled, which is what stops a fresh install overwriting the studio.
 
 ## 3 · Things worth knowing before you change the UI
 
+- **The sample flag does not survive a round trip.** It is a local boolean with
+  no column behind it, so a demo record pulled back from Supabase arrives as
+  ordinary data: `hasSampleData()` goes quiet, the banner stops appearing and
+  Remove finds nothing, while Priya & Sam is still on the dashboard. Migration
+  18 gives it a column and a check constraint that keeps it false, which makes
+  it a tripwire rather than a state. The thing that actually keeps demo content
+  out of a studio is the client not sending it.
 - **A push claims the studio, it does not finish it.** `sbBegin()` takes a
   lease and reports the version; `sbCommit()` moves it once the run is done;
   `sbAbort()` hands it back on failure. Never make the version move earlier
