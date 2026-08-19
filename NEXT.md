@@ -164,10 +164,16 @@ never pulled, which is what stops a fresh install overwriting the studio.
   `sbAbort()` hands it back on failure. Never make the version move earlier
   than the last write — that is what invited every other device to come and
   fetch a half-written studio.
-- **Deletion is inferred from absence, and that is the remaining hazard.**
-  `sbPrune()` removes whatever the payload left out. It can no longer empty a
-  table outside the manual push, but until rows carry a `deleted_at` the wire
-  format still cannot tell "deleted" from "this device never had it".
+- **Deletion is explicit, and diffed against what THIS DEVICE last sent.**
+  `gem-sb-sent` holds the id list per table from the last successful push; the
+  rows retired are the ones that list holds and the payload no longer does.
+  That is a different set from "everything the payload lacks", and the
+  difference is the whole incident: a device holding a partial workspace lacks
+  the other planner's client, and prune-by-difference read that as an
+  instruction to delete it. Prune survives only behind the manual
+  "make Supabase match this device" button, which is a person asking for a
+  mirror. A first push after upgrading retires nothing, because nothing is
+  recorded yet.
 - **A detail page is one gapped column** (`.detail-col`), not a margin per
   block. `evSection()` carries no margin of its own because in the event
   workspace `.ev-col` spaces it; dropped loose into a page it sat flush.
