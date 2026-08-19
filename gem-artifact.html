@@ -1174,6 +1174,10 @@ tbody tr:hover{background:var(--pink-50)}
 }
 
 /* --- framing a photograph: drag the picture under a fixed circle --- */
+/* A wide frame needs the room a square did not: the modal grows for it. */
+.modal-wide-crop{max-width:600px}
+.crop-stage.wide{max-width:100%}
+.crop-stage.wide .crop-ring::after{border-radius:var(--radius);inset:0}
 .crop-stage{position:relative;width:100%;max-width:320px;aspect-ratio:1;margin:0 auto;
   border-radius:var(--radius);overflow:hidden;background:#241B1F;
   touch-action:none;user-select:none;-webkit-user-select:none;cursor:grab}
@@ -1186,6 +1190,7 @@ tbody tr:hover{background:var(--pink-50)}
   border:2px solid rgba(255,255,255,.92);box-shadow:0 0 0 9999px rgba(22,15,18,.66)}
 .crop-stage:focus-visible{outline:none;box-shadow:var(--ring)}
 .crop-zoom{display:flex;align-items:center;gap:12px;max-width:320px;margin:16px auto 0}
+.modal-wide-crop .crop-zoom,.modal-wide-crop .crop-hint{max-width:100%}
 .crop-zoom input[type=range]{flex:1;accent-color:var(--gold);height:22px;cursor:pointer}
 .cz-i{color:var(--ink-soft);line-height:1;font-size:15px;font-weight:600;width:14px;text-align:center;
   user-select:none}
@@ -1209,7 +1214,17 @@ tbody tr:hover{background:var(--pink-50)}
 .ev-cards{display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:16px}
 .ev-card{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);overflow:hidden;box-shadow:var(--shadow-sm);cursor:pointer;transition:transform .14s,box-shadow .14s}
 .ev-card:hover{transform:translateY(-3px);box-shadow:var(--shadow)}
-.ev-card .banner{height:78px;background:var(--gold-grad);position:relative}
+/* Tall enough to be a photograph rather than a stripe. The gold stays as the
+   answer when there is no cover — an honest wash, not a placeholder. */
+.ev-card .banner{height:78px;background:var(--gold-grad);position:relative;
+  background-size:cover;background-position:center}
+.ev-card .banner.has-photo{height:152px}
+.ev-card .banner.has-photo::after{content:"";position:absolute;inset:0;
+  background:linear-gradient(180deg,rgba(18,12,15,0) 40%,rgba(18,12,15,.55) 100%)}
+.ev-card .banner.has-photo .d,
+.ev-card .banner.has-photo .ev-blk,
+.ev-card .banner.has-photo .r-acts{z-index:2}
+.ev-card .banner.has-photo .d{background:rgba(0,0,0,.3)}
 .ev-card .banner .d{position:absolute;bottom:10px;left:16px;color:#fff;font-size:12px;font-weight:600;background:rgba(0,0,0,.12);padding:3px 10px;border-radius:20px}
 .ev-card .body{padding:16px}
 .ev-card .body h4{font-family:var(--serif);font-size:21px;font-weight:600}
@@ -1380,10 +1395,28 @@ td.inv-col{text-align:center;width:1%}
     color-mix(in srgb,var(--tint) 6%,#fff) 46%,var(--card) 100%)}
 .hero>*{position:relative;z-index:1}
 .hero-img{position:absolute;inset:0;z-index:0;background-size:cover;background-position:center}
+/* With a picture the card IS the picture: full bleed, taller, and the type on
+   a scrim at the foot rather than a white wash across the left two thirds that
+   left the photograph as a strip down one side. */
+.hero.has-photo{min-height:310px;align-items:flex-end;border-color:transparent}
 .hero.has-photo .hero-img::after{content:"";position:absolute;inset:0;
-  background:linear-gradient(100deg,rgba(255,255,255,.96) 0%,rgba(255,255,255,.9) 38%,
-    rgba(255,255,255,.35) 68%,rgba(255,255,255,.05) 100%)}
-.hero.has-photo::before{opacity:.5}
+  background:linear-gradient(180deg,rgba(18,12,15,0) 32%,rgba(18,12,15,.34) 60%,rgba(18,12,15,.76) 100%)}
+.hero.has-photo::before{opacity:0}
+.hero.has-photo .hero-body{padding:0 0 26px 28px}
+.hero.has-photo .hero-k{color:rgba(255,255,255,.78)}
+.hero.has-photo .hero-type,
+.hero.has-photo .hero-t,
+.hero.has-photo .hero-t:hover{color:#fff}
+.hero.has-photo .hero-m{color:rgba(255,255,255,.9)}
+.hero.has-photo .hr-i{background:rgba(255,255,255,.16);border-color:rgba(255,255,255,.3);color:#fff}
+.hero.has-photo .hr-i b{color:#fff}
+.hero.has-photo .hero-prog span{color:rgba(255,255,255,.86)}
+.hero.has-photo .hero-prog .bar{background:rgba(255,255,255,.28)}
+.hero.has-photo .hero-prog .bar i{background:#fff}
+.hero.has-photo .hero-side{border-left-color:rgba(255,255,255,.24);background:rgba(18,12,15,.3);
+  align-self:stretch}
+.hero.has-photo .hero-days,.hero.has-photo .hero-dl{color:#fff}
+@media (max-width:700px){ .hero.has-photo{min-height:250px} }
 .hero-body{flex:1;min-width:0;padding:24px 0 22px 26px;display:flex;flex-direction:column;gap:7px}
 .hero-k{display:flex;align-items:center;gap:9px;font-size:9.5px;letter-spacing:1.9px;
   text-transform:uppercase;color:var(--muted);font-weight:600}
@@ -4392,7 +4425,10 @@ function viewEvents(){
     /* Row actions live in the banner, not beside the title. Inline, a long
        client name wrapped around them and the card grew a second row — the
        grid then sat at two different heights depending on the name. */
-    return '<div class="ev-card'+(isSampleEvent(e)?' is-sample':'')+'" data-ev="'+e.id+'"><div class="banner">'+rowActions('event',e.id)+
+    var cov=evPhoto(e);
+    return '<div class="ev-card'+(isSampleEvent(e)?' is-sample':'')+'" data-ev="'+e.id+'">'+
+      '<div class="banner'+(cov?' has-photo':'')+'"'+
+        (cov?' style="background-image:url('+cov+')"':'')+'>'+rowActions('event',e.id)+
       (isSampleEvent(e)?'<span class="samp-tag card">Sample</span>':'')+
       '<span class="d">'+daysAway(e.date)+' days · '+fmtDate(e.date)+'</span>'+
       (kids.length?'<span class="ev-blk">'+(kids.length+1)+' events</span>':'')+'</div>'+
@@ -4431,16 +4467,22 @@ function wireEvents(){
     var f=cin.files&&cin.files[0]; cin.value='';
     if(!f||!ev)return;
     if(!/^image\//.test(f.type)){toast('Choose an image file.');return;}
-    shrinkImage(f,1200,function(dataUrl){
-      if(!dataUrl){toast('Could not read that image.');return;}
-      var prev=ev.photo, prevPath=ev.photoPath;
-      /* Clearing photoPath is what makes the new picture upload: mediaUpload()
-         only sends records that have pixels and no path yet, so leaving the
-         old key here would keep the old object on every other device. */
-      ev.photo=dataUrl; ev.photoPath=null;
-      if(!save()){ ev.photo=prev; ev.photoPath=prevPath; }
-      render();
-    });
+    /* The same framing the client photo gets, in the shape this one is going
+       to be used at: 16:9 fills the dashboard hero and crops sensibly into the
+       event card's banner. Scaled up beforehand it was whatever the camera
+       happened to give, and object-fit chose the crop. */
+    openPhotoCrop(f,{aspect:16/9,out:1440,
+                     title:'Frame the cover',
+                     sub:'This fills the top of the dashboard and the card for '+ev.title+'.'},
+      function(dataUrl){
+        var prev=ev.photo, prevPath=ev.photoPath;
+        /* Clearing photoPath is what makes the new picture upload: mediaUpload()
+           only sends records that have pixels and no path yet, so leaving the
+           old key here would keep the old object on every other device. */
+        ev.photo=dataUrl; ev.photoPath=null;
+        if(!save()){ ev.photo=prev; ev.photoPath=prevPath; return; }
+        closeModal(); render(); toast('Cover updated ✦');
+      });
   };
   if(clbl)clbl.onkeydown=function(e){
     if((e.key==='Enter'||e.key===' ')&&cin){ e.preventDefault(); cin.click(); }
@@ -5795,6 +5837,12 @@ function shrinkImage(file,maxDim,cb){
 function openPhotoCrop(file,opts,done){
   opts=opts||{};
   var OUT=opts.out||512;
+  /* 1 is a face — a circle to frame it by and a square to export, because the
+     avatar, the card tile and the dashboard hero each mask that square their
+     own way. A wider ratio is a cover: the same drag-and-zoom, a rectangular
+     frame, and an export shaped like the place it is going. */
+  var AR=opts.aspect||1;
+  var round=AR===1;
   /* Bound the working image before it is ever decoded into the page: a modern
      phone camera file is 4000px wide and there is no reason to hold that. */
   shrinkImage(file,1400,function(url){
@@ -5806,10 +5854,11 @@ function openPhotoCrop(file,opts,done){
   });
 
   function cropStage(img,url){
-    md.className='modal';
+    md.className='modal'+(round?'':' modal-wide-crop');
     md.innerHTML='<h3>'+esc(opts.title||'Frame the photo')+'</h3>'+
       '<p class="sub">'+esc(opts.sub||'Drag the picture to move it, and zoom to fill the circle.')+'</p>'+
-      '<div class="crop-stage" id="cropStage" tabindex="0" role="application" '+
+      '<div class="crop-stage'+(round?'':' wide')+'" id="cropStage" tabindex="0" role="application" '+
+        (round?'':'style="aspect-ratio:'+AR+'" ')+
         'aria-label="Drag to reposition the photograph, arrow keys to nudge">'+
         '<img id="cropImg" alt="" draggable="false">'+
         '<div class="crop-ring"></div>'+
@@ -5819,7 +5868,9 @@ function openPhotoCrop(file,opts,done){
         '<input type="range" id="cropZoom" min="1" max="3" step="0.01" value="1" aria-label="Zoom">'+
         '<span class="cz-i lg" aria-hidden="true">+</span>'+
       '</div>'+
-      '<div class="crop-hint">Everything inside the circle is what people will see.</div>'+
+      '<div class="crop-hint">'+(round
+        ?'Everything inside the circle is what people will see.'
+        :'What sits inside the frame is what fills the card.')+'</div>'+
       '<div class="modal-actions">'+
         '<button class="btn btn-ghost" id="cropCancel">Cancel</button>'+
         '<button class="btn btn-gold" id="cropSave">Use photo</button>'+
@@ -5830,18 +5881,18 @@ function openPhotoCrop(file,opts,done){
     var nw=img.naturalWidth||img.width, nh=img.naturalHeight||img.height;
     el.src=url; el.style.width=nw+'px'; el.style.height=nh+'px';
 
-    /* S is measured, not assumed: the stage is a percentage of a modal that is
-       itself a percentage of the viewport, so it is a different number on a
-       phone than on a desktop and the export maths depends on it. */
-    var S=stage.clientWidth||320;
-    /* At zoom 1 the shorter side exactly fills the stage, so there is never a
-       gap to drag into — the picture always covers. */
-    var kFit=S/Math.min(nw,nh), k=kFit, ox=0, oy=0;
+    /* W and H are measured, not assumed: the stage is a percentage of a modal
+       that is itself a percentage of the viewport, so they differ between a
+       phone and a desktop and the export maths depends on both. */
+    var W=stage.clientWidth||320, H=stage.clientHeight||Math.round(W/AR);
+    /* At zoom 1 the picture exactly covers the frame — whichever of its sides
+       runs out first — so there is never a gap to drag into. */
+    var kFit=Math.max(W/nw,H/nh), k=kFit, ox=0, oy=0;
 
     function clamp(){
       var dw=nw*k, dh=nh*k;
-      ox=Math.min(0,Math.max(S-dw,ox));
-      oy=Math.min(0,Math.max(S-dh,oy));
+      ox=Math.min(0,Math.max(W-dw,ox));
+      oy=Math.min(0,Math.max(H-dh,oy));
     }
     function paint(){
       clamp();
@@ -5849,16 +5900,16 @@ function openPhotoCrop(file,opts,done){
     }
     /* Start centred — the middle of a photograph is where the subject usually
        is, and it is the framing someone is least surprised by. */
-    ox=(S-nw*k)/2; oy=(S-nh*k)/2; paint();
+    ox=(W-nw*k)/2; oy=(H-nh*k)/2; paint();
 
     function zoomTo(z){
       var k2=kFit*Math.max(1,Math.min(3,z));
       if(k2===k)return;
-      /* Hold the centre of the circle still. Zooming from the top-left corner
+      /* Hold the centre of the frame still. Zooming from the top-left corner
          instead would walk the subject out of frame every time. */
       var r=k2/k;
-      ox=S/2-(S/2-ox)*r;
-      oy=S/2-(S/2-oy)*r;
+      ox=W/2-(W/2-ox)*r;
+      oy=H/2-(H/2-oy)*r;
       k=k2; paint();
     }
     zin.oninput=function(){ zoomTo(Number(zin.value)||1); };
@@ -5899,11 +5950,11 @@ function openPhotoCrop(file,opts,done){
 
     $('#cropCancel').onclick=closeModal;
     $('#cropSave').onclick=function(){
-      /* The visible square, back in the source image's own coordinates. */
+      /* The visible frame, back in the source image's own coordinates. */
       var cv=document.createElement('canvas');
-      cv.width=OUT; cv.height=OUT;
+      cv.width=OUT; cv.height=Math.round(OUT/AR);
       var ctx=cv.getContext('2d');
-      ctx.drawImage(img,(-ox)/k,(-oy)/k,S/k,S/k,0,0,OUT,OUT);
+      ctx.drawImage(img,(-ox)/k,(-oy)/k,W/k,H/k,0,0,cv.width,cv.height);
       var out=null;
       try{ out=cv.toDataURL('image/jpeg',0.86); }catch(err){ out=null; }
       if(!out){ toast('Could not save that image.'); return; }
