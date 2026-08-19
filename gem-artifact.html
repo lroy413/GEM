@@ -1096,6 +1096,73 @@ tbody tr:hover{background:var(--pink-50)}
 }
 
 /* event chooser cards */
+/* --- clients as cards: the same records, read by face rather than by row --- */
+.cl-head{display:flex;align-items:center;justify-content:space-between;gap:14px;flex-wrap:wrap}
+.cl-head .seg{margin-bottom:16px}
+.cl-count{font-size:12px;color:var(--muted);margin-bottom:16px}
+.cl-cards{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:16px}
+.cl-card{position:relative;background:var(--card);border:1px solid var(--line);border-radius:var(--radius);
+  overflow:hidden;box-shadow:var(--shadow-sm);cursor:pointer;
+  transition:transform .16s var(--ease),box-shadow .16s var(--ease),border-color .16s var(--ease)}
+.cl-card:hover{transform:translateY(-3px);box-shadow:var(--shadow);border-color:var(--gold-line)}
+.cl-card:focus-visible{outline:none;box-shadow:var(--ring)}
+.cl-face{position:relative;aspect-ratio:1;overflow:hidden;background:var(--pink-100)}
+.cl-face img{width:100%;height:100%;object-fit:cover;display:block}
+/* No photograph is a normal state, not a missing one, so it gets a finished
+   tile rather than a grey box: the couple's initials on a wash of the house
+   palette. Assigned by position for the same reason EVENT_TINTS is — a hash
+   collides, and two files side by side in the same colour looks like a bug. */
+/* A medallion on a wash, rather than initials on a slab of gold: it echoes the
+   circle you framed the photograph in, and it leaves the tile quiet enough
+   that a grid of them does not shout. */
+.cl-mono{width:100%;height:100%;display:flex;align-items:center;justify-content:center}
+.cl-mono i{width:47%;aspect-ratio:1;border-radius:50%;display:flex;align-items:center;justify-content:center;
+  font-family:var(--serif);font-style:normal;font-size:clamp(19px,4.6vw,28px);font-weight:600;
+  letter-spacing:.03em;color:#fff;
+  box-shadow:0 8px 20px rgba(59,46,51,.16),inset 0 1px 0 rgba(255,255,255,.22)}
+/* A scrim only under the chip, so a pale photograph cannot swallow the date. */
+/* Only over a photograph: a scrim on the pale wash would be a grey smudge. */
+.cl-face.has-photo::after{content:"";position:absolute;left:0;right:0;bottom:0;height:52%;pointer-events:none;
+  background:linear-gradient(180deg,rgba(28,20,24,0),rgba(28,20,24,.45))}
+.cl-when{position:absolute;left:12px;bottom:10px;z-index:1;font-size:11px;font-weight:600;
+  letter-spacing:.04em;text-transform:uppercase;color:var(--ink-soft)}
+.cl-face.has-photo .cl-when{color:#fff;text-shadow:0 1px 3px rgba(0,0,0,.45)}
+.cl-samp{position:absolute;top:10px;left:11px;z-index:2}
+.cl-body{padding:14px 15px 15px}
+.cl-name{font-family:var(--serif);font-size:18px;font-weight:600;letter-spacing:-.01em;line-height:1.2;
+  overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.cl-sub{font-size:11px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);margin-top:5px}
+.cl-foot{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-top:11px;
+  padding-top:11px;border-top:1px solid var(--line)}
+.cl-foot .val{font-size:13px}
+.cl-sub{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+@media (max-width:560px){
+  .cl-cards{grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:12px}
+  .cl-name{font-size:16px}
+  /* Two cards to a phone screen leaves no room for "Wedding · " as well as
+     the date, and the date is the half that earns its place. */
+  .cl-type{display:none}
+  .cl-body{padding:12px 13px 13px}
+}
+
+/* --- framing a photograph: drag the picture under a fixed circle --- */
+.crop-stage{position:relative;width:100%;max-width:320px;aspect-ratio:1;margin:0 auto;
+  border-radius:var(--radius);overflow:hidden;background:#241B1F;
+  touch-action:none;user-select:none;-webkit-user-select:none;cursor:grab}
+.crop-stage.dragging{cursor:grabbing}
+.crop-stage img{position:absolute;top:0;left:0;transform-origin:0 0;-webkit-user-drag:none;display:block}
+.crop-ring{position:absolute;inset:0;pointer-events:none}
+/* One element does both jobs: the ring itself, and — through a shadow larger
+   than the stage — the dimming of everything outside it. */
+.crop-ring::after{content:"";position:absolute;inset:8px;border-radius:50%;
+  border:2px solid rgba(255,255,255,.92);box-shadow:0 0 0 9999px rgba(22,15,18,.66)}
+.crop-stage:focus-visible{outline:none;box-shadow:var(--ring)}
+.crop-zoom{display:flex;align-items:center;gap:12px;max-width:320px;margin:16px auto 0}
+.crop-zoom input[type=range]{flex:1;accent-color:var(--gold);height:22px;cursor:pointer}
+.cz-i{color:var(--ink-soft);line-height:1;font-size:15px;font-weight:600;width:14px;text-align:center;
+  user-select:none}
+.cz-i.lg{font-size:19px}
+.crop-hint{max-width:320px;margin:10px auto 0;font-size:11.5px;color:var(--muted);text-align:center;line-height:1.5}
 .ev-cards{display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:16px}
 .ev-card{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);overflow:hidden;box-shadow:var(--shadow-sm);cursor:pointer;transition:transform .14s,box-shadow .14s}
 .ev-card:hover{transform:translateY(-3px);box-shadow:var(--shadow)}
@@ -3453,6 +3520,7 @@ function render(){
   else if(state.view==='clients'){
     el.innerHTML= state.clientId?viewClientDetail(state.clientId):viewClients();
     if(state.clientId){wireClientDetail();wireSampleBanner();}
+    else wireClients();
   }
   else if(state.view==='inquiries'){ el.innerHTML=viewInquiries(); wireInquiries(); }
   else if(state.view==='questionnaires'){ el.innerHTML=viewQuestionnaires(); wireQuestionnaires(); }
@@ -3925,13 +3993,91 @@ function wireBoard(){
 }
 
 /* --- Clients --- */
+/* "Ava & Julian" is two people, so two letters. Split on the ampersand as well
+   as on spaces, or every couple in the grid reads AJ-less and identical. */
+function leadInitials(l){
+  return String((l&&l.names)||'').split(/[\s&]+/).filter(Boolean).slice(0,2)
+    .map(function(w){return w[0];}).join('').toUpperCase()||'—';
+}
+/* Washes for a client with no photograph, in the house palette rather than a
+   rainbow: champagne, blush, sage, slate. By position for the same reason
+   EVENT_TINTS is — a hash collides, and two files side by side in the same
+   colour reads as a bug rather than as a choice. */
+/* [tile wash, medallion]. Both stops of every medallion clear 4.6:1 against
+   the white initials — the light-to-dark gradient this started as put white
+   text on #D9B978 at the top, which is 1.9:1 and unreadable. */
+var LEAD_WASHES=[
+  ['#F7F0E1','linear-gradient(145deg,#8D6A22,#6F5319)'],
+  ['#FBEFF1','linear-gradient(145deg,#9E6470,#7E4C57)'],
+  ['#EFF3EC','linear-gradient(145deg,#5E7A55,#47603F)'],
+  ['#EFF1F6','linear-gradient(145deg,#5C6C80,#455465)']
+];
+function leadWash(id){
+  var ids=db.leads.map(function(x){return x.id;}).sort();
+  var i=ids.indexOf(id);
+  return LEAD_WASHES[(i<0?0:i)%LEAD_WASHES.length];
+}
+function leadsByDate(){
+  return db.leads.slice().sort(function(a,b){return a.date<b.date?-1:1;});
+}
+function clientViewMode(){ return prefs().clientView==='cards'?'cards':'list'; }
+
 function viewClients(){
+  var mode=clientViewMode(), rows=leadsByDate();
+  var head='<div class="cl-head">'+
+    '<div class="seg" role="tablist" aria-label="How to show your clients">'+
+      [['list','List'],['cards','Cards']].map(function(m){
+        return '<button class="seg-b'+(mode===m[0]?' on':'')+'" data-clientview="'+m[0]+'" '+
+          'role="tab" aria-selected="'+(mode===m[0])+'">'+m[1]+'</button>';
+      }).join('')+
+    '</div>'+
+    '<div class="cl-count">'+rows.length+' client'+(rows.length===1?'':'s')+'</div>'+
+  '</div>';
+  if(!rows.length)return head+emptyState('No clients yet.');
+  return head+(mode==='cards'?clientCards(rows):clientTable(rows));
+}
+function clientTable(rows){
   return '<div class="card"><div class="tbl-wrap"><table><thead><tr><th>Client</th><th>Type</th><th>Event Date</th><th>Venue</th><th>Stage</th><th style="text-align:right">Value</th></tr></thead><tbody>'+
-    db.leads.slice().sort(function(a,b){return a.date<b.date?-1:1;}).map(function(l){var s=stageOf(l.stage);
+    rows.map(function(l){var s=stageOf(l.stage);
       return '<tr class="row-link" data-client="'+esc(l.id)+'" tabindex="0" role="link"><td><b>'+esc(l.names)+'</b>'+
       (isSampleLead(l)?' <span class="samp-tag mini">Sample</span>':'')+'</td><td>'+esc(l.type)+'</td><td>'+fmtDate(l.date)+'</td><td>'+esc(l.venue||'—')+'</td>'+
       '<td><span class="pill" style="background:'+s.color+'22;color:'+s.color+'">'+s.name+'</span></td><td style="text-align:right"><span class="val">'+money(l.value)+'</span>'+rowActions('lead',l.id)+'</td></tr>';
     }).join('')+'</tbody></table></div></div>';
+}
+function clientCards(rows){
+  return '<div class="cl-cards">'+rows.map(function(l){
+    var s=stageOf(l.stage), away=daysAway(l.date);
+    return '<div class="cl-card" data-client="'+esc(l.id)+'" tabindex="0" role="link" '+
+      'aria-label="'+esc(l.names)+', '+esc(fmtDate(l.date))+'">'+
+      '<div class="cl-face'+(l.photo?' has-photo':'')+'">'+
+        (l.photo
+          ? '<img src="'+esc(l.photo)+'" alt="">'
+          : (function(w){ return '<div class="cl-mono" style="background:'+w[0]+'">'+
+                 '<i style="background:'+w[1]+'">'+esc(leadInitials(l))+'</i></div>'; })(leadWash(l.id)))+
+        /* No edit/delete here on purpose. In touch mode .r-act is always
+           visible, which put a permanent ✕ on every face in the grid — it
+           reads as "close this" and sits on top of the one thing the card is
+           for, which is opening the file. Editing lives inside. */
+        (isSampleLead(l)?'<span class="samp-tag mini cl-samp">Sample</span>':'')+
+        '<span class="cl-when">'+(l.date?(away>=0?away+' days away':'Completed'):'No date yet')+'</span>'+
+      '</div>'+
+      '<div class="cl-body">'+
+        '<div class="cl-name">'+esc(l.names)+'</div>'+
+        '<div class="cl-sub"><span class="cl-type">'+esc(l.type||'Event')+' · </span>'+fmtDate(l.date)+'</div>'+
+        '<div class="cl-foot">'+
+          '<span class="pill" style="background:'+s.color+'22;color:'+s.color+'">'+s.name+'</span>'+
+          '<span class="val">'+money(l.value)+'</span>'+
+        '</div>'+
+      '</div>'+
+    '</div>';
+  }).join('')+'</div>';
+}
+function wireClients(){
+  document.querySelectorAll('[data-clientview]').forEach(function(b){
+    b.onclick=function(){
+      var q=prefs(); q.clientView=b.dataset.clientview; savePrefs(); render();
+    };
+  });
 }
 
 /* --- Client detail --- */
@@ -3949,7 +4095,7 @@ function viewClientDetail(id){
   var owed=invs.filter(function(x){return x.status==='due'||x.status==='over';}).reduce(function(a,x){return a+x.amount;},0);
   var away=daysAway(l.date);
 
-  var initials=l.names.split(/[\s&]+/).filter(Boolean).slice(0,2).map(function(w){return w[0];}).join('').toUpperCase();
+  var initials=leadInitials(l);
   return '<button class="back-link" data-back="clients">‹ All clients</button>'+
   sampleBanner()+
   '<div class="detail-head">'+
@@ -5461,6 +5607,142 @@ function shrinkImage(file,maxDim,cb){
   fr.onerror=function(){ cb(null); };
   fr.readAsDataURL(file);
 }
+/* ============================================================
+ * Framing a photograph
+ *
+ * shrinkImage() scales a picture down and keeps whatever shape it arrived in,
+ * which is right for a mood board and wrong for a face: a client photo is
+ * displayed through a circle on the file header and a square in the card grid,
+ * so a landscape group shot got cropped to its middle by object-fit and the
+ * couple ended up as two shoulders. There was no way to say otherwise.
+ *
+ * Here the circle is fixed and the picture moves under it — drag, or zoom with
+ * the slider, the wheel, or the arrow keys. What is exported is the SQUARE the
+ * circle sits in, not the circle: the same pixels serve the round avatar, the
+ * card tile and, through evPhoto(), the dashboard hero, and each masks the
+ * square its own way. The circle is the guide, not the crop.
+ * ============================================================ */
+function openPhotoCrop(file,opts,done){
+  opts=opts||{};
+  var OUT=opts.out||512;
+  /* Bound the working image before it is ever decoded into the page: a modern
+     phone camera file is 4000px wide and there is no reason to hold that. */
+  shrinkImage(file,1400,function(url){
+    if(!url){ toast('Could not read that image.'); return; }
+    var img=new Image();
+    img.onerror=function(){ toast('Could not read that image.'); };
+    img.onload=function(){ cropStage(img,url); };
+    img.src=url;
+  });
+
+  function cropStage(img,url){
+    md.className='modal';
+    md.innerHTML='<h3>'+esc(opts.title||'Frame the photo')+'</h3>'+
+      '<p class="sub">'+esc(opts.sub||'Drag the picture to move it, and zoom to fill the circle.')+'</p>'+
+      '<div class="crop-stage" id="cropStage" tabindex="0" role="application" '+
+        'aria-label="Drag to reposition the photograph, arrow keys to nudge">'+
+        '<img id="cropImg" alt="" draggable="false">'+
+        '<div class="crop-ring"></div>'+
+      '</div>'+
+      '<div class="crop-zoom">'+
+        '<span class="cz-i" aria-hidden="true">−</span>'+
+        '<input type="range" id="cropZoom" min="1" max="3" step="0.01" value="1" aria-label="Zoom">'+
+        '<span class="cz-i lg" aria-hidden="true">+</span>'+
+      '</div>'+
+      '<div class="crop-hint">Everything inside the circle is what people will see.</div>'+
+      '<div class="modal-actions">'+
+        '<button class="btn btn-ghost" id="cropCancel">Cancel</button>'+
+        '<button class="btn btn-gold" id="cropSave">Use photo</button>'+
+      '</div>';
+    ov.classList.add('show');
+
+    var stage=$('#cropStage'), el=$('#cropImg'), zin=$('#cropZoom');
+    var nw=img.naturalWidth||img.width, nh=img.naturalHeight||img.height;
+    el.src=url; el.style.width=nw+'px'; el.style.height=nh+'px';
+
+    /* S is measured, not assumed: the stage is a percentage of a modal that is
+       itself a percentage of the viewport, so it is a different number on a
+       phone than on a desktop and the export maths depends on it. */
+    var S=stage.clientWidth||320;
+    /* At zoom 1 the shorter side exactly fills the stage, so there is never a
+       gap to drag into — the picture always covers. */
+    var kFit=S/Math.min(nw,nh), k=kFit, ox=0, oy=0;
+
+    function clamp(){
+      var dw=nw*k, dh=nh*k;
+      ox=Math.min(0,Math.max(S-dw,ox));
+      oy=Math.min(0,Math.max(S-dh,oy));
+    }
+    function paint(){
+      clamp();
+      el.style.transform='translate('+ox+'px,'+oy+'px) scale('+k+')';
+    }
+    /* Start centred — the middle of a photograph is where the subject usually
+       is, and it is the framing someone is least surprised by. */
+    ox=(S-nw*k)/2; oy=(S-nh*k)/2; paint();
+
+    function zoomTo(z){
+      var k2=kFit*Math.max(1,Math.min(3,z));
+      if(k2===k)return;
+      /* Hold the centre of the circle still. Zooming from the top-left corner
+         instead would walk the subject out of frame every time. */
+      var r=k2/k;
+      ox=S/2-(S/2-ox)*r;
+      oy=S/2-(S/2-oy)*r;
+      k=k2; paint();
+    }
+    zin.oninput=function(){ zoomTo(Number(zin.value)||1); };
+
+    var drag=null;
+    stage.addEventListener('pointerdown',function(e){
+      drag={x:e.clientX,y:e.clientY,ox:ox,oy:oy};
+      stage.classList.add('dragging');
+      try{ stage.setPointerCapture(e.pointerId); }catch(err){}
+    });
+    stage.addEventListener('pointermove',function(e){
+      if(!drag)return;
+      e.preventDefault();
+      ox=drag.ox+(e.clientX-drag.x); oy=drag.oy+(e.clientY-drag.y);
+      paint();
+    });
+    function endDrag(){ drag=null; stage.classList.remove('dragging'); }
+    stage.addEventListener('pointerup',endDrag);
+    stage.addEventListener('pointercancel',endDrag);
+    stage.addEventListener('wheel',function(e){
+      e.preventDefault();
+      var z=(k/kFit)*(e.deltaY>0?0.94:1.06);
+      zin.value=String(Math.max(1,Math.min(3,z)));
+      zoomTo(z);
+    },{passive:false});
+    /* A trackpad is not the only way in. Arrows nudge, +/- zoom. */
+    stage.addEventListener('keydown',function(e){
+      var step=e.shiftKey?20:6, used=true;
+      if(e.key==='ArrowLeft')ox-=step;
+      else if(e.key==='ArrowRight')ox+=step;
+      else if(e.key==='ArrowUp')oy-=step;
+      else if(e.key==='ArrowDown')oy+=step;
+      else if(e.key==='+'||e.key==='='){ zin.value=String(Math.min(3,(k/kFit)+0.1)); zoomTo(Number(zin.value)); }
+      else if(e.key==='-'||e.key==='_'){ zin.value=String(Math.max(1,(k/kFit)-0.1)); zoomTo(Number(zin.value)); }
+      else used=false;
+      if(used){ e.preventDefault(); paint(); }
+    });
+
+    $('#cropCancel').onclick=closeModal;
+    $('#cropSave').onclick=function(){
+      /* The visible square, back in the source image's own coordinates. */
+      var cv=document.createElement('canvas');
+      cv.width=OUT; cv.height=OUT;
+      var ctx=cv.getContext('2d');
+      ctx.drawImage(img,(-ox)/k,(-oy)/k,S/k,S/k,0,0,OUT,OUT);
+      var out=null;
+      try{ out=cv.toDataURL('image/jpeg',0.86); }catch(err){ out=null; }
+      if(!out){ toast('Could not save that image.'); return; }
+      done(out);
+    };
+    stage.focus();
+  }
+}
+
 function wireBoardDetail(){
   var b=findBoard(state.boardId); if(!b)return;
   var input=$('#imgInput'), dz=$('#dropzone');
@@ -5842,12 +6124,19 @@ function wireClientDetail(){
     var f=pin.files&&pin.files[0]; pin.value='';
     if(!f)return;
     if(!/^image\//.test(f.type)){toast('Choose an image file.');return;}
-    shrinkImage(f,320,function(dataUrl){
-      if(!dataUrl){toast('Could not read that image.');return;}
-      var prev=l.photo; l.photo=dataUrl;
-      if(!save()){ l.photo=prev; }
-      render();
-    });
+    openPhotoCrop(f,{title:'Frame the photo',
+                     sub:'This is how '+l.names+' appears on their file and in the card grid.'},
+      function(dataUrl){
+        var prev=l.photo, prevPath=l.photoPath;
+        /* Clearing photoPath is what makes the new picture upload. mediaUpload()
+           only sends records that have pixels and no path yet, so leaving the
+           old key here would keep the OLD photograph on every other device —
+           the same trap the event cover already had a comment about, which this
+           handler never got. */
+        l.photo=dataUrl; l.photoPath=null;
+        if(!save()){ l.photo=prev; l.photoPath=prevPath; return; }
+        closeModal(); render(); toast('Photo updated ✦');
+      });
   };
   if(photo)photo.addEventListener('keydown',function(e){
     if(e.key==='Enter'||e.key===' '){e.preventDefault();pin.click();}
@@ -6193,6 +6482,7 @@ function prefs(){
        back as the default on the next reload. */
     dashOrder:Array.isArray(d.dashOrder)?d.dashOrder:null,
     dashHidden:d.dashHidden||{},
+    clientView:d.clientView==='cards'?'cards':'list',
     portalDocs:d.portalDocs!==false,
     portalPayments:d.portalPayments!==false,
     portalQuestionnaires:d.portalQuestionnaires!==false,
@@ -9901,6 +10191,7 @@ function toast(msg){
    sample freely; only the writes are stopped. */
 var SAMPLE_SAFE=['[data-openevent]','[data-client]','[data-back]','[data-backdesign]','[data-backq]',
   '[data-ev]','[data-evtoggle]','[data-seatmode]','[data-setup]','[data-print]','[data-gotoev]',
+  '[data-clientview]',
   '[data-board]','[data-q]','[data-adopt]','[data-sampleinfo]','.ev-card','.ev-sub','.ew-b','.wk-row',
   '#evSwitch','#printEvent','#exportGuests','#exportInv','#calPrev','#calNext','#calToday',
   '#seatPickCancel','#sampleAdopt','#sampleRemove','.back-link','.srch-row','.tour-x'].join(',');

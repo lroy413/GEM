@@ -134,6 +134,21 @@ never pulled, which is what stops a fresh install overwriting the studio.
 
 ## 3 · Things worth knowing before you change the UI
 
+- **Photographs are framed, not just shrunk.** `openPhotoCrop(file,opts,done)`
+  hands back a square JPEG at whatever size `opts.out` asks for (512 by
+  default) after the person has dragged and zoomed the picture under a fixed
+  circle. What it exports is the **square** the circle sits in, not the circle:
+  the same pixels serve the round avatar, the client card and the dashboard
+  hero through `evPhoto()`, and each masks it its own way. Anything that takes
+  a photograph of a person should go through it rather than calling
+  `shrinkImage()` directly.
+- **Replacing a photograph must null its `photoPath`.** `mediaUpload()` only
+  sends records with pixels and no path, so a new picture left beside the old
+  key never uploads and every other device keeps the old one. The event cover
+  always did this; the client photo did not until 19 Aug.
+- **Clients read as a list or as cards** (`prefs().clientView`, in the
+  whitelist). Cards deliberately carry no edit/delete: `.r-act` is always
+  visible in touch mode, which put a permanent ✕ on every face in the grid.
 - **First run is a gate, then the tour.** `openWelcomeGate()` asks for an
   account or guest before anything else, and `closeModal()` refuses while it is
   up — a scrim click that quietly meant "guest" is the outcome it exists to
