@@ -7071,6 +7071,18 @@ function settingsPage(k){
         setRow('Sync automatically',toggle('s_sbAuto',p.autoSync!==false),
                'Pushes a few seconds after you stop editing, and only the parts that changed')+
       '</div>':'')+
+      /* The way back. Shown only when there is something to go back to, and it
+         says what it would restore rather than asking for faith. */
+      (function(){
+        var s=prevSnapshot(); if(!s)return '';
+        var n=0; try{ var d=JSON.parse(s.db)||{};
+          n=(d.leads||[]).length+' clients · '+(d.events||[]).length+' events'; }catch(e){ n='the previous copy'; }
+        return '<div class="set-card" style="margin-top:18px">'+
+          setRow('Undo the last sync','<button class="btn btn-ghost btn-sm" id="s_sbUndo">Restore</button>',
+            'Taken '+fmtStamp(s.at)+(s.why?' — '+esc(s.why):'')+'. Holds '+esc(String(n))+
+            '. Restoring swaps the two, so this is reversible.')+
+        '</div>';
+      })()+
       '<div class="set-note"><b>Why this is safe:</b> a publishable key grants nothing on its own. Every table is protected by row-level security, so the key can only ever reach rows your signed-in account is entitled to. A key beginning <code>sb_secret_</code> or a long <code>eyJ…</code> service_role token must never go here.</div>'+
       '<div class="set-note">Client photos and mood-board images stay on this device for now — they are held inline, and moving them means uploading to the private media bucket.</div>'+
     '</div>';
@@ -7610,6 +7622,15 @@ function wireSettings(){
     sbSignIn(em.trim()).then(function(m){ sbSay('ok',m); })
       .catch(function(e){ sbSay('bad',e.message); })
       .then(function(){ sbL.disabled=false; });
+  };
+  var sbU=$('#s_sbUndo');
+  if(sbU)sbU.onclick=function(){
+    confirmDelete('the current copy on this device and put the previous one back',function(){
+      if(!restoreSnapshot()){ toast('Could not restore.'); return; }
+      /* Reload rather than re-render: db, settings and every cached view were
+         built from the copy we have just replaced. */
+      location.reload();
+    });
   };
   var sbO=$('#s_sbOut');
   if(sbO)sbO.onclick=function(){ sbSignOut(); toast('Signed out'); render(); };
@@ -11789,7 +11810,24 @@ function sbUpsert(table,rows){
   if(!rows.length)return Promise.resolve();
   return sbRest(table,{method:'POST',body:rows,prefer:'resolution=merge-duplicates,return=minimal'});
 }
-function sbPrune(table,keepIds,scope){
+/* Deletes every row of a table that the payload left out. With an EMPTY keep
+   list that is a DELETE with no id filter — every row in the table, for the
+   whole studio, gone. That is the single most destructive line in the app, and
+   it fires from a timer.
+
+   A local collection can be empty for reasons that have nothing to do with
+   intent: storage was lost, a pull brought down a partial state, a normalize
+   went wrong. So an empty keep list no longer deletes anything unless this is
+   the manual "make Supabase match this device" push, where a person has said
+   so and been asked to confirm. Emptying a collection deliberately therefore
+   needs that button — a stale row left on the server is a far cheaper mistake
+   than an emptied table. */
+var SB_SKIPPED_PRUNE=[];
+function sbPrune(table,keepIds,scope,allowEmpty){
+  if(!keepIds.length&&!allowEmpty){
+    SB_SKIPPED_PRUNE.push(table);
+    return Promise.resolve();
+  }
   var q=table+'?'+(scope||('org_id=eq.'+SB_STATE.org));
   q+=keepIds.length?('&id=not.in.('+keepIds.join(',')+')'):'';
   return sbRest(q,{method:'DELETE',prefer:'return=minimal'});
@@ -11811,9 +11849,25 @@ function sbPush(opts){
   }
   sbMigrateIds();
   saveLocal();
+  SB_SKIPPED_PRUNE=[];
 
   var me=sbUserId();
-  var L=db.leads||[], E=db.events||[], V=db.vendors||[], B=db.bookings||[];
+  /* The sample is demo content, and sbMigrateIds() gives it FRESH uuids on
+     every device that has ever held it — so two devices pushing it produce two
+     "Priya & Sam" weddings in one studio, and a device that lost its storage
+     and reseeded produces a third. It is also the thing most likely to be on a
+     device that has no business writing to a studio at all.
+
+     So it is filtered out here rather than guarded against somewhere: nothing
+     still flagged as sample is sent, and — because the prune deletes whatever
+     the payload leaves out — sampleKeep() below makes sure leaving it out
+     never deletes anything either. "Use this as my project" clears the flags,
+     at which point these records are real and push like everything else. */
+  var notSample=function(list,kind){
+    return (list||[]).filter(function(r){ return !isSampleRecord(kind,r.id); });
+  };
+  var L=notSample(db.leads,'lead'), E=notSample(db.events,'event'),
+      V=notSample(db.vendors,'vendor'), B=notSample(db.bookings,'booking');
   /* form_submissions.form_id is NOT NULL and points at lead_forms, so the form
      itself has to exist first — it was never being pushed at all. */
   var lf=db.leadForm||null;
@@ -12023,7 +12077,7 @@ function sbPush(opts){
   chain=chain.then(function(){
     var back=Promise.resolve();
     live.slice().reverse().forEach(function(st){
-      back=back.then(function(){ return sbPrune(st[0],st[1].map(function(r){return r.id;})); });
+      back=back.then(function(){ return sbPrune(st[0],st[1].map(function(r){return r.id;}),null,!!opts.full); });
     });
     return back;
   });
@@ -12038,6 +12092,12 @@ function sbPush(opts){
        IndexedDB forever otherwise. */
     var keep={}; mediaItems().forEach(function(m){ keep[m.id]=true; });
     mediaPrune(keep);
+    if(SB_SKIPPED_PRUNE.length){
+      /* Loud, not silent: the studio and this device genuinely disagree now. */
+      sbSetStatus('warn','Kept '+SB_SKIPPED_PRUNE.length+' table'+(SB_SKIPPED_PRUNE.length===1?'':'s')+
+        ' the studio has and this device does not — Settings › Connection to reconcile');
+      SB_SKIPPED_PRUNE=[];
+    }
     setSbHashes(nextH);
     setSbVer(SB_SYNC.claimed);
     /* Everything local is now on the server, so an automatic pull is safe
@@ -12051,7 +12111,56 @@ function sbPush(opts){
 }
 
 /* ---------- pull ---------- */
-function sbPull(){
+/* One previous copy of the workspace, taken immediately before anything
+   replaces it. There was no way back from a pull: it overwrote localStorage
+   and the copy it replaced was simply gone. This is the cheapest safety net in
+   the app and the one whose absence cost a client file.
+   Photos are excluded — they live in IndexedDB and would blow the quota. */
+var PREV_KEY='gem-proto-prev';
+function snapshotLocal(why){
+  try{
+    var raw=localStorage.getItem(KEY);
+    if(!raw)return false;
+    localStorage.setItem(PREV_KEY,JSON.stringify({at:new Date().toISOString(),why:why||'',db:raw}));
+    return true;
+  }catch(e){ return false; }   // a full quota must never block the sync itself
+}
+function prevSnapshot(){
+  try{ return JSON.parse(localStorage.getItem(PREV_KEY))||null; }catch(e){ return null; }
+}
+function restoreSnapshot(){
+  var s=prevSnapshot(); if(!s)return false;
+  try{
+    /* Swap, do not discard: restoring is itself destructive, so the thing it
+       replaces becomes the new undo. */
+    var now=localStorage.getItem(KEY);
+    localStorage.setItem(KEY,s.db);
+    if(now)localStorage.setItem(PREV_KEY,JSON.stringify({at:new Date().toISOString(),why:'before restoring',db:now}));
+    return true;
+  }catch(e){ return false; }
+}
+
+/* What a pull is about to cost, in records. A studio that legitimately holds
+   less than this device is possible — someone deleted a client elsewhere — but
+   losing a whole client file to an automatic background sync is not something
+   to discover later, so it stops and says so instead. */
+function pullLoss(next){
+  var out=[];
+  [['leads','client'],['events','event'],['invoices','invoice'],
+   ['documents','document'],['vendors','vendor']].forEach(function(pair){
+    var before=(db[pair[0]]||[]).length, after=(next[pair[0]]||[]).length;
+    if(before>after)out.push({what:pair[1],before:before,after:after,lost:before-after});
+  });
+  return out;
+}
+function lossLine(loss){
+  return loss.map(function(l){
+    return l.lost+' '+l.what+(l.lost===1?'':'s');
+  }).join(' and ');
+}
+
+function sbPull(opts){
+  opts=opts||{};
   var org=SB_STATE.org;
   if(!org)return Promise.reject(new Error('No studio yet.'));
   var t=['leads','events','timeline_items','checklist_items','budget_lines','seating_tables','guests','guest_invites',
@@ -12132,6 +12241,18 @@ function sbPull(){
                      fields:f.fields||[],active:f.active!==false};
     }
     normalize(next);
+    /* Checked before anything is written. An automatic pull that would remove
+       records this device is holding is refused outright — the device keeps
+       what it has and says so. A manual pull is the person asking for exactly
+       this, so it proceeds, but only after the snapshot below. */
+    var loss=pullLoss(next);
+    if(loss.length&&opts.auto){
+      var e=new Error('The studio has '+lossLine(loss)+' fewer than this device. '+
+        'Nothing has been changed here — open Settings › Connection to compare.');
+      e.wouldLose=loss;
+      throw e;
+    }
+    snapshotLocal(loss.length?('pull removed '+lossLine(loss)):'pull');
     db=next;
     if(R.org_prefs[0]&&R.org_prefs[0].stages&&R.org_prefs[0].stages.length){
       var sp=R.org_prefs[0];
@@ -12232,7 +12353,7 @@ function sbCheckRemote(){
 function sbAutoPull(msg){
   if(!sbReady()||!SB_STATE.org||SB_SYNC.busy)return Promise.resolve(false);
   SB_SYNC.busy=true; sbSetStatus('busy',msg||'Getting the latest…');
-  return sbPull().then(function(){
+  return sbPull({auto:true}).then(function(){
     sbSetStatus('ok','Up to date');
     setTimeout(function(){ if(SB_SYNC.status==='ok')sbSetStatus('idle',''); },2200);
     if(typeof render==='function')render();
