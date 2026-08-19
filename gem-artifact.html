@@ -406,6 +406,10 @@ html.no-motion body::before{opacity:.3}
 .conn-state.ok .cs-dot{background:var(--ok);box-shadow:0 0 0 3px rgba(79,143,98,.16)}
 .conn-state.pending{border-color:var(--gold-line);background:#FFFCF4}
 .conn-state.pending .cs-dot{background:var(--gold);box-shadow:0 0 0 3px rgba(176,141,62,.16)}
+/* Signed in with no studio behind it. Not a caution — nothing is being kept. */
+.conn-state.bad{border-color:rgba(142,47,57,.45);background:rgba(142,47,57,.07)}
+.conn-state.bad b{color:#8E2F39}
+.conn-state.bad .cs-dot{background:#8E2F39;box-shadow:0 0 0 3px rgba(142,47,57,.18)}
 .chk-list{margin-top:14px;border:1px solid var(--line);border-radius:var(--radius);overflow:hidden;
   background:var(--card);box-shadow:var(--shadow-xs)}
 .chk{display:flex;align-items:flex-start;gap:10px;padding:11px 16px;font-size:12.5px;line-height:1.5;
@@ -6494,10 +6498,21 @@ function settingsPage(k){
     var configured=!!(p.sbUrl&&p.sbKey);
     var signed=configured&&sbAuthed();
     var last=null; try{ last=localStorage.getItem('gem-sb-last'); }catch(e){}
-    var tone=signed?'ok':(configured?'pending':'none');
-    var head=signed?'Signed in':(configured?'Saved — not signed in':'Not connected');
+    /* Signed in is NOT the same as backed up, and this block used to say it
+       was: with no studio behind the account it still read "Signed in — your
+       studio syncs to your Supabase project", which is exactly the sentence
+       that let a tester work all afternoon into nothing. */
+    var hasOrg=!!SB_STATE.org;
+    var tone=signed?(hasOrg?'ok':'bad'):(configured?'pending':'none');
+    var head=signed
+      ? (hasOrg?'Signed in — your work is backed up':'Signed in, but NOT backed up')
+      : (configured?'Saved — not signed in':'Not connected');
     var blurb=signed
-      ? 'Your studio syncs to your Supabase project.'
+      ? (hasOrg
+          ? 'Every change is sent to your Supabase project a few seconds after you stop typing.'
+          : 'This account has no studio, so nothing you enter is leaving this device. '+
+            'One is normally created for you the moment you sign in — if this is still here, '+
+            'use Create below before entering anything else.')
       : (configured?'Details saved. Sign in to start syncing.'
                    :'Everything is stored locally on this device only.');
     return back+'<div class="set-page">'+
@@ -10295,8 +10310,14 @@ function sbAfterSignIn(){
        sbSyncDown() decides whether that is safe; it declines and warns if this
        device is holding anything of its own. */
     return sbResolveOrg().then(function(id){
-      if(!id)return n;
-      return sbSyncDown().then(function(){ return n; });
+      if(id)return sbSyncDown().then(function(){ return n; });
+      /* No studio, and two very different reasons for that. A couple invited
+         to a portal has none by design — n counts the invitations just claimed,
+         so n>0 identifies them — and so does anyone actually on the portal
+         host. Everyone else is a planner who simply was never given one, and
+         giving them one is the difference between working and losing it all. */
+      if(n>0||(typeof PORTAL_ONLY!=='undefined'&&PORTAL_ONLY))return n;
+      return sbAutoCreateStudio().then(function(){ return n; });
     }).catch(function(){ return n; });
   });
 }
@@ -10394,6 +10415,37 @@ function sbCreateOrg(name){
   return sbRest('rpc/gem_create_org',{method:'POST',body:{p_name:name}}).then(function(id){
     SB_STATE.org=id; return id;
   });
+}
+/* Creating an account never created a studio. Every new planner therefore
+   arrived signed in and backed up nowhere, and the interface told them they
+   were syncing — which is how a tester lost an afternoon of clients and a
+   timeline that had never once left her laptop.
+
+   gem_create_org() is NOT idempotent: called twice it makes two studios and
+   the second one is empty. So this runs only after sbResolveOrg() has come
+   back with nothing, and the in-flight flag stops two tabs racing it. */
+var SB_MAKING_ORG=false;
+function sbAutoCreateStudio(){
+  if(SB_MAKING_ORG||SB_STATE.org||!sbReady())return Promise.resolve(null);
+  SB_MAKING_ORG=true;
+  sbSetStatus('busy','Setting up your studio…');
+  return sbCreateOrg(prefs().bizName||'My Studio').then(function(id){
+    if(!id)return null;
+    /* Whatever is on this device now was typed before there was anywhere to
+       put it. Send it immediately, while the new studio is still empty and
+       gem_claim_sync() is certain to accept a device that has never synced. */
+    return sbSyncNow().then(function(){
+      sbSetStatus('ok','Studio ready — your work is backed up');
+      setTimeout(function(){ if(SB_SYNC.status==='ok')sbSetStatus('idle',''); },2800);
+      if(typeof render==='function')render();
+      return id;
+    });
+  }).catch(function(e){
+    /* Loudly, and permanently. Silence here is the whole bug. */
+    sbSetStatus('warn','Could not set up your studio — nothing is being backed up. '+
+      (e&&e.message?e.message:'Open Settings › Connection'));
+    return null;
+  }).then(function(r){ SB_MAKING_ORG=false; return r; });
 }
 
 /* ---------- ids ---------- */
@@ -11074,7 +11126,14 @@ try{
        followed the link, signed in successfully, and landed in an empty app.
        Password sign-in always ran it; the link never did. */
     if(SB_FRESH_LINK)sbAfterSignIn().then(function(){ render(); }).catch(function(){});
-    else sbResolveOrg().then(function(id){ if(id)sbSyncDown(); else sbNoStudioWarn(); }).catch(function(){});
+    /* An account that predates automatic creation — or one whose creation
+       failed the first time — is repaired on the next load rather than left
+       broken forever. sbAfterSignIn() does the couple-or-planner test before
+       it creates anything, and warns if it cannot. */
+    else sbResolveOrg().then(function(id){
+      if(id)return sbSyncDown();
+      return sbAfterSignIn().then(function(){ render(); });
+    }).catch(function(){ sbNoStudioWarn(); });
   }
 }catch(e){}
 
