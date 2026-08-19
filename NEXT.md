@@ -20,24 +20,25 @@ runs local-first in the browser and syncs to Supabase when connected.
 | Database | Supabase, project `dqntxdhzcieycifzjzwc` |
 | Which build is live? | Settings → Data & storage → **App version**, or `curl -s https://gemevents.app/ \| grep gem-build` |
 
-Migrations **01–16 are all run** against the live project — 16 on 19 Aug 2026,
-verifying all true. **17 is not.**
+Migrations **01–19 are all run** against the live project, each verifying all
+true. **20 and 21 are not.**
 
 **Migrations can be run before you ship them.** Postgres is installable in the
 dev container; a shim for `auth.uid()`, `storage.foldername()` and the three
-Supabase roles is enough to run `01`–`18` end to end and exercise the functions.
-That is how 17 and 18 were checked. Do this rather than reasoning about SQL.
+Supabase roles is enough to run the whole set end to end and exercise the
+functions. That is how 17, 18 and 19 were checked. Do this rather than
+reasoning about SQL.
 
-Run `17_sync_two_phase.sql` before the build that goes with it. It splits the
-sync claim in two: the studio's version now moves only when a push *finishes*,
-where it used to move before a single row was written. The client falls back to
-the old one-step claim if the functions are missing, so deploying first is not
-fatal — it simply leaves the hole open. `18_venues.sql` is written, numbered and
-**inert**: the venue feature it belongs to is unfinished. The database is now ahead of production: `events.photo_path`
-exists and nothing writes to it until this build ships, which is the safe
-direction. Deploying before the migration would not have been: the events
-payload carries that key on every row whether or not the event has a cover, so
-PostgREST would have refused *every* events push.
+`20_venues.sql` is written, numbered and **inert** — the venue feature it
+belongs to is unfinished, and nothing in the app references it.
+
+`21_client_cover.sql` adds `leads.cover_path`, for the client file's own
+banner. Unlike `16`, this one is safe to ship ahead of: the client asks the
+database once whether the column is there and omits `cover_path` from the
+payload until it has seen it, so a studio that has not run 21 simply does not
+sync covers. That guard is `sbCoverCol()`, and it exists because the events
+payload carried `photo_path` on every row whether or not an event had a cover,
+which made PostgREST refuse *every* events push for weeks.
 
 This build also carries six bug fixes — `BUGS.md` is the report they came from.
 One of them changes what the invoices payload contains: `lead_id` is finally
@@ -145,6 +146,31 @@ never pulled, which is what stops a fresh install overwriting the studio.
 ---
 
 ## 3 · Things worth knowing before you change the UI
+
+- **The demo is recognised by fingerprint as well as by flag.** `sample` is a
+  local boolean; a demo record that has been round-tripped through Supabase
+  comes back as ordinary data, so Remove found nothing while six invented
+  florists sat in a directory the studio was trying to start from scratch.
+  `SAMPLE_PRINTS` holds name-plus-address for the six shipped vendors and for
+  Priya & Sam, and `sampleHit()` consults it. Editing either field breaks the
+  match, which is the point: once a record is genuinely theirs, it stays.
+- **`removeSampleData()` works out what is going BEFORE it deletes anything.**
+  `vendors` is one of the `SAMPLE_IDS` collections, so by the time the main
+  loop has run there is nothing left to ask which vendors went — and the
+  bookings that pointed at them survived as rows the screen cannot draw. Both
+  `goneEvents` and `goneVendors` are built up front for that reason.
+- **A list of kinds of thing is a list somebody will need to add to.** Vendor
+  categories are a `combo` field — an input with a `<datalist>` behind it — and
+  the suggestions are what we ship plus whatever the directory is already
+  using. Nothing is stored and nothing needs curating: a category appears when
+  it is typed and stops being offered when the last vendor filed under it goes.
+- **A client has two pictures and they are not interchangeable.** `photo` is a
+  portrait, cropped to a circle, shown as a medallion on the file and a tile in
+  the grid. `cover` is the banner, cropped 16:9 exactly as an event cover is,
+  and `leadCover()` falls back to the event's cover rather than to `evPhoto()`
+  — which would hand back the portrait and reproduce the stretched header this
+  replaced. The cover is a second media object on the same record, so it is
+  keyed `<leadId>-cover` in `mediaItems()`.
 
 - **The archive is derived, not a state.** `archiveEvents()` is every primary
   whose date has passed, newest first; nothing is marked "done" and nothing has

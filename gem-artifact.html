@@ -2186,16 +2186,38 @@ tr:hover .r-acts,.ev-card:hover .r-acts,.table-card:hover .r-acts,
 .detail-head.has-photo{display:block;padding:0;overflow:hidden;background:var(--card);
   border:1px solid var(--line);border-radius:var(--radius-lg);box-shadow:var(--shadow-sm)}
 .dh-band{position:relative;display:flex;align-items:flex-end;justify-content:space-between;gap:24px;
-  min-height:330px;padding:26px 28px;background-size:cover;background-position:center;cursor:pointer}
+  min-height:320px;padding:26px 28px;background-size:cover;background-position:center}
 .dh-band::after{content:"";position:absolute;inset:0;pointer-events:none;
   background:linear-gradient(180deg,rgba(18,12,15,0) 34%,rgba(18,12,15,.36) 64%,rgba(18,12,15,.78) 100%)}
 .dh-band>*{position:relative;z-index:1}
-.dh-band-ed{position:absolute;top:16px;right:18px;z-index:2;font-size:11px;font-weight:600;color:#fff;
+/* No cover means no photograph to give room to — 320px of flat wash is a
+   void, not a banner. */
+.dh-band:not(.has-photo){min-height:252px}
+.dh-band-acts{position:absolute;top:16px;right:18px;z-index:2;display:flex;gap:8px}
+.dh-band-ed{font-size:11px;font-weight:600;color:#fff;cursor:pointer;
   background:rgba(18,12,15,.42);border:1px solid rgba(255,255,255,.3);border-radius:var(--radius-pill);
   padding:5px 12px;opacity:0;transition:opacity .16s var(--ease)}
-.dh-band:hover .dh-band-ed,.dh-band:focus-visible .dh-band-ed{opacity:1}
-.dh-band:focus-visible{outline:none;box-shadow:inset 0 0 0 2px var(--gold)}
-.dh-band-tx{display:flex;flex-direction:column;min-width:0}
+/* Kept visible while focused as well as hovered, or the only way to reach the
+   cover from a keyboard is to tab to a control you cannot see. */
+.dh-band:hover .dh-band-ed,.dh-band-ed:focus-visible{opacity:1}
+.dh-band-ed:focus-visible{outline:none;box-shadow:0 0 0 2px var(--gold)}
+/* The portrait, at the shape a portrait wants: the same circle as the card
+   grid, sitting on the band rather than being stretched into it. */
+.dh-face{position:relative;flex:0 0 auto;width:104px;height:104px;border-radius:50%;padding:0;
+  background-size:cover;background-position:center;cursor:pointer;
+  border:3px solid rgba(255,255,255,.86);box-shadow:0 10px 28px rgba(18,12,15,.34);
+  display:flex;align-items:center;justify-content:center}
+.dh-face>span:first-child{font-family:var(--serif);font-size:33px;font-weight:600;letter-spacing:.03em;
+  color:var(--ink)}
+.dh-face.has-photo>span:first-child{display:none}
+.dh-face-ed{position:absolute;right:-2px;bottom:-2px;width:28px;height:28px;border-radius:50%;
+  display:flex;align-items:center;justify-content:center;font-size:12px;color:#fff;
+  background:rgba(18,12,15,.66);border:1px solid rgba(255,255,255,.34);
+  opacity:0;transition:opacity .16s var(--ease)}
+.dh-band:hover .dh-face-ed,.dh-face:focus-visible .dh-face-ed{opacity:1}
+.dh-face:focus-visible{outline:none;box-shadow:0 0 0 3px var(--gold)}
+.dh-band-tx{display:flex;align-items:flex-end;gap:20px;min-width:0}
+.dh-band-id{display:flex;flex-direction:column;min-width:0;padding-bottom:4px}
 .dh-band-k{font-size:9.5px;letter-spacing:1.9px;text-transform:uppercase;color:var(--gold);font-weight:600}
 .dh-band-n{font-family:var(--serif);font-size:46px;font-weight:600;line-height:1.04;margin-top:6px;
   letter-spacing:-.014em;color:#fff;text-shadow:0 1px 14px rgba(0,0,0,.32)}
@@ -2205,9 +2227,18 @@ tr:hover .r-acts,.ev-card:hover .r-acts,.table-card:hover .r-acts,
 .dh-band-v .dh-l{color:rgba(255,255,255,.8)}
 .dh-strip{display:flex;align-items:center;flex-wrap:wrap;gap:8px 10px;padding:13px 20px}
 @media (max-width:700px){
-  .dh-band{min-height:230px;padding:18px 20px;flex-direction:column;align-items:flex-start;gap:14px}
+  /* Stacked, and anchored to the BOTTOM: the action pills are always visible
+     on a touch screen, and content starting at the top ran straight under
+     them. Top padding keeps the eyebrow clear of the pills either way. */
+  .dh-band{min-height:252px;padding:56px 20px 18px;flex-direction:column;
+    justify-content:flex-end;align-items:flex-start;gap:12px}
   .dh-band-n{font-size:30px}
   .dh-band-v{align-items:flex-start;text-align:left}
+  .dh-band-tx{align-items:center;gap:14px}
+  .dh-face{width:76px;height:76px;border-width:2px}
+  .dh-face>span:first-child{font-size:25px}
+  /* On a phone there is no hover to reveal them with. */
+  .dh-band-ed,.dh-face-ed{opacity:1}
 }
 .main.evfocus .page-head{display:none}
 .main.evfocus .topbar{margin-bottom:14px;justify-content:flex-end}
@@ -3075,7 +3106,7 @@ function isSampleRecord(kind,id){
   if(coll){
     var r=(db[coll]||[]).find(function(x){return x.id===id;});
     if(!r)return false;
-    if(r.sample||(SAMPLE_IDS[coll]||[]).indexOf(id)>=0)return true;
+    if(sampleHit(coll,r))return true;
     if(r.eventId)return isSampleEvent(db.events.find(function(x){return x.id===r.eventId;}));
     return false;
   }
@@ -3110,11 +3141,11 @@ function adoptSample(){
   var n=0;
   Object.keys(SAMPLE_IDS).forEach(function(k){
     (db[k]||[]).forEach(function(r){
-      if(SAMPLE_IDS[k].indexOf(r.id)>=0||r.sample){ r.sample=false; r.adopted=true; n++; }
+      if(sampleHit(k,r)){ r.sample=false; r.adopted=true; n++; }
     });
   });
   SAMPLE_FLAGGED.forEach(function(k){
-    (db[k]||[]).forEach(function(r){ if(r.sample){ r.sample=false; r.adopted=true; n++; } });
+    (db[k]||[]).forEach(function(r){ if(sampleHit(k,r)){ r.sample=false; r.adopted=true; n++; } });
   });
   /* The id lists are how an un-flagged record is still recognised as sample,
      so they have to stop matching too. */
@@ -3163,7 +3194,34 @@ function hasSampleData(){
    the id lists match nothing. Checking only the ids — which is what this did —
    deleted the sample vendors, reported a count, and left the wedding itself in
    place with the button gone, because hasSampleData() then found nothing. */
-function sampleHit(k,r){ return !!r.sample||(SAMPLE_IDS[k]||[]).indexOf(r.id)>=0; }
+function sampleHit(k,r){
+  return !!r.sample||(SAMPLE_IDS[k]||[]).indexOf(r.id)>=0||samplePrint(k,r);
+}
+/* And the fingerprints, for when the flag is gone as well as the id. `sample`
+   is a local boolean; migration 18 gives it a column, but a studio that pulled
+   before that has demo records carrying nothing at all — they come back down
+   from Supabase as ordinary data, so Remove found nothing and a planner
+   starting their own vendor list was left with six invented florists in it.
+   Name plus address, because a record the studio has actually edited then
+   stops matching, which is the right outcome: once it is theirs, it stays. */
+var SAMPLE_PRINTS={
+  vendors:[
+    'fern & fable florals|rosa@fernfable.co',
+    'hearth & vine catering|events@hearthvine.com',
+    'aurelio photography|hello@aureliophoto.com',
+    'the copper quartet|book@copperquartet.com',
+    'lumen event rentals|orders@lumenrentals.com',
+    'gilded cake studio|tomas@gildedcake.com'
+  ],
+  leads:['priya & sam|priya.sharma@example.com']
+};
+function samplePrint(k,r){
+  if(!r||r.adopted||sampleAdopted())return false;
+  var list=SAMPLE_PRINTS[k];
+  if(!list)return false;
+  return list.indexOf(String(r.name||r.names||'').trim().toLowerCase()+'|'+
+                      String(r.email||'').trim().toLowerCase())>=0;
+}
 
 /* Anything on this device that is NOT the seeded sample. This is what decides
    whether a first sync may pull without asking: a device holding only the
@@ -3211,6 +3269,12 @@ function removeSampleData(){
   var goneEvents={};
   (db.events||[]).forEach(function(e){ if(isSampleEvent(e))goneEvents[e.id]=true; });
   var inGone=function(id){ return !!goneEvents[id]; };
+  /* And which vendors, before anything is filtered — 'vendors' is one of the
+     SAMPLE_IDS collections, so by the time the loop below has run the records
+     are already gone and there is nothing left to ask. A booking pointing at a
+     vendor no longer in the directory is a row the screen cannot draw. */
+  var goneVendors={};
+  (db.vendors||[]).forEach(function(v){ if(sampleHit('vendors',v))goneVendors[v.id]=true; });
 
   Object.keys(SAMPLE_IDS).forEach(function(k){
     if(!db[k])return;
@@ -3224,13 +3288,12 @@ function removeSampleData(){
       return !drop;
     });
   });
-  SAMPLE_FLAGGED.forEach(function(k){
-    if(!db[k])return;
-    db[k]=db[k].filter(function(r){
-      if(r.sample||(r.eventId&&inGone(r.eventId))){ n++; return false; }
+  if(db.bookings){
+    db.bookings=db.bookings.filter(function(r){
+      if(sampleHit('bookings',r)||goneVendors[r.vendorId]||(r.eventId&&inGone(r.eventId))){ n++; return false; }
       return true;
     });
-  });
+  }
   /* Invitations point at a guest and an event that have both just gone. */
   if(db.invites)db.invites=db.invites.filter(function(i){ return !inGone(i.eventId); });
   /* Release anything still pointing at a record that has just gone, or the
@@ -3333,6 +3396,9 @@ function normalize(d){
     d.vendors=directory;
   }
   d.vendors.forEach(function(v){
+    /* "Beauty" became "Hair & Makeup"; anything already filed under the old
+       name comes across rather than falling off the end of the select. */
+    if(v.cat==='Beauty')v.cat='Hair & Makeup';
     if(v.preferred===undefined)v.preferred=false;
     if(v.rating===undefined)v.rating=0;
     if(v.notes===undefined)v.notes='';
@@ -3343,6 +3409,11 @@ function normalize(d){
   if(!d.submissions)d.submissions=DEFAULT.submissions.slice();
   if(!d.messages)d.messages=DEFAULT.messages.slice();
   d.leads.forEach(function(l){
+    /* The file's banner, separate from the portrait since they are cropped for
+       different shapes. Undefined means "has never been set", which is what
+       leadCover() reads as "use the event's". */
+    if(l.cover===undefined)l.cover=null;
+    if(l.coverPath===undefined)l.coverPath=null;
     if(l.photo===undefined)l.photo=null;
     ['partnerA','partnerB','email','altEmail','phone','preferred','source','notes','pronounsA','pronounsB']
       .forEach(function(k){ if(l[k]===undefined)l[k]=''; });
@@ -4429,6 +4500,18 @@ function leadWash(id){
   var i=ids.indexOf(id);
   return LEAD_WASHES[(i<0?0:i)%LEAD_WASHES.length];
 }
+/* The banner for a client file. Their own if they have chosen one, otherwise
+   the event's cover — the same photograph nine times out of ten, and being
+   asked for it twice is a chore. Deliberately NOT evPhoto(), which falls back
+   to the client's portrait: a head-and-shoulders picture cropped to a wide
+   band is precisely the stretched, badly-cut header this replaces. */
+function leadCover(l){
+  if(!l)return null;
+  if(l.cover)return l.cover;
+  var e=eventForLead(l);
+  if(!e)return null;
+  return e.photo||((evPrimary(e)||{}).photo)||null;
+}
 function leadsByDate(){
   return db.leads.slice().sort(function(a,b){return a.date<b.date?-1:1;});
 }
@@ -4507,7 +4590,7 @@ function viewClientDetail(id){
   var owed=invs.filter(function(x){return x.status==='due'||x.status==='over';}).reduce(function(a,x){return a+x.amount;},0);
   var away=daysAway(l.date);
 
-  var initials=leadInitials(l);
+  var initials=leadInitials(l), cover=leadCover(l), wash=leadWash(l.id);
   /* One gapped column rather than a margin on each block. The event workspace
      already does this with .ev-col; here every block carried its own inline
      margin-bottom, so evSection() — which has none, because in the workspace
@@ -4516,58 +4599,58 @@ function viewClientDetail(id){
   '<div class="detail-col">'+
   sampleBanner()+
   /* Their photograph, given the page rather than a corner of it. A client file
-   is about one couple; a 76px tile beside a page title says "record", and a
-   banner says "them". The tile is still the answer when there is no
-   photograph — an initials medallion is a finished thing, not a gap — so the
-   old head stays for that case rather than leaving a grey slab. */
-  (l.photo
-   ? '<div class="detail-head has-photo">'+
-       '<label class="dh-band" id="clientPhoto" tabindex="0" title="Replace the photograph" '+
-         'style="background-image:url('+l.photo+')">'+
-         '<input type="file" id="clientPhotoInput" accept="image/*" hidden>'+
-         '<span class="dh-band-ed">✎ Replace</span>'+
-         '<span class="dh-band-tx">'+
+     is about one couple; a 76px tile beside a page title says "record", and a
+     banner says "them".
+
+     Two pictures, because they are two different jobs. The portrait is a
+     portrait — a phone photograph of a couple, tall, their faces in the middle
+     — and stretching it across a 330px band cropped their heads off and left
+     the rest soft. So the band gets a cover in the shape a cover is used at,
+     defaulting to the event's own so nobody has to choose the same photograph
+     twice, and the portrait stays a portrait: a medallion on the band, the
+     same circle it has in the card grid.
+
+     With no cover the band takes the client's wash — the DARK half of the
+     pair, the one the medallion uses, so the white type over it needs no
+     second set of rules. One band, one set of colours, photograph or not. */
+  '<div class="detail-head has-photo">'+
+     '<div class="dh-band'+(cover?' has-photo':'')+'" '+
+       (cover?'style="background-image:url('+cover+')"':'style="background:'+wash[1]+'"')+'>'+
+       '<input type="file" id="clientCoverInput" accept="image/*" hidden>'+
+       '<input type="file" id="clientPhotoInput" accept="image/*" hidden>'+
+       '<span class="dh-band-acts">'+
+         '<button type="button" class="dh-band-ed" id="clientCover">✎ '+
+           (cover?'Replace cover':'Add a cover')+'</button>'+
+         (l.cover?'<button type="button" class="dh-band-ed" id="clientCoverClear" '+
+           'title="Go back to the event’s cover">Use the event’s</button>':'')+
+       '</span>'+
+       '<span class="dh-band-tx">'+
+         '<button type="button" class="dh-face'+(l.photo?' has-photo':'')+'" id="clientPhoto" '+
+           'title="'+(l.photo?'Replace the portrait':'Add a portrait')+'" '+
+           (l.photo?'style="background-image:url('+l.photo+')"':'style="background:'+wash[0]+'"')+'>'+
+           (l.photo?'':'<span>'+esc(initials)+'</span>')+
+           '<span class="dh-face-ed">✎</span>'+
+         '</button>'+
+         '<span class="dh-band-id">'+
            '<span class="dh-band-k">'+esc(l.type||'Client')+'</span>'+
            '<span class="dh-band-n">'+esc(l.names)+'</span>'+
            '<span class="dh-band-m">'+fmtDate(l.date)+' · '+esc(venueName(l.venue))+'</span>'+
          '</span>'+
-         '<span class="dh-band-v">'+
-           '<span class="dh-v">'+money(l.value)+'</span>'+
-           '<span class="dh-l">contract value</span>'+
-         '</span>'+
-       '</label>'+
-       '<div class="dh-strip">'+
-         '<span class="pill" style="background:'+s.color+'22;color:'+s.color+'">'+s.name+'</span>'+
-         (l.guests?'<span class="pill">'+l.guests+' guests</span>':'')+
-         (away>=0?'<span class="pill gold">'+away+' days away</span>':'<span class="pill">Completed</span>')+
-         '<span style="flex:1"></span>'+
-         '<button class="btn btn-quiet btn-sm" id="editClient">✎ Edit details</button>'+
-         '<button class="btn btn-quiet btn-sm" id="clientBible">◈ Export bible</button>'+
-       '</div>'+
-     '</div>'
-   : '<div class="detail-head">'+
-    '<div class="dh-main">'+
-      '<div class="dh-id">'+
-        '<label class="dh-photo" id="clientPhoto" tabindex="0" title="Upload a photo">'+
-          '<input type="file" id="clientPhotoInput" accept="image/*" hidden>'+
-          '<span>'+esc(initials)+'</span>'+
-          '<span class="dh-photo-ed">✎</span>'+
-        '</label>'+
-        '<div>'+
-          '<div class="dh-name">'+esc(l.names)+'</div>'+
-          '<div class="dh-meta">'+esc(l.type)+' · '+fmtDate(l.date)+' · '+esc(venueName(l.venue))+'</div>'+
-          '<div class="dh-tags">'+
-            '<span class="pill" style="background:'+s.color+'22;color:'+s.color+'">'+s.name+'</span>'+
-            (l.guests?'<span class="pill">'+l.guests+' guests</span>':'')+
-            (away>=0?'<span class="pill gold">'+away+' days away</span>':'<span class="pill">Completed</span>')+
-          '</div>'+
-        '</div>'+
-      '</div>'+
-    '</div>'+
-    '<div class="dh-value"><span class="dh-v">'+money(l.value)+'</span><span class="dh-l">contract value</span>'+
-      '<button class="btn btn-ghost btn-sm" id="editClient" style="margin-top:10px">✎ Edit details</button>'+
-      '<button class="btn btn-ghost btn-sm" id="clientBible" style="margin-top:8px">◈ Export bible</button></div>'+
-  '</div>')+
+       '</span>'+
+       '<span class="dh-band-v">'+
+         '<span class="dh-v">'+money(l.value)+'</span>'+
+         '<span class="dh-l">contract value</span>'+
+       '</span>'+
+     '</div>'+
+     '<div class="dh-strip">'+
+       '<span class="pill" style="background:'+s.color+'22;color:'+s.color+'">'+s.name+'</span>'+
+       (l.guests?'<span class="pill">'+l.guests+' guests</span>':'')+
+       (away>=0?'<span class="pill gold">'+away+' days away</span>':'<span class="pill">Completed</span>')+
+       '<span style="flex:1"></span>'+
+       '<button class="btn btn-quiet btn-sm" id="editClient">✎ Edit details</button>'+
+       '<button class="btn btn-quiet btn-sm" id="clientBible">◈ Export bible</button>'+
+     '</div>'+
+   '</div>'+
   '<div class="stat-row">'+
     stat('Collected',money(paid),invs.filter(function(x){return x.status==='paid';}).length+' payments','up')+
     stat('Outstanding',money(owed),owed?'awaiting payment':'all settled')+
@@ -5916,22 +5999,42 @@ function vendorTeamMarkup(ev,editable){
     (editable?'<div class="sec-actions"><button class="btn btn-ghost btn-sm" data-addbooking="'+esc(ev.id)+'">＋ Book a vendor</button>'+
       '<span class="sec-badge" style="margin-left:auto">'+money(total)+' total</span></div>':'');
 }
+/* "Beauty" was one box for a trade a planner books by name — the hair and
+   make-up team is on the call sheet, in the timeline and in the getting-ready
+   room, and it is not the same booking as a spa. Renamed rather than added
+   alongside, so there are not two boxes for the same vendor; normalize()
+   carries anything already filed under the old name across. */
 var VENDOR_CATS=['Florals','Catering','Photography','Videography','Music','Rentals','Cake',
-  'Venue','Beauty','Transport','Stationery','Lighting','Planning','Other'];
+  'Venue','Hair & Makeup','Transport','Stationery','Lighting','Planning','Other'];
+/* What we ship, plus every category the directory is actually using. Built
+   from the vendors rather than stored as a preference, so a category the
+   studio invented appears the moment they type it and stops being offered
+   once the last vendor filed under it has gone — there is no list to curate
+   and nothing to prune. 'Other' stays at the end where it belongs. */
+function vendorCats(){
+  var out=VENDOR_CATS.filter(function(c){ return c!=='Other'; });
+  (db.vendors||[]).forEach(function(v){
+    var c=String(v.cat||'').trim();
+    if(c&&c!=='Other'&&out.indexOf(c)<0)out.push(c);
+  });
+  out.push('Other');
+  return out;
+}
 /* The vendor's own details, shared by the directory form and the booking form
    so a vendor created from a client file is a full directory record, not a
    stub that has to be filled in again later. */
 function vendorFields(v,showIf){
   return [
     {id:'name',label:'Business name',value:v&&v.name,required:true,full:true,showIf:showIf},
-    {id:'cat',label:'Category',type:'select',value:(v&&v.cat)||'Florals',options:VENDOR_CATS,showIf:showIf},
+    {id:'cat',label:'Category',type:'combo',value:(v&&v.cat)||'',options:vendorCats(),
+     placeholder:'Florals, Hair & Makeup, Officiant…',showIf:showIf},
     {id:'contact',label:'Contact name',value:v&&v.contact,showIf:showIf},
     {id:'email',label:'Email',type:'email',value:v&&v.email,showIf:showIf},
     {id:'phone',label:'Phone',type:'tel',value:v&&v.phone,showIf:showIf}
   ];
 }
 function newVendorFrom(v){
-  var rec={id:uid('vn'),name:(v.name||'').trim(),cat:v.cat||'Other',
+  var rec={id:uid('vn'),name:(v.name||'').trim(),cat:(v.cat||'').trim()||'Other',
     contact:(v.contact||'').trim(),email:(v.email||'').trim(),phone:(v.phone||'').trim(),
     notes:'',preferred:false,rating:0};
   db.vendors.push(rec);
@@ -6626,12 +6729,37 @@ function wireClientDetail(){
   };
 
   var photo=$('#clientPhoto'), pin=$('#clientPhotoInput');
+  if(photo&&pin)photo.onclick=function(){ pin.click(); };
+  /* The band's own picture: 16:9 at 1440, exactly what the event cover is
+     cropped to, so the two are interchangeable and "use the event's" is a
+     swap rather than a different-shaped photograph. */
+  var cin=$('#clientCoverInput'), cbtn=$('#clientCover'), cclr=$('#clientCoverClear');
+  if(cbtn&&cin)cbtn.onclick=function(){ cin.click(); };
+  if(cin)cin.onchange=function(){
+    var f=cin.files&&cin.files[0]; cin.value='';
+    if(!f)return;
+    if(!/^image\//.test(f.type)){toast('Choose an image file.');return;}
+    openPhotoCrop(f,{aspect:16/9,out:1440,title:'Frame the cover',
+                     sub:'This fills the top of '+l.names+'\u2019s file.'},
+      function(dataUrl){
+        var prev=l.cover, prevPath=l.coverPath;
+        /* Clearing coverPath is what makes the new picture upload: mediaUpload()
+           only sends records that have pixels and no path yet. */
+        l.cover=dataUrl; l.coverPath=null;
+        if(!save()){ l.cover=prev; l.coverPath=prevPath; return; }
+        closeModal(); render(); toast('Cover updated \u2726');
+      });
+  };
+  if(cclr)cclr.onclick=function(){
+    l.cover=null; l.coverPath=null;
+    save(); render(); toast('Back to the event\u2019s cover');
+  };
   if(pin)pin.onchange=function(){
     var f=pin.files&&pin.files[0]; pin.value='';
     if(!f)return;
     if(!/^image\//.test(f.type)){toast('Choose an image file.');return;}
-    openPhotoCrop(f,{title:'Frame the photo',
-                     sub:'This is how '+l.names+' appears on their file and in the card grid.'},
+    openPhotoCrop(f,{title:'Frame the portrait',
+                     sub:'The circle on their file and the tile in the card grid.'},
       function(dataUrl){
         var prev=l.photo, prevPath=l.photoPath;
         /* Clearing photoPath is what makes the new picture upload. mediaUpload()
@@ -6644,9 +6772,7 @@ function wireClientDetail(){
         closeModal(); render(); toast('Photo updated ✦');
       });
   };
-  if(photo)photo.addEventListener('keydown',function(e){
-    if(e.key==='Enter'||e.key===' '){e.preventDefault();pin.click();}
-  });
+
 
   wireCustomFields(l);
   var notes=$('#clientNotes');
@@ -7404,6 +7530,13 @@ function settingsPage(k){
         setRow('Export everything','<button class="btn btn-ghost btn-sm" id="s_export">Download JSON</button>','A full backup you can re-import')+
         setRow('Import a backup','<button class="btn btn-ghost btn-sm" id="s_import">Choose file</button>','Replaces what is here now')+
         setRow('Reset to sample data','<button class="btn btn-danger btn-sm" id="s_reset">Reset</button>','Clears your work and restores the demo')+
+        /* This used to live only on the Getting started page, filed under the
+           tours it illustrates, which is not where anyone goes looking for
+           "get the demo out of my studio". */
+        (hasSampleData()?setRow('Sample wedding',
+          '<button class="btn btn-danger btn-sm" id="wipeSample2">Remove</button>',
+          'Priya &amp; Sam and everything attached — the six sample vendors out of your '+
+          'directory, and the guests, documents and invoices'):'')+
       '</div>'+
       /* Put where someone already goes when they are worried about their data,
          and phrased as the question they actually have. */
@@ -7463,8 +7596,9 @@ function toursPage(){
       '<div class="set-card" style="margin-top:22px">'+
         setRow('Sample wedding',
                '<button class="btn btn-danger btn-sm" id="wipeSample">Remove</button>',
-               'Priya &amp; Sam and everything attached — vendors, guests, documents and invoices. '+
-               'The tours still run on an empty studio, they just have less to point at.')+
+               'Priya &amp; Sam and everything attached — the six sample vendors out of your '+
+               'directory, and the guests, documents and invoices. The tours still run on an '+
+               'empty studio, they just have less to point at.')+
       '</div>'
      /* It used to say "Sample data removed — everything here is your own",
         which the app cannot actually know. The demo is recognised by a local
@@ -7990,7 +8124,7 @@ function wireSettings(){
     });
   };
 
-  var ws=$('#wipeSample');
+  var ws=$('#wipeSample')||$('#wipeSample2');
   if(ws)ws.onclick=function(){
     confirmDelete('the sample wedding and everything attached to it',function(){
       var n=removeSampleData();
@@ -9055,6 +9189,18 @@ function openEditor(o){
           var val=(typeof op==='object')?op.value:op, lab=(typeof op==='object')?op.label:op;
           return '<option value="'+esc(val)+'"'+(String(v)===String(val)?' selected':'')+'>'+esc(lab)+'</option>';
         }).join('')+'</select>';
+      /* An input with suggestions behind it rather than a select. Every list
+         in this app that describes a trade, a room or a kind of thing is a
+         list somebody's studio will eventually need to add to, and a select
+         says no. This says "here is what we know of" and takes anything. */
+      else if(f.type==='combo'){
+        var lid=id+'_list';
+        ctl='<input id="'+id+'" list="'+lid+'" value="'+esc(v)+'"'+
+          (f.placeholder?' placeholder="'+esc(f.placeholder)+'"':'')+'>'+
+          '<datalist id="'+lid+'">'+(f.options||[]).map(function(op){
+            return '<option value="'+esc((typeof op==='object')?op.value:op)+'"></option>';
+          }).join('')+'</datalist>';
+      }
       else ctl='<input id="'+id+'" type="'+(f.type||'text')+'" value="'+esc(v)+'"'+
         (f.placeholder?' placeholder="'+esc(f.placeholder)+'"':'')+'>';
       return '<div class="field" data-fid="'+f.id+'"'+(f.full?' style="grid-column:1/-1"':'')+'><label for="'+id+'">'+esc(f.label)+
@@ -11061,7 +11207,8 @@ function editRecord(kind,id){
     booking:function(){ openBookingModal(it.eventId,it); },
     vendor:function(){ openEditor({title:'Edit Vendor',twoCol:true,onDelete:del,deleteLabel:it.name,
       fields:[{id:'name',label:'Business name',value:it.name,required:true},
-              {id:'cat',label:'Category',value:it.cat},
+              {id:'cat',label:'Category',type:'combo',value:it.cat,options:vendorCats(),
+               placeholder:'Florals, Hair & Makeup, Officiant\u2026'},
               {id:'contact',label:'Contact name',value:it.contact},
               {id:'email',label:'Email',type:'email',value:it.email},
               {id:'phone',label:'Phone',type:'tel',value:it.phone},
@@ -11541,6 +11688,9 @@ function mediaItems(){
      record to say it ever had one — the lookup is by id against IndexedDB. */
   (db.leads||[]).forEach(function(l){
     out.push({id:l.id,owner:l,field:'photo',pathField:'photoPath',eventId:null,boardId:null});
+    /* The file's banner is a second object on the same record, so it needs an
+       id of its own: mediaKey() files by id and IndexedDB is keyed by it. */
+    out.push({id:l.id+'-cover',owner:l,field:'cover',pathField:'coverPath',eventId:null,boardId:null});
   });
   (db.events||[]).forEach(function(e){
     /* The event's cover, keyed by the event id exactly as a lead's is keyed by
@@ -12286,6 +12436,24 @@ function sbPrune(table,keepIds,scope,allowEmpty){
   return sbRest(q,{method:'DELETE',prefer:'return=minimal'});
 }
 
+/* Does this studio's database have leads.cover_path yet? A client file's own
+   banner needs a column, and a build reaches a studio before its migration
+   does — every push carrying a column the table does not have fails whole,
+   which is exactly what left a studio "ahead" holding a half-written state.
+   So the answer is no until proven otherwise, and it is proven asynchronously:
+   the payload is built synchronously, so the first push after upgrading asks
+   the question and the next one acts on the answer. A cover therefore lands in
+   Supabase one push late, which is a fair price. */
+var SB_COVER_COL=null;
+function sbCoverCol(){
+  if(SB_COVER_COL===null){
+    SB_COVER_COL=false;
+    sbRest('leads?select=cover_path&limit=1')
+      .then(function(){ SB_COVER_COL=true; })
+      .catch(function(){ SB_COVER_COL=false; });
+  }
+  return SB_COVER_COL;
+}
 function sbPush(opts){
   var org=SB_STATE.org;
   if(!org)return Promise.reject(new Error('No studio yet.'));
@@ -12384,12 +12552,14 @@ function sbPush(opts){
     });
   });
 
+  var coverCol=sbCoverCol();
   var steps=[
     ['leads',L.map(function(l){ return {id:l.id,org_id:org,names:s(l.names),event_type:s(l.type),event_date:nn(l.date),
       venue:s(l.venue),value:num(l.value),stage:s(l.stage)||'inquiry',guest_count:num(l.guests),email:s(l.email),
       phone:s(l.phone),notes:s(l.notes),partner_a:s(l.partnerA),partner_b:s(l.partnerB),pronouns_a:s(l.pronounsA),
       pronouns_b:s(l.pronounsB),alt_email:s(l.altEmail),preferred_contact:s(l.preferred),source:s(l.source),
-      address:l.address||{},photo_path:nn(l.photoPath)}; })],
+      address:l.address||{},photo_path:nn(l.photoPath),
+      cover_path:coverCol?nn(l.coverPath):undefined}; })],
     /* Primaries first. events_parent_guard is a BEFORE ROW trigger, so it runs
        as each row lands rather than at the end of the statement — a child sent
        ahead of its parent is refused for pointing at an event that does not
@@ -12472,7 +12642,12 @@ function sbPush(opts){
              .then(function(){ return docUpload(org); }).then(function(){
     steps.forEach(function(st){
       if(st[0]==='leads')st[1].forEach(function(r){
-        var l=L.find(function(x){return x.id===r.id;}); if(l)r.photo_path=nn(l.photoPath);
+        var l=L.find(function(x){return x.id===r.id;});
+        if(!l)return;
+        r.photo_path=nn(l.photoPath);
+        /* The file's banner is a second object on the same record, uploaded by
+           the same run — and only sent at all once the column is known. */
+        if(coverCol)r.cover_path=nn(l.coverPath);
       });
       /* Events carry a cover of their own now, stamped by the same
          mediaUpload() run — same refresh, same reason. */
@@ -12675,7 +12850,8 @@ function sbPull(opts){
         value:Number(l.value),stage:l.stage,guests:l.guest_count,email:l.email,phone:l.phone,notes:l.notes,
         partnerA:l.partner_a,partnerB:l.partner_b,pronounsA:l.pronouns_a,pronounsB:l.pronouns_b,
         altEmail:l.alt_email,preferred:l.preferred_contact,source:l.source,address:l.address||{},
-        photo:null,photoPath:l.photo_path||null}; }),
+        photo:null,photoPath:l.photo_path||null,
+        cover:null,coverPath:l.cover_path||null}; }),
       events:R.events.map(function(e){
         var boards=R.design_boards.filter(function(b){return b.event_id===e.id;}).map(function(b){
           return {id:b.id,title:b.title,tone:b.tone,note:b.note,
