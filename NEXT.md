@@ -161,6 +161,19 @@ never pulled, which is what stops a fresh install overwriting the studio.
 
 ## 3 · Things worth knowing before you change the UI
 
+- **Never index DEFAULT by position.** `normalize()` filled a missing `design`
+  from `DEFAULT.events[i]` — the sample's palette, mood boards and décor handed
+  to whatever event happened to sit at the same INDEX. After a pull that is the
+  studio's own first event. Match the seed by id; the sample's content must
+  only ever reach the sample's record.
+- **`auth.uid()` is NULL in the Supabase SQL editor.** It runs as `postgres`,
+  not as a signed-in user, so anything shaped like
+  `where user_id = auth.uid()` matches nothing and the query returns "success,
+  no rows" — which reads exactly like a clean bill of health. Pass the org id
+  literally, or select it from `orgs`. Same class of mistake as `to_regproc`
+  with a signature: a broken query whose failure is indistinguishable from a
+  good answer.
+
 - **A pull that writes preferences must also APPLY them.** `sbPull()` wrote the
   studio's branding into `settings` and stopped, so a new device kept the
   default gold and no logo until the next reload — indistinguishable from

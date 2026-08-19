@@ -3818,8 +3818,13 @@ function normalize(d){
     if(e.photoPath===undefined)e.photoPath=null;
     e.guests.forEach(function(g){ if(g.tableId===undefined)g.tableId=null; });
     if(!e.design){
-      var seed=DEFAULT.events[i];
-      e.design=seed&&seed.design?seed.design:{palette:[],boards:[],decor:[]};
+      /* Was DEFAULT.events[i] — the sample's design, handed to whatever event
+         happened to sit at the same INDEX. After a pull that is the studio's
+         own first event, which then wore the sample wedding's palette, its
+         mood boards and its décor list. Match on the sample's id instead, so
+         the seed only ever reaches the record it was written for. */
+      var seed=DEFAULT.events.find(function(x){ return x.id===e.id; });
+      e.design=(seed&&seed.design)?seed.design:{palette:[],boards:[],decor:[]};
     }
     if(!e.design.palette)e.design.palette=[];
     if(!e.design.boards)e.design.boards=[];
