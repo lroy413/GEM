@@ -10,7 +10,7 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
 <meta name="apple-mobile-web-app-title" content="GEM">
 <meta name="format-detection" content="telephone=no">
-<meta name="gem-build" content="25eeaef28175">
+<meta name="gem-build" content="42f3a695a7f0">
 <link rel="manifest" href="/manifest.webmanifest">
 <link rel="icon" href="/icons/icon-192.png" sizes="192x192" type="image/png">
 <link rel="apple-touch-icon" href="/icons/icon-180.png">
@@ -822,6 +822,12 @@ body.portal-only .main{margin-left:0!important}
   background:linear-gradient(180deg,#fff,var(--ivory))}
 .card-h h3{font-family:var(--serif);font-size:21px;font-weight:600;letter-spacing:-.01em;line-height:1.15}
 .grid-2{display:grid;grid-template-columns:1.4fr 1fr;gap:20px}
+/* A detail page is a stack of blocks with one rhythm between them. It used to
+   be a margin-bottom written by hand on each one, which meant a block whose
+   author did not add one — evSection(), because in the event workspace .ev-col
+   already spaces it — sat flush against whatever came next. */
+.detail-col{display:flex;flex-direction:column;gap:20px}
+.detail-col > *{margin-bottom:0 !important}
 
 /* ============ PIPELINE (KANBAN) ============ */
 /* ---- summary bar ---- */
@@ -4271,7 +4277,12 @@ function viewClientDetail(id){
   var away=daysAway(l.date);
 
   var initials=leadInitials(l);
+  /* One gapped column rather than a margin on each block. The event workspace
+     already does this with .ev-col; here every block carried its own inline
+     margin-bottom, so evSection() — which has none, because in the workspace
+     the container spaces it — sat flush against the row beneath it. */
   return '<button class="back-link" data-back="clients">‹ All clients</button>'+
+  '<div class="detail-col">'+
   sampleBanner()+
   '<div class="detail-head">'+
     '<div class="dh-main">'+
@@ -4386,7 +4397,8 @@ function viewClientDetail(id){
           (ev?'<div class="hint" style="margin-top:6px">Upload contracts, venue paperwork, vendor insurance — anything you already have.</div>':'')+
         '</td></tr>')+'</tbody></table></div></div>'+
     '</div>'+
-  '</div>';
+  '</div>'+
+  '</div>';                 /* .detail-col */
 }
 
 /* --- Events --- */
@@ -11800,24 +11812,58 @@ function setSbVer(v){ try{ v===null?localStorage.removeItem('gem-sb-ver'):localS
 /* Compare-and-increment on the server. A device whose last-seen version has
    moved on is refused rather than allowed to prune away another device's
    work — the prune is what makes a blind push dangerous. */
-function sbClaim(){
-  return sbRest('rpc/gem_claim_sync',{method:'POST',body:{p_org:SB_STATE.org,p_expect:sbVer()}})
+/* The studio's version used to move the moment a push began, so a run that
+   died partway left it looking newer than it was and every other device came
+   to fetch a half-written state. Begin takes a lease and reports where the
+   studio stands; commit is what makes the new state visible. See 17. */
+function sbSyncErr(e){
+  var m=String((e&&e.message)||'');
+  if(/unsynced/i.test(m)){
+    /* This device has never pulled, but the studio already holds records.
+       Its ids differ from the ones on the server, so a push would insert a
+       second copy of everything rather than update. */
+    var u=new Error('This device has never synced with your studio. Pull first — pushing now would create a duplicate copy of everything.');
+    u.stale=true; return u;
+  }
+  if(/busy/i.test(m)){
+    var b=new Error('Another device is syncing this studio right now. Try again in a moment.');
+    b.busy=true; return b;
+  }
+  if(/stale/i.test(m)){
+    var s=new Error('Another device has saved since this one last synced. Pull first, then push.');
+    s.stale=true; return s;
+  }
+  return e;
+}
+function sbBegin(){
+  return sbRest('rpc/gem_begin_sync',{method:'POST',body:{p_org:SB_STATE.org,p_expect:sbVer()}})
     .then(function(v){ return Number(v); })
     .catch(function(e){
-      var m=String(e.message||'');
-      if(/unsynced/i.test(m)){
-        /* This device has never pulled, but the studio already holds records.
-           Its ids differ from the ones on the server, so a push would insert a
-           second copy of everything rather than update. */
-        var u=new Error('This device has never synced with your studio. Pull first — pushing now would create a duplicate copy of everything.');
-        u.stale=true; throw u;
+      /* Migration 17 not run yet, or an older studio: fall back to the
+         one-step claim so this build still works rather than refusing to sync
+         at all. Less safe, and exactly as safe as it was yesterday. */
+      if(/PGRST202|404|not find the function|does not exist/i.test(String(e.message||''))){
+        SB_SYNC.onePhase=true;
+        return sbRest('rpc/gem_claim_sync',{method:'POST',body:{p_org:SB_STATE.org,p_expect:sbVer()}})
+          .then(function(v){ return Number(v); })
+          .catch(function(e2){ throw sbSyncErr(e2); });
       }
-      if(/stale/i.test(m)){
-        var err=new Error('Another device has saved since this one last synced. Pull first, then push.');
-        err.stale=true; throw err;
-      }
-      throw e;
+      throw sbSyncErr(e);
     });
+}
+/* Returns the version the studio is now on — the first moment anything else is
+   entitled to act on this run. */
+function sbCommit(){
+  if(SB_SYNC.onePhase)return Promise.resolve(SB_SYNC.claimed);   // already bumped at begin
+  return sbRest('rpc/gem_commit_sync',{method:'POST',body:{p_org:SB_STATE.org,p_expect:sbVer()}})
+    .then(function(v){ return Number(v); })
+    .catch(function(e){ throw sbSyncErr(e); });
+}
+/* Best effort: hand the studio back at once rather than making the next device
+   wait out the five-minute lease. Never allowed to mask the real failure. */
+function sbAbort(){
+  if(SB_SYNC.onePhase)return Promise.resolve();
+  return sbRest('rpc/gem_abort_sync',{method:'POST',body:{p_org:SB_STATE.org}}).catch(function(){});
 }
 
 /* ---------- push ---------- */
@@ -12023,7 +12069,8 @@ function sbPush(opts){
   SB_SYNC.wrote=live.length;
 
   /* Parents before children — every child carries an FK to the row above it. */
-  var chain=sbClaim().then(function(v){ SB_SYNC.claimed=v; });
+  SB_SYNC.onePhase=false;
+  var chain=sbBegin().then(function(v){ SB_SYNC.claimed=v; });
   /* Photos first: mediaUpload() stamps photoPath/path onto the records, and
      the payloads above were built before that ran, so refresh the two that
      carry a storage reference. */
@@ -12106,6 +12153,12 @@ function sbPush(opts){
     return sbRest('org_prefs',{method:'POST',prefer:'resolution=merge-duplicates,return=minimal',
       body:[{org_id:org,prefs:p,stages:loadStages(),templates:p.templates||{},fields:p.fields||[]}]});
   }).then(function(){
+    /* The run is complete, so now the studio may move. Everything above this
+       line is reversible by simply not committing: a failure leaves the
+       version where it was and no other device is told to come and look. */
+    return sbCommit();
+  }).then(function(v){
+    setSbVer(v);
     /* Photos belonging to records that have since been deleted would sit in
        IndexedDB forever otherwise. */
     var keep={}; mediaItems().forEach(function(m){ keep[m.id]=true; });
@@ -12117,7 +12170,6 @@ function sbPush(opts){
       SB_SKIPPED_PRUNE=[];
     }
     setSbHashes(nextH);
-    setSbVer(SB_SYNC.claimed);
     /* Everything local is now on the server, so an automatic pull is safe
        again. Cleared here rather than on entry: a push that fails half way
        must leave the device marked as holding work. */
@@ -12125,6 +12177,10 @@ function sbPush(opts){
     SB_STATE.lastSync=new Date().toISOString(); SB_STATE.lastError=null;
     try{ localStorage.setItem('gem-sb-last',SB_STATE.lastSync); }catch(e){}
     return true;
+  }).catch(function(e){
+    /* Hand the studio back before reporting, so the next attempt is not made
+       to wait out a lease held by a run that is already over. */
+    return sbAbort().then(function(){ throw e; });
   });
 }
 
@@ -12294,7 +12350,7 @@ function sbPull(opts){
 }
 
 /* ---------- automatic sync ---------- */
-var SB_SYNC={timer:null,busy:false,queued:false,claimed:null,wrote:0,status:'idle'};
+var SB_SYNC={timer:null,busy:false,queued:false,claimed:null,wrote:0,status:'idle',onePhase:false};
 function sbSetStatus(st,msg){
   SB_SYNC.status=st; SB_SYNC.msg=msg||'';
   var el=document.getElementById('sbPill');
