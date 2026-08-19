@@ -10,7 +10,7 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
 <meta name="apple-mobile-web-app-title" content="GEM">
 <meta name="format-detection" content="telephone=no">
-<meta name="gem-build" content="9b9a1192db82">
+<meta name="gem-build" content="f833d7d379cd">
 <link rel="manifest" href="/manifest.webmanifest">
 <link rel="icon" href="/icons/icon-192.png" sizes="192x192" type="image/png">
 <link rel="apple-touch-icon" href="/icons/icon-180.png">
@@ -12046,13 +12046,27 @@ function sbUpsert(table,rows){
    whole studio, gone. That is the single most destructive line in the app, and
    it fires from a timer.
 
-   A local collection can be empty for reasons that have nothing to do with
-   intent: storage was lost, a pull brought down a partial state, a normalize
-   went wrong. So an empty keep list no longer deletes anything unless this is
-   the manual "make Supabase match this device" push, where a person has said
-   so and been asked to confirm. Emptying a collection deliberately therefore
-   needs that button — a stale row left on the server is a far cheaper mistake
-   than an emptied table. */
+   The automatic path no longer comes here at all — it retires named ids
+   instead, see sbRetire() — so this now runs only for the manual "make
+   Supabase match this device" push, which is a person asking for a mirror.
+   The empty-list guard stays as defence: if anything ever routes back through
+   here without allowEmpty, it refuses rather than emptying a table. */
+/* The id list this device last successfully sent, per table. It is what makes
+   a deletion explicit rather than inferred: the rows to remove are the ones
+   THIS DEVICE used to have and no longer does, which is a completely different
+   set from "everything the payload happens to lack".
+   That difference is the whole incident. A device holding a partial workspace
+   lacks the other planner's client, and prune-by-difference reads that as an
+   instruction to delete it. Diffed against what this device sent, it is simply
+   a row this device has never known about, and nothing happens to it. */
+function sbSent(){ try{ return JSON.parse(localStorage.getItem('gem-sb-sent'))||{}; }catch(e){ return {}; } }
+function setSbSent(m){ try{ localStorage.setItem('gem-sb-sent',JSON.stringify(m)); }catch(e){} }
+/* Delete exactly these ids, named one by one. */
+function sbRetire(table,ids){
+  if(!ids.length)return Promise.resolve(0);
+  return sbRest(table+'?id=in.('+ids.join(',')+')',{method:'DELETE',prefer:'return=minimal'})
+    .then(function(){ return ids.length; });
+}
 var SB_SKIPPED_PRUNE=[];
 function sbPrune(table,keepIds,scope,allowEmpty){
   if(!keepIds.length&&!allowEmpty){
@@ -12308,16 +12322,31 @@ function sbPush(opts){
     return up;
   });
 
-  /* Prune in reverse, so children go before the parents they point at. An
-     untouched table already matches, so it needs no prune. */
+  /* In reverse, so children go before the parents they point at. */
   chain=chain.then(function(){
     /* Recorded from the payload as built, so "this push carried no leads" is
        answerable afterwards rather than inferred from what survived. */
     SB_SYNC.counts={};
     steps.forEach(function(st){ if(st[1].length)SB_SYNC.counts[st[0]]=st[1].length; });
+
+    var sent=sbSent();
+    SB_SYNC.retired=0;
     var back=Promise.resolve();
     live.slice().reverse().forEach(function(st){
-      back=back.then(function(){ return sbPrune(st[0],st[1].map(function(r){return r.id;}),null,!!opts.full); });
+      var now=st[1].map(function(r){return r.id;});
+      back=back.then(function(){
+        if(opts.full){
+          /* "Make Supabase match this device" is a person asking for a mirror,
+             so it still prunes by difference — that is what the button means. */
+          return sbPrune(st[0],now,null,true);
+        }
+        /* Everything this device sent last time and is no longer carrying.
+           A first push after upgrading has nothing recorded, so it retires
+           nothing: rows this device has never seen simply stay. */
+        var had=sent[st[0]]||[];
+        var gone=had.filter(function(id){ return now.indexOf(id)<0; });
+        return sbRetire(st[0],gone).then(function(n){ SB_SYNC.retired+=n; });
+      });
     });
     return back;
   });
@@ -12336,6 +12365,7 @@ function sbPush(opts){
     setSbVer(v);
     sbLogClose(SB_SYNC.runId,{outcome:'committed',version_after:v,
       tables_written:SB_SYNC.wrote||0,counts:SB_SYNC.counts||{},
+      note:SB_SYNC.retired?(SB_SYNC.retired+' rows retired'):'',
       kept:SB_SKIPPED_PRUNE.slice()});
     /* Photos belonging to records that have since been deleted would sit in
        IndexedDB forever otherwise. */
@@ -12347,6 +12377,11 @@ function sbPush(opts){
         ' the studio has and this device does not — Settings › Connection to reconcile');
       SB_SKIPPED_PRUNE=[];
     }
+    /* On success only. A failed push must not leave this device believing it
+       sent rows it did not, or the next one would retire them. */
+    var sentNow={};
+    steps.forEach(function(st){ sentNow[st[0]]=st[1].map(function(r){return r.id;}); });
+    setSbSent(sentNow);
     setSbHashes(nextH);
     /* Everything local is now on the server, so an automatic pull is safe
        again. Cleared here rather than on entry: a push that fails half way
