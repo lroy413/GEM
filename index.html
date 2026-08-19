@@ -10,7 +10,7 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
 <meta name="apple-mobile-web-app-title" content="GEM">
 <meta name="format-detection" content="telephone=no">
-<meta name="gem-build" content="587e1a6090f7">
+<meta name="gem-build" content="50db545a8f7d">
 <link rel="manifest" href="/manifest.webmanifest">
 <link rel="icon" href="/icons/icon-192.png" sizes="192x192" type="image/png">
 <link rel="apple-touch-icon" href="/icons/icon-180.png">
@@ -64,6 +64,21 @@
   --shadow-lg:0 4px 12px rgba(59,46,51,.07), 0 28px 60px rgba(120,70,80,.13);
   --ring:0 0 0 3px rgba(176,141,62,.22);
 
+  /* Three surface tiers, and they mean something. Everything used to be one
+     surface — white fill, 1px line, same radius, same shadow — so nothing on
+     a screen was more important than anything else and the eye had nowhere to
+     land. The radius scales with the tier: a uniform radius is the tell that
+     a system was set once and never revisited.
+
+       PLATE   imagery or deep ink, no border, the largest radius. The one
+               thing on the screen you are meant to look at.
+       CARD    the working surface. A hairline and a contact shadow.
+       RECESS  sunk into the ground, no shadow, an inset hairline. Figures,
+               lists and empty states — things that support a card rather
+               than compete with one. */
+  --sunk:#F5ECEE;
+  --sunk-line:inset 0 0 0 1px rgba(59,46,51,.06);
+  --radius-plate:22px;
   --radius-lg:20px;
   --radius:14px;
   --radius-sm:10px;
@@ -78,6 +93,12 @@
   --ease:cubic-bezier(.22,.61,.36,1);
 }
 *{box-sizing:border-box;margin:0;padding:0}
+/* Anything that sets one number above or beside another gets tabular figures.
+   Proportional digits are correct in a sentence and wrong in a column: a 1 is
+   half the width of a 0, so a list of amounts wanders. */
+table,td,th,.pill,.status,.stat .v,.stat .d,.wk-n,.wk-due,.arc-s,.vn-f,
+.money,.amt,.j-c,.sec-badge,.count,.dh-band-v,.hero-count{
+  font-variant-numeric:tabular-nums;font-feature-settings:"tnum" 1}
 /* min-height, not height: a fixed 100% pinned the document to the
    viewport, so anything taller than the fold could not be scrolled to. */
 html,body{min-height:100%}
@@ -225,12 +246,13 @@ html.no-motion body::before{opacity:.3}
   border:1px solid transparent;
   transition:background-color .16s var(--ease),color .16s var(--ease),border-color .16s var(--ease);
 }
-.nav-item .ic{width:24px;text-align:center;font-size:19px;opacity:.72;
-  font-family:'Segoe UI Symbol','Apple Symbols',var(--sans);
-  /* Keep these as line art. Several of the marks have emoji presentations and
-     iOS will happily substitute a colour glyph, which reads as a sticker next
-     to the type. */
-  font-variant-emoji:text;-webkit-font-feature-settings:normal;
+/* Drawn, not typed. These were Unicode marks, and no font has a set of them
+   at one optical weight: the shade blocks (▥▤▧) came out dense and black while
+   the part-circles (◐◑◒) rendered as specks a third the size, so the rail read
+   as nineteen icons borrowed from nineteen places. One viewBox, one stroke,
+   currentColor — and no font substitution to guess at, which is what the
+   font-variant-emoji note below used to be defending against. */
+.nav-item .ic{flex:0 0 auto;width:19px;height:19px;opacity:.66;
   transition:opacity .16s var(--ease),color .16s var(--ease),transform .16s var(--ease)}
 .nav-item:hover{background:var(--pink-100);color:var(--ink)}
 .nav-item:hover .ic{opacity:1}
@@ -307,7 +329,7 @@ html.no-motion body::before{opacity:.3}
 .app.rail .nav-item{justify-content:center;padding:11px 0;gap:0}
 /* Collapsed, the mark carries the whole identity of the row — so it steps up
    in size and to full strength rather than sitting at label weight. */
-.app.rail .nav-item .ic{width:auto;font-size:24px;opacity:.88}
+.app.rail .nav-item .ic{width:22px;height:22px;opacity:.88}
 .app.rail .nav-item:hover .ic{opacity:1;transform:scale(1.06)}
 .app.rail .nav-item.active .ic{opacity:1}
 .app.rail .nav-item.active::before{left:-10px;height:20px}
@@ -388,16 +410,15 @@ html.no-motion body::before{opacity:.3}
 /* stat cards */
 .stat-row{display:grid;grid-template-columns:repeat(4,1fr);gap:16px;margin-bottom:28px}
 .stat-row.cols-3{grid-template-columns:repeat(3,1fr)}
+/* Figures support the thing above them; they are not the thing. Sunk into the
+   ground rather than lifted off it, so a row of them under a plate reads as
+   supporting detail instead of eleven equal panels. */
 .stat{
-  background:linear-gradient(180deg,#fff,var(--ivory));
-  border:1px solid var(--line);border-radius:var(--radius);
-  padding:18px 20px 17px;box-shadow:var(--shadow-sm);position:relative;overflow:hidden;
-  transition:box-shadow .2s var(--ease),transform .2s var(--ease);
+  background:var(--sunk);
+  border:0;border-radius:var(--radius-sm);
+  padding:16px 18px 15px;box-shadow:var(--sunk-line);position:relative;overflow:hidden;
 }
-.stat:hover{box-shadow:var(--shadow);transform:translateY(-1px)}
-/* A hairline of leaf along the top edge instead of a blurred blob. */
-.stat::before{content:"";position:absolute;left:0;right:0;top:0;height:1px;
-  background:linear-gradient(90deg,transparent,var(--gold-line) 22%,var(--gold-line) 78%,transparent)}
+.stat:hover{box-shadow:var(--sunk-line)}
 .stat .k{font-size:10px;letter-spacing:1.9px;text-transform:uppercase;color:var(--muted);font-weight:600}
 .stat .v{font-family:var(--serif);font-size:35px;font-weight:600;margin-top:8px;line-height:1;
   font-variant-numeric:tabular-nums;letter-spacing:-.015em}
@@ -1014,10 +1035,16 @@ tbody tr:hover{background:var(--pink-50)}
 /* 4px, a flat fill and a hairline track. A 7px pill with a three-stop gold
    gradient is the most generic component a web app owns, and at this size the
    gradient was never visible anyway — it only read as "widget". */
-.bar{height:4px;border-radius:2px;background:var(--line);overflow:hidden;
-  box-shadow:inset 0 1px 2px rgba(59,46,51,.05)}
-.bar > i{display:block;height:100%;background:var(--gold-deep);border-radius:2px;
-  box-shadow:inset 0 1px 0 rgba(255,255,255,.3);transition:width .4s var(--ease)}
+/* A rounded, inset-shadowed gold pill is the most generic component there is —
+   it says "web form" wherever it appears. A rule with a filled portion carries
+   exactly the same fact and reads as a measure rather than a widget: square
+   ends, hairline weight, no bevel. */
+.bar{height:2px;border-radius:0;background:var(--line-strong);overflow:hidden}
+.bar > i{display:block;height:100%;background:var(--gold-deep);border-radius:0;
+  transition:width .4s var(--ease)}
+/* Over a photograph the track has to hold its own without a shadow. */
+.hero .bar{background:rgba(255,255,255,.32)}
+.hero .bar > i{background:#fff}
 
 /* timeline */
 .tl{position:relative;padding-left:26px}
@@ -1236,7 +1263,7 @@ tbody tr:hover{background:var(--pink-50)}
 .arc-year:first-child{margin-top:0}
 .arc-card{position:relative;display:block;width:100%;padding:0;overflow:hidden;text-align:left;
   aspect-ratio:4/5;cursor:pointer;background-size:cover;background-position:center;
-  border:1px solid var(--line);border-radius:var(--radius-lg);box-shadow:var(--shadow-sm);
+  border:0;border-radius:var(--radius-plate);box-shadow:var(--shadow);
   transition:transform .18s var(--ease),box-shadow .18s var(--ease)}
 .arc-card:hover{transform:translateY(-3px);box-shadow:var(--shadow)}
 .arc-card:focus-visible{outline:none;box-shadow:var(--ring)}
@@ -1365,7 +1392,11 @@ tbody tr:hover{background:var(--pink-50)}
 .ev-card:hover{transform:translateY(-3px);box-shadow:var(--shadow)}
 /* Tall enough to be a photograph rather than a stripe. The gold stays as the
    answer when there is no cover — an honest wash, not a placeholder. */
-.ev-card .banner{height:78px;background:var(--gold-grad);position:relative;
+/* Was var(--gold-grad) — a slab of poster gold at card size, which is the
+   thing the archive tiles and the venue tiles were both corrected away from.
+   The house gold is a metal; it stops reading as one when it fills a shape. */
+.ev-card .banner{height:78px;background:linear-gradient(160deg,var(--pink-100),var(--card));
+  border-bottom:1px solid var(--line);position:relative;
   background-size:cover;background-position:center}
 .ev-card .banner.has-photo{height:152px}
 .ev-card .banner.has-photo::after{content:"";position:absolute;inset:0;
@@ -1374,7 +1405,13 @@ tbody tr:hover{background:var(--pink-50)}
 .ev-card .banner.has-photo .ev-blk,
 .ev-card .banner.has-photo .r-acts{z-index:2}
 .ev-card .banner.has-photo .d{background:rgba(0,0,0,.3)}
-.ev-card .banner .d{position:absolute;bottom:10px;left:16px;color:#fff;font-size:12px;font-weight:600;background:rgba(0,0,0,.12);padding:3px 10px;border-radius:20px}
+/* The date chip was white on a translucent black, which worked only because
+   the banner behind it was a dark gold. On the pale banner it has to be ink;
+   over a photograph it goes back to white. */
+.ev-card .banner .d{position:absolute;bottom:10px;left:16px;color:var(--ink-soft);font-size:12px;
+  font-weight:600;background:var(--card);box-shadow:var(--sunk-line);
+  padding:3px 10px;border-radius:20px;font-variant-numeric:tabular-nums}
+.ev-card .banner.has-photo .d{color:#fff;box-shadow:none}
 .ev-card .body{padding:16px}
 .ev-card .body h4{font-family:var(--serif);font-size:21px;font-weight:600}
 .ev-card .body .loc{font-size:12.5px;color:var(--muted);margin-top:2px}
@@ -1541,8 +1578,12 @@ td.inv-col{text-align:center;width:1%}
   opacity:.30;display:block}
 .hero-behind i:nth-child(2){left:26px;right:26px;top:-13px;opacity:.16}
 .hero{position:relative;display:flex;align-items:stretch;gap:22px;overflow:hidden;
-  border-radius:var(--radius-lg);border:1px solid var(--line);background:var(--card);
+  border-radius:var(--radius-plate);border:1px solid var(--line);background:var(--card);
   box-shadow:var(--shadow);min-height:172px}
+/* A plate carrying a photograph needs no hairline — the image gives it its own
+   edge, and a border on top of one reads as a frame around a frame. Without a
+   picture the hairline stays, or a pale tint wash floats on a pale page. */
+.hero.has-photo{border-color:transparent;box-shadow:var(--shadow-lg)}
 /* No photograph yet: the event's own colour, not a stock image pretending to
    be content. */
 .hero::before{content:"";position:absolute;inset:0;
@@ -1636,8 +1677,11 @@ td.inv-col{text-align:center;width:1%}
   box-shadow:0 0 0 3px rgba(176,141,62,.13), inset 0 1px 0 rgba(255,255,255,.8), var(--shadow)}
 /* A clear day is information too, so it settles back rather than competing
    with the days that actually hold something. Flat, no lift, paler date. */
-.wk-d.quiet{background:transparent;border-color:var(--line);box-shadow:none;cursor:default}
-.wk-d.quiet:hover{transform:none;border-color:var(--line);box-shadow:none}
+/* A clear day is a slot with nothing in it, not a gap in the strip — the
+   recess tier says that exactly, and it keeps the seven columns reading as one
+   object while the days that hold something stay lifted off the page. */
+.wk-d.quiet{background:var(--sunk);border-color:transparent;box-shadow:var(--sunk-line);cursor:default}
+.wk-d.quiet:hover{transform:none;border-color:transparent;box-shadow:var(--sunk-line)}
 .wk-d.quiet .wk-n{color:var(--muted);font-weight:400}
 .wk-d.quiet.today{background:var(--card);border-color:var(--gold);
   box-shadow:0 0 0 3px rgba(176,141,62,.13), inset 0 1px 0 rgba(255,255,255,.8), var(--shadow-sm)}
@@ -1872,7 +1916,10 @@ select.mini:focus-visible{outline:none;box-shadow:var(--ring)}
 .board-img{position:relative}
 .board-count{position:absolute;right:8px;bottom:8px;font-size:10.5px;font-weight:600;color:#fff;
   background:rgba(74,59,63,.5);padding:3px 9px;border-radius:20px;backdrop-filter:blur(3px)}
-.empty-hint{font-size:13px;color:var(--muted);padding:20px;text-align:center;grid-column:1/-1}
+/* An empty list is a recess too — a note sitting in the hollow where the rows
+   will go, rather than floating text on the card's own white. */
+.empty-hint{font-size:13px;color:var(--muted);padding:20px;text-align:center;grid-column:1/-1;
+  background:var(--sunk);border-radius:var(--radius-sm);box-shadow:var(--sunk-line)}
 .btn-sm{padding:7px 13px;font-size:12.5px}
 
 /* ---- board detail ---- */
@@ -2273,7 +2320,8 @@ tr:hover .r-acts,.ev-card:hover .r-acts,.table-card:hover .r-acts,
    the top — but the title block goes. */
 /* A client file with a photograph carries its own header too. */
 .detail-head.has-photo{display:block;padding:0;overflow:hidden;background:var(--card);
-  border:1px solid var(--line);border-radius:var(--radius-lg);box-shadow:var(--shadow-sm)}
+  border:1px solid var(--line);border-radius:var(--radius-plate);box-shadow:var(--shadow)}
+.detail-head.has-photo:has(.dh-band.has-photo){border-color:transparent;box-shadow:var(--shadow-lg)}
 .dh-band{position:relative;display:flex;align-items:flex-end;justify-content:space-between;gap:24px;
   min-height:320px;padding:26px 28px;background-size:cover;background-position:center}
 .dh-band::after{content:"";position:absolute;inset:0;pointer-events:none;
@@ -2797,40 +2845,40 @@ html,body{max-width:100%;overflow-x:hidden}
     <div class="nav-group" data-group="workspace">
       <button class="nav-label" type="button" aria-expanded="true"><span>Workspace</span><span class="chev" aria-hidden="true"></span></button>
       <div class="nav-items"><div class="nav-items-inner">
-        <div class="nav-item" data-view="dashboard" tabindex="0"><span class="ic">◆</span><span class="lbl">Dashboard</span></div>
-        <div class="nav-item" data-view="pipeline" tabindex="0"><span class="ic">▥</span><span class="lbl">Leads &amp; Pipeline</span></div>
-        <div class="nav-item" data-view="clients" tabindex="0"><span class="ic">♥</span><span class="lbl">Clients</span></div>
+        <div class="nav-item" data-view="dashboard" tabindex="0"><svg class="ic" viewBox="0 0 20 20" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"><path d="M10 2.6 17.4 10 10 17.4 2.6 10Z"/></svg><span class="lbl">Dashboard</span></div>
+        <div class="nav-item" data-view="pipeline" tabindex="0"><svg class="ic" viewBox="0 0 20 20" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"><path d="M2.8 3.6h4.4v12.8H2.8ZM7.8 3.6h4.4v12.8H7.8ZM12.8 3.6h4.4v12.8h-4.4Z"/><path d="M2.8 7.4h4.4M7.8 7.4h4.4M12.8 7.4h4.4"/></svg><span class="lbl">Leads &amp; Pipeline</span></div>
+        <div class="nav-item" data-view="clients" tabindex="0"><svg class="ic" viewBox="0 0 20 20" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"><circle cx="10" cy="7.3" r="2.9"/><path d="M4.2 16.6a5.8 5.8 0 0 1 11.6 0"/></svg><span class="lbl">Clients</span></div>
       </div></div>
     </div>
     <div class="nav-group" data-group="events">
       <button class="nav-label" type="button" aria-expanded="true"><span>Events</span><span class="chev" aria-hidden="true"></span></button>
       <div class="nav-items"><div class="nav-items-inner">
-        <div class="nav-item" data-view="events" tabindex="0"><span class="ic">✦</span><span class="lbl">Events</span></div>
-        <div class="nav-item" data-view="guests" tabindex="0"><span class="ic">▤</span><span class="lbl">Guests &amp; RSVP</span></div>
-        <div class="nav-item" data-view="seating" tabindex="0"><span class="ic">◍</span><span class="lbl">Seating Chart</span></div>
-        <div class="nav-item" data-view="vendors" tabindex="0"><span class="ic">❖</span><span class="lbl">Vendors</span></div>
-        <div class="nav-item" data-view="venues" tabindex="0"><span class="ic">◇</span><span class="lbl">Venues</span></div>
-        <div class="nav-item" data-view="archive" tabindex="0"><span class="ic">▦</span><span class="lbl">Archive</span></div>
-        <div class="nav-item" data-view="design" tabindex="0"><span class="ic">◈</span><span class="lbl">Design Studio</span></div>
+        <div class="nav-item" data-view="events" tabindex="0"><svg class="ic" viewBox="0 0 20 20" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"><path d="M10 2.4 11.9 8.1 17.6 10 11.9 11.9 10 17.6 8.1 11.9 2.4 10 8.1 8.1Z"/></svg><span class="lbl">Events</span></div>
+        <div class="nav-item" data-view="guests" tabindex="0"><svg class="ic" viewBox="0 0 20 20" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"><path d="M7 5.4h10M7 10h10M7 14.6h10"/><path d="M3.4 5.4h.02M3.4 10h.02M3.4 14.6h.02"/></svg><span class="lbl">Guests &amp; RSVP</span></div>
+        <div class="nav-item" data-view="seating" tabindex="0"><svg class="ic" viewBox="0 0 20 20" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"><circle cx="10" cy="10" r="4.1"/><path d="M10 2.3v1.6M10 16.1v1.6M2.3 10h1.6M16.1 10h1.6"/></svg><span class="lbl">Seating Chart</span></div>
+        <div class="nav-item" data-view="vendors" tabindex="0"><svg class="ic" viewBox="0 0 20 20" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"><path d="M10 2.6 12.6 6 10 9.4 7.4 6Z"/><path d="M10 10.6 12.6 14 10 17.4 7.4 14Z"/><path d="M3.4 6.6 6 10l-2.6 3.4"/><path d="M16.6 6.6 14 10l2.6 3.4"/></svg><span class="lbl">Vendors</span></div>
+        <div class="nav-item" data-view="venues" tabindex="0"><svg class="ic" viewBox="0 0 20 20" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"><path d="M3.2 17.4V8.6L10 3.4l6.8 5.2v8.8Z"/><path d="M7.8 17.4v-5h4.4v5"/></svg><span class="lbl">Venues</span></div>
+        <div class="nav-item" data-view="archive" tabindex="0"><svg class="ic" viewBox="0 0 20 20" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3.6h6v6H3ZM11 3.6h6v6h-6ZM3 10.4h6v6H3ZM11 10.4h6v6h-6Z"/></svg><span class="lbl">Archive</span></div>
+        <div class="nav-item" data-view="design" tabindex="0"><svg class="ic" viewBox="0 0 20 20" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"><circle cx="7.6" cy="8" r="4.2"/><circle cx="12.4" cy="12" r="4.2"/></svg><span class="lbl">Design Studio</span></div>
       </div></div>
     </div>
     <div class="nav-group" data-group="client">
       <button class="nav-label" type="button" aria-expanded="true"><span>Client</span><span class="chev" aria-hidden="true"></span></button>
       <div class="nav-items"><div class="nav-items-inner">
-        <div class="nav-item" data-view="inquiries" tabindex="0"><span class="ic">✧</span><span class="lbl">Inquiries</span></div>
-        <div class="nav-item" data-view="questionnaires" tabindex="0"><span class="ic">▨</span><span class="lbl">Questionnaires</span></div>
-        <div class="nav-item" data-view="messages" tabindex="0"><span class="ic">✻</span><span class="lbl">Messages</span></div>
-        <div class="nav-item" data-view="portal" tabindex="0"><span class="ic">♡</span><span class="lbl">Client Portal</span></div>
+        <div class="nav-item" data-view="inquiries" tabindex="0"><svg class="ic" viewBox="0 0 20 20" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"><path d="M2.8 11.6h4.1l1 2.2h4.2l1-2.2h4.1"/><path d="M2.8 11.6 5.3 4.2h9.4l2.5 7.4v5.2H2.8Z"/></svg><span class="lbl">Inquiries</span></div>
+        <div class="nav-item" data-view="questionnaires" tabindex="0"><svg class="ic" viewBox="0 0 20 20" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"><path d="M4.6 2.8h10.8v14.4H4.6Z"/><path d="M7.4 7h5.2M7.4 10.4h5.2M7.4 13.8h3"/></svg><span class="lbl">Questionnaires</span></div>
+        <div class="nav-item" data-view="messages" tabindex="0"><svg class="ic" viewBox="0 0 20 20" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"><path d="M3.2 5.2h13.6v8.6H8.4L4.6 17v-3.2H3.2Z"/></svg><span class="lbl">Messages</span></div>
+        <div class="nav-item" data-view="portal" tabindex="0"><svg class="ic" viewBox="0 0 20 20" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"><path d="M3.2 3.6h13.6v12.8H3.2Z"/><path d="M11.2 3.6v12.8"/><path d="M13.9 10h.02"/></svg><span class="lbl">Client Portal</span></div>
       </div></div>
     </div>
     <div class="nav-group" data-group="business">
       <button class="nav-label" type="button" aria-expanded="true"><span>Business</span><span class="chev" aria-hidden="true"></span></button>
       <div class="nav-items"><div class="nav-items-inner">
-        <div class="nav-item" data-view="calendar" tabindex="0"><span class="ic">▦</span><span class="lbl">Calendar</span></div>
-        <div class="nav-item" data-view="documents" tabindex="0"><span class="ic">§</span><span class="lbl">Contracts &amp; Docs</span></div>
-        <div class="nav-item" data-view="finance" tabindex="0"><span class="ic">¤</span><span class="lbl">Budget &amp; Invoicing</span></div>
-        <div class="nav-item" data-view="analytics" tabindex="0"><span class="ic">◑</span><span class="lbl">Analytics</span></div>
-        <div class="nav-item" data-view="tax" tabindex="0"><span class="ic">%</span><span class="lbl">Tax Tool</span></div>
+        <div class="nav-item" data-view="calendar" tabindex="0"><svg class="ic" viewBox="0 0 20 20" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"><path d="M3.2 4.8h13.6v12H3.2Z"/><path d="M3.2 8.6h13.6"/><path d="M6.8 2.6v3.2M13.2 2.6v3.2"/></svg><span class="lbl">Calendar</span></div>
+        <div class="nav-item" data-view="documents" tabindex="0"><svg class="ic" viewBox="0 0 20 20" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"><path d="M5 2.8h6.6L15.6 7v10.2H5Z"/><path d="M11.4 2.8V7h4.2"/></svg><span class="lbl">Contracts &amp; Docs</span></div>
+        <div class="nav-item" data-view="finance" tabindex="0"><svg class="ic" viewBox="0 0 20 20" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"><path d="M3 4.4h14v11.2H3Z"/><path d="M6.2 8.4h7.6M6.2 11.6h4.6"/></svg><span class="lbl">Budget &amp; Invoicing</span></div>
+        <div class="nav-item" data-view="analytics" tabindex="0"><svg class="ic" viewBox="0 0 20 20" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"><path d="M4.4 15.6V11M10 15.6V5.4M15.6 15.6v-6.8"/><path d="M2.6 17.4h14.8"/></svg><span class="lbl">Analytics</span></div>
+        <div class="nav-item" data-view="tax" tabindex="0"><svg class="ic" viewBox="0 0 20 20" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"><circle cx="10" cy="10" r="7.2"/><path d="M10 2.8V10h7.2"/></svg><span class="lbl">Tax Tool</span></div>
       </div></div>
     </div>
     <div class="spacer"></div>
@@ -4059,23 +4107,23 @@ function evSwitcher(){
   }).join('')+'</select>';
 }
 function actionsFor(v){
-  if(v==='pipeline')return '<button class="btn btn-gold" id="addLead">＋ New Lead</button>';
-  if(v==='clients')return state.clientId?'':'<button class="btn btn-gold" id="addClient">＋ New Client</button>';
-  if(v==='finance')return '<button class="btn btn-ghost" id="exportInv">Export CSV</button> <button class="btn btn-gold" id="addInv">＋ New Invoice</button>';
+  if(v==='pipeline')return '<button class="btn btn-gold" id="addLead">＋ New lead</button>';
+  if(v==='clients')return state.clientId?'':'<button class="btn btn-gold" id="addClient">＋ New client</button>';
+  if(v==='finance')return '<button class="btn btn-ghost" id="exportInv">Export CSV</button> <button class="btn btn-gold" id="addInv">＋ New invoice</button>';
   if(v==='events')return state.eventId
     ?'<button class="btn btn-quiet" id="printEvent">⎙ Print</button> <button class="btn btn-quiet" id="editEvent">✎ Edit event</button>'
-    :'<button class="btn btn-gold" id="addEvent">＋ New Event</button>';
+    :'<button class="btn btn-gold" id="addEvent">＋ New event</button>';
   if(v==='guests')return evSwitcher()+' <button class="btn btn-ghost" id="importGuests">⇪ Import CSV</button>'+
     ' <button class="btn btn-ghost" id="exportGuests">Export</button>'+
-    ' <button class="btn btn-gold" id="addGuest">＋ Add Guest</button>';
-  if(v==='seating')return evSwitcher()+' <button class="btn btn-gold" id="addTable">＋ Add Table</button>';
-  if(v==='vendors')return '<button class="btn btn-gold" id="addVendor">＋ Add Vendor</button>';
-  if(v==='design')return state.boardId?'':evSwitcher()+' <button class="btn btn-gold" id="addSwatch">＋ Add Colour</button>';
+    ' <button class="btn btn-gold" id="addGuest">＋ Add guest</button>';
+  if(v==='seating')return evSwitcher()+' <button class="btn btn-gold" id="addTable">＋ Add table</button>';
+  if(v==='vendors')return '<button class="btn btn-gold" id="addVendor">＋ Add vendor</button>';
+  if(v==='design')return state.boardId?'':evSwitcher()+' <button class="btn btn-gold" id="addSwatch">＋ Add colour</button>';
   if(v==='documents')return '<button class="btn btn-ghost" id="uploadDoc">⇪ Upload</button>'+
-    ' <button class="btn btn-gold" id="addDoc">＋ New Document</button>';
+    ' <button class="btn btn-gold" id="addDoc">＋ New document</button>';
   if(v==='portal')return evSwitcher();
   if(v==='messages')return evSwitcher();
-  if(v==='questionnaires')return state.qId?'':'<button class="btn btn-gold" id="addQuestionnaire">＋ New Questionnaire</button>';
+  if(v==='questionnaires')return state.qId?'':'<button class="btn btn-gold" id="addQuestionnaire">＋ New questionnaire</button>';
   if(v==='calendar')return '<button class="btn btn-ghost" id="calPrev">‹</button> <button class="btn btn-ghost" id="calToday">Today</button> <button class="btn btn-ghost" id="calNext">›</button>';
   return '';
 }
@@ -5060,7 +5108,7 @@ function wireEvents(){
   };
   var add=function(sel,fn){ var b=document.querySelector(sel); if(b)b.onclick=function(e){e.stopPropagation();fn();}; };
   add('[data-addtl]',function(){
-    openEditor({title:'Add Moment',sub:ev&&ev.title,saveLabel:'Add',
+    openEditor({title:'Add moment',sub:ev&&ev.title,saveLabel:'Add',
       fields:[{id:'t',label:'Time',required:true,placeholder:'4:30 PM',fmt:'time'},
               {id:'ev',label:'What happens',required:true,placeholder:'Ceremony'},
               {id:'ds',label:'Detail',placeholder:'Conservatory hall'}],
@@ -5068,7 +5116,7 @@ function wireEvents(){
         sortTimeline(ev); closeModal(); afterChange(); }});
   });
   add('[data-addck]',function(){
-    openEditor({title:'Add Task',sub:ev&&ev.title,twoCol:true,saveLabel:'Add',
+    openEditor({title:'Add task',sub:ev&&ev.title,twoCol:true,saveLabel:'Add',
       fields:[{id:'lbl',label:'Task',required:true,full:true},
               {id:'cat',label:'Category',type:'select',
                options:['Logistics','Design','Catering','Music','Finance','Attire','Stationery','General']},
@@ -5078,7 +5126,7 @@ function wireEvents(){
         closeModal(); afterChange(); }});
   });
   add('[data-addbl]',function(){
-    openEditor({title:'Add Budget Line',sub:ev&&ev.title,twoCol:true,saveLabel:'Add',
+    openEditor({title:'Add budget line',sub:ev&&ev.title,twoCol:true,saveLabel:'Add',
       fields:[{id:'cat',label:'Category',required:true,full:true},
               {id:'est',label:'Estimated',type:'number'},
               {id:'act',label:'Committed',type:'number'}],
@@ -5894,7 +5942,7 @@ function wireFloorPlan(ev){
   if(ch)ch.onchange=function(){ f.showChairs=ch.checked; afterChange(); };
   var rm=$('#fpRoom');
   if(rm)rm.onclick=function(){
-    openEditor({title:'Room Size',sub:ev.title,twoCol:true,saveLabel:'Update',
+    openEditor({title:'Room size',sub:ev.title,twoCol:true,saveLabel:'Update',
       fields:[{id:'w',label:'Width (ft)',type:'number',value:f.w,required:true},
               {id:'h',label:'Depth (ft)',type:'number',value:f.h,required:true}],
       onSave:function(v){
@@ -6263,7 +6311,7 @@ function openVenueModal(v){
   var isNew=!v;
   var a=(v&&v.address)||{}, c=(v&&v.contact)||{};
   openEditor({
-    title:isNew?'Add a Venue':'Edit Venue', twoCol:true,
+    title:isNew?'Add a venue':'Edit venue', twoCol:true,
     saveLabel:isNew?'Add venue':'Save changes',
     onDelete:isNew?null:function(){ closeModal(); deleteRecord('venue',v.id); },
     deleteLabel:v&&v.name,
@@ -6318,7 +6366,7 @@ function openSpaceModal(v,sp){
   if(!v)return;
   var isNew=!sp;
   openEditor({
-    title:isNew?'Add a Space':'Edit Space', sub:v.name, twoCol:true,
+    title:isNew?'Add a space':'Edit space', sub:v.name, twoCol:true,
     saveLabel:isNew?'Add':'Save changes',
     onDelete:isNew?null:function(){ closeModal(); deleteRecord('space',sp.id); },
     deleteLabel:sp&&sp.name,
@@ -6603,7 +6651,7 @@ function viewDesign(){
         '<div class="sw-name">'+esc(c.name)+'</div><div class="sw-hex">'+esc(c.hex.toUpperCase())+'</div></div>';
     }).join('')+'</div></div>'+
   '<div class="card" style="margin-bottom:20px"><div class="card-h"><h3>Mood Boards</h3>'+
-    '<button class="btn btn-ghost btn-sm" id="newBoard">＋ New Board</button></div>'+
+    '<button class="btn btn-ghost btn-sm" id="newBoard">＋ New board</button></div>'+
     '<div class="boards">'+d.boards.map(function(b){
       var cover=b.images&&b.images.length?b.images[0].src:null;
       return '<div class="board board-link" data-board="'+esc(b.id)+'" tabindex="0" role="link">'+
@@ -7008,7 +7056,7 @@ function uploadDocFor(eventId,after){
        as "Hillside Barn COI", and the extension is still on the file itself. */
     var base=String(f.name).replace(/\.[^.]+$/,'');
     openEditor({
-      title:'File a Document',
+      title:'File a document',
       sub:f.name+' · '+fileSize(f.size),
       twoCol:true,
       saveLabel:'Upload',
@@ -7725,25 +7773,25 @@ var SET_PAGES=[
   {g:'Studio',items:[
     {k:'business',icon:'◆',t:'Business profile',d:'Name, contact details and letterhead'},
     {k:'branding',icon:'◈',t:'Branding',d:'Your logo, colours and how clients see you'},
-    {k:'pipeline',icon:'❧',t:'Pipeline stages',d:'Rename, reorder and colour your booking flow'},
+    {k:'pipeline',icon:'▥',t:'Pipeline stages',d:'Rename, reorder and colour your booking flow'},
     {k:'templates',icon:'✦',t:'Templates',d:'Task countdowns and document boilerplate'},
     {k:'fields',icon:'▤',t:'Custom fields',d:'Extra details you track on clients and events'},
-    {k:'team',icon:'♣',t:'Team & roles',d:'Who has access and what they can do'}
+    {k:'team',icon:'◉',t:'Team & roles',d:'Who has access and what they can do'}
   ]},
   {g:'App',items:[
-    {k:'appearance',icon:'◑',t:'Appearance',d:'Motion, density and where GEM opens'},
+    {k:'appearance',icon:'◐',t:'Appearance',d:'Motion, density and where GEM opens'},
     {k:'planning',icon:'◍',t:'Planning defaults',d:'Room size, table preset, grid and chairs'},
-    {k:'alerts',icon:'✻',t:'Alerts',d:'What appears in Waiting On, and how far ahead'},
-    {k:'portal',icon:'♡',t:'Client portal',d:'What couples can see and do'}
+    {k:'alerts',icon:'◔',t:'Alerts',d:'What appears in Waiting On, and how far ahead'},
+    {k:'portal',icon:'◑',t:'Client portal',d:'What couples can see and do'}
   ]},
   {g:'Learn',items:[
-    {k:'tours',icon:'✦',t:'Getting started',d:'Guided walkthroughs for every toolset'},
+    {k:'tours',icon:'✧',t:'Getting started',d:'Guided walkthroughs for every toolset'},
     {k:'help',icon:'?',t:'Help & instructions',d:'How each part of GEM works'}
   ]},
   {g:'Data',items:[
     {k:'connection',icon:'⇄',t:'Connection',d:'Link this device to your Supabase project'},
-    {k:'data',icon:'▤',t:'Data & storage',d:'Export, import, storage used'},
-    {k:'about',icon:'◈',t:'About GEM',d:'Version, security and what’s coming'}
+    {k:'data',icon:'▢',t:'Data & storage',d:'Export, import, storage used'},
+    {k:'about',icon:'◇',t:'About GEM',d:'Version, security and what’s coming'}
   ]}
 ];
 /* Which build is this? Stamped into the page head by build.py and
@@ -8420,7 +8468,7 @@ function wireSettings(){
   });
   var as=$('#addStage');
   if(as)as.onclick=function(){
-    openEditor({title:'Add Stage',sub:'Appears at the end of your pipeline.',saveLabel:'Add',
+    openEditor({title:'Add stage',sub:'Appears at the end of your pipeline.',saveLabel:'Add',
       fields:[{id:'name',label:'Stage name',required:true,placeholder:'e.g. Site Visit Booked'}],
       onSave:function(v){
         STAGES.push({id:uid('st'),name:v.name,color:'#C9A24B'});
@@ -9029,7 +9077,7 @@ function wireTax(){
   if(r)r.oninput=function(){ t.rate=Number(r.value); save(); render(); wireTax(); };
   var ae=$('#addExpense');
   if(ae)ae.onclick=function(){
-    md.className='modal';md.innerHTML='<h3>Add Expense</h3><p class="sub">A deductible business cost.</p>'+
+    md.className='modal';md.innerHTML='<h3>Add expense</h3><p class="sub">A deductible business cost.</p>'+
       '<div class="field"><label>Category</label><input id="x_label" placeholder="e.g. Studio rent"></div>'+
       '<div class="field"><label>Amount for the year</label><input id="x_amt" type="number" placeholder="2400"></div>'+
       '<div class="modal-actions"><button class="btn btn-ghost" id="mCancel">Cancel</button><button class="btn btn-gold" id="mSave">Add</button></div>';
@@ -9301,7 +9349,7 @@ function openLeadModal(){
     '<div class="field"><label>Event date</label><input id="f_date" type="date"></div>'+
     '<div class="field"><label>Venue</label><input id="f_venue" placeholder="Venue name"></div>'+
     '<div class="field"><label>Estimated value</label><input id="f_value" type="number" placeholder="35000"></div>'+
-    '<div class="modal-actions"><button class="btn btn-ghost" id="mCancel">Cancel</button><button class="btn btn-gold" id="mSave">Add Lead</button></div>';
+    '<div class="modal-actions"><button class="btn btn-ghost" id="mCancel">Cancel</button><button class="btn btn-gold" id="mSave">Add lead</button></div>';
   ov.classList.add('show');
   $('#mCancel').onclick=closeModal;
   $('#mSave').onclick=function(){
@@ -9384,10 +9432,10 @@ function openGuestModal(ev){
 }
 function openTableModal(){
   var e=activeEvent(); if(!e){toast('Create an event first ✦');return;}
-  md.className='modal';md.innerHTML='<h3>Add Table</h3><p class="sub">Adding to '+esc(e.title)+'.</p>'+
+  md.className='modal';md.innerHTML='<h3>Add table</h3><p class="sub">Adding to '+esc(e.title)+'.</p>'+
     '<div class="field"><label>Table name</label><input id="f_tname" placeholder="e.g. Table 3 · Friends"></div>'+
     '<div class="field"><label>Seats</label><input id="f_tseats" type="number" value="8" min="1"></div>'+
-    '<div class="modal-actions"><button class="btn btn-ghost" id="mCancel">Cancel</button><button class="btn btn-gold" id="mSave">Add Table</button></div>';
+    '<div class="modal-actions"><button class="btn btn-ghost" id="mCancel">Cancel</button><button class="btn btn-gold" id="mSave">Add table</button></div>';
   ov.classList.add('show');
   $('#mCancel').onclick=closeModal;
   $('#mSave').onclick=function(){
@@ -9405,7 +9453,7 @@ function openVendorModal(){
       .map(function(e){return {value:e.id,label:(evIsSub(e)?'└ ':'')+e.title+' · '+fmtDate(e.date)};}));
   var booking=function(vals){ return !!vals.bookTo; };
   openEditor({
-    title:'Add Vendor',
+    title:'Add vendor',
     sub:'Goes into your directory, and onto an event if you pick one.',
     twoCol:true,
     saveLabel:'Add vendor',
@@ -9432,10 +9480,10 @@ function openVendorModal(){
 /* Pass a board to pin the colour to that board; omit for the event palette. */
 function openSwatchModal(board){
   var e=activeEvent(); if(!e){toast('Create an event first ✦');return;}
-  md.className='modal';md.innerHTML='<h3>Add Colour</h3><p class="sub">Adding to '+esc(board?board.title:e.title+'’s palette')+'.</p>'+
+  md.className='modal';md.innerHTML='<h3>Add colour</h3><p class="sub">Adding to '+esc(board?board.title:e.title+'’s palette')+'.</p>'+
     '<div class="field"><label>Name</label><input id="f_cname" placeholder="e.g. Powder Blush"></div>'+
     '<div class="field"><label>Colour</label><input id="f_chex" type="color" value="#F5DDE0" style="height:46px;padding:4px"></div>'+
-    '<div class="modal-actions"><button class="btn btn-ghost" id="mCancel">Cancel</button><button class="btn btn-gold" id="mSave">Add Colour</button></div>';
+    '<div class="modal-actions"><button class="btn btn-ghost" id="mCancel">Cancel</button><button class="btn btn-gold" id="mSave">Add colour</button></div>';
   ov.classList.add('show');
   $('#mCancel').onclick=closeModal;
   $('#mSave').onclick=function(){
@@ -9454,13 +9502,13 @@ function openBoardModal(){
     ['Gold → Mauve','linear-gradient(135deg,#C9A24B,#6E5B60)'],
     ['Slate → Linen','linear-gradient(135deg,#E7EAF0,#F3E7D8)']
   ];
-  md.className='modal';md.innerHTML='<h3>New Mood Board</h3><p class="sub">Adding to '+esc(e.title)+'.</p>'+
+  md.className='modal';md.innerHTML='<h3>New mood board</h3><p class="sub">Adding to '+esc(e.title)+'.</p>'+
     '<div class="field"><label>Title</label><input id="f_btitle" placeholder="e.g. Ceremony Arch"></div>'+
     '<div class="field"><label>Description</label><input id="f_bnote" placeholder="e.g. Asymmetric florals, ivory drape"></div>'+
     '<div class="field"><label>Cover tone</label><div class="tone-pick" id="tonePick">'+
       TONES.map(function(t,i){return '<button type="button" class="tone'+(i===0?' sel':'')+'" data-tone="'+t[1]+'" title="'+t[0]+'" style="background:'+t[1]+'"></button>';}).join('')+
     '</div><div class="hint">You can add photos once the board is created.</div></div>'+
-    '<div class="modal-actions"><button class="btn btn-ghost" id="mCancel">Cancel</button><button class="btn btn-gold" id="mSave">Create Board</button></div>';
+    '<div class="modal-actions"><button class="btn btn-ghost" id="mCancel">Cancel</button><button class="btn btn-gold" id="mSave">Create board</button></div>';
   ov.classList.add('show');
   var tone=TONES[0][1];
   md.querySelectorAll('.tone').forEach(function(t){
@@ -9489,7 +9537,7 @@ function openDocModal(){
     '<div class="field"><label>Event</label><select id="f_devent">'+db.events.map(function(e){
       return '<option value="'+esc(e.id)+'">'+(evIsSub(e)?'└ ':'')+esc(e.title)+'</option>';}).join('')+'</select></div>'+
     '<div class="field"><label>Value</label><input id="f_damt" type="number" placeholder="9600"></div>'+
-    '<div class="modal-actions"><button class="btn btn-ghost" id="mCancel">Cancel</button><button class="btn btn-gold" id="mSave">Create Draft</button></div>';
+    '<div class="modal-actions"><button class="btn btn-ghost" id="mCancel">Cancel</button><button class="btn btn-gold" id="mSave">Create draft</button></div>';
   ov.classList.add('show');
   var tp=$('#f_dtpl');
   if(tp)tp.onchange=function(){
@@ -9519,7 +9567,7 @@ function openClientModal(existing){
     return '<div class="field"><label>'+label+'</label><input id="'+id+'" type="'+(type||'text')+'" value="'+esc(val||'')+'"></div>';
   }
   md.className='modal';
-  md.innerHTML='<h3>'+(creating?'New Client':'Edit Client')+'</h3>'+
+  md.innerHTML='<h3>'+(creating?'New client':'Edit client')+'</h3>'+
     '<p class="sub">'+(creating?'For clients who come to you directly, with no enquiry stage.':esc(l.names))+'</p>'+
     '<div class="modal-scroll">'+
     '<div class="fgrid">'+
@@ -9620,7 +9668,7 @@ function openClientModal(existing){
   };
 }
 function openQuestionModal(){
-  md.className='modal';md.innerHTML='<h3>Add Question</h3><p class="sub">Appended to the end of the questionnaire.</p>'+
+  md.className='modal';md.innerHTML='<h3>Add question</h3><p class="sub">Appended to the end of the questionnaire.</p>'+
     '<div class="field"><label>Question</label><input id="q_prompt" placeholder="e.g. What time is the ceremony?"></div>'+
     '<div class="field"><label>Answer type</label><select id="q_kind">'+
       Object.keys(QKIND).map(function(k){return '<option value="'+k+'">'+QKIND[k]+'</option>';}).join('')+
@@ -9628,7 +9676,7 @@ function openQuestionModal(){
     '<div class="field" id="optWrap" style="display:none"><label>Choices <span style="font-weight:400;color:var(--muted)">(comma separated)</span></label>'+
       '<input id="q_opts" placeholder="Plated, Buffet, Family style"></div>'+
     '<div class="field"><label><input type="checkbox" id="q_req" style="width:auto;margin-right:8px">Required</label></div>'+
-    '<div class="modal-actions"><button class="btn btn-ghost" id="mCancel">Cancel</button><button class="btn btn-gold" id="mSave">Add Question</button></div>';
+    '<div class="modal-actions"><button class="btn btn-ghost" id="mCancel">Cancel</button><button class="btn btn-gold" id="mSave">Add question</button></div>';
   ov.classList.add('show');
   $('#q_kind').onchange=function(){ $('#optWrap').style.display=$('#q_kind').value==='choice'?'block':'none'; };
   $('#mCancel').onclick=closeModal;
@@ -10217,9 +10265,9 @@ function startTour(key){
 function setupSteps(){
   var ev=db.events[0];
   return [
-    {k:'lead', label:'Add your first enquiry', hint:'Leads & Pipeline → ＋ New Lead',
+    {k:'lead', label:'Add your first enquiry', hint:'Leads & Pipeline → ＋ New lead',
      done:db.leads.length>0, view:'pipeline'},
-    {k:'event', label:'Create an event', hint:'Events → ＋ New Event',
+    {k:'event', label:'Create an event', hint:'Events → ＋ New event',
      done:db.events.length>0, view:'events'},
     {k:'tasks', label:'Apply a task template', hint:'Open an event → Checklist → ✦ Apply template',
      done:db.events.some(function(e){return e.checklist.length>=8;}), view:'events'},
@@ -10227,7 +10275,7 @@ function setupSteps(){
      done:db.events.some(function(e){return e.guests.length>0;}), view:'guests'},
     {k:'floor', label:'Lay out the room', hint:'Seating Chart → drag tables into place',
      done:db.events.some(function(e){return e.tables.length>0&&(e.floor&&e.floor.items.length>0);}), view:'seating'},
-    {k:'vendor', label:'Build your vendor directory', hint:'Vendors → ＋ Add Vendor',
+    {k:'vendor', label:'Build your vendor directory', hint:'Vendors → ＋ Add vendor',
      done:db.vendors.length>0, view:'vendors'},
     {k:'doc', label:'Send a contract or questionnaire', hint:'Contracts & Docs, or Questionnaires',
      done:db.documents.some(function(d){return d.status!=='draft';})||db.questionnaires.some(function(q){return q.status!=='draft';}),
@@ -11021,7 +11069,7 @@ function openBibleModal(ev){
   md.className='modal modal-bible';
   function draw(){
     var avail=BIBLE_SECTIONS.filter(function(s){ return !(s.planner&&state.audience!=='planner'); });
-    md.innerHTML='<h3>Export the bible</h3>'+
+    md.innerHTML='<h3>Export the Bible</h3>'+
       '<p class="sub">Everything you have on '+esc((leadForEvent(ev)||{}).names||ev.title)+
         ', gathered into one document.</p>'+
       '<div class="seg" role="tablist" aria-label="Who this copy is for">'+
@@ -11172,7 +11220,7 @@ function openTemplateModal(ev){
   var keys=Object.keys(TASK_TEMPLATES);
   var suggested=keys.find(function(k){return TASK_TEMPLATES[k].type===(db.leads.find(function(l){return l.id===ev.leadId;})||{}).type;})||'wedding12';
   md.className='modal';
-  md.innerHTML='<h3>Apply a Task Template</h3>'+
+  md.innerHTML='<h3>Apply a task template</h3>'+
     '<p class="sub">Due dates are calculated backwards from '+fmtDate(ev.date)+'. Existing tasks are kept.</p>'+
     '<div class="field"><label>Template</label><select id="tpl_pick">'+
       keys.map(function(k){return '<option value="'+k+'"'+(k===suggested?' selected':'')+'>'+esc(TASK_TEMPLATES[k].name)+' ('+TASK_TEMPLATES[k].items.length+' tasks)</option>';}).join('')+
@@ -11340,7 +11388,7 @@ function openEventModal(existing,parentId){
   var free=roleOpts.filter(function(r){return used.indexOf(r.value)<0&&r.value!=='other';})[0];
   var defRole=evRole(e)!=='primary'?evRole(e):(free?free.value:'other');
   openEditor({
-    title:e?'Edit Event':(isSub?'New Sub-event':'New Event'),
+    title:e?'Edit event':(isSub?'New sub-event':'New Event'),
     sub:e?e.title:(isSub?'Part of '+parent.title:'Events are usually created from a booked lead.'),
     twoCol:true,
     saveLabel:e?'Save changes':(isSub?'Add sub-event':'Create event'),
@@ -11753,7 +11801,7 @@ function editRecord(kind,id){
   var del=function(){ closeModal(); deleteRecord(kind,id); };
   var F={
     lead:function(){ openClientModal(it); },
-    guest:function(){ openEditor({title:'Edit Guest',sub:ev&&ev.title,twoCol:true,onDelete:del,deleteLabel:it.name,
+    guest:function(){ openEditor({title:'Edit guest',sub:ev&&ev.title,twoCol:true,onDelete:del,deleteLabel:it.name,
       fields:[{id:'name',label:'Full name',value:it.name,required:true},
               {id:'party',label:'Party / group',value:it.party},
               {id:'rsvp',label:evIsSub(ev)?'RSVP · '+roleLabel(ev,true):'RSVP',type:'select',value:gRsvp(it,ev),
@@ -11770,7 +11818,7 @@ function editRecord(kind,id){
         gSet(it,ev,'rsvp',v.rsvp); gSet(it,ev,'meal',v.meal);
         if(v.rsvp==='no')gSet(it,ev,'tableId',null);
         closeModal(); afterChange(); }});},
-    table:function(){ openEditor({title:'Edit Table',sub:ev&&ev.title,onDelete:del,deleteLabel:it.name,
+    table:function(){ openEditor({title:'Edit table',sub:ev&&ev.title,onDelete:del,deleteLabel:it.name,
       fields:[{id:'name',label:'Table name',value:it.name,required:true},
               {id:'seats',label:'Seats',type:'number',value:it.seats,required:true}],
       onSave:function(v){ var seated=seatedAt(ev,it.id).length;
@@ -11779,7 +11827,7 @@ function editRecord(kind,id){
     booking:function(){ openBookingModal(it.eventId,it); },
     venue:function(){ openVenueModal(it); },
     space:function(){ openSpaceModal(venueById(state.venueId),it); },
-    vendor:function(){ openEditor({title:'Edit Vendor',twoCol:true,onDelete:del,deleteLabel:it.name,
+    vendor:function(){ openEditor({title:'Edit vendor',twoCol:true,onDelete:del,deleteLabel:it.name,
       fields:[{id:'name',label:'Business name',value:it.name,required:true},
               {id:'cat',label:'Category',type:'combo',value:it.cat,options:vendorCats(),
                placeholder:'Florals, Hair & Makeup, Officiant\u2026'},
@@ -11788,7 +11836,7 @@ function editRecord(kind,id){
               {id:'phone',label:'Phone',type:'tel',value:it.phone},
               {id:'notes',label:'Notes',type:'textarea',value:it.notes,full:true}],
       onSave:function(v){ Object.assign(it,v); closeModal(); afterChange(); }});},
-    invoice:function(){ openEditor({title:'Edit Invoice',twoCol:true,onDelete:del,deleteLabel:it.num,
+    invoice:function(){ openEditor({title:'Edit invoice',twoCol:true,onDelete:del,deleteLabel:it.num,
       fields:[{id:'num',label:'Invoice number',value:it.num,required:true},
               {id:'leadId',label:'Client',type:'select',value:it.leadId,
                options:db.leads.map(function(l){return {value:l.id,label:l.names};})},
@@ -11801,7 +11849,7 @@ function editRecord(kind,id){
         /* Keep the cached name in step with the chosen client. */
         var l=leadById(it.leadId); if(l)it.client=l.names;
         closeModal(); afterChange(); }});},
-    document:function(){ openEditor({title:'Edit Document',twoCol:true,onDelete:del,deleteLabel:it.title,
+    document:function(){ openEditor({title:'Edit document',twoCol:true,onDelete:del,deleteLabel:it.title,
       fields:[{id:'title',label:'Title',value:it.title,required:true,full:true},
               {id:'type',label:'Label',type:'select',value:it.type,options:docTypeOptions()},
               {id:'status',label:'Status',type:'select',value:it.status,
@@ -11810,30 +11858,30 @@ function editRecord(kind,id){
               {id:'eventId',label:'Event',type:'select',value:it.eventId,
                options:db.events.map(function(e){return {value:e.id,label:e.title};})}],
       onSave:function(v){ Object.assign(it,v); closeModal(); afterChange(); }});},
-    questionnaire:function(){ openEditor({title:'Edit Questionnaire',onDelete:del,deleteLabel:it.title,
+    questionnaire:function(){ openEditor({title:'Edit questionnaire',onDelete:del,deleteLabel:it.title,
       fields:[{id:'title',label:'Title',value:it.title,required:true},
               {id:'intro',label:'Intro for the client',type:'textarea',value:it.intro},
               {id:'eventId',label:'Event',type:'select',value:it.eventId,
                options:db.events.map(function(e){return {value:e.id,label:e.title};})}],
       onSave:function(v){ Object.assign(it,v); closeModal(); afterChange(); }});},
     event:function(){ openEventModal(it); },
-    timeline:function(){ openEditor({title:'Edit Timeline Item',sub:ev&&ev.title,onDelete:del,deleteLabel:it.ev,
+    timeline:function(){ openEditor({title:'Edit timeline item',sub:ev&&ev.title,onDelete:del,deleteLabel:it.ev,
       fields:[{id:'t',label:'Time',value:it.t,required:true,placeholder:'4:30 PM',fmt:'time'},
               {id:'ev',label:'What happens',value:it.ev,required:true},
               {id:'ds',label:'Detail',value:it.ds}],
       onSave:function(v){ Object.assign(it,v); sortTimeline(ev); closeModal(); afterChange(); }});},
-    checklist:function(){ openEditor({title:'Edit Task',sub:ev&&ev.title,twoCol:true,onDelete:del,deleteLabel:it.lbl,
+    checklist:function(){ openEditor({title:'Edit task',sub:ev&&ev.title,twoCol:true,onDelete:del,deleteLabel:it.lbl,
       fields:[{id:'lbl',label:'Task',value:it.lbl,required:true,full:true},
               {id:'cat',label:'Category',type:'select',value:it.cat,
                options:['Logistics','Design','Catering','Music','Finance','Attire','Stationery','General']},
               {id:'due',label:'Due date',type:'date',value:it.due}],
       onSave:function(v){ Object.assign(it,v); closeModal(); afterChange(); }});},
-    budget:function(){ openEditor({title:'Edit Budget Line',sub:ev&&ev.title,twoCol:true,onDelete:del,deleteLabel:it.cat,
+    budget:function(){ openEditor({title:'Edit budget line',sub:ev&&ev.title,twoCol:true,onDelete:del,deleteLabel:it.cat,
       fields:[{id:'cat',label:'Category',value:it.cat,required:true,full:true},
               {id:'est',label:'Estimated',type:'number',value:it.est},
               {id:'act',label:'Committed',type:'number',value:it.act}],
       onSave:function(v){ Object.assign(it,v); closeModal(); afterChange(); }});},
-    decor:function(){ openEditor({title:'Edit Décor Item',sub:ev&&ev.title,onDelete:del,deleteLabel:it.item,
+    decor:function(){ openEditor({title:'Edit décor item',sub:ev&&ev.title,onDelete:del,deleteLabel:it.item,
       fields:[{id:'item',label:'Item',value:it.item,required:true},
               {id:'vendor',label:'Vendor',value:it.vendor},
               {id:'status',label:'Status',type:'select',value:it.status,
@@ -11935,7 +11983,7 @@ function normaliseRsvp(v){
 function openImportModal(ev){
   if(!ev){toast('Choose an event first ✦');return;}
   md.className='modal modal-import';
-  md.innerHTML='<h3>Import Guests</h3><p class="sub">Adding to '+esc(ev.title)+'. A header row is detected automatically.</p>'+
+  md.innerHTML='<h3>Import guests</h3><p class="sub">Adding to '+esc(ev.title)+'. A header row is detected automatically.</p>'+
     '<label class="dropzone" id="csvZone" tabindex="0">'+
       '<input type="file" id="csvInput" accept=".csv,text/csv" hidden>'+
       '<span class="dz-ic">⇪</span><span class="dz-t">Choose a CSV file</span>'+

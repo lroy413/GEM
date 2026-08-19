@@ -161,6 +161,28 @@ never pulled, which is what stops a fresh install overwriting the studio.
 
 ## 3 · Things worth knowing before you change the UI
 
+- **Three surface tiers, and they mean something.** `PLATE` (imagery or deep
+  ink, no border, `--radius-plate`) for the one thing you are meant to look at;
+  `CARD` (hairline + contact shadow, `--radius`) for working surfaces; `RECESS`
+  (`--sunk` fill, `--sunk-line` inset, no shadow, `--radius-sm`) for figures,
+  empty states and clear days — things that support a card rather than compete
+  with one. Before this everything was one surface, so nothing on a screen was
+  more important than anything else. If you add a panel, pick a tier.
+- **The house gold is a metal, and it stops reading as one when it fills a
+  shape.** `var(--gold-grad)` across an event card banner, an archive tile or a
+  venue tile is a slab of poster colour; all three were corrected to a pale
+  wash or to tinted ink. Gold belongs in hairlines, marks and small type.
+  Anything painted on it has to be re-checked for contrast — the event card's
+  date chip was white on translucent black and became invisible.
+- **The rail icons are drawn, not typed.** No font has nineteen geometric marks
+  at one optical weight: the shade blocks (▥▤▧) came out dense and black while
+  the part-circles (◐◑◒) rendered a third the size. They are inline SVG on one
+  20×20 grid at one stroke weight now, in `<svg class="ic">`, and there is no
+  font substitution left to defend against.
+- **Case has a rule now.** Section and card headings are Title Case — they read
+  as named parts of a document. Everything you *do* is sentence case: buttons,
+  modal titles, row actions. It had drifted about half and half.
+
 - **A day with nothing on it is information.** The week strip's `.quiet` cells
   go flat and unlifted on purpose, so the days that hold something are the ones
   the eye lands on — but `.quiet` came after `.today` at the same specificity
