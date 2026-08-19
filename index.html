@@ -10,7 +10,7 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
 <meta name="apple-mobile-web-app-title" content="GEM">
 <meta name="format-detection" content="telephone=no">
-<meta name="gem-build" content="83c025591ecb">
+<meta name="gem-build" content="0b95347041d1">
 <link rel="manifest" href="/manifest.webmanifest">
 <link rel="icon" href="/icons/icon-192.png" sizes="192x192" type="image/png">
 <link rel="apple-touch-icon" href="/icons/icon-180.png">
@@ -1024,6 +1024,9 @@ tbody tr:hover{background:var(--pink-50)}
 .tl::before{content:"";position:absolute;left:7px;top:6px;bottom:6px;width:2px;background:var(--gold-soft)}
 .tl-item{position:relative;padding:0 0 20px 0}
 .tl-item::before{content:"";position:absolute;left:-24px;top:3px;width:14px;height:14px;border-radius:50%;background:var(--card);border:3px solid var(--gold)}
+/* The start comes off the event's own Start time field rather than out of the
+   running order, so it reads as given rather than typed: a filled dot. */
+.tl-item.anchor::before{background:var(--gold)}
 .tl-item .time{font-size:12px;font-weight:600;color:var(--gold);letter-spacing:.5px;font-variant-numeric:tabular-nums}
 .tl-item .ev{font-size:14.5px;font-weight:600;margin-top:2px}
 .tl-item .ds{font-size:12.5px;color:var(--muted);margin-top:1px}
@@ -1172,6 +1175,55 @@ tbody tr:hover{background:var(--pink-50)}
 }
 
 /* event chooser cards */
+/* --- The archive: a gallery, not a table ---
+   Past work is the thing a studio is actually selling, so it gets photographs
+   at a size you can see and almost no chrome around them. A card with no cover
+   falls back to the event's own tint rather than to grey, so a mixed year
+   still reads as one set instead of as a set with holes in it. */
+.arc-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(268px,1fr));gap:18px}
+.arc-year{grid-column:1/-1;display:flex;align-items:center;gap:16px;margin:16px 0 0;
+  font-family:var(--serif);font-size:19px;font-weight:600;letter-spacing:.01em;color:var(--ink-soft)}
+.arc-year::after{content:"";flex:1;height:1px;background:var(--line)}
+.arc-year:first-child{margin-top:0}
+.arc-card{position:relative;display:block;width:100%;padding:0;overflow:hidden;text-align:left;
+  aspect-ratio:4/5;cursor:pointer;background-size:cover;background-position:center;
+  border:1px solid var(--line);border-radius:var(--radius-lg);box-shadow:var(--shadow-sm);
+  transition:transform .18s var(--ease),box-shadow .18s var(--ease)}
+.arc-card:hover{transform:translateY(-3px);box-shadow:var(--shadow)}
+.arc-card:focus-visible{outline:none;box-shadow:var(--ring)}
+/* A separate element rather than ::after, so the tint fallback can carry a
+   lighter veil than a photograph needs without a second selector fighting it. */
+.arc-veil{position:absolute;inset:0;pointer-events:none;
+  background:linear-gradient(180deg,rgba(18,12,15,0) 30%,rgba(18,12,15,.34) 58%,rgba(18,12,15,.82) 100%)}
+/* EVENT_TINTS were drawn for dots and chart keys. At the size of a card they
+   are a slab of poster colour next to a photograph, so the tint sits under
+   ink here rather than beside it: the same identity, read as a tinted
+   charcoal, and white type stays legible over all of them. */
+.arc-card:not(.has-photo) .arc-veil{
+  background:linear-gradient(180deg,rgba(36,26,31,.66) 0%,rgba(30,21,25,.78) 55%,rgba(23,16,19,.91) 100%)}
+/* Something in the empty half, or a card with no photograph is a hole in the
+   grid. Set in the same face as the name, at the weight of a watermark. */
+.arc-mono{position:absolute;left:0;right:0;top:0;height:62%;z-index:1;
+  display:flex;align-items:center;justify-content:center;
+  font-family:var(--serif);font-size:66px;font-weight:600;letter-spacing:.06em;
+  color:rgba(255,255,255,.17);pointer-events:none}
+.arc-tx{position:absolute;left:0;right:0;bottom:0;z-index:1;display:flex;flex-direction:column;
+  min-width:0;padding:16px 17px 15px}
+.arc-k{font-size:9.5px;letter-spacing:1.9px;text-transform:uppercase;font-weight:600;color:var(--gold)}
+.arc-n{font-family:var(--serif);font-size:23px;font-weight:600;line-height:1.14;letter-spacing:-.012em;
+  margin-top:6px;color:#fff;text-shadow:0 1px 12px rgba(0,0,0,.36);
+  display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:2;overflow:hidden}
+.arc-m{font-size:12px;color:rgba(255,255,255,.9);margin-top:5px;text-shadow:0 1px 8px rgba(0,0,0,.4);
+  overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.arc-s{margin-top:9px;font-size:11.5px;color:rgba(255,255,255,.8);text-shadow:0 1px 8px rgba(0,0,0,.4)}
+.arc-s b{font-weight:600;color:#fff}
+.arc-s i{font-style:normal;opacity:.5;margin:0 7px}
+@media (max-width:560px){
+  .arc-grid{grid-template-columns:repeat(auto-fill,minmax(158px,1fr));gap:12px}
+  .arc-n{font-size:17px}
+  .arc-mono{font-size:46px}
+  .arc-tx{padding:12px 13px 12px}
+}
 /* --- clients as cards: the same records, read by face rather than by row --- */
 .cl-head{display:flex;align-items:center;justify-content:space-between;gap:14px;flex-wrap:wrap}
 .cl-head .seg{margin-bottom:16px}
@@ -2655,6 +2707,7 @@ html,body{max-width:100%;overflow-x:hidden}
         <div class="nav-item" data-view="guests" tabindex="0"><span class="ic">▤</span><span class="lbl">Guests &amp; RSVP</span></div>
         <div class="nav-item" data-view="seating" tabindex="0"><span class="ic">◍</span><span class="lbl">Seating Chart</span></div>
         <div class="nav-item" data-view="vendors" tabindex="0"><span class="ic">❖</span><span class="lbl">Vendors</span></div>
+        <div class="nav-item" data-view="archive" tabindex="0"><span class="ic">▦</span><span class="lbl">Archive</span></div>
         <div class="nav-item" data-view="design" tabindex="0"><span class="ic">◈</span><span class="lbl">Design Studio</span></div>
       </div></div>
     </div>
@@ -3652,6 +3705,14 @@ function pageHead(v){
     var n2=db.vendors.length;
     return [lab,n2?(n2+' in your directory'):'No vendors yet',sub];
   }
+  if(v==='archive'){
+    var pastN=archiveEvents().length;
+    if(!pastN)return [lab,'Nothing wrapped yet',sub];
+    var yrs={}; archiveEvents().forEach(function(e){ yrs[String(e.date).slice(0,4)]=1; });
+    var ny=Object.keys(yrs).length;
+    return [lab,pastN+' event'+(pastN===1?'':'s')+' delivered',
+            ny>1?('Across '+ny+' years'):sub];
+  }
   if(v==='finance'){
     var inv=db.invoices||[];
     var paid=inv.filter(function(x){return x.status==='paid';}).reduce(function(a,x){return a+x.amount;},0);
@@ -3675,6 +3736,7 @@ var TITLES={
   vendors:['Vendors','Your trusted roster and booking status.'],
   design:['Design Studio','Palettes, mood boards, and décor sign-off.'],
   calendar:['Calendar','Every event and deadline in one month view.'],
+  archive:['Archive','The work, after the work.'],
   documents:['Contracts & Docs','Proposals and agreements, with signature status.'],
   portal:['Client Portal','Exactly what your couple sees when they log in.'],
   settings:['Settings','Your studio, this app, and how to use it.'],
@@ -3851,6 +3913,7 @@ function render(){
     else { state.boardId=null; el.innerHTML=viewDesign(); wireDesign(); }
   }
   else if(state.view==='calendar'){ el.innerHTML=viewCalendar(); }
+  else if(state.view==='archive'){ el.innerHTML=viewArchive(); }
   else if(state.view==='documents'){ el.innerHTML=viewDocuments(); wireDocuments(); }
   else if(state.view==='portal'){ el.innerHTML=viewPortal(); wirePortal(); }
   else if(state.view==='finance')el.innerHTML=viewFinance();
@@ -4058,7 +4121,7 @@ function heroStack(list){
   var tint=eventTint(e.id);
   var pct=evPct(e);
   var kids=evChildren(e.id);
-  var next3=(e.timeline||[]).slice(0,3);
+  var next3=tlRows(e).slice(0,3);
   /* The event's own cover, the primary's, then the client's — evPhoto() picks.
      Each card in the deck can now carry its own picture, which is the whole
      point of the stack: four events, four photographs, not one repeated. */
@@ -4304,6 +4367,59 @@ function wireBoard(){
     },{passive:false});
     update();
   }
+}
+
+/* --- The archive: the work, after the work ---
+   The product ended at the event. Everything a studio is actually selling —
+   what last September looked like, the venues they know, the day as it turned
+   out — had nowhere to live, and mood boards are an input rather than a
+   record. This is the screen a planner shows a prospective client, and it
+   costs almost nothing: the data is already here and every event has a cover.
+   Primaries only, newest first — a weekend is one job, not four. */
+function archiveEvents(){
+  return evPrimaries().filter(function(e){
+    return e.date&&daysAway(e.date)<0;
+  }).sort(function(a,b){ return a.date<b.date?1:-1; });
+}
+/* Initials off an event title rather than off a couple's name, so the little
+   words do not get a letter: "Midsummer at Ellery" is ME, not MA. The pattern
+   is a literal inside the function on purpose — a var up here would be
+   undefined for any render that beat its assignment. */
+function evMono(e){
+  var w=String((e&&e.title)||'').split(/[\s&\u00b7,\-\u2013\u2014]+/).filter(function(x){
+    return x&&!/^(a|an|and|at|by|de|for|in|la|le|of|on|the|to|von|with)$/i.test(x);
+  });
+  return (w.slice(0,2).map(function(x){return x.charAt(0);}).join('')||'\u2014').toUpperCase();
+}
+function viewArchive(){
+  var past=archiveEvents();
+  if(!past.length)return emptyState('Nothing wrapped yet. Events move here on their own once the day has passed.');
+  var year=null, out='';
+  past.forEach(function(e){
+    var y=String(e.date).slice(0,4);
+    if(y!==year){ year=y; out+='<div class="arc-year">'+esc(y)+'</div>'; }
+    var cov=evPhoto(e), lead=leadForEvent(e), kids=evChildren(e.id);
+    var roster=rosterFor(e), came=roster.filter(function(g){return gRsvp(g,e)==='yes';}).length;
+    /* An empty venue on a past event reads worse than no venue at all: "to be
+       confirmed" about a day that has already happened. */
+    var meta=[fmtDate(e.date)];
+    if(e.venue&&String(e.venue).trim())meta.push(esc(e.venue));
+    var stat=[];
+    if(came)stat.push('<b>'+came+'</b> guests');
+    if(lead&&lead.value)stat.push('<b>'+money(lead.value)+'</b>');
+    out+='<button class="arc-card'+(cov?' has-photo':'')+'" data-openevent="'+esc(e.id)+'"'+
+      (cov?' style="background-image:url('+cov+')"':' style="background:'+eventTint(e.id)+'"')+'>'+
+      (cov?'':'<span class="arc-mono">'+esc(evMono(e))+'</span>')+
+      '<span class="arc-veil"></span>'+
+      '<span class="arc-tx">'+
+        '<span class="arc-k">'+esc(evType(e))+(kids.length?' · '+(kids.length+1)+' events':'')+'</span>'+
+        '<span class="arc-n">'+esc(e.title)+'</span>'+
+        '<span class="arc-m">'+meta.join(' · ')+'</span>'+
+        (stat.length?'<span class="arc-s">'+stat.join('<i>·</i>')+'</span>':'')+
+      '</span>'+
+    '</button>';
+  });
+  return '<div class="arc-grid">'+out+'</div>';
 }
 
 /* --- Clients --- */
@@ -4878,9 +4994,9 @@ function viewEventDetail(id){
 
   '<div class="grid-2" style="align-items:start">'+
     '<div class="ev-col">'+
-      evSection('timeline','Day-of Timeline',e.timeline.length,
+      evSection('timeline','Day-of Timeline',tlRows(e).length,
         '<div style="padding:20px 22px"><div class="tl">'+
-          (e.timeline.length?e.timeline.map(function(t){return '<div class="tl-item"><div class="time">'+esc(t.t)+'</div><div class="ev">'+esc(t.ev)+rowActions('timeline',t.id)+'</div><div class="ds">'+esc(t.ds)+'</div></div>';}).join(''):'<div class="empty-hint">No running order yet.</div>')+
+          (tlRows(e).length?tlMarkup(e,true):'<div class="empty-hint">No running order yet.</div>')+
         '</div><button class="btn btn-ghost btn-sm" data-addtl="1" style="margin-top:14px">＋ Add moment</button></div>')+
 
       evSection('vendors','Vendor Team',vend.length,
@@ -8324,14 +8440,12 @@ function viewPortal(){
             '<span class="pw-t">'+esc(x.title)+'</span>'+
             '<span class="pw-d">'+fmtDate(x.date)+(x.startTime?' · '+esc(x.startTime):'')+'</span></div>'+
           (x.venue?'<div class="pw-v">'+esc(venueDot(x.venue,x.loc))+'</div>':'')+
-          ((x.timeline||[]).length
-            ?'<div class="tl">'+x.timeline.map(function(t){
-                return '<div class="tl-item"><div class="time">'+esc(t.t)+'</div><div class="ev">'+esc(t.ev)+'</div><div class="ds">'+esc(t.ds)+'</div></div>';
-              }).join('')+'</div>'
+          (tlRows(x).length
+            ?'<div class="tl">'+tlMarkup(x)+'</div>'
             :'<div class="empty-hint" style="padding:10px 0">Running order to come.</div>')+
         '</div>';
       }).join('')
-      :'<div class="tl">'+e.timeline.map(function(t){return '<div class="tl-item"><div class="time">'+esc(t.t)+'</div><div class="ev">'+esc(t.ev)+'</div><div class="ds">'+esc(t.ds)+'</div></div>';}).join('')+'</div>')+
+      :'<div class="tl">'+tlMarkup(e)+'</div>')+
     '</div></div>'+
     '<div>'+
       '<div class="card" style="margin-bottom:20px"><div class="card-h"><h3>To Review</h3><span class="pill gold">'+pct+'%</span></div><div style="padding:8px 22px 16px">'+
@@ -9586,7 +9700,7 @@ function printSheet(kind,ev){
   if(kind==='timeline'){
     title='Day-of Timeline';
     body='<table class="pr-t"><thead><tr><th style="width:110px">Time</th><th>Moment</th><th>Detail</th></tr></thead><tbody>'+
-      ev.timeline.map(function(t){return '<tr><td><b>'+esc(t.t)+'</b></td><td>'+esc(t.ev)+'</td><td>'+esc(t.ds||'')+'</td></tr>';}).join('')+
+      tlRows(ev).map(function(t){return '<tr><td><b>'+esc(t.t)+'</b></td><td>'+esc(t.ev)+'</td><td>'+esc(t.ds||'')+'</td></tr>';}).join('')+
       '</tbody></table>';
   } else if(kind==='weekend'){
     /* The sheet a coordinator actually carries: every event of the weekend in
@@ -9599,9 +9713,9 @@ function printSheet(kind,ev){
         ' <span>'+fmtDate(x.date)+(x.startTime?' · '+esc(x.startTime):'')+'</span></h3>'+
         '<div class="pr-note">'+esc(venueName(x.venue))+(xa.length?' · '+esc(xa.join(', ')):'')+
           ' · '+rosterFor(x).filter(function(g){return gRsvp(g,x)==='yes';}).length+' attending</div>'+
-        ((x.timeline||[]).length
+        (tlRows(x).length
           ?'<table class="pr-t"><thead><tr><th style="width:110px">Time</th><th>Moment</th><th>Detail</th></tr></thead><tbody>'+
-            x.timeline.map(function(t){return '<tr><td><b>'+esc(t.t)+'</b></td><td>'+esc(t.ev)+'</td><td>'+esc(t.ds||'')+'</td></tr>';}).join('')+
+            tlRows(x).map(function(t){return '<tr><td><b>'+esc(t.t)+'</b></td><td>'+esc(t.ev)+'</td><td>'+esc(t.ds||'')+'</td></tr>';}).join('')+
             '</tbody></table>'
           :'<div class="pr-note">No running order yet.</div>')+
       '</div>';
@@ -9846,9 +9960,9 @@ function bibleBlocks(ev,opts){
     push({h1:'Running order'});
     wk.forEach(function(x){
       push({h2:roleLabel(x,true)+' — '+x.title+' · '+fmtDate(x.date)});
-      if(!(x.timeline||[]).length){ push({p:'No running order yet.'}); return; }
+      if(!tlRows(x).length){ push({p:'No running order yet.'}); return; }
       push({table:{head:['Time','Moment','Detail'],
-        rows:x.timeline.map(function(t){ return [t.t||'',t.ev||'',t.ds||'']; })}});
+        rows:tlRows(x).map(function(t){ return [t.t||'',t.ev||'',t.ds||'']; })}});
     });
   }
   if(want('guests')){
@@ -11035,11 +11149,43 @@ function editRecord(kind,id){
 function toMinutes(t){
   var m=/(\d{1,2}):(\d{2})\s*(AM|PM)?/i.exec(String(t||'').trim());
   if(!m)return 1e9;
-  var h=Number(m[1])%12, mi=Number(m[2]);
-  if(m[3]&&/pm/i.test(m[3]))h+=12;
+  var h=Number(m[1]), mi=Number(m[2]);
+  /* With a meridiem, 12 is the odd one: 12:30 AM is half past midnight.
+     Without one it was typed as 24-hour — folding 16:00 down to 4:00 sorted
+     the reception in before breakfast, which is what this used to do. */
+  if(m[3])h=(h%12)+(/pm/i.test(m[3])?12:0);
   return h*60+mi;
 }
 function sortTimeline(ev){ if(ev)ev.timeline.sort(function(a,b){return toMinutes(a.t)-toMinutes(b.t);}); }
+/* The start time is entered on the event, and until now it lived only in the
+   header: the running order underneath began at whatever moment the planner
+   happened to type first, which is not the same thing as when the day starts.
+   So the start is a row on the timeline — derived rather than stored, so it
+   moves when the field moves and cannot drift out of step with it, and it
+   stands aside if the planner has already written their own moment at that
+   time. Unparseable times sort to the end in toMinutes(), so a start nobody
+   can parse goes to the front by hand: whatever it says, it is the start. */
+function tlRows(e){
+  var rows=(e&&e.timeline||[]).slice();
+  var t=e&&e.startTime&&String(e.startTime).trim();
+  if(!t)return rows;
+  var at=toMinutes(t);
+  if(at<1e9&&rows.some(function(r){return toMinutes(r.t)===at;}))return rows;
+  var row={t:t,ev:(evIsSub(e)?roleLabel(e,false):evType(e))+' begins',ds:'',anchor:true};
+  if(at>=1e9){ rows.unshift(row); return rows; }
+  rows.push(row);
+  rows.sort(function(a,b){return toMinutes(a.t)-toMinutes(b.t);});
+  return rows;
+}
+function tlMarkup(e,acts){
+  return tlRows(e).map(function(t){
+    return '<div class="tl-item'+(t.anchor?' anchor':'')+'">'+
+      '<div class="time">'+esc(t.t)+'</div>'+
+      '<div class="ev">'+esc(t.ev)+(acts&&!t.anchor?rowActions('timeline',t.id):'')+'</div>'+
+      (t.ds?'<div class="ds">'+esc(t.ds)+'</div>':'')+
+    '</div>';
+  }).join('');
+}
 
 /* ============================================================
  * CSV guest import — nobody types a 200-person list by hand.

@@ -146,6 +146,24 @@ never pulled, which is what stops a fresh install overwriting the studio.
 
 ## 3 · Things worth knowing before you change the UI
 
+- **The archive is derived, not a state.** `archiveEvents()` is every primary
+  whose date has passed, newest first; nothing is marked "done" and nothing has
+  to be moved there. That means it is also the one screen where covers matter
+  most, and where an event with no cover is most visible — `.arc-card` with no
+  photograph puts the tint *under* ink rather than beside it, because
+  `EVENT_TINTS` were drawn for dots and read as poster colour at card size.
+- **The event's start time is a row on the timeline, and is not stored as one.**
+  `tlRows(e)` merges a derived `{anchor:true}` row from `e.startTime` into
+  `e.timeline`, and every surface that draws a running order goes through it —
+  workspace, hero, portal, print, the bible. It carries no id and no row
+  actions on purpose: it belongs to the field, so it moves when the field moves
+  and cannot be deleted into disagreement with the header. It stands aside if
+  the planner has already written a moment at that minute.
+- **`toMinutes()` reads 24-hour times.** It used to fold the hour with `%12`
+  whether or not a meridiem was present, so a legacy or pulled `16:00` sorted
+  in at four in the morning. `normTime()` normalises anything typed in the app
+  to `4:00 PM`, so this only ever showed up on data that arrived some other way.
+
 - **Every push writes a row to `sync_runs`.** Opened after the claim, closed
   after the commit — so a run that dies leaves `finished_at` null and the
   unfinished state records itself, rather than depending on a client that is by
