@@ -161,6 +161,16 @@ never pulled, which is what stops a fresh install overwriting the studio.
 
 ## 3 · Things worth knowing before you change the UI
 
+- **`pullLoss()` counts WORK, not records.** A device with nothing saved seeds
+  the demo — one client, its events, four documents, six vendors — so counting
+  raw lengths made a brand-new phone look like it was holding six vendors the
+  studio had lost. The guard then refused the pull, at the one moment a new
+  device most needs one, and left the planner looking at the sample believing
+  it was their studio. The sample is never pushed, so the studio is *right* not
+  to have it; anything compared against the server has to be filtered through
+  `isSampleRecord()` first. `scratchpad/pullloss.mjs` covers the three cases
+  that matter: sample only, real work the studio lacks, and both together.
+
 - **A warning with no timeout needs a way out.** `sbSetStatus('warn', …)`
   deliberately never clears itself — a message about your data should not
   vanish while you are reading it — which meant on a phone it sat over the tab

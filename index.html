@@ -10,7 +10,7 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
 <meta name="apple-mobile-web-app-title" content="GEM">
 <meta name="format-detection" content="telephone=no">
-<meta name="gem-build" content="fe68041d225f">
+<meta name="gem-build" content="062d45fe7b2d">
 <link rel="manifest" href="/manifest.webmanifest">
 <link rel="icon" href="/icons/icon-192.png" sizes="192x192" type="image/png">
 <link rel="apple-touch-icon" href="/icons/icon-180.png">
@@ -13705,12 +13705,26 @@ function restoreSnapshot(){
    less than this device is possible — someone deleted a client elsewhere — but
    losing a whole client file to an automatic background sync is not something
    to discover later, so it stops and says so instead. */
+/* What this device would LOSE by accepting the studio's copy — and the word
+   that matters is "lose", which the sample is not.
+
+   This counted raw lengths. A device with no saved work seeds the demo: one
+   client, its events, four documents, six vendors. So the first sign-in on a
+   new phone compared 4 sample documents and 6 sample vendors against a studio
+   that correctly has neither, announced "the studio has 4 documents and 6
+   vendors fewer than this device", and REFUSED the pull — at the one moment a
+   new device most needs one. The planner was then looking at the sample,
+   believing it was their studio, with a warning they could not clear.
+
+   The sample is not work. It is never pushed, so the studio is right not to
+   have it, and a device holding only the sample has nothing to protect. */
 function pullLoss(next){
   var out=[];
-  [['leads','client'],['events','event'],['invoices','invoice'],
-   ['documents','document'],['vendors','vendor']].forEach(function(pair){
-    var before=(db[pair[0]]||[]).length, after=(next[pair[0]]||[]).length;
-    if(before>after)out.push({what:pair[1],before:before,after:after,lost:before-after});
+  [['leads','client','lead'],['events','event','event'],['invoices','invoice','invoice'],
+   ['documents','document','document'],['vendors','vendor','vendor']].forEach(function(t){
+    var mine=(db[t[0]]||[]).filter(function(r){ return !isSampleRecord(t[2],r.id); }).length;
+    var after=(next[t[0]]||[]).length;
+    if(mine>after)out.push({what:t[1],before:mine,after:after,lost:mine-after});
   });
   return out;
 }
