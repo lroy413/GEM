@@ -356,6 +356,12 @@ html.no-motion body::before{opacity:.3}
              0 2px 4px rgba(143,113,48,.26), 0 10px 26px rgba(143,113,48,.28)}
 .btn-gold:focus-visible{box-shadow:var(--ring), 0 6px 18px rgba(143,113,48,.22)}
 
+/* For the corner of a screen whose subject is a photograph: still a button,
+   still reachable, but not competing with the thing the page is about. */
+.btn-quiet{background:none;border:1px solid transparent;color:var(--muted);
+  box-shadow:none;font-weight:500}
+.btn-quiet:hover{background:var(--card);border-color:var(--line);color:var(--ink)}
+.btn-quiet:focus-visible{outline:none;box-shadow:var(--ring)}
 .btn-ghost{background:var(--card);border-color:var(--line-strong);color:var(--ink-soft);box-shadow:var(--shadow-xs)}
 .btn-ghost:hover{border-color:var(--gold-line);color:var(--ink);box-shadow:var(--shadow-sm);transform:translateY(-1px)}
 
@@ -2112,22 +2118,49 @@ tr:hover .r-acts,.ev-card:hover .r-acts,.table-card:hover .r-acts,
    to stay readable moves to the card below. */
 .venue-band.has-cover{display:block;padding:0;background:var(--card)}
 .venue-band.has-cover::before{display:none}
-.vb-banner{position:relative;min-height:250px;background-size:cover;background-position:center;
+.vb-banner{position:relative;min-height:330px;background-size:cover;background-position:center;
   display:flex;align-items:flex-end;justify-content:space-between;gap:24px;padding:24px 26px}
 .vb-banner::after{content:"";position:absolute;inset:0;pointer-events:none;
   background:linear-gradient(180deg,rgba(18,12,15,0) 34%,rgba(18,12,15,.36) 64%,rgba(18,12,15,.78) 100%)}
 .vb-banner > *{position:relative;z-index:1}
 .vb-banner .vb-k{color:rgba(255,255,255,.82)}
-.vb-banner .vb-name{color:#fff;margin-top:5px;font-size:40px;text-shadow:0 1px 14px rgba(0,0,0,.3)}
+.vb-banner .vb-name{color:#fff;margin-top:6px;font-size:46px;text-shadow:0 1px 14px rgba(0,0,0,.32)}
 .vb-where{color:rgba(255,255,255,.92);font-size:14px;margin-top:7px;
   text-shadow:0 1px 10px rgba(0,0,0,.34)}
 /* With a banner this size the page header above would be saying the same thing
    twice, in a smaller voice. The actions stay — Print and Edit still belong at
    the top — but the title block goes. */
+/* A client file with a photograph carries its own header too. */
+.detail-head.has-photo{display:block;padding:0;overflow:hidden;background:var(--card);
+  border:1px solid var(--line);border-radius:var(--radius-lg);box-shadow:var(--shadow-sm)}
+.dh-band{position:relative;display:flex;align-items:flex-end;justify-content:space-between;gap:24px;
+  min-height:330px;padding:26px 28px;background-size:cover;background-position:center;cursor:pointer}
+.dh-band::after{content:"";position:absolute;inset:0;pointer-events:none;
+  background:linear-gradient(180deg,rgba(18,12,15,0) 34%,rgba(18,12,15,.36) 64%,rgba(18,12,15,.78) 100%)}
+.dh-band>*{position:relative;z-index:1}
+.dh-band-ed{position:absolute;top:16px;right:18px;z-index:2;font-size:11px;font-weight:600;color:#fff;
+  background:rgba(18,12,15,.42);border:1px solid rgba(255,255,255,.3);border-radius:var(--radius-pill);
+  padding:5px 12px;opacity:0;transition:opacity .16s var(--ease)}
+.dh-band:hover .dh-band-ed,.dh-band:focus-visible .dh-band-ed{opacity:1}
+.dh-band:focus-visible{outline:none;box-shadow:inset 0 0 0 2px var(--gold)}
+.dh-band-tx{display:flex;flex-direction:column;min-width:0}
+.dh-band-k{font-size:9.5px;letter-spacing:1.9px;text-transform:uppercase;color:var(--gold);font-weight:600}
+.dh-band-n{font-family:var(--serif);font-size:46px;font-weight:600;line-height:1.04;margin-top:6px;
+  letter-spacing:-.014em;color:#fff;text-shadow:0 1px 14px rgba(0,0,0,.32)}
+.dh-band-m{font-size:14px;color:rgba(255,255,255,.92);margin-top:7px;text-shadow:0 1px 10px rgba(0,0,0,.34)}
+.dh-band-v{display:flex;flex-direction:column;align-items:flex-end;text-align:right;flex:0 0 auto}
+.dh-band-v .dh-v{color:#fff;text-shadow:0 1px 12px rgba(0,0,0,.34)}
+.dh-band-v .dh-l{color:rgba(255,255,255,.8)}
+.dh-strip{display:flex;align-items:center;flex-wrap:wrap;gap:8px 10px;padding:13px 20px}
+@media (max-width:700px){
+  .dh-band{min-height:230px;padding:18px 20px;flex-direction:column;align-items:flex-start;gap:14px}
+  .dh-band-n{font-size:30px}
+  .dh-band-v{align-items:flex-start;text-align:left}
+}
 .main.evfocus .page-head{display:none}
 .main.evfocus .topbar{margin-bottom:14px;justify-content:flex-end}
 .main.evfocus .menu-btn{margin-right:auto}
-@media (max-width:700px){ .vb-banner .vb-name{font-size:28px} }
+@media (max-width:700px){ .vb-banner .vb-name{font-size:30px} }
 .vb-banner .vb-name.tbc{color:rgba(255,255,255,.72)}
 .vb-bwhen{display:flex;flex-direction:column;align-items:flex-end;gap:2px;text-align:right;color:#fff;
   white-space:nowrap}
@@ -2152,12 +2185,19 @@ tr:hover .r-acts,.ev-card:hover .r-acts,.table-card:hover .r-acts,
 /* Pushed to the end of the line, so the bar reads left to right as
    where it is · how to get there · the picture you set. */
 .venue-band.has-cover .vb-cover-row{margin-left:auto;margin-top:0}
+/* The weekend switcher, rehoused under the picture. It brings its own card
+   styling, which would be a card inside a card here. */
+.vb-switch{flex:0 0 auto}
+.vb-switch .wknd-bar{margin:0;padding:0;background:none;border:0}
+.vb-switch .wknd-bar.solo{gap:8px}
+.vb-switch .ew-h{display:none}
+@media (max-width:860px){ .vb-switch{flex:1 1 100%} }
 .venue-band.has-cover .vb-contact{border-top:0;padding-top:0}
 .venue-band.has-cover .vb-note{flex:0 0 100%;padding:0 26px 14px;border-top:0;margin-top:-4px}
 @media (max-width:700px){
   .venue-band.has-cover .vb-cover-row{margin-left:0}
 }
-@media (max-width:700px){ .vb-banner{min-height:190px} }
+@media (max-width:700px){ .vb-banner{min-height:230px} }
 .vb-k{font-size:9.5px;letter-spacing:1.9px;text-transform:uppercase;color:var(--gold);font-weight:600}
 .vb-name{font-family:var(--serif);font-size:32px;font-weight:600;line-height:1.05;margin-top:6px;letter-spacing:-.012em}
 .vb-name.tbc{color:var(--muted);font-style:italic}
@@ -3673,6 +3713,9 @@ function setView(v,opts){
   if(v==='events'&&state.eventId){
     var evc=db.events.find(function(x){return x.id===state.eventId;});
     evf=!!(evc&&evPhoto(evc));
+  }else if(v==='clients'&&state.clientId){
+    var clc=db.leads.find(function(x){return x.id===state.clientId;});
+    evf=!!(clc&&clc.photo);
   }
   document.querySelector('.main').classList.toggle('evfocus',evf);
   // Board-style views fill the window; document-style views scroll normally.
@@ -3706,7 +3749,7 @@ function actionsFor(v){
   if(v==='clients')return state.clientId?'':'<button class="btn btn-gold" id="addClient">＋ New Client</button>';
   if(v==='finance')return '<button class="btn btn-ghost" id="exportInv">Export CSV</button> <button class="btn btn-gold" id="addInv">＋ New Invoice</button>';
   if(v==='events')return state.eventId
-    ?'<button class="btn btn-ghost" id="printEvent">⎙ Print</button> <button class="btn btn-ghost" id="editEvent">✎ Edit event</button>'
+    ?'<button class="btn btn-quiet" id="printEvent">⎙ Print</button> <button class="btn btn-quiet" id="editEvent">✎ Edit event</button>'
     :'<button class="btn btn-gold" id="addEvent">＋ New Event</button>';
   if(v==='guests')return evSwitcher()+' <button class="btn btn-ghost" id="importGuests">⇪ Import CSV</button>'+
     ' <button class="btn btn-ghost" id="exportGuests">Export</button>'+
@@ -4356,12 +4399,42 @@ function viewClientDetail(id){
   return '<button class="back-link" data-back="clients">‹ All clients</button>'+
   '<div class="detail-col">'+
   sampleBanner()+
-  '<div class="detail-head">'+
+  /* Their photograph, given the page rather than a corner of it. A client file
+   is about one couple; a 76px tile beside a page title says "record", and a
+   banner says "them". The tile is still the answer when there is no
+   photograph — an initials medallion is a finished thing, not a gap — so the
+   old head stays for that case rather than leaving a grey slab. */
+  (l.photo
+   ? '<div class="detail-head has-photo">'+
+       '<label class="dh-band" id="clientPhoto" tabindex="0" title="Replace the photograph" '+
+         'style="background-image:url('+l.photo+')">'+
+         '<input type="file" id="clientPhotoInput" accept="image/*" hidden>'+
+         '<span class="dh-band-ed">✎ Replace</span>'+
+         '<span class="dh-band-tx">'+
+           '<span class="dh-band-k">'+esc(l.type||'Client')+'</span>'+
+           '<span class="dh-band-n">'+esc(l.names)+'</span>'+
+           '<span class="dh-band-m">'+fmtDate(l.date)+' · '+esc(venueName(l.venue))+'</span>'+
+         '</span>'+
+         '<span class="dh-band-v">'+
+           '<span class="dh-v">'+money(l.value)+'</span>'+
+           '<span class="dh-l">contract value</span>'+
+         '</span>'+
+       '</label>'+
+       '<div class="dh-strip">'+
+         '<span class="pill" style="background:'+s.color+'22;color:'+s.color+'">'+s.name+'</span>'+
+         (l.guests?'<span class="pill">'+l.guests+' guests</span>':'')+
+         (away>=0?'<span class="pill gold">'+away+' days away</span>':'<span class="pill">Completed</span>')+
+         '<span style="flex:1"></span>'+
+         '<button class="btn btn-quiet btn-sm" id="editClient">✎ Edit details</button>'+
+         '<button class="btn btn-quiet btn-sm" id="clientBible">◈ Export bible</button>'+
+       '</div>'+
+     '</div>'
+   : '<div class="detail-head">'+
     '<div class="dh-main">'+
       '<div class="dh-id">'+
         '<label class="dh-photo" id="clientPhoto" tabindex="0" title="Upload a photo">'+
           '<input type="file" id="clientPhotoInput" accept="image/*" hidden>'+
-          (l.photo?'<img src="'+l.photo+'" alt="">':'<span>'+esc(initials)+'</span>')+
+          '<span>'+esc(initials)+'</span>'+
           '<span class="dh-photo-ed">✎</span>'+
         '</label>'+
         '<div>'+
@@ -4378,7 +4451,7 @@ function viewClientDetail(id){
     '<div class="dh-value"><span class="dh-v">'+money(l.value)+'</span><span class="dh-l">contract value</span>'+
       '<button class="btn btn-ghost btn-sm" id="editClient" style="margin-top:10px">✎ Edit details</button>'+
       '<button class="btn btn-ghost btn-sm" id="clientBible" style="margin-top:8px">◈ Export bible</button></div>'+
-  '</div>'+
+  '</div>')+
   '<div class="stat-row">'+
     stat('Collected',money(paid),invs.filter(function(x){return x.status==='paid';}).length+' payments','up')+
     stat('Outstanding',money(owed),owed?'awaiting payment':'all settled')+
@@ -4704,9 +4777,13 @@ function viewEventDetail(id){
     :'<div class="wknd-bar solo"><button type="button" class="ew-add" data-addsub="'+e.id+'">'+
       '+ Add a sub-event</button><span class="ew-h">Welcome party, rehearsal dinner, farewell brunch…</span></div>');
 
+  /* The banner comes first. It is the header for this screen, so anything
+     above it pushes the thing the page is about below the fold of the eye —
+     the weekend switcher and the sub-event control now sit under the picture,
+     in the strip that already answers "where is this". */
   return '<button class="back-link" data-back="events">‹ All events</button>'+
   sampleBanner()+
-  switcher+
+  (cover?'':switcher)+
 
   // ---- venue, given the prominence it deserves ----
   '<div class="venue-band'+(cover?' has-cover':'')+'">'+
@@ -4738,6 +4815,9 @@ function viewEventDetail(id){
         '<div class="vb-name'+(e.venue?'':' tbc')+'">'+esc(venueName(e.venue))+'</div>')+
       (addr.length?'<div class="vb-addr">'+addr.map(esc).join(cover?' · ':'<br>')+'</div>'
                   :'<div class="vb-addr muted">No address on file</div>')+
+      /* Sits with the map link because both answer the same question — what
+         else is there, and where. */
+      (cover?'<div class="vb-switch">'+switcher+'</div>':'')+
       (addr.length?'<a class="vb-map" href="https://maps.google.com/?q='+mapQ+'" target="_blank" rel="noopener">Open in Maps ›</a>':'')+
       /* A thumbnail here, not a wash behind the band. The band carries copy in
          all four corners — venue contact, date, site notes — and the hero's
