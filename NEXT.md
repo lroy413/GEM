@@ -174,6 +174,11 @@ never pulled, which is what stops a fresh install overwriting the studio.
   "make Supabase match this device" button, which is a person asking for a
   mirror. A first push after upgrading retires nothing, because nothing is
   recorded yet.
+- **A page about one subject leads with that subject.** An event with a cover
+  and a client with a photograph both put their own name on the picture and
+  suppress the page title block (`.main.evfocus`), because otherwise the header
+  says the same thing twice in a smaller voice. Without a picture the old head
+  returns — an initials medallion is a finished answer, a grey slab is not.
 - **A detail page is one gapped column** (`.detail-col`), not a margin per
   block. `evSection()` carries no margin of its own because in the event
   workspace `.ev-col` spaces it; dropped loose into a page it sat flush.
