@@ -10,7 +10,7 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
 <meta name="apple-mobile-web-app-title" content="GEM">
 <meta name="format-detection" content="telephone=no">
-<meta name="gem-build" content="9b54b8cc2450">
+<meta name="gem-build" content="3e4472f702eb">
 <link rel="manifest" href="/manifest.webmanifest">
 <link rel="icon" href="/icons/icon-192.png" sizes="192x192" type="image/png">
 <link rel="apple-touch-icon" href="/icons/icon-180.png">
@@ -612,6 +612,15 @@ body.portal-only .main{margin-left:0!important}
 .sb-msg.ok{background:rgba(143,191,159,.13);border-color:rgba(143,191,159,.4)}
 .sb-msg.bad{background:rgba(200,90,90,.10);border-color:rgba(200,90,90,.34)}
 .sb-msg.wait{background:var(--pink-50);color:var(--ink-soft)}
+/* first-run gate — a choice, not a dialog, so it has no close affordance */
+.modal-gate{max-width:530px}
+.gate-opt{padding:16px 17px;border:1px solid var(--line);border-radius:14px;margin-bottom:12px;
+  background:linear-gradient(180deg,var(--pink-50),var(--card))}
+.gate-opt.plain{background:var(--card)}
+.gate-opt b{display:block;font-family:var(--serif);font-size:17px;font-weight:600;letter-spacing:-.008em}
+.gate-opt span{display:block;font-size:12.5px;line-height:1.55;color:var(--ink-soft);margin-top:6px}
+.gate-opt .gate-warn{color:var(--muted)}
+.gate-acts{display:flex;align-items:center;gap:12px;margin-top:13px;flex-wrap:wrap}
 .tc-sample{margin-top:15px;padding:13px 14px;border:1px solid var(--line);border-radius:12px;
   background:linear-gradient(180deg,var(--pink-50),var(--card))}
 .tcs-t{font-family:var(--serif);font-size:15px;font-weight:600;letter-spacing:-.008em}
@@ -7104,25 +7113,10 @@ function wireSettings(){
       .catch(function(){ sbSay('bad','Could not reach that URL. Check the project URL.'); });
   };
   var sbGo=function(mode,btn){
-    var em=(($('#s_sbEmail')||{}).value||'').trim();
-    var pw=(($('#s_sbPw')||{}).value||'');
-    if(!/.+@.+\..+/.test(em)){ sbSay('bad','Enter your email address.'); return; }
-    if(pw.length<6){ sbSay('bad','Password must be at least 6 characters.'); return; }
     btn.disabled=true; sbSay('wait',mode==='up'?'Creating your account…':'Signing in…');
-    sbPassword(mode,em,pw).then(function(r){
-      if(r==='in'){
-        toast('Signed in ✦');
-        var q=prefs(); if(!q.bizEmail)q.bizEmail=em; savePrefs();
-        /* Claim any portal invitation waiting on this address. For a couple
-           this is the step that attaches them to their wedding; for staff it
-           finds nothing and costs one call. */
-        sbAfterSignIn().then(function(n){
-          if(n)toast('Portal access granted for '+n+' event'+(n===1?'':'s')+' ✦');
-          render();
-        });
-      } else {
-        sbSay('ok','Account created. Confirm the email we just sent, then sign in.');
-      }
+    sbAuthGo(mode,($('#s_sbEmail')||{}).value,($('#s_sbPw')||{}).value).then(function(r){
+      if(r==='in'){ toast('Signed in ✦'); render(); }
+      else sbSay('ok','Account created. Confirm the email we just sent, then sign in.');
     }).catch(function(e){ sbSay('bad',e.message); })
       .then(function(){ btn.disabled=false; });
   };
@@ -7756,7 +7750,13 @@ function viewFinance(){
 
 /* ---------- modals ---------- */
 var ov=$('#overlay'),md=$('#modal');
-function closeModal(){ ov.classList.remove('show'); md.className='modal'; }
+function closeModal(){
+  /* The first-run gate is a question, not a dialog: Escape and a click on the
+     scrim both arrive here, and skipping past it would leave someone working
+     without ever having been told their work is not going anywhere. */
+  if(md.classList.contains('modal-gate'))return;
+  ov.classList.remove('show'); md.className='modal';
+}
 ov.addEventListener('click',function(e){if(e.target===ov)closeModal();});
 function openLeadModal(){
   md.className='modal';md.innerHTML='<h3>New Lead</h3><p class="sub">Add an inquiry to the top of your pipeline.</p>'+
@@ -8306,6 +8306,129 @@ function rowActions(kind,id){
   return '<span class="r-acts">'+
     '<button class="r-act" data-edit="'+kind+':'+esc(id)+'" aria-label="Edit" title="Edit">✎</button>'+
     '<button class="r-act r-del" data-del="'+kind+':'+esc(id)+'" aria-label="Delete" title="Delete">✕</button></span>';
+}
+
+/* ============================================================
+ * First run — an account, or guest with the cost spelled out
+ *
+ * The tour used to start on its own 420ms after a first visit, which meant
+ * the first thing anyone was ever told about GEM was where the search box is.
+ * The thing they actually needed to know is that nothing they type is leaving
+ * the browser until they have an account — and by the time that sentence is
+ * discoverable, in Settings › Connection, an afternoon's work can already be
+ * sitting somewhere it can be lost.
+ *
+ * So the choice comes first and the tour follows it. The gate is deliberately
+ * not dismissable: closeModal() refuses while it is up, because a scrim click
+ * that quietly means "guest" is exactly the outcome this exists to prevent.
+ * "I already have one" is on it for the same reason — a fresh install of the
+ * app on a second phone is a first run too, and without it the only route
+ * back to an existing studio would be a settings page nobody has been shown.
+ * ============================================================ */
+var WELCOME_KEY='gem-welcome';
+function welcomeChoice(){
+  /* A browser that cannot remember the answer would be asked on every load,
+     which is worse than not asking: treat it as answered. */
+  try{ return localStorage.getItem(WELCOME_KEY); }catch(e){ return 'guest'; }
+}
+function setWelcome(v){ try{ localStorage.setItem(WELCOME_KEY,v); }catch(e){} }
+
+function gateSay(cls,msg){
+  var box=$('#gateMsg');
+  if(box)box.innerHTML='<div class="sb-msg '+cls+'">'+esc(msg)+'</div>';
+}
+function closeGate(){ md.className='modal'; ov.classList.remove('show'); }
+
+/* The tour is what the gate was standing in front of, so it runs on the way
+   out — but only if it has never run, the same rule as before. */
+function afterGate(){
+  try{ if(!localStorage.getItem(TOUR_KEY)) setTimeout(function(){ startTour(); },320); }catch(e){}
+}
+
+function gateChoice(){
+  md.innerHTML='<h3>Welcome to GEM</h3>'+
+    '<p class="sub">Enquiries through to the day itself. How would you like to start?</p>'+
+    '<div class="gate-opt">'+
+      '<b>Create an account</b>'+
+      '<span>Your studio is backed up as you work and follows you to every device — the laptop, your phone, the iPad on the day.</span>'+
+      '<div class="gate-acts">'+
+        '<button class="btn btn-gold" id="gAcct">Create an account</button>'+
+        '<button class="link-btn" id="gIn">I already have one</button>'+
+      '</div>'+
+    '</div>'+
+    '<div class="gate-opt plain">'+
+      '<b>Continue as guest</b>'+
+      '<span class="gate-warn">Nothing syncs. Everything you enter stays in this browser, on this device — another device will not see it, and clearing site data, or the browser reclaiming space on its own, takes it with no way back. You can create an account later under Settings › Connection and push it all up, as long as this browser still has it.</span>'+
+      '<div class="gate-acts">'+
+        '<button class="btn btn-ghost" id="gGuest">Continue as guest</button>'+
+      '</div>'+
+    '</div>';
+  var a=$('#gAcct'); if(a)a.onclick=function(){ gateAccount('up'); };
+  var i=$('#gIn');   if(i)i.onclick=function(){ gateAccount('in'); };
+  var g=$('#gGuest');
+  if(g)g.onclick=function(){
+    setWelcome('guest');
+    closeGate();
+    toast('Working on this device only — Settings › Connection when you want it backed up');
+    afterGate();
+  };
+  if(a)a.focus();
+}
+
+function gateAccount(mode){
+  var up=mode==='up';
+  md.innerHTML='<h3>'+(up?'Create your account':'Sign in')+'</h3>'+
+    '<p class="sub">'+(up
+      ? 'This is the account your studio is backed up to. One is created for you the moment you sign in.'
+      : 'Signing in brings your studio down to this device.')+'</p>'+
+    '<div class="field"><label>Email</label>'+
+      /* Deliberately not prefilled from bizEmail: on a first run that is still
+         the shipped default, and an account created against hello@gemevents.app
+         belongs to nobody. The browser's own saved credentials are the right
+         source here, which autocomplete asks for. */
+      '<input id="g_em" type="email" autocomplete="username" placeholder="you@studio.com"></div>'+
+    '<div class="field"><label>Password</label>'+
+      '<input id="g_pw" type="password" autocomplete="'+(up?'new-password':'current-password')+'" placeholder="At least 6 characters"></div>'+
+    '<div id="gateMsg"></div>'+
+    '<div class="modal-actions">'+
+      '<button class="btn btn-ghost" id="gBack">‹ Back</button>'+
+      '<button class="btn btn-gold" id="gGo">'+(up?'Create account':'Sign in')+'</button>'+
+    '</div>';
+  var back=$('#gBack'); if(back)back.onclick=gateChoice;
+  var go=$('#gGo');
+  if(go)go.onclick=function(){ gateGo(mode,go); };
+  var pw=$('#g_pw');
+  if(pw)pw.onkeydown=function(e){ if(e.key==='Enter'&&go)go.click(); };
+  var em=$('#g_em'); if(em)em.focus();
+}
+
+function gateGo(mode,btn){
+  btn.disabled=true;
+  gateSay('wait',mode==='up'?'Creating your account…':'Signing in…');
+  sbAuthGo(mode,($('#g_em')||{}).value,($('#g_pw')||{}).value).then(function(r){
+    if(r==='confirm'){
+      /* Signup succeeded but the project asks for a confirmed email, so there
+         is no session to work with yet. Back is still there, so nobody is
+         trapped waiting on an inbox. */
+      gateSay('ok','Account created. Confirm the email we just sent, then sign in — you can look around in the meantime.');
+      btn.disabled=false;
+      return;
+    }
+    setWelcome('account');
+    closeGate();
+    toast('Signed in ✦');
+    render();
+    afterGate();
+  }).catch(function(e){
+    gateSay('bad',e.message);
+    btn.disabled=false;
+  });
+}
+
+function openWelcomeGate(){
+  md.className='modal modal-gate';
+  gateChoice();
+  ov.classList.add('show');
 }
 
 /* ============================================================
@@ -10408,6 +10531,24 @@ function sbPassword(mode,email,pw){
     });
   });
 }
+/* Shared by the settings panel and the first-run gate. What counts as a valid
+   address, what a confirmation email means, and what has to happen the moment
+   a session appears — claiming a portal invitation, resolving or creating the
+   studio — belong in one place rather than in each screen that signs someone
+   in. Resolves 'in' or 'confirm'; rejects with a message fit to show. */
+function sbAuthGo(mode,em,pw){
+  em=(em||'').trim();
+  if(!/.+@.+\..+/.test(em))return Promise.reject(new Error('Enter your email address.'));
+  if((pw||'').length<6)return Promise.reject(new Error('Password must be at least 6 characters.'));
+  return sbPassword(mode,em,pw).then(function(r){
+    if(r!=='in')return 'confirm';
+    var q=prefs(); if(!q.bizEmail)q.bizEmail=em; savePrefs();
+    return sbAfterSignIn().then(function(n){
+      if(n)toast('Portal access granted for '+n+' event'+(n===1?'':'s')+' ✦');
+      return 'in';
+    });
+  });
+}
 function sbSignOut(){ setSbSession(null); SB_STATE.org=null; }
 
 /* The magic link returns to the app with the tokens in the URL fragment.
@@ -11274,8 +11415,13 @@ $('#railBtn').onclick=function(){
 document.addEventListener('keydown',function(e){
   if((e.metaKey||e.ctrlKey)&&e.key==='\\'){ e.preventDefault(); setRail(!appEl.classList.contains('rail')); }
 });
+/* The gate comes first and hands off to the tour; the tour only starts on its
+   own when the question has already been answered. A couple on the portal host
+   is never asked — they have an account by definition, and guest means nothing
+   to them — and neither is anyone already signed in. */
 try{
-  if(!localStorage.getItem(TOUR_KEY)) setTimeout(startTour,420);
+  if(!PORTAL_ONLY&&!sbAuthed()&&!welcomeChoice()) setTimeout(openWelcomeGate,320);
+  else if(!localStorage.getItem(TOUR_KEY)) setTimeout(startTour,420);
 }catch(e){}
 })();
 </script>

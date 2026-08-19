@@ -134,6 +134,15 @@ never pulled, which is what stops a fresh install overwriting the studio.
 
 ## 3 · Things worth knowing before you change the UI
 
+- **First run is a gate, then the tour.** `openWelcomeGate()` asks for an
+  account or guest before anything else, and `closeModal()` refuses while it is
+  up — a scrim click that quietly meant "guest" is the outcome it exists to
+  prevent. It hands off to the tour on the way out, so the tour no longer
+  starts on its own except when the question has already been answered
+  (`gem-welcome`). A couple on the portal host is never asked, and neither is
+  anyone already signed in. Both it and Settings › Connection sign in through
+  `sbAuthGo()` — put anything that must happen on sign-in there, not in either
+  screen.
 - **`prefs()` rebuilds a whitelisted object.** A key not named there is written
   to storage and silently dropped on load. This cost an afternoon with
   `dashOrder`.
