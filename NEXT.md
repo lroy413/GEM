@@ -161,6 +161,21 @@ never pulled, which is what stops a fresh install overwriting the studio.
 
 ## 3 · Things worth knowing before you change the UI
 
+- **Two faces, both inlined, both OFL.** Cormorant Garamond 600 for display,
+  Karla 400–800 for everything else. Karla is a VARIABLE file — one 24KB woff2
+  covers the whole weight axis, declared `font-weight:400 800` with
+  `format('woff2-variations')`. Do not add per-weight faces; ask the variable
+  file for the weight. The artifact CSP blocks font CDNs, so anything new has
+  to be base64 in the same way.
+- **An icon has to say what its screen does.** The first drawn set was
+  internally consistent and still wrong — a diamond for Dashboard, a bulleted
+  list for Guests, an abstract cluster for Vendors. They are literal now: a
+  panel layout, a person with a tick, a tag, a photograph for the archive, a
+  clipboard for questionnaires, an eye for the portal, a receipt for invoicing,
+  a pie with a slice set aside for tax. And settings is a **gear** — testers
+  did not know the lozenge opened settings. It is the one place where the
+  universal symbol beats a house one.
+
 - **Three surface tiers, and they mean something.** `PLATE` (imagery or deep
   ink, no border, `--radius-plate`) for the one thing you are meant to look at;
   `CARD` (hairline + contact shadow, `--radius`) for working surfaces; `RECESS`
