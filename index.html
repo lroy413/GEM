@@ -10,7 +10,7 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
 <meta name="apple-mobile-web-app-title" content="GEM">
 <meta name="format-detection" content="telephone=no">
-<meta name="gem-build" content="5eb568c83046">
+<meta name="gem-build" content="eea60271b7a6">
 <link rel="manifest" href="/manifest.webmanifest">
 <link rel="icon" href="/icons/icon-192.png" sizes="192x192" type="image/png">
 <link rel="apple-touch-icon" href="/icons/icon-180.png">
@@ -822,6 +822,12 @@ body.portal-only .main{margin-left:0!important}
   background:linear-gradient(180deg,#fff,var(--ivory))}
 .card-h h3{font-family:var(--serif);font-size:21px;font-weight:600;letter-spacing:-.01em;line-height:1.15}
 .grid-2{display:grid;grid-template-columns:1.4fr 1fr;gap:20px}
+/* A detail page is a stack of blocks with one rhythm between them. It used to
+   be a margin-bottom written by hand on each one, which meant a block whose
+   author did not add one — evSection(), because in the event workspace .ev-col
+   already spaces it — sat flush against whatever came next. */
+.detail-col{display:flex;flex-direction:column;gap:20px}
+.detail-col > *{margin-bottom:0 !important}
 
 /* ============ PIPELINE (KANBAN) ============ */
 /* ---- summary bar ---- */
@@ -1186,6 +1192,10 @@ tbody tr:hover{background:var(--pink-50)}
 }
 
 /* --- framing a photograph: drag the picture under a fixed circle --- */
+/* A wide frame needs the room a square did not: the modal grows for it. */
+.modal-wide-crop{max-width:600px}
+.crop-stage.wide{max-width:100%}
+.crop-stage.wide .crop-ring::after{border-radius:var(--radius);inset:0}
 .crop-stage{position:relative;width:100%;max-width:320px;aspect-ratio:1;margin:0 auto;
   border-radius:var(--radius);overflow:hidden;background:#241B1F;
   touch-action:none;user-select:none;-webkit-user-select:none;cursor:grab}
@@ -1198,6 +1208,7 @@ tbody tr:hover{background:var(--pink-50)}
   border:2px solid rgba(255,255,255,.92);box-shadow:0 0 0 9999px rgba(22,15,18,.66)}
 .crop-stage:focus-visible{outline:none;box-shadow:var(--ring)}
 .crop-zoom{display:flex;align-items:center;gap:12px;max-width:320px;margin:16px auto 0}
+.modal-wide-crop .crop-zoom,.modal-wide-crop .crop-hint{max-width:100%}
 .crop-zoom input[type=range]{flex:1;accent-color:var(--gold);height:22px;cursor:pointer}
 .cz-i{color:var(--ink-soft);line-height:1;font-size:15px;font-weight:600;width:14px;text-align:center;
   user-select:none}
@@ -1221,7 +1232,17 @@ tbody tr:hover{background:var(--pink-50)}
 .ev-cards{display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:16px}
 .ev-card{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);overflow:hidden;box-shadow:var(--shadow-sm);cursor:pointer;transition:transform .14s,box-shadow .14s}
 .ev-card:hover{transform:translateY(-3px);box-shadow:var(--shadow)}
-.ev-card .banner{height:78px;background:var(--gold-grad);position:relative}
+/* Tall enough to be a photograph rather than a stripe. The gold stays as the
+   answer when there is no cover — an honest wash, not a placeholder. */
+.ev-card .banner{height:78px;background:var(--gold-grad);position:relative;
+  background-size:cover;background-position:center}
+.ev-card .banner.has-photo{height:152px}
+.ev-card .banner.has-photo::after{content:"";position:absolute;inset:0;
+  background:linear-gradient(180deg,rgba(18,12,15,0) 40%,rgba(18,12,15,.55) 100%)}
+.ev-card .banner.has-photo .d,
+.ev-card .banner.has-photo .ev-blk,
+.ev-card .banner.has-photo .r-acts{z-index:2}
+.ev-card .banner.has-photo .d{background:rgba(0,0,0,.3)}
 .ev-card .banner .d{position:absolute;bottom:10px;left:16px;color:#fff;font-size:12px;font-weight:600;background:rgba(0,0,0,.12);padding:3px 10px;border-radius:20px}
 .ev-card .body{padding:16px}
 .ev-card .body h4{font-family:var(--serif);font-size:21px;font-weight:600}
@@ -1392,10 +1413,28 @@ td.inv-col{text-align:center;width:1%}
     color-mix(in srgb,var(--tint) 6%,#fff) 46%,var(--card) 100%)}
 .hero>*{position:relative;z-index:1}
 .hero-img{position:absolute;inset:0;z-index:0;background-size:cover;background-position:center}
+/* With a picture the card IS the picture: full bleed, taller, and the type on
+   a scrim at the foot rather than a white wash across the left two thirds that
+   left the photograph as a strip down one side. */
+.hero.has-photo{min-height:310px;align-items:flex-end;border-color:transparent}
 .hero.has-photo .hero-img::after{content:"";position:absolute;inset:0;
-  background:linear-gradient(100deg,rgba(255,255,255,.96) 0%,rgba(255,255,255,.9) 38%,
-    rgba(255,255,255,.35) 68%,rgba(255,255,255,.05) 100%)}
-.hero.has-photo::before{opacity:.5}
+  background:linear-gradient(180deg,rgba(18,12,15,0) 32%,rgba(18,12,15,.34) 60%,rgba(18,12,15,.76) 100%)}
+.hero.has-photo::before{opacity:0}
+.hero.has-photo .hero-body{padding:0 0 26px 28px}
+.hero.has-photo .hero-k{color:rgba(255,255,255,.78)}
+.hero.has-photo .hero-type,
+.hero.has-photo .hero-t,
+.hero.has-photo .hero-t:hover{color:#fff}
+.hero.has-photo .hero-m{color:rgba(255,255,255,.9)}
+.hero.has-photo .hr-i{background:rgba(255,255,255,.16);border-color:rgba(255,255,255,.3);color:#fff}
+.hero.has-photo .hr-i b{color:#fff}
+.hero.has-photo .hero-prog span{color:rgba(255,255,255,.86)}
+.hero.has-photo .hero-prog .bar{background:rgba(255,255,255,.28)}
+.hero.has-photo .hero-prog .bar i{background:#fff}
+.hero.has-photo .hero-side{border-left-color:rgba(255,255,255,.24);background:rgba(18,12,15,.3);
+  align-self:stretch}
+.hero.has-photo .hero-days,.hero.has-photo .hero-dl{color:#fff}
+@media (max-width:700px){ .hero.has-photo{min-height:250px} }
 .hero-body{flex:1;min-width:0;padding:24px 0 22px 26px;display:flex;flex-direction:column;gap:7px}
 .hero-k{display:flex;align-items:center;gap:9px;font-size:9.5px;letter-spacing:1.9px;
   text-transform:uppercase;color:var(--muted);font-weight:600}
@@ -1439,12 +1478,23 @@ td.inv-col{text-align:center;width:1%}
 .wk-h{display:flex;align-items:baseline;justify-content:space-between;margin-bottom:9px}
 .wk-h .fig-head{margin:0}
 .wk-days{display:grid;grid-template-columns:repeat(7,1fr);gap:8px}
-.wk-d{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);
+/* These had no resting shadow — only one on hover — so on a palette where the
+   card and the page sit close together the whole strip dissolved into the
+   background. Every other card in the app is lifted; these are cards too.
+   The top highlight is what makes it read as sitting ON the page rather than
+   as a rectangle drawn on it. */
+.wk-d{background:linear-gradient(180deg,var(--ivory),var(--card));
+  border:1px solid var(--line);border-radius:var(--radius);
   padding:11px 10px 12px;cursor:pointer;min-height:96px;display:flex;flex-direction:column;gap:3px;
-  transition:border-color .14s,transform .14s,box-shadow .14s}
-.wk-d:hover{border-color:var(--gold-line);transform:translateY(-2px);box-shadow:var(--shadow-sm)}
-.wk-d.today{border-color:var(--gold);box-shadow:0 0 0 3px rgba(176,141,62,.12)}
-.wk-d.quiet{background:transparent;box-shadow:none}
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.7), var(--shadow-sm);
+  transition:border-color .14s var(--ease),transform .14s var(--ease),box-shadow .14s var(--ease)}
+.wk-d:hover{border-color:var(--gold-line);transform:translateY(-3px);
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.7), var(--shadow)}
+/* Today is the one that should look picked up off the page. */
+.wk-d.today{border-color:var(--gold);
+  box-shadow:0 0 0 3px rgba(176,141,62,.13), inset 0 1px 0 rgba(255,255,255,.8), var(--shadow)}
+/* A day with nothing on it settles back rather than disappearing. */
+.wk-d.quiet{background:var(--card);box-shadow:inset 0 1px 0 rgba(255,255,255,.5), var(--shadow-xs)}
 .wk-dow{font-size:9.5px;letter-spacing:1.3px;text-transform:uppercase;color:var(--muted);font-weight:600}
 .wk-n{font-family:var(--serif);font-size:22px;line-height:1;font-weight:600}
 .wk-d.today .wk-n{color:var(--gold)}
@@ -4224,7 +4274,12 @@ function viewClientDetail(id){
   var away=daysAway(l.date);
 
   var initials=leadInitials(l);
+  /* One gapped column rather than a margin on each block. The event workspace
+     already does this with .ev-col; here every block carried its own inline
+     margin-bottom, so evSection() — which has none, because in the workspace
+     the container spaces it — sat flush against the row beneath it. */
   return '<button class="back-link" data-back="clients">‹ All clients</button>'+
+  '<div class="detail-col">'+
   sampleBanner()+
   '<div class="detail-head">'+
     '<div class="dh-main">'+
@@ -4339,7 +4394,8 @@ function viewClientDetail(id){
           (ev?'<div class="hint" style="margin-top:6px">Upload contracts, venue paperwork, vendor insurance — anything you already have.</div>':'')+
         '</td></tr>')+'</tbody></table></div></div>'+
     '</div>'+
-  '</div>';
+  '</div>'+
+  '</div>';                 /* .detail-col */
 }
 
 /* --- Events --- */
@@ -4351,7 +4407,10 @@ function viewEvents(){
     /* Row actions live in the banner, not beside the title. Inline, a long
        client name wrapped around them and the card grew a second row — the
        grid then sat at two different heights depending on the name. */
-    return '<div class="ev-card'+(isSampleEvent(e)?' is-sample':'')+'" data-ev="'+e.id+'"><div class="banner">'+rowActions('event',e.id)+
+    var cov=evPhoto(e);
+    return '<div class="ev-card'+(isSampleEvent(e)?' is-sample':'')+'" data-ev="'+e.id+'">'+
+      '<div class="banner'+(cov?' has-photo':'')+'"'+
+        (cov?' style="background-image:url('+cov+')"':'')+'>'+rowActions('event',e.id)+
       (isSampleEvent(e)?'<span class="samp-tag card">Sample</span>':'')+
       '<span class="d">'+daysAway(e.date)+' days · '+fmtDate(e.date)+'</span>'+
       (kids.length?'<span class="ev-blk">'+(kids.length+1)+' events</span>':'')+'</div>'+
@@ -4390,16 +4449,22 @@ function wireEvents(){
     var f=cin.files&&cin.files[0]; cin.value='';
     if(!f||!ev)return;
     if(!/^image\//.test(f.type)){toast('Choose an image file.');return;}
-    shrinkImage(f,1200,function(dataUrl){
-      if(!dataUrl){toast('Could not read that image.');return;}
-      var prev=ev.photo, prevPath=ev.photoPath;
-      /* Clearing photoPath is what makes the new picture upload: mediaUpload()
-         only sends records that have pixels and no path yet, so leaving the
-         old key here would keep the old object on every other device. */
-      ev.photo=dataUrl; ev.photoPath=null;
-      if(!save()){ ev.photo=prev; ev.photoPath=prevPath; }
-      render();
-    });
+    /* The same framing the client photo gets, in the shape this one is going
+       to be used at: 16:9 fills the dashboard hero and crops sensibly into the
+       event card's banner. Scaled up beforehand it was whatever the camera
+       happened to give, and object-fit chose the crop. */
+    openPhotoCrop(f,{aspect:16/9,out:1440,
+                     title:'Frame the cover',
+                     sub:'This fills the top of the dashboard and the card for '+ev.title+'.'},
+      function(dataUrl){
+        var prev=ev.photo, prevPath=ev.photoPath;
+        /* Clearing photoPath is what makes the new picture upload: mediaUpload()
+           only sends records that have pixels and no path yet, so leaving the
+           old key here would keep the old object on every other device. */
+        ev.photo=dataUrl; ev.photoPath=null;
+        if(!save()){ ev.photo=prev; ev.photoPath=prevPath; return; }
+        closeModal(); render(); toast('Cover updated ✦');
+      });
   };
   if(clbl)clbl.onkeydown=function(e){
     if((e.key==='Enter'||e.key===' ')&&cin){ e.preventDefault(); cin.click(); }
@@ -5754,6 +5819,12 @@ function shrinkImage(file,maxDim,cb){
 function openPhotoCrop(file,opts,done){
   opts=opts||{};
   var OUT=opts.out||512;
+  /* 1 is a face — a circle to frame it by and a square to export, because the
+     avatar, the card tile and the dashboard hero each mask that square their
+     own way. A wider ratio is a cover: the same drag-and-zoom, a rectangular
+     frame, and an export shaped like the place it is going. */
+  var AR=opts.aspect||1;
+  var round=AR===1;
   /* Bound the working image before it is ever decoded into the page: a modern
      phone camera file is 4000px wide and there is no reason to hold that. */
   shrinkImage(file,1400,function(url){
@@ -5765,10 +5836,11 @@ function openPhotoCrop(file,opts,done){
   });
 
   function cropStage(img,url){
-    md.className='modal';
+    md.className='modal'+(round?'':' modal-wide-crop');
     md.innerHTML='<h3>'+esc(opts.title||'Frame the photo')+'</h3>'+
       '<p class="sub">'+esc(opts.sub||'Drag the picture to move it, and zoom to fill the circle.')+'</p>'+
-      '<div class="crop-stage" id="cropStage" tabindex="0" role="application" '+
+      '<div class="crop-stage'+(round?'':' wide')+'" id="cropStage" tabindex="0" role="application" '+
+        (round?'':'style="aspect-ratio:'+AR+'" ')+
         'aria-label="Drag to reposition the photograph, arrow keys to nudge">'+
         '<img id="cropImg" alt="" draggable="false">'+
         '<div class="crop-ring"></div>'+
@@ -5778,7 +5850,9 @@ function openPhotoCrop(file,opts,done){
         '<input type="range" id="cropZoom" min="1" max="3" step="0.01" value="1" aria-label="Zoom">'+
         '<span class="cz-i lg" aria-hidden="true">+</span>'+
       '</div>'+
-      '<div class="crop-hint">Everything inside the circle is what people will see.</div>'+
+      '<div class="crop-hint">'+(round
+        ?'Everything inside the circle is what people will see.'
+        :'What sits inside the frame is what fills the card.')+'</div>'+
       '<div class="modal-actions">'+
         '<button class="btn btn-ghost" id="cropCancel">Cancel</button>'+
         '<button class="btn btn-gold" id="cropSave">Use photo</button>'+
@@ -5789,18 +5863,18 @@ function openPhotoCrop(file,opts,done){
     var nw=img.naturalWidth||img.width, nh=img.naturalHeight||img.height;
     el.src=url; el.style.width=nw+'px'; el.style.height=nh+'px';
 
-    /* S is measured, not assumed: the stage is a percentage of a modal that is
-       itself a percentage of the viewport, so it is a different number on a
-       phone than on a desktop and the export maths depends on it. */
-    var S=stage.clientWidth||320;
-    /* At zoom 1 the shorter side exactly fills the stage, so there is never a
-       gap to drag into — the picture always covers. */
-    var kFit=S/Math.min(nw,nh), k=kFit, ox=0, oy=0;
+    /* W and H are measured, not assumed: the stage is a percentage of a modal
+       that is itself a percentage of the viewport, so they differ between a
+       phone and a desktop and the export maths depends on both. */
+    var W=stage.clientWidth||320, H=stage.clientHeight||Math.round(W/AR);
+    /* At zoom 1 the picture exactly covers the frame — whichever of its sides
+       runs out first — so there is never a gap to drag into. */
+    var kFit=Math.max(W/nw,H/nh), k=kFit, ox=0, oy=0;
 
     function clamp(){
       var dw=nw*k, dh=nh*k;
-      ox=Math.min(0,Math.max(S-dw,ox));
-      oy=Math.min(0,Math.max(S-dh,oy));
+      ox=Math.min(0,Math.max(W-dw,ox));
+      oy=Math.min(0,Math.max(H-dh,oy));
     }
     function paint(){
       clamp();
@@ -5808,16 +5882,16 @@ function openPhotoCrop(file,opts,done){
     }
     /* Start centred — the middle of a photograph is where the subject usually
        is, and it is the framing someone is least surprised by. */
-    ox=(S-nw*k)/2; oy=(S-nh*k)/2; paint();
+    ox=(W-nw*k)/2; oy=(H-nh*k)/2; paint();
 
     function zoomTo(z){
       var k2=kFit*Math.max(1,Math.min(3,z));
       if(k2===k)return;
-      /* Hold the centre of the circle still. Zooming from the top-left corner
+      /* Hold the centre of the frame still. Zooming from the top-left corner
          instead would walk the subject out of frame every time. */
       var r=k2/k;
-      ox=S/2-(S/2-ox)*r;
-      oy=S/2-(S/2-oy)*r;
+      ox=W/2-(W/2-ox)*r;
+      oy=H/2-(H/2-oy)*r;
       k=k2; paint();
     }
     zin.oninput=function(){ zoomTo(Number(zin.value)||1); };
@@ -5858,11 +5932,11 @@ function openPhotoCrop(file,opts,done){
 
     $('#cropCancel').onclick=closeModal;
     $('#cropSave').onclick=function(){
-      /* The visible square, back in the source image's own coordinates. */
+      /* The visible frame, back in the source image's own coordinates. */
       var cv=document.createElement('canvas');
-      cv.width=OUT; cv.height=OUT;
+      cv.width=OUT; cv.height=Math.round(OUT/AR);
       var ctx=cv.getContext('2d');
-      ctx.drawImage(img,(-ox)/k,(-oy)/k,S/k,S/k,0,0,OUT,OUT);
+      ctx.drawImage(img,(-ox)/k,(-oy)/k,W/k,H/k,0,0,cv.width,cv.height);
       var out=null;
       try{ out=cv.toDataURL('image/jpeg',0.86); }catch(err){ out=null; }
       if(!out){ toast('Could not save that image.'); return; }
@@ -7006,6 +7080,18 @@ function settingsPage(k){
         setRow('Sync automatically',toggle('s_sbAuto',p.autoSync!==false),
                'Pushes a few seconds after you stop editing, and only the parts that changed')+
       '</div>':'')+
+      /* The way back. Shown only when there is something to go back to, and it
+         says what it would restore rather than asking for faith. */
+      (function(){
+        var s=prevSnapshot(); if(!s)return '';
+        var n=0; try{ var d=JSON.parse(s.db)||{};
+          n=(d.leads||[]).length+' clients · '+(d.events||[]).length+' events'; }catch(e){ n='the previous copy'; }
+        return '<div class="set-card" style="margin-top:18px">'+
+          setRow('Undo the last sync','<button class="btn btn-ghost btn-sm" id="s_sbUndo">Restore</button>',
+            'Taken '+fmtStamp(s.at)+(s.why?' — '+esc(s.why):'')+'. Holds '+esc(String(n))+
+            '. Restoring swaps the two, so this is reversible.')+
+        '</div>';
+      })()+
       '<div class="set-note"><b>Why this is safe:</b> a publishable key grants nothing on its own. Every table is protected by row-level security, so the key can only ever reach rows your signed-in account is entitled to. A key beginning <code>sb_secret_</code> or a long <code>eyJ…</code> service_role token must never go here.</div>'+
       '<div class="set-note">Client photos and mood-board images stay on this device for now — they are held inline, and moving them means uploading to the private media bucket.</div>'+
     '</div>';
@@ -7545,6 +7631,15 @@ function wireSettings(){
     sbSignIn(em.trim()).then(function(m){ sbSay('ok',m); })
       .catch(function(e){ sbSay('bad',e.message); })
       .then(function(){ sbL.disabled=false; });
+  };
+  var sbU=$('#s_sbUndo');
+  if(sbU)sbU.onclick=function(){
+    confirmDelete('the current copy on this device and put the previous one back',function(){
+      if(!restoreSnapshot()){ toast('Could not restore.'); return; }
+      /* Reload rather than re-render: db, settings and every cached view were
+         built from the copy we have just replaced. */
+      location.reload();
+    });
   };
   var sbO=$('#s_sbOut');
   if(sbO)sbO.onclick=function(){ sbSignOut(); toast('Signed out'); render(); };
@@ -11696,24 +11791,58 @@ function setSbVer(v){ try{ v===null?localStorage.removeItem('gem-sb-ver'):localS
 /* Compare-and-increment on the server. A device whose last-seen version has
    moved on is refused rather than allowed to prune away another device's
    work — the prune is what makes a blind push dangerous. */
-function sbClaim(){
-  return sbRest('rpc/gem_claim_sync',{method:'POST',body:{p_org:SB_STATE.org,p_expect:sbVer()}})
+/* The studio's version used to move the moment a push began, so a run that
+   died partway left it looking newer than it was and every other device came
+   to fetch a half-written state. Begin takes a lease and reports where the
+   studio stands; commit is what makes the new state visible. See 17. */
+function sbSyncErr(e){
+  var m=String((e&&e.message)||'');
+  if(/unsynced/i.test(m)){
+    /* This device has never pulled, but the studio already holds records.
+       Its ids differ from the ones on the server, so a push would insert a
+       second copy of everything rather than update. */
+    var u=new Error('This device has never synced with your studio. Pull first — pushing now would create a duplicate copy of everything.');
+    u.stale=true; return u;
+  }
+  if(/busy/i.test(m)){
+    var b=new Error('Another device is syncing this studio right now. Try again in a moment.');
+    b.busy=true; return b;
+  }
+  if(/stale/i.test(m)){
+    var s=new Error('Another device has saved since this one last synced. Pull first, then push.');
+    s.stale=true; return s;
+  }
+  return e;
+}
+function sbBegin(){
+  return sbRest('rpc/gem_begin_sync',{method:'POST',body:{p_org:SB_STATE.org,p_expect:sbVer()}})
     .then(function(v){ return Number(v); })
     .catch(function(e){
-      var m=String(e.message||'');
-      if(/unsynced/i.test(m)){
-        /* This device has never pulled, but the studio already holds records.
-           Its ids differ from the ones on the server, so a push would insert a
-           second copy of everything rather than update. */
-        var u=new Error('This device has never synced with your studio. Pull first — pushing now would create a duplicate copy of everything.');
-        u.stale=true; throw u;
+      /* Migration 17 not run yet, or an older studio: fall back to the
+         one-step claim so this build still works rather than refusing to sync
+         at all. Less safe, and exactly as safe as it was yesterday. */
+      if(/PGRST202|404|not find the function|does not exist/i.test(String(e.message||''))){
+        SB_SYNC.onePhase=true;
+        return sbRest('rpc/gem_claim_sync',{method:'POST',body:{p_org:SB_STATE.org,p_expect:sbVer()}})
+          .then(function(v){ return Number(v); })
+          .catch(function(e2){ throw sbSyncErr(e2); });
       }
-      if(/stale/i.test(m)){
-        var err=new Error('Another device has saved since this one last synced. Pull first, then push.');
-        err.stale=true; throw err;
-      }
-      throw e;
+      throw sbSyncErr(e);
     });
+}
+/* Returns the version the studio is now on — the first moment anything else is
+   entitled to act on this run. */
+function sbCommit(){
+  if(SB_SYNC.onePhase)return Promise.resolve(SB_SYNC.claimed);   // already bumped at begin
+  return sbRest('rpc/gem_commit_sync',{method:'POST',body:{p_org:SB_STATE.org,p_expect:sbVer()}})
+    .then(function(v){ return Number(v); })
+    .catch(function(e){ throw sbSyncErr(e); });
+}
+/* Best effort: hand the studio back at once rather than making the next device
+   wait out the five-minute lease. Never allowed to mask the real failure. */
+function sbAbort(){
+  if(SB_SYNC.onePhase)return Promise.resolve();
+  return sbRest('rpc/gem_abort_sync',{method:'POST',body:{p_org:SB_STATE.org}}).catch(function(){});
 }
 
 /* ---------- push ---------- */
@@ -11724,7 +11853,24 @@ function sbUpsert(table,rows){
   if(!rows.length)return Promise.resolve();
   return sbRest(table,{method:'POST',body:rows,prefer:'resolution=merge-duplicates,return=minimal'});
 }
-function sbPrune(table,keepIds,scope){
+/* Deletes every row of a table that the payload left out. With an EMPTY keep
+   list that is a DELETE with no id filter — every row in the table, for the
+   whole studio, gone. That is the single most destructive line in the app, and
+   it fires from a timer.
+
+   A local collection can be empty for reasons that have nothing to do with
+   intent: storage was lost, a pull brought down a partial state, a normalize
+   went wrong. So an empty keep list no longer deletes anything unless this is
+   the manual "make Supabase match this device" push, where a person has said
+   so and been asked to confirm. Emptying a collection deliberately therefore
+   needs that button — a stale row left on the server is a far cheaper mistake
+   than an emptied table. */
+var SB_SKIPPED_PRUNE=[];
+function sbPrune(table,keepIds,scope,allowEmpty){
+  if(!keepIds.length&&!allowEmpty){
+    SB_SKIPPED_PRUNE.push(table);
+    return Promise.resolve();
+  }
   var q=table+'?'+(scope||('org_id=eq.'+SB_STATE.org));
   q+=keepIds.length?('&id=not.in.('+keepIds.join(',')+')'):'';
   return sbRest(q,{method:'DELETE',prefer:'return=minimal'});
@@ -11746,9 +11892,25 @@ function sbPush(opts){
   }
   sbMigrateIds();
   saveLocal();
+  SB_SKIPPED_PRUNE=[];
 
   var me=sbUserId();
-  var L=db.leads||[], E=db.events||[], V=db.vendors||[], B=db.bookings||[];
+  /* The sample is demo content, and sbMigrateIds() gives it FRESH uuids on
+     every device that has ever held it — so two devices pushing it produce two
+     "Priya & Sam" weddings in one studio, and a device that lost its storage
+     and reseeded produces a third. It is also the thing most likely to be on a
+     device that has no business writing to a studio at all.
+
+     So it is filtered out here rather than guarded against somewhere: nothing
+     still flagged as sample is sent, and — because the prune deletes whatever
+     the payload leaves out — sampleKeep() below makes sure leaving it out
+     never deletes anything either. "Use this as my project" clears the flags,
+     at which point these records are real and push like everything else. */
+  var notSample=function(list,kind){
+    return (list||[]).filter(function(r){ return !isSampleRecord(kind,r.id); });
+  };
+  var L=notSample(db.leads,'lead'), E=notSample(db.events,'event'),
+      V=notSample(db.vendors,'vendor'), B=notSample(db.bookings,'booking');
   /* form_submissions.form_id is NOT NULL and points at lead_forms, so the form
      itself has to exist first — it was never being pushed at all. */
   var lf=db.leadForm||null;
@@ -11886,7 +12048,8 @@ function sbPush(opts){
   SB_SYNC.wrote=live.length;
 
   /* Parents before children — every child carries an FK to the row above it. */
-  var chain=sbClaim().then(function(v){ SB_SYNC.claimed=v; });
+  SB_SYNC.onePhase=false;
+  var chain=sbBegin().then(function(v){ SB_SYNC.claimed=v; });
   /* Photos first: mediaUpload() stamps photoPath/path onto the records, and
      the payloads above were built before that ran, so refresh the two that
      carry a storage reference. */
@@ -11958,7 +12121,7 @@ function sbPush(opts){
   chain=chain.then(function(){
     var back=Promise.resolve();
     live.slice().reverse().forEach(function(st){
-      back=back.then(function(){ return sbPrune(st[0],st[1].map(function(r){return r.id;})); });
+      back=back.then(function(){ return sbPrune(st[0],st[1].map(function(r){return r.id;}),null,!!opts.full); });
     });
     return back;
   });
@@ -11969,12 +12132,23 @@ function sbPush(opts){
     return sbRest('org_prefs',{method:'POST',prefer:'resolution=merge-duplicates,return=minimal',
       body:[{org_id:org,prefs:p,stages:loadStages(),templates:p.templates||{},fields:p.fields||[]}]});
   }).then(function(){
+    /* The run is complete, so now the studio may move. Everything above this
+       line is reversible by simply not committing: a failure leaves the
+       version where it was and no other device is told to come and look. */
+    return sbCommit();
+  }).then(function(v){
+    setSbVer(v);
     /* Photos belonging to records that have since been deleted would sit in
        IndexedDB forever otherwise. */
     var keep={}; mediaItems().forEach(function(m){ keep[m.id]=true; });
     mediaPrune(keep);
+    if(SB_SKIPPED_PRUNE.length){
+      /* Loud, not silent: the studio and this device genuinely disagree now. */
+      sbSetStatus('warn','Kept '+SB_SKIPPED_PRUNE.length+' table'+(SB_SKIPPED_PRUNE.length===1?'':'s')+
+        ' the studio has and this device does not — Settings › Connection to reconcile');
+      SB_SKIPPED_PRUNE=[];
+    }
     setSbHashes(nextH);
-    setSbVer(SB_SYNC.claimed);
     /* Everything local is now on the server, so an automatic pull is safe
        again. Cleared here rather than on entry: a push that fails half way
        must leave the device marked as holding work. */
@@ -11982,11 +12156,64 @@ function sbPush(opts){
     SB_STATE.lastSync=new Date().toISOString(); SB_STATE.lastError=null;
     try{ localStorage.setItem('gem-sb-last',SB_STATE.lastSync); }catch(e){}
     return true;
+  }).catch(function(e){
+    /* Hand the studio back before reporting, so the next attempt is not made
+       to wait out a lease held by a run that is already over. */
+    return sbAbort().then(function(){ throw e; });
   });
 }
 
 /* ---------- pull ---------- */
-function sbPull(){
+/* One previous copy of the workspace, taken immediately before anything
+   replaces it. There was no way back from a pull: it overwrote localStorage
+   and the copy it replaced was simply gone. This is the cheapest safety net in
+   the app and the one whose absence cost a client file.
+   Photos are excluded — they live in IndexedDB and would blow the quota. */
+var PREV_KEY='gem-proto-prev';
+function snapshotLocal(why){
+  try{
+    var raw=localStorage.getItem(KEY);
+    if(!raw)return false;
+    localStorage.setItem(PREV_KEY,JSON.stringify({at:new Date().toISOString(),why:why||'',db:raw}));
+    return true;
+  }catch(e){ return false; }   // a full quota must never block the sync itself
+}
+function prevSnapshot(){
+  try{ return JSON.parse(localStorage.getItem(PREV_KEY))||null; }catch(e){ return null; }
+}
+function restoreSnapshot(){
+  var s=prevSnapshot(); if(!s)return false;
+  try{
+    /* Swap, do not discard: restoring is itself destructive, so the thing it
+       replaces becomes the new undo. */
+    var now=localStorage.getItem(KEY);
+    localStorage.setItem(KEY,s.db);
+    if(now)localStorage.setItem(PREV_KEY,JSON.stringify({at:new Date().toISOString(),why:'before restoring',db:now}));
+    return true;
+  }catch(e){ return false; }
+}
+
+/* What a pull is about to cost, in records. A studio that legitimately holds
+   less than this device is possible — someone deleted a client elsewhere — but
+   losing a whole client file to an automatic background sync is not something
+   to discover later, so it stops and says so instead. */
+function pullLoss(next){
+  var out=[];
+  [['leads','client'],['events','event'],['invoices','invoice'],
+   ['documents','document'],['vendors','vendor']].forEach(function(pair){
+    var before=(db[pair[0]]||[]).length, after=(next[pair[0]]||[]).length;
+    if(before>after)out.push({what:pair[1],before:before,after:after,lost:before-after});
+  });
+  return out;
+}
+function lossLine(loss){
+  return loss.map(function(l){
+    return l.lost+' '+l.what+(l.lost===1?'':'s');
+  }).join(' and ');
+}
+
+function sbPull(opts){
+  opts=opts||{};
   var org=SB_STATE.org;
   if(!org)return Promise.reject(new Error('No studio yet.'));
   var t=['leads','events','timeline_items','checklist_items','budget_lines','seating_tables','guests','guest_invites',
@@ -12067,6 +12294,18 @@ function sbPull(){
                      fields:f.fields||[],active:f.active!==false};
     }
     normalize(next);
+    /* Checked before anything is written. An automatic pull that would remove
+       records this device is holding is refused outright — the device keeps
+       what it has and says so. A manual pull is the person asking for exactly
+       this, so it proceeds, but only after the snapshot below. */
+    var loss=pullLoss(next);
+    if(loss.length&&opts.auto){
+      var e=new Error('The studio has '+lossLine(loss)+' fewer than this device. '+
+        'Nothing has been changed here — open Settings › Connection to compare.');
+      e.wouldLose=loss;
+      throw e;
+    }
+    snapshotLocal(loss.length?('pull removed '+lossLine(loss)):'pull');
     db=next;
     if(R.org_prefs[0]&&R.org_prefs[0].stages&&R.org_prefs[0].stages.length){
       var sp=R.org_prefs[0];
@@ -12090,7 +12329,7 @@ function sbPull(){
 }
 
 /* ---------- automatic sync ---------- */
-var SB_SYNC={timer:null,busy:false,queued:false,claimed:null,wrote:0,status:'idle'};
+var SB_SYNC={timer:null,busy:false,queued:false,claimed:null,wrote:0,status:'idle',onePhase:false};
 function sbSetStatus(st,msg){
   SB_SYNC.status=st; SB_SYNC.msg=msg||'';
   var el=document.getElementById('sbPill');
@@ -12167,7 +12406,7 @@ function sbCheckRemote(){
 function sbAutoPull(msg){
   if(!sbReady()||!SB_STATE.org||SB_SYNC.busy)return Promise.resolve(false);
   SB_SYNC.busy=true; sbSetStatus('busy',msg||'Getting the latest…');
-  return sbPull().then(function(){
+  return sbPull({auto:true}).then(function(){
     sbSetStatus('ok','Up to date');
     setTimeout(function(){ if(SB_SYNC.status==='ok')sbSetStatus('idle',''); },2200);
     if(typeof render==='function')render();

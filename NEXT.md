@@ -21,7 +21,14 @@ runs local-first in the browser and syncs to Supabase when connected.
 | Which build is live? | Settings → Data & storage → **App version**, or `curl -s https://gemevents.app/ \| grep gem-build` |
 
 Migrations **01–16 are all run** against the live project — 16 on 19 Aug 2026,
-verifying all true. The database is now ahead of production: `events.photo_path`
+verifying all true. **17 is not.**
+
+Run `17_sync_two_phase.sql` before the build that goes with it. It splits the
+sync claim in two: the studio's version now moves only when a push *finishes*,
+where it used to move before a single row was written. The client falls back to
+the old one-step claim if the functions are missing, so deploying first is not
+fatal — it simply leaves the hole open. `18_venues.sql` is written, numbered and
+**inert**: the venue feature it belongs to is unfinished. The database is now ahead of production: `events.photo_path`
 exists and nothing writes to it until this build ships, which is the safe
 direction. Deploying before the migration would not have been: the events
 payload carries that key on every row whether or not the event has a cover, so
@@ -134,6 +141,18 @@ never pulled, which is what stops a fresh install overwriting the studio.
 
 ## 3 · Things worth knowing before you change the UI
 
+- **A push claims the studio, it does not finish it.** `sbBegin()` takes a
+  lease and reports the version; `sbCommit()` moves it once the run is done;
+  `sbAbort()` hands it back on failure. Never make the version move earlier
+  than the last write — that is what invited every other device to come and
+  fetch a half-written studio.
+- **Deletion is inferred from absence, and that is the remaining hazard.**
+  `sbPrune()` removes whatever the payload left out. It can no longer empty a
+  table outside the manual push, but until rows carry a `deleted_at` the wire
+  format still cannot tell "deleted" from "this device never had it".
+- **A detail page is one gapped column** (`.detail-col`), not a margin per
+  block. `evSection()` carries no margin of its own because in the event
+  workspace `.ev-col` spaces it; dropped loose into a page it sat flush.
 - **The title bar names the work, not the screen.** `pageHead(v)` returns
   `[eyebrow, headline, sub]` — the screen's own name goes in the eyebrow at
   label size, and the headline says what is true today (the countdown, what is
