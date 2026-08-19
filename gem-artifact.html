@@ -1594,36 +1594,58 @@ td.inv-col{text-align:center;width:1%}
 
 /* ============ THE WEEK ============ */
 .wk{margin-bottom:22px}
-.wk-h{display:flex;align-items:baseline;justify-content:space-between;margin-bottom:9px}
-.wk-h .fig-head{margin:0}
+/* The sentence sits between the label and the link, and takes the slack — on a
+   narrow window it is the part that should shrink, not the label. */
+.wk-h{display:flex;align-items:baseline;gap:14px;margin-bottom:9px}
+.wk-h .fig-head{margin:0;flex:0 0 auto}
+.wk-h .link-btn{flex:0 0 auto;margin-left:auto}
+.wk-sum{flex:1 1 auto;min-width:0;font-size:12.5px;color:var(--ink-soft);
+  overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .wk-days{display:grid;grid-template-columns:repeat(7,1fr);gap:8px}
 /* These had no resting shadow — only one on hover — so on a palette where the
    card and the page sit close together the whole strip dissolved into the
-   background. Every other card in the app is lifted; these are cards too.
-   The top highlight is what makes it read as sitting ON the page rather than
-   as a rectangle drawn on it. */
+   background. Every other card in the app is lifted; these are cards too. */
 .wk-d{background:linear-gradient(180deg,var(--ivory),var(--card));
   border:1px solid var(--line);border-radius:var(--radius);
-  padding:11px 10px 12px;cursor:pointer;min-height:96px;display:flex;flex-direction:column;gap:3px;
+  padding:9px 10px 10px;cursor:pointer;min-height:92px;display:flex;flex-direction:column;gap:7px;
   box-shadow:inset 0 1px 0 rgba(255,255,255,.7), var(--shadow-sm);
   transition:border-color .14s var(--ease),transform .14s var(--ease),box-shadow .14s var(--ease)}
 .wk-d:hover{border-color:var(--gold-line);transform:translateY(-3px);
   box-shadow:inset 0 1px 0 rgba(255,255,255,.7), var(--shadow)}
+.wk-d:focus-visible{outline:none;box-shadow:var(--ring)}
 /* Today is the one that should look picked up off the page. */
 .wk-d.today{border-color:var(--gold);
   box-shadow:0 0 0 3px rgba(176,141,62,.13), inset 0 1px 0 rgba(255,255,255,.8), var(--shadow)}
-/* A day with nothing on it settles back rather than disappearing. */
-.wk-d.quiet{background:var(--card);box-shadow:inset 0 1px 0 rgba(255,255,255,.5), var(--shadow-xs)}
+/* A clear day is information too, so it settles back rather than competing
+   with the days that actually hold something. Flat, no lift, paler date. */
+.wk-d.quiet{background:transparent;border-color:var(--line);box-shadow:none;cursor:default}
+.wk-d.quiet:hover{transform:none;border-color:var(--line);box-shadow:none}
+.wk-d.quiet .wk-n{color:var(--muted);font-weight:400}
+.wk-d.quiet.today{background:var(--card);border-color:var(--gold);
+  box-shadow:0 0 0 3px rgba(176,141,62,.13), inset 0 1px 0 rgba(255,255,255,.8), var(--shadow-sm)}
+.wk-d.quiet.today .wk-n{color:var(--gold);font-weight:600}
+.wk-top{display:flex;align-items:baseline;gap:6px}
 .wk-dow{font-size:9.5px;letter-spacing:1.3px;text-transform:uppercase;color:var(--muted);font-weight:600}
-.wk-n{font-family:var(--serif);font-size:22px;line-height:1;font-weight:600}
+.wk-n{font-family:var(--serif);font-size:19px;line-height:1;font-weight:600;margin-left:auto}
 .wk-d.today .wk-n{color:var(--gold)}
-.wk-dots{display:flex;flex-wrap:wrap;gap:4px;margin-top:5px;min-height:8px}
-.wd{width:7px;height:7px;border-radius:50%;display:block}
-.wd.tk{background:var(--ok)}
-.wd.iv{background:var(--warn)}
-.wk-lbl{margin-top:auto;font-size:10.5px;color:var(--ink-soft);overflow:hidden;
-  text-overflow:ellipsis;white-space:nowrap}
-.wk-lbl.muted{color:var(--muted)}
+/* What is actually on the day, in words. The dots this replaces had to be
+   hovered to mean anything, which on a touch screen means never. */
+.wk-x{display:flex;flex-direction:column;gap:4px;min-width:0}
+.wk-ev{position:relative;padding-left:8px;font-size:11px;font-weight:600;line-height:1.25;color:var(--ink);
+  display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:2;overflow:hidden}
+.wk-ev::before{content:"";position:absolute;left:0;top:1px;bottom:1px;width:3px;border-radius:2px;
+  background:var(--d,var(--gold))}
+.wk-t,.wk-due,.wk-more{font-size:10.5px;color:var(--muted);line-height:1.3;
+  overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.wk-due{color:var(--warn);font-weight:600}
+@media (max-width:860px){
+  /* Seven columns on a phone gives each day 40px, which fits a number and
+     nothing else — the very problem this rewrite exists to fix. Two rows of
+     the same seven days, each wide enough to say something. */
+  .wk-days{grid-template-columns:repeat(4,1fr)}
+  .wk-sum{white-space:normal;flex-basis:100%;order:3}
+  .wk-h{flex-wrap:wrap;row-gap:4px}
+}
 @media (max-width:900px){
   .wk-days{grid-template-columns:repeat(4,1fr)}
   .hero{flex-direction:column;min-height:0}
@@ -4358,9 +4380,16 @@ function heroStack(list){
 }
 
 /* ---- the week, so the shape of it lands before you read anything ---- */
-function weekStrip(){
+/* Seven cards, a date on each, and a row of coloured dots you had to hover to
+   decode. On a normal week that is a thousand pixels of the best space on the
+   dashboard spent telling a planner what day it is, which they know. It says
+   what is ON the week now — the event by name, the work by count, the money by
+   amount — with a sentence at the top that answers the question without
+   reading the grid at all. The seven columns stay because the SHAPE of a week
+   carries information a list cannot: you can see where the clear days are. */
+function weekDays(){
   var today=new Date(); today.setHours(0,0,0,0);
-  var days=[];
+  var out=[];
   for(var d=0;d<7;d++){
     var dt=new Date(today.getTime()+d*86400000);
     var iso=dt.getFullYear()+'-'+String(dt.getMonth()+1).padStart(2,'0')+'-'+String(dt.getDate()).padStart(2,'0');
@@ -4369,27 +4398,73 @@ function weekStrip(){
     db.events.forEach(function(e){ (e.checklist||[]).forEach(function(c){
       if(!c.done&&c.due===iso&&c.owner!=='client')tasks.push({e:e,c:c}); }); });
     var invs=db.invoices.filter(function(x){return x.due===iso&&x.status!=='paid'&&x.status!=='draft';});
-    days.push({dt:dt,iso:iso,evs:evs,tasks:tasks,invs:invs,today:d===0});
+    out.push({dt:dt,iso:iso,idx:d,evs:evs,tasks:tasks,invs:invs,today:d===0,
+              due:invs.reduce(function(a,x){return a+(Number(x.amount)||0);},0)});
   }
+  return out;
+}
+var DOW_LONG=['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
+function weekWhen(x){
+  if(x.today)return 'today';
+  if(x.idx===1)return 'tomorrow';
+  return 'on '+DOW_LONG[x.dt.getDay()];
+}
+/* One sentence for the whole week. A weekend is one job, so events are grouped
+   by their primary — four rows in the grid, one name in the sentence. */
+function weekLine(days){
+  var byPrim={}, order=[], tasks=0, due=0;
+  days.forEach(function(x){
+    x.evs.forEach(function(e){
+      var pr=evPrimary(e)||e;
+      if(!byPrim[pr.id]){ byPrim[pr.id]={p:pr,first:x,days:0}; order.push(pr.id); }
+      byPrim[pr.id].days++;
+    });
+    tasks+=x.tasks.length;
+    due+=x.due;
+  });
+  var parts=[];
+  if(order.length===1){
+    var g=byPrim[order[0]];
+    parts.push(g.p.title+(g.days>1?', from '+weekWhen(g.first).replace(/^on /,''):' '+weekWhen(g.first)));
+  }else if(order.length>1){
+    parts.push(order.length+' events, from '+weekWhen(byPrim[order[0]].first).replace(/^on /,''));
+  }
+  if(tasks)parts.push(tasks+' task'+(tasks===1?'':'s')+' due');
+  if(due)parts.push(money(due)+' to collect');
+  return parts.length?parts.join(' \u00b7 '):'Nothing on, nothing due.';
+}
+function weekStrip(){
+  var days=weekDays();
   var DOW=['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
-  var busiest=Math.max.apply(null,days.map(function(x){return x.evs.length+x.tasks.length+x.invs.length;}))||1;
   return '<div class="wk">'+
-    '<div class="wk-h"><span class="fig-head">Your week</span>'+
-      '<button class="link-btn" data-goto="calendar">Open calendar ›</button></div>'+
+    '<div class="wk-h">'+
+      '<span class="fig-head">Your week</span>'+
+      '<span class="wk-sum">'+esc(weekLine(days))+'</span>'+
+      '<button class="link-btn" data-goto="calendar">Open calendar \u203a</button>'+
+    '</div>'+
     '<div class="wk-days">'+days.map(function(x){
-      var load=(x.evs.length+x.tasks.length+x.invs.length)/busiest;
-      return '<div class="wk-d'+(x.today?' today':'')+(load?'':' quiet')+'" data-goto="calendar">'+
-        '<div class="wk-dow">'+DOW[x.dt.getDay()]+'</div>'+
-        '<div class="wk-n">'+x.dt.getDate()+'</div>'+
-        '<div class="wk-dots">'+
-          x.evs.slice(0,3).map(function(e){
-            return '<i class="wd ev" style="background:'+eventTint(e.id)+'" title="'+esc(e.title)+'"></i>';
-          }).join('')+
-          (x.tasks.length?'<i class="wd tk" title="'+x.tasks.length+' task'+(x.tasks.length===1?'':'s')+' due"></i>':'')+
-          (x.invs.length?'<i class="wd iv" title="'+x.invs.length+' invoice'+(x.invs.length===1?'':'s')+' due"></i>':'')+
+      var busy=x.evs.length+x.tasks.length+x.invs.length;
+      /* A day with one event opens that event; anything else is a question the
+         calendar answers better than a guess would. */
+      var one=x.evs.length===1?x.evs[0]:null;
+      var target=one?('data-openevent="'+esc(one.id)+'"'):'data-goto="calendar"';
+      return '<div class="wk-d'+(x.today?' today':'')+(busy?'':' quiet')+'" '+target+
+        ' tabindex="0" role="link">'+
+        '<div class="wk-top">'+
+          '<span class="wk-dow">'+DOW[x.dt.getDay()]+'</span>'+
+          '<span class="wk-n">'+x.dt.getDate()+'</span>'+
         '</div>'+
-        (x.evs.length?'<div class="wk-lbl">'+esc(x.evs[0].title)+'</div>':
-          x.tasks.length?'<div class="wk-lbl muted">'+x.tasks.length+' due</div>':'')+
+        '<div class="wk-x">'+
+          x.evs.slice(0,2).map(function(e){
+            var pr=evPrimary(e)||e;
+            return '<span class="wk-ev" style="--d:'+eventTint(pr.id)+'">'+
+              esc(evIsSub(e)?roleLabel(e,true):e.title)+'</span>';
+          }).join('')+
+          (x.evs.length>2?'<span class="wk-more">+'+(x.evs.length-2)+' more</span>':'')+
+          (x.tasks.length?'<span class="wk-t">'+
+            (x.tasks.length===1?esc(x.tasks[0].c.lbl):x.tasks.length+' tasks')+'</span>':'')+
+          (x.due?'<span class="wk-due">'+money(x.due)+'</span>':'')+
+        '</div>'+
       '</div>';
     }).join('')+'</div></div>';
 }

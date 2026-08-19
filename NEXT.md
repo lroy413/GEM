@@ -161,6 +161,13 @@ never pulled, which is what stops a fresh install overwriting the studio.
 
 ## 3 · Things worth knowing before you change the UI
 
+- **A day with nothing on it is information.** The week strip's `.quiet` cells
+  go flat and unlifted on purpose, so the days that hold something are the ones
+  the eye lands on — but `.quiet` came after `.today` at the same specificity
+  and was flattening today along with the rest. `.wk-d.quiet.today` puts the
+  ring back. Today is the anchor for reading every other column; it is marked
+  whether or not it holds anything.
+
 - **The venue directory is built by the DEVICE, never by the database.**
   Migration 21 deliberately has no backfill, and its name index is deliberately
   not unique. An earlier draft had both, and together they were a push that
