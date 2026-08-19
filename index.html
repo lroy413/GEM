@@ -10,7 +10,7 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
 <meta name="apple-mobile-web-app-title" content="GEM">
 <meta name="format-detection" content="telephone=no">
-<meta name="gem-build" content="f28fd01f2450">
+<meta name="gem-build" content="0742b3d5c218">
 <link rel="manifest" href="/manifest.webmanifest">
 <link rel="icon" href="/icons/icon-192.png" sizes="192x192" type="image/png">
 <link rel="apple-touch-icon" href="/icons/icon-180.png">
@@ -424,6 +424,10 @@ html.no-motion body::before{opacity:.3}
 .conn-state.ok .cs-dot{background:var(--ok);box-shadow:0 0 0 3px rgba(79,143,98,.16)}
 .conn-state.pending{border-color:var(--gold-line);background:#FFFCF4}
 .conn-state.pending .cs-dot{background:var(--gold);box-shadow:0 0 0 3px rgba(176,141,62,.16)}
+/* Signed in with no studio behind it. Not a caution — nothing is being kept. */
+.conn-state.bad{border-color:rgba(142,47,57,.45);background:rgba(142,47,57,.07)}
+.conn-state.bad b{color:#8E2F39}
+.conn-state.bad .cs-dot{background:#8E2F39;box-shadow:0 0 0 3px rgba(142,47,57,.18)}
 .chk-list{margin-top:14px;border:1px solid var(--line);border-radius:var(--radius);overflow:hidden;
   background:var(--card);box-shadow:var(--shadow-xs)}
 .chk{display:flex;align-items:flex-start;gap:10px;padding:11px 16px;font-size:12.5px;line-height:1.5;
@@ -1199,6 +1203,28 @@ td.inv-col{text-align:center;width:1%}
   background:var(--pink-100);border:1px solid var(--line);border-radius:6px;padding:3px 8px;
   color:var(--ink-soft);user-select:all}
 /* --- the sample wedding, plainly marked --- */
+/* Storage has stopped accepting writes. Deliberately loud, fixed to the top and
+   not dismissable: the alternative is what already happened once — an afternoon
+   of work typed into a page that could not keep any of it. */
+.save-alarm{
+  position:fixed;top:0;left:0;right:0;z-index:120;
+  background:#8E2F39;color:#fff;font-size:13px;line-height:1.5;
+  padding:calc(10px + env(safe-area-inset-top)) 18px 10px;
+  box-shadow:0 2px 12px rgba(0,0,0,.28);
+}
+.save-alarm b{font-weight:700}
+.save-alarm button{
+  margin-left:8px;background:rgba(255,255,255,.16);color:#fff;border:1px solid rgba(255,255,255,.5);
+  border-radius:999px;padding:3px 11px;font-size:12px;font-weight:600;cursor:pointer;
+}
+.save-alarm button:hover{background:rgba(255,255,255,.28)}
+.diag{padding:14px 16px;border-radius:var(--radius);font-size:13px;line-height:1.6;border:1px solid var(--line)}
+.diag.ok{background:rgba(143,191,159,.14);border-color:rgba(143,191,159,.5)}
+.diag.bad{background:rgba(142,47,57,.09);border-color:rgba(142,47,57,.42)}
+.diag code{font-size:12px;background:rgba(0,0,0,.06);padding:1px 5px;border-radius:5px}
+.diag-t td{font-size:12px;padding:6px 10px;vertical-align:top}
+.diag-t td:first-child{color:var(--muted);white-space:nowrap;width:1%}
+.diag-t td:last-child{word-break:break-word}
 .samp-banner{display:flex;align-items:center;flex-wrap:wrap;gap:12px;margin:0 0 18px;padding:13px 16px;
   background:linear-gradient(135deg,#FFFDF9,#FBF3E8);border:1px solid var(--gold-line);
   border-left:3px solid var(--gold);border-radius:var(--radius)}
@@ -1222,6 +1248,15 @@ td.inv-col{text-align:center;width:1%}
 .do-tx{flex:1;min-width:0;display:flex;flex-direction:column;gap:2px}
 .do-tx b{font-size:13.5px;font-weight:600}
 .do-tx em{font-style:normal;font-size:11.5px;color:var(--muted)}
+.do-grip{cursor:grab;color:var(--muted);font-size:14px;line-height:1;padding:2px 0;
+  -webkit-user-select:none;user-select:none}
+.do-grip:hover{color:var(--gold)}
+.do-grip:active{cursor:grabbing}
+.do-row.dragging{opacity:.45}
+/* A single insertion line rather than a swapped pair, so where the module will
+   land is readable before the mouse comes up. */
+.do-row.drop-above{box-shadow:inset 0 2px 0 var(--gold)}
+.do-row.drop-below{box-shadow:inset 0 -2px 0 var(--gold)}
 
 /* ============ DASHBOARD HERO — the one focal point ============
    The old next-event strip was 106px against a 602px task list, so the thing
@@ -1921,6 +1956,20 @@ tr:hover .r-acts,.ev-card:hover .r-acts,.table-card:hover .r-acts,
   color:var(--ink-soft);line-height:1.6}
 .vb-note b{font-size:9.5px;letter-spacing:1.6px;text-transform:uppercase;color:var(--gold);
   font-weight:600;margin-right:8px}
+/* ---- setting the event's cover photo ----
+   A preview, not a backdrop. The picture itself belongs on the dashboard hero,
+   which was built around one; the band is four corners of dense copy and a
+   photograph behind it costs more legibility than it buys. */
+.vb-thumb{width:38px;height:38px;flex:0 0 38px;border-radius:10px;border:1px solid var(--line);
+  background-size:cover;background-position:center;box-shadow:var(--shadow-sm)}
+.vb-cover-row{display:flex;align-items:center;gap:11px;margin-top:15px;flex-wrap:wrap}
+.vb-cover{cursor:pointer;font-size:11.5px;font-weight:600;color:var(--ink-soft);
+  background:rgba(255,255,255,.82);border:1px solid var(--line);border-radius:999px;padding:5px 12px}
+.vb-cover:hover{color:var(--gold);border-color:var(--gold)}
+.vb-cover:focus-visible{outline:2px solid var(--gold);outline-offset:2px}
+.vb-cover-x{background:none;border:0;padding:0;cursor:pointer;font-size:11.5px;color:var(--muted)}
+.vb-cover-x:hover{color:var(--gold)}
+.vb-cover-n{font-style:normal;font-size:11.5px;color:var(--muted)}
 
 /* collapsible workspace sections */
 .ev-col{display:flex;flex-direction:column;gap:20px}
@@ -2406,33 +2455,71 @@ html,body{max-width:100%;overflow-x:hidden}
       x.fillText('G',size/2,size/2+size*0.02);
       return c.toDataURL('image/png');
     };
-    var manifest={
-      name:'GEM · Glimmer Events Management',
-      short_name:'GEM',
-      description:'Wedding and event planning for Glimmer Events Management.',
-      start_url:'.', scope:'.', display:'standalone', orientation:'any',
-      background_color:'#FAF2F3', theme_color:'#F2DFE1',
-      icons:[{src:icon(192),sizes:'192x192',type:'image/png',purpose:'any'},
-             {src:icon(512),sizes:'512x512',type:'image/png',purpose:'any'},
-             {src:icon(512),sizes:'512x512',type:'image/png',purpose:'maskable'}]
+    /* Fill only what the wrapper did NOT provide. This used to append every
+       tag unconditionally, so on gemevents.app — where the built <head>
+       already carries the real manifest, the designed icons and the apple
+       metas — the page ended up with two of each. That is not merely untidy:
+       Safari picks the LAST apple-touch-icon when none of them declare a
+       size, so the home screen icon was this canvas-drawn "G" rather than the
+       designed one. The generated icons are a fallback for the artifact host,
+       which owns <head> and serves no files of its own. */
+    var head=document.head;
+    var lacks=function(sel){ return !head.querySelector(sel); };
+    if(lacks('link[rel="manifest"]')){
+      var manifest={
+        name:'GEM · Glimmer Events Management',
+        short_name:'GEM',
+        description:'Wedding and event planning for Glimmer Events Management.',
+        start_url:'.', scope:'.', display:'standalone', orientation:'any',
+        background_color:'#FAF2F3', theme_color:'#F2DFE1',
+        icons:[{src:icon(192),sizes:'192x192',type:'image/png',purpose:'any'},
+               {src:icon(512),sizes:'512x512',type:'image/png',purpose:'any'},
+               {src:icon(512),sizes:'512x512',type:'image/png',purpose:'maskable'}]
+      };
+      var link=document.createElement('link');
+      link.rel='manifest';
+      link.href=URL.createObjectURL(new Blob([JSON.stringify(manifest)],{type:'application/manifest+json'}));
+      head.appendChild(link);
+    }
+    var meta=function(name,content){
+      if(!lacks('meta[name="'+name+'"]'))return;
+      var m=document.createElement('meta'); m.name=name; m.content=content; head.appendChild(m);
     };
-    var link=document.createElement('link');
-    link.rel='manifest';
-    link.href=URL.createObjectURL(new Blob([JSON.stringify(manifest)],{type:'application/manifest+json'}));
-    document.head.appendChild(link);
-    var tc=document.createElement('meta'); tc.name='theme-color'; tc.content='#F2DFE1';
-    document.head.appendChild(tc);
-    var ac=document.createElement('meta'); ac.name='apple-mobile-web-app-capable'; ac.content='yes';
-    document.head.appendChild(ac);
-    var at=document.createElement('meta'); at.name='apple-mobile-web-app-title'; at.content='GEM';
-    document.head.appendChild(at);
-    var ai=document.createElement('link'); ai.rel='apple-touch-icon'; ai.href=icon(180);
-    document.head.appendChild(ai);
+    meta('theme-color','#F2DFE1');
+    meta('apple-mobile-web-app-capable','yes');
+    meta('apple-mobile-web-app-title','GEM');
+    if(lacks('link[rel="apple-touch-icon"]')){
+      var ai=document.createElement('link'); ai.rel='apple-touch-icon'; ai.href=icon(180);
+      head.appendChild(ai);
+    }
     // A real origin can register the served worker; blob/file cannot.
     if('serviceWorker' in navigator && location.protocol==='https:'){
       navigator.serviceWorker.register('/sw.js').catch(function(){ /* not deployed yet */ });
     }
   }catch(e){ /* PWA is an enhancement — never block the app */ }
+})();
+
+/* ---- installing to the home screen ----
+   Chrome fires beforeinstallprompt once the app qualifies. It is deliberately
+   NOT preventDefault()ed: suppressing it hides Chrome's own install affordance,
+   and trading that for a control buried in Settings would be a worse deal than
+   the browser's. This only adds a second way in. Safari never fires it at all,
+   so on iOS the Settings row explains the Share-sheet route rather than
+   offering a button that cannot work. */
+var INSTALL_PROMPT=null;
+function isInstalled(){
+  try{
+    return (window.matchMedia&&window.matchMedia('(display-mode: standalone)').matches)
+           ||navigator.standalone===true;
+  }catch(e){ return false; }
+}
+(function installable(){
+  var refresh=function(){
+    /* Only worth a repaint if the row that shows this is on screen. */
+    if(typeof state!=='undefined'&&state.view==='settings'&&state.settingsPage==='data')render();
+  };
+  addEventListener('beforeinstallprompt',function(e){ INSTALL_PROMPT=e; refresh(); });
+  addEventListener('appinstalled',function(){ INSTALL_PROMPT=null; refresh(); });
 })();
 
 /* The artifact wrapper owns <head>, so a hand-written <meta name="viewport">
@@ -2757,6 +2844,45 @@ function hasSampleData(){
    place with the button gone, because hasSampleData() then found nothing. */
 function sampleHit(k,r){ return !!r.sample||(SAMPLE_IDS[k]||[]).indexOf(r.id)>=0; }
 
+/* Anything on this device that is NOT the seeded sample. This is what decides
+   whether a first sync may pull without asking: a device holding only the
+   sample has nothing of its own to lose, and a device holding real work must
+   never be overwritten because a timer fired. Deliberately generous about what
+   counts as work — every collection, not just the ones with sample ids — so
+   the answer errs towards "leave it alone". */
+function hasOwnWork(){
+  return ['leads','events','vendors','bookings','invoices','documents',
+          'questionnaires','messages','submissions'].some(function(k){
+    return (db[k]||[]).some(function(r){ return !sampleHit(k,r); });
+  });
+}
+
+/* Has this workspace been re-seeded from DEFAULT since it last synced?
+   Sample records carry their FIXED ids (l2, e1…) only when they have just come
+   out of DEFAULT. On any device that has synced, sbMigrateIds() rewrote those
+   to uuids and stamped sample:true, so the fixed ids match nothing. Fixed ids
+   PLUS a stored sync version therefore means one thing: local storage lost the
+   real workspace and the app is showing the template instead.
+
+   Pushing in that state is the worst thing the app can do. sbPush() prunes
+   every row the payload does not mention, so it would replace a studio's real
+   work with the sample wedding — and gem_claim_sync() cannot stop it, because
+   that guard only refuses a device with NO version at all. A tester lost her
+   clients and timeline exactly this way, and the sample's timeline is what was
+   left in the studio afterwards. */
+function sbLooksReseeded(){
+  if(typeof sbVer!=='function'||sbVer()===null)return false;
+  /* And nothing of its own alongside. Fixed ids next to real work is not a
+     re-seed — it is a backup restored from before this workspace first synced,
+     which someone chose deliberately and must not have pulled out from under
+     them. Only a workspace that is the template and nothing else qualifies. */
+  if(typeof hasOwnWork==='function'&&hasOwnWork())return false;
+  return Object.keys(SAMPLE_IDS).some(function(k){
+    var ids=SAMPLE_IDS[k]||[];
+    return (db[k]||[]).some(function(r){ return ids.indexOf(r.id)>=0; });
+  });
+}
+
 function removeSampleData(){
   var n=0;
   /* Work out which events are going first: sub-events and anything hanging off
@@ -2936,6 +3062,12 @@ function normalize(d){
       }
     });
     e.timeline.forEach(function(t){ if(!t.id)t.id=uid('tl'); });
+    /* The running order is chronological by contract — sortTimeline() runs on
+       every add and every edit. Running it here too does two jobs: it repairs a
+       timeline saved while toMinutes() still sorted ranges to the end, and it
+       gives a pulled one a defined order at all, since timeline_items come back
+       from PostgREST unsorted and nothing re-sorted them on the way in. */
+    sortTimeline(e);
     e.budget.forEach(function(b){ if(!b.id)b.id=uid('bl'); });
     e.checklist.forEach(function(c){ if(!c.id)c.id=uid('ck'); });
     if(!e.tables)e.tables=[];
@@ -2944,6 +3076,12 @@ function normalize(d){
     if(!e.venueContact)e.venueContact={name:'',role:'',phone:'',email:''};
     if(e.venueNotes===undefined)e.venueNotes='';
     if(e.startTime===undefined)e.startTime='';
+    /* The event's own cover image, held as a data URL like every other photo,
+       with photoPath naming it in Storage once it has been pushed. Absent one,
+       evPhoto() falls back to the primary's and then the client's, so a
+       weekend photographed once still looks right on every card. */
+    if(e.photo===undefined)e.photo=null;
+    if(e.photoPath===undefined)e.photoPath=null;
     e.guests.forEach(function(g){ if(g.tableId===undefined)g.tableId=null; });
     if(!e.design){
       var seed=DEFAULT.events[i];
@@ -2963,6 +3101,41 @@ function normalize(d){
 db=normalize(db);
 /* Returns false when the browser refuses the write (quota) so callers can
    tell the user instead of silently losing their work. */
+/* The last local write that failed, kept so the interface can keep saying so.
+   A toast was the wrong instrument entirely: it clears after two seconds and
+   the next forty edits vanish just as quietly. A tester spent an afternoon
+   entering clients and a timeline that were never on disk, watched every one
+   of them appear on screen, and found the sample wedding back on reload —
+   because only the quota case was ever reported, and 58 of the 60 save() call
+   sites ignore the return value and re-render as though the write had worked. */
+var SAVE_FAIL=null;
+function paintSaveAlarm(){
+  if(!document.body)return;
+  var el=document.getElementById('saveAlarm');
+  if(!SAVE_FAIL){ if(el)el.remove(); return; }
+  if(!el){
+    el=document.createElement('div');
+    el.id='saveAlarm'; el.className='save-alarm';
+    el.setAttribute('role','alert');
+    document.body.appendChild(el);
+  }
+  /* Whether the work has anywhere else to go changes what this bar should say
+     — and it is the difference between "you are about to lose an afternoon"
+     and "you are covered". */
+  var toStudio=(typeof sbReady==='function'&&sbReady()&&
+                typeof SB_STATE!=='undefined'&&!!SB_STATE.org);
+  el.innerHTML='<b>Nothing is being saved on this device.</b> '+
+    (SAVE_FAIL.quota
+      ? 'Storage is full. Export a backup now, then remove a few reference photos.'
+      : 'This browser is refusing to store data ('+esc(SAVE_FAIL.name)+'). '+
+        'Private browsing and blocked site data both do this.')+
+    ' '+(toStudio
+      ? 'You are signed in, so your work is still going to your studio.'
+      : 'Sign in, or export a backup, before you close this tab.')+
+    ' <button type="button" id="saveAlarmGo">Run diagnostics</button>';
+  var b=document.getElementById('saveAlarmGo');
+  if(b)b.onclick=function(){ setView('settings',{settingsPage:'data'}); };
+}
 function saveLocal(){
   try{
     if(typeof mediaStash==='function')mediaStash();
@@ -2974,11 +3147,20 @@ function saveLocal(){
       }
       return v;
     }));
+    /* Recovered — clear the alarm. */
+    if(SAVE_FAIL){ SAVE_FAIL=null; paintSaveAlarm(); }
     return true; }
   catch(e){
-    if(e&&(e.name==='QuotaExceededError'||e.code===22||e.code===1014)){
-      toast('Storage full — remove a few reference photos to save.');
-    }
+    /* Every failure is reported now, not just the quota one. A SecurityError
+       from blocked site data, a zero quota in a private window, a partitioned
+       origin — all of them used to return false in complete silence. */
+    SAVE_FAIL={
+      name:(e&&e.name)||'Error',
+      msg:(e&&e.message)||String(e),
+      quota:!!(e&&(e.name==='QuotaExceededError'||e.code===22||e.code===1014)),
+      at:new Date().toISOString()
+    };
+    paintSaveAlarm();
     return false;
   }
 }
@@ -2987,11 +3169,108 @@ function saveLocal(){
    saveLocal() directly, so a sync can never schedule another sync. */
 function save(){
   var ok=saveLocal();
-  if(ok&&typeof sbAutoQueue==='function')sbAutoQueue();
+  /* Marked before the push is even scheduled, and cleared only when one
+     succeeds. While this is set, nothing will pull over the top of it. */
+  if(ok&&typeof setSbDirty==='function')setSbDirty(true);
+  /* Queued whether or not the local write worked — and ESPECIALLY when it did
+     not. A browser refusing to store data is the one situation where the studio
+     is the only place the work can go, and gating this on `ok` meant a
+     signed-in tester whose storage was blocked kept nothing at all: not on the
+     device, and not on the server either. */
+  if(typeof sbAutoQueue==='function')sbAutoQueue();
   return ok;
 }
 function storageUsed(){
   try{ return new Blob([localStorage.getItem(KEY)||'']).size; }catch(e){ return 0; }
+}
+
+/* ---- why did my work disappear? ----
+   Built for one question a tester could not answer from the screen: is this
+   browser actually keeping anything? The load path parses the key, falls back
+   to null, and takes DEFAULT when that is null — so
+   the sample wedding coming back means the key was ABSENT or unparseable, not
+   that records were lost one by one. That narrows the causes to writes that
+   never landed, storage cleared underneath the app, or a different storage
+   container than the one the work went into. Every field below distinguishes
+   between those three. */
+function storageDiag(){
+  var d={};
+  d.when=new Date().toISOString();
+  d.build=(typeof buildStamp==='function'&&buildStamp())||'dev (running from source)';
+  d.origin=location.origin;
+  d.host=location.hostname;
+  d.protocol=location.protocol;
+  /* An installed app has its own storage container, separate from the browser
+     that installed it. Work entered in Safari is genuinely not in the home
+     screen app, and vice versa — this line is how you tell which one you are
+     looking at. */
+  d.context=(typeof isInstalled==='function'&&isInstalled())?'installed app (its own storage)':'browser tab';
+
+  /* The live test. Not "is localStorage defined" — whether a write survives a
+     read, right now, with the real exception name if it does not. */
+  try{
+    var probe='gem-diag-probe';
+    localStorage.setItem(probe,'ok');
+    d.canStore=localStorage.getItem(probe)==='ok';
+    localStorage.removeItem(probe);
+  }catch(e){
+    d.canStore=false;
+    d.storeError=((e&&e.name)||'Error')+': '+((e&&e.message)||String(e));
+  }
+
+  var raw=null;
+  try{ raw=localStorage.getItem(KEY); }catch(e){}
+  d.workspaceKey=KEY;
+  d.workspaceOnDisk=!!raw;
+  d.workspaceBytes=raw?new Blob([raw]).size:0;
+  if(raw){
+    try{
+      var p=JSON.parse(raw);
+      d.onDiskCounts=(p.leads||[]).length+' clients · '+(p.events||[]).length+' events · '+
+        (p.invoices||[]).length+' invoices';
+    }catch(e){ d.onDiskCounts='UNPARSEABLE — this is why the sample came back'; }
+  }
+  d.inMemoryCounts=(db.leads||[]).length+' clients · '+(db.events||[]).length+' events';
+  d.sampleStillPresent=(typeof hasSampleData==='function')?hasSampleData():null;
+  d.workOfItsOwn=(typeof hasOwnWork==='function')?hasOwnWork():null;
+  d.lastWriteFailure=SAVE_FAIL?(SAVE_FAIL.name+' at '+SAVE_FAIL.at+' — '+SAVE_FAIL.msg):'none this session';
+  d.indexedDB=!!window.indexedDB;
+
+  d.signedIn=(typeof sbAuthed==='function')&&sbAuthed();
+  d.studioResolved=!!(typeof SB_STATE!=='undefined'&&SB_STATE.org);
+  d.syncedAtVersion=(typeof sbVer==='function')?sbVer():null;
+  d.unsentWork=(typeof sbDirty==='function')?sbDirty():null;
+  d.autoSync=(typeof sbAuto==='function')?sbAuto():null;
+  d.lastSync=(typeof SB_STATE!=='undefined'&&SB_STATE.lastSync)||'never';
+  d.userAgent=navigator.userAgent;
+
+  /* Quota and eviction protection are async, so the whole thing is a promise. */
+  var jobs=[];
+  if(navigator.storage&&navigator.storage.estimate){
+    jobs.push(navigator.storage.estimate().then(function(e){
+      d.quotaBytes=e.quota||0; d.usedBytes=e.usage||0;
+    }).catch(function(){}));
+  }
+  if(navigator.storage&&navigator.storage.persisted){
+    /* Unpersisted storage is what a browser evicts first when it wants space,
+       and on iOS it is also what a long gap between visits clears. */
+    jobs.push(navigator.storage.persisted().then(function(v){ d.evictionProtected=v; }).catch(function(){}));
+  }
+  return Promise.all(jobs).then(function(){ return d; });
+}
+
+/* Ask the browser not to evict this origin. Chrome decides silently on
+   engagement, Safari largely ignores it — but where it is honoured it removes a
+   whole class of "my work vanished after a few days". Only asked once there is
+   real work to protect, so a first look at the sample does not spend it. */
+function requestPersistence(){
+  try{
+    if(!navigator.storage||!navigator.storage.persist||!navigator.storage.persisted)return;
+    if(typeof hasOwnWork==='function'&&!hasOwnWork())return;
+    navigator.storage.persisted().then(function(already){
+      if(!already)navigator.storage.persist().catch(function(){});
+    }).catch(function(){});
+  }catch(e){}
 }
 
 /* ---------- helpers ---------- */
@@ -3403,15 +3682,14 @@ function heroStack(list){
   }
   var i=Math.min(state.heroIdx||0,list.length-1);
   var e=list[i];
-  var lead=leadForEvent(e);
   var tint=eventTint(e.id);
   var pct=evPct(e);
   var kids=evChildren(e.id);
   var next3=(e.timeline||[]).slice(0,3);
-  /* The couple's photo if there is one, otherwise the event's own colour.
-     Deliberately not a stock image — a placeholder that pretends to be content
-     looks worse than an honest wash. */
-  var photo=(lead&&lead.photo)||null;
+  /* The event's own cover, the primary's, then the client's — evPhoto() picks.
+     Each card in the deck can now carry its own picture, which is the whole
+     point of the stack: four events, four photographs, not one repeated. */
+  var photo=evPhoto(e);
   return '<div class="hero-wrap">'+
     /* The cards behind, purely as depth. */
     (list.length>1?'<div class="hero-behind" aria-hidden="true">'+
@@ -3828,6 +4106,38 @@ function wireEvents(){
   });
   var ev=state.eventId?evById(state.eventId):null;
   if(ev)wireCustomFields(ev);
+
+  /* ---- cover photo ----
+     1200px, not the 320 a client's thumbnail gets: this one is stretched
+     across the full width of the dashboard hero, where 320 is visibly soft.
+     render() re-wires this view, so these are .onX= assignments — attaching
+     with addEventListener here would stack a handler on every save. */
+  var cin=$('#evCoverInput'), clbl=$('#evCover'), cclr=$('#evCoverClear');
+  if(cin)cin.onchange=function(){
+    var f=cin.files&&cin.files[0]; cin.value='';
+    if(!f||!ev)return;
+    if(!/^image\//.test(f.type)){toast('Choose an image file.');return;}
+    shrinkImage(f,1200,function(dataUrl){
+      if(!dataUrl){toast('Could not read that image.');return;}
+      var prev=ev.photo, prevPath=ev.photoPath;
+      /* Clearing photoPath is what makes the new picture upload: mediaUpload()
+         only sends records that have pixels and no path yet, so leaving the
+         old key here would keep the old object on every other device. */
+      ev.photo=dataUrl; ev.photoPath=null;
+      if(!save()){ ev.photo=prev; ev.photoPath=prevPath; }
+      render();
+    });
+  };
+  if(clbl)clbl.onkeydown=function(e){
+    if((e.key==='Enter'||e.key===' ')&&cin){ e.preventDefault(); cin.click(); }
+  };
+  /* Removing the event's own picture falls back to the client's, which is why
+     this is Remove and not Delete — the band rarely ends up empty. */
+  if(cclr)cclr.onclick=function(){
+    if(!ev)return;
+    ev.photo=null; ev.photoPath=null;
+    afterChange();
+  };
   var add=function(sel,fn){ var b=document.querySelector(sel); if(b)b.onclick=function(e){e.stopPropagation();fn();}; };
   add('[data-addtl]',function(){
     openEditor({title:'Add Moment',sub:ev&&ev.title,saveLabel:'Add',
@@ -3958,6 +4268,10 @@ function viewEventDetail(id){
   var diets=roster.filter(function(g){return g.diet;});
   var seated=attending.filter(function(g){return gTable(g,e);}).length;
   var addr=addrLines(e.venueAddress);
+  /* The cover the band will wear. ownCover distinguishes "this event has a
+     picture" from "it is borrowing one" — only the former can be removed, and
+     saying which is which stops the Remove button looking broken. */
+  var cover=evPhoto(e), ownCover=!!e.photo;
   var mapQ=encodeURIComponent([e.venue].concat(addr).join(', '));
 
   /* The weekend, as a strip across the top. Present whenever the event is part
@@ -3989,6 +4303,21 @@ function viewEventDetail(id){
       (addr.length?'<div class="vb-addr">'+addr.map(esc).join('<br>')+'</div>'
                   :'<div class="vb-addr muted">No address on file</div>')+
       (addr.length?'<a class="vb-map" href="https://maps.google.com/?q='+mapQ+'" target="_blank" rel="noopener">Open in Maps ›</a>':'')+
+      /* A thumbnail here, not a wash behind the band. The band carries copy in
+         all four corners — venue contact, date, site notes — and the hero's
+         left-to-right scrim leaves the right-hand column unprotected, so a
+         photograph behind it put the coordinator's phone number on top of a
+         picture. The dashboard hero is the surface built to wear one; this is
+         only where you set it, so it shows what you set. */
+      '<div class="vb-cover-row">'+
+        (cover?'<span class="vb-thumb" style="background-image:url('+cover+')" aria-hidden="true"></span>':'')+
+        '<label class="vb-cover" id="evCover" tabindex="0">'+
+          '<input type="file" id="evCoverInput" accept="image/*" hidden>'+
+          (ownCover?'Replace cover photo':'Add a cover photo')+
+        '</label>'+
+        (ownCover?'<button type="button" class="vb-cover-x" id="evCoverClear">Remove</button>':'')+
+        (cover&&!ownCover?'<em class="vb-cover-n">Showing the client’s photo</em>':'')+
+      '</div>'+
     '</div>'+
     '<div class="vb-side">'+
       '<div class="vb-when"><span class="vb-day">'+fmtDate(e.date)+'</span>'+
@@ -5877,6 +6206,12 @@ function prefs(){
     portalHost:d.portalHost||'',
     sbUrl:d.sbUrl||'https://dqntxdhzcieycifzjzwc.supabase.co',
     sbKey:d.sbKey||'sb_publishable_QnAyHvcBW3lzbK3JAYFACw_U-a4hkbA',
+    /* Was never named here, so Settings → Connection → "Sync automatically"
+       turned off, saved, looked right — and came back on at the next reload,
+       because prefs() rebuilds a whitelisted object and drops the rest. The
+       same trap that cost an afternoon with dashOrder. It matters more now
+       that the switch governs automatic PULLS as well as pushes. */
+    autoSync:d.autoSync!==false,
     team:d.team||[
       {id:uid('tm'),name:'Glimmer M.',email:'hello@gemevents.app',role:'owner'},
       {id:uid('tm'),name:'Rosa Mendez',email:'rosa@gemevents.app',role:'planner'}
@@ -6001,7 +6336,12 @@ function settingsPage(k){
         dashOrder().map(function(k,i,arr){
           var m=DASH_MODULES.find(function(x){return x.k===k;});
           var off=!!dashHidden()[k];
-          return '<div class="do-row'+(off?' off':'')+'">'+
+          return '<div class="do-row'+(off?' off':'')+'" data-dkey="'+k+'">'+
+            /* Only the grip is draggable. With the whole row draggable, a
+               press on ↑ that drifts a pixel becomes a drag and the click
+               never lands. aria-hidden because the arrows beside it are the
+               accessible way to do the same thing. */
+            '<span class="do-grip" draggable="true" title="Drag to reorder" aria-hidden="true">⠿</span>'+
             '<div class="do-move">'+
               '<button class="do-b" data-dmove="'+k+':up"'+(i===0?' disabled':'')+' aria-label="Move up">↑</button>'+
               '<button class="do-b" data-dmove="'+k+':down"'+(i===arr.length-1?' disabled':'')+' aria-label="Move down">↓</button>'+
@@ -6176,10 +6516,21 @@ function settingsPage(k){
     var configured=!!(p.sbUrl&&p.sbKey);
     var signed=configured&&sbAuthed();
     var last=null; try{ last=localStorage.getItem('gem-sb-last'); }catch(e){}
-    var tone=signed?'ok':(configured?'pending':'none');
-    var head=signed?'Signed in':(configured?'Saved — not signed in':'Not connected');
+    /* Signed in is NOT the same as backed up, and this block used to say it
+       was: with no studio behind the account it still read "Signed in — your
+       studio syncs to your Supabase project", which is exactly the sentence
+       that let a tester work all afternoon into nothing. */
+    var hasOrg=!!SB_STATE.org;
+    var tone=signed?(hasOrg?'ok':'bad'):(configured?'pending':'none');
+    var head=signed
+      ? (hasOrg?'Signed in — your work is backed up':'Signed in, but NOT backed up')
+      : (configured?'Saved — not signed in':'Not connected');
     var blurb=signed
-      ? 'Your studio syncs to your Supabase project.'
+      ? (hasOrg
+          ? 'Every change is sent to your Supabase project a few seconds after you stop typing.'
+          : 'This account has no studio, so nothing you enter is leaving this device. '+
+            'One is normally created for you the moment you sign in — if this is still here, '+
+            'use Create below before entering anything else.')
       : (configured?'Details saved. Sign in to start syncing.'
                    :'Everything is stored locally on this device only.');
     return back+'<div class="set-page">'+
@@ -6232,12 +6583,36 @@ function settingsPage(k){
       '<p class="set-intro">Everything currently lives in this browser. Connecting Supabase moves it to your account and syncs across devices.</p>'+
       '<div class="set-card">'+
         setRow('Stored on this device','<b>'+used+' KB</b>',counts)+
+        setRow('Install on this device',installControl(),installHint())+
         setRow('App version','<code class="build-id">'+esc(buildStamp()||'dev')+'</code>',
           buildStamp()?'Reload the page to pick up a newer one':'Running from source, not a deployed build')+
         setRow('Export everything','<button class="btn btn-ghost btn-sm" id="s_export">Download JSON</button>','A full backup you can re-import')+
         setRow('Import a backup','<button class="btn btn-ghost btn-sm" id="s_import">Choose file</button>','Replaces what is here now')+
         setRow('Reset to sample data','<button class="btn btn-danger btn-sm" id="s_reset">Reset</button>','Clears your work and restores the demo')+
-      '</div><input type="file" id="s_importFile" accept="application/json,.json" hidden></div>';
+      '</div>'+
+      /* Put where someone already goes when they are worried about their data,
+         and phrased as the question they actually have. */
+      '<div class="fig-head" style="margin:22px 0 8px">Is my work being saved?</div>'+
+      '<div class="set-card">'+
+        setRow('Storage check','<button class="btn btn-ghost btn-sm" id="s_diag">Run check</button>',
+          'Tests whether this browser is really keeping your work, and says what to send us if not')+
+      '</div>'+
+      '<div id="diagOut"></div>'+
+      '<input type="file" id="s_importFile" accept="application/json,.json" hidden></div>';
+  }
+  /* Three states, because the browsers genuinely differ: Chrome can be asked
+     to install from a button, Safari cannot be asked at all, and an app that
+     is already installed should say so rather than offer to do it twice. */
+  function installControl(){
+    if(isInstalled())return '<span class="pill gold">Installed</span>';
+    if(INSTALL_PROMPT)return '<button class="btn btn-gold btn-sm" id="s_install">Install</button>';
+    return '<span class="pill">Add to Home Screen</span>';
+  }
+  function installHint(){
+    if(isInstalled())return 'Running as an installed app, in its own window';
+    if(INSTALL_PROMPT)return 'Its own window, its own icon, and it still works at a venue with no signal';
+    return IS_APPLE?'On iPhone and iPad: Share → Add to Home Screen. Safari offers no in-app button.'
+                   :'Use your browser’s menu — look for Install or Add to Home Screen.';
   }
   if(k==='about'){
     return back+'<div class="set-page">'+
@@ -6353,6 +6728,63 @@ function wireSettings(){
       if(i<0||j<0||j>=ord.length)return;
       ord.splice(j,0,ord.splice(i,1)[0]);
       var q=prefs(); q.dashOrder=ord; savePrefs(); render(); wireSettings();
+    };
+  });
+
+  /* Drag, as well as the arrows. The arrows stay rather than being replaced:
+     HTML5 drag-and-drop is not keyboard-operable and does nothing at all on
+     iOS Safari, so on a phone they are the only way to reorder anything. */
+  var dragKey=null;
+  var doRows=document.querySelectorAll('.dash-ord .do-row');
+  function doClear(){
+    doRows.forEach(function(r){ r.classList.remove('dragging','drop-above','drop-below'); });
+  }
+  /* Which half of the row the pointer sits in decides whether the module lands
+     before or after it. */
+  function doAbove(row,e){
+    var b=row.getBoundingClientRect();
+    return (e.clientY-b.top)<b.height/2;
+  }
+  doRows.forEach(function(row){
+    var grip=row.querySelector('.do-grip');
+    if(grip){
+      grip.ondragstart=function(e){
+        dragKey=row.dataset.dkey;
+        row.classList.add('dragging');
+        if(!e.dataTransfer)return;
+        e.dataTransfer.effectAllowed='move';
+        /* Firefox refuses to start a drag unless the transfer carries data. */
+        try{ e.dataTransfer.setData('text/plain',dragKey); }catch(err){}
+        /* Drag the whole row, not the handle glyph on its own. */
+        if(e.dataTransfer.setDragImage)e.dataTransfer.setDragImage(row,24,row.offsetHeight/2);
+      };
+      grip.ondragend=function(){ dragKey=null; doClear(); };
+    }
+    row.ondragover=function(e){
+      if(!dragKey||row.dataset.dkey===dragKey)return;
+      e.preventDefault();                       // preventDefault is what marks this a drop target
+      if(e.dataTransfer)e.dataTransfer.dropEffect='move';
+      var above=doAbove(row,e);
+      row.classList.toggle('drop-above',above);
+      row.classList.toggle('drop-below',!above);
+    };
+    row.ondragleave=function(){ row.classList.remove('drop-above','drop-below'); };
+    row.ondrop=function(e){
+      if(!dragKey||row.dataset.dkey===dragKey)return;
+      e.preventDefault();
+      var above=doAbove(row,e), moved=dragKey;
+      dragKey=null; doClear();
+      /* Remove first, then find the target — reading the target's index after
+         the removal is what makes dragging downward land where it was shown,
+         rather than one row short. */
+      var ord=dashOrder(), from=ord.indexOf(moved);
+      if(from<0)return;
+      ord.splice(from,1);
+      var to=ord.indexOf(row.dataset.dkey);
+      if(to<0)return;
+      ord.splice(above?to:to+1,0,moved);
+      /* render() re-runs wireSettings() for this view, so no second call. */
+      var q=prefs(); q.dashOrder=ord; savePrefs(); render();
     };
   });
   DASH_MODULES.forEach(function(m){
@@ -6761,6 +7193,81 @@ function wireSettings(){
     };
   });
   // data
+  var dg=$('#s_diag');
+  if(dg)dg.onclick=function(){
+    var out=$('#diagOut'); if(!out)return;
+    out.innerHTML='<div class="set-note">Checking…</div>';
+    storageDiag().then(function(d){
+      /* The verdict first, in the words someone would use themselves. Whatever
+         is wrong, the report underneath is what gets sent on. */
+      var kb=function(n){ return n?Math.round(n/1024).toLocaleString()+' KB':'0 KB'; };
+      var verdict,tone;
+      if(!d.canStore){
+        tone='bad';
+        verdict='<b>This browser is not storing anything.</b> Nothing typed here will '+
+          'survive a reload. '+(d.storeError?'It reports: <code>'+esc(d.storeError)+'</code>. ':'')+
+          'Private browsing, or site data blocked for this address, both do this.';
+      } else if(!d.workspaceOnDisk){
+        tone='bad';
+        verdict='<b>Storage works, but nothing is saved yet.</b> Writes are accepted, '+
+          'so if work has just disappeared it was cleared underneath the app — '+
+          'private browsing, a "clear history" sweep, or this being a different '+
+          'place than the work was entered ('+esc(d.context)+').';
+      } else if(d.lastWriteFailure!=='none this session'){
+        tone='bad';
+        verdict='<b>A save failed in this session.</b> '+esc(d.lastWriteFailure);
+      } else if(d.signedIn&&!d.studioResolved){
+        /* The state that decides whether anything is recoverable after the
+           browser clears its storage, so it outranks the good news. */
+        tone='bad';
+        verdict='<b>Saved here, but backed up nowhere.</b> '+esc(d.onDiskCounts||'')+
+          ' on disk — but this account has no studio, so none of it has ever '+
+          'reached Supabase. If this browser clears its storage, it is gone. '+
+          'Settings › Connection › Studio › Create.';
+      } else {
+        tone='ok';
+        verdict='<b>Your work is being saved.</b> '+esc(d.onDiskCounts||'')+
+          ' on disk, '+kb(d.workspaceBytes)+'.'+
+          (d.evictionProtected===false?' This browser has not granted eviction protection, so a long gap between visits could still clear it — sign in so there is a copy in your studio.':'');
+      }
+      var rows=Object.keys(d).map(function(k){
+        var v=d[k];
+        if(k==='quotaBytes'||k==='usedBytes'||k==='workspaceBytes')v=kb(v);
+        return '<tr><td>'+esc(k)+'</td><td>'+esc(String(v))+'</td></tr>';
+      }).join('');
+      out.innerHTML='<div class="diag '+tone+'">'+verdict+'</div>'+
+        '<div class="set-card" style="margin-top:12px"><div class="tbl-wrap">'+
+          '<table class="diag-t"><tbody>'+rows+'</tbody></table></div></div>'+
+        '<div class="sec-actions" style="padding:10px 2px">'+
+          '<button class="btn btn-ghost btn-sm" id="s_diagCopy">Copy this report</button>'+
+          '<button class="btn btn-ghost btn-sm" id="s_diagExport">Export a backup now</button>'+
+        '</div>';
+      var cp=$('#s_diagCopy');
+      if(cp)cp.onclick=function(){
+        var txt=JSON.stringify(d,null,2);
+        (navigator.clipboard?navigator.clipboard.writeText(txt):Promise.reject())
+          .then(function(){ toast('Report copied — paste it to us ✦'); })
+          .catch(function(){ toast('Select the table and copy it manually.'); });
+      };
+      /* Offered right here because the moment someone runs this is the moment a
+         backup is worth most, and Export is otherwise further up the page. */
+      var xp=$('#s_diagExport');
+      if(xp)xp.onclick=function(){ var b=$('#s_export'); if(b)b.click(); };
+    }).catch(function(e){
+      out.innerHTML='<div class="diag bad">Could not complete the check: '+esc(e.message||String(e))+'</div>';
+    });
+  };
+  var inst=$('#s_install');
+  if(inst)inst.onclick=function(){
+    var ev=INSTALL_PROMPT;
+    if(!ev)return;
+    /* A captured prompt may only be shown once. Dropping the reference here
+       means the button goes away with it; Chrome fires a fresh event if the
+       user dismisses the dialog and the app is still eligible. */
+    INSTALL_PROMPT=null;
+    try{ ev.prompt(); }catch(e){}
+    if(ev.userChoice&&ev.userChoice.then)ev.userChoice.then(function(){ render(); },function(){});
+  };
   var ex=$('#s_export');
   if(ex)ex.onclick=function(){
     var blob=new Blob([JSON.stringify({exported:new Date().toISOString(),data:db,settings:prefs()},null,2)],
@@ -7616,9 +8123,12 @@ function openInquiryModal(){
    With no am/pm given, 7–11 reads as morning and everything else as
    afternoon — the shape of a wedding day. It normalises as you leave the
    field, so a wrong guess is visible immediately and one keystroke to fix. */
-function normTime(v){
+/* One time, or null when the text is not one. normTime() wraps this so a range
+   can be tidied half by half — this half must be able to say "not a time" for
+   that to work, which is why a failure is null here and not the input back. */
+function normTimeOne(v){
   var s=String(v==null?'':v).trim();
-  if(!s)return '';
+  if(!s)return null;
   if(/^noon$/i.test(s))return '12:00 PM';
   if(/^midnight$/i.test(s))return '12:00 AM';
   /* Every part after the hour is optional — "4:30" and "17:30" are times too,
@@ -7631,17 +8141,39 @@ function normTime(v){
     else{
       var h1=s.match(/^(\d{1,2})$/);
       if(h1)m=[s,h1[1],null,null];
-      else return s;
+      else return null;
     }
   }
   var h=parseInt(m[1],10), min=m[2]?parseInt(m[2],10):0;
   var mer=m[3]?m[3].toLowerCase():null;
-  if(isNaN(h)||isNaN(min)||min>59||h>23)return s;
+  if(isNaN(h)||isNaN(min)||min>59||h>23)return null;
   if(h===0){ h=12; mer=mer||'a'; }
   else if(h>12){ h-=12; mer='p'; }              // 24-hour input is unambiguous
   else if(h===12&&!mer){ mer='p'; }
   if(!mer)mer=(h>=7&&h<=11)?'a':'p';
   return h+':'+String(min).padStart(2,'0')+' '+(mer==='a'?'AM':'PM');
+}
+/* A moment can be a range, and the field has to tidy one without mangling it.
+   The WHOLE string is tried as a single time first, deliberately: "6-35" is an
+   accepted way to type 6:35, and splitting on the dash before trying that would
+   turn a time into a range. Only text that is not a time on its own gets split. */
+function normTime(v){
+  var s=String(v==null?'':v).trim();
+  if(!s)return '';
+  var one=normTimeOne(s);
+  if(one)return one;
+  var parts=s.split(/\s*(?:[–—-]|\bto\b)\s*/i);
+  if(parts.length===2){
+    var a=normTimeOne(parts[0]), b=normTimeOne(parts[1]);
+    if(a&&b){
+      /* "9:00 - 10:00 PM" means both are PM. Tidying the halves independently
+         would read the start as nine in the morning, so a start with no am/pm
+         of its own borrows the end's. */
+      if(!/[ap]m?\.?\s*$/i.test(parts[0]))a=a.slice(0,-2)+b.slice(-2);
+      return a+' – '+b;
+    }
+  }
+  return s;
 }
 
 function openEditor(o){
@@ -8839,6 +9371,18 @@ function evChildren(id){
 /* A dangling parentId — the primary deleted on another device before this one
    pulled — must not make the event vanish, so it falls back to itself. */
 function evPrimary(e){ return (e&&e.parentId&&evById(e.parentId))||e||null; }
+/* The picture for an event, in the order a planner would expect: its own
+   cover first, then the primary's — a weekend is usually photographed once —
+   and the client's photo last. Deliberately never a stock image: an honest
+   colour wash reads better than a placeholder pretending to be content. */
+function evPhoto(e){
+  if(!e)return null;
+  if(e.photo)return e.photo;
+  var p=evPrimary(e);
+  if(p&&p!==e&&p.photo)return p.photo;
+  var l=leadForEvent(e);
+  return (l&&l.photo)||null;
+}
 function evBlock(e){ var p=evPrimary(e); return p?[p].concat(evChildren(p.id)):[]; }
 function evPrimaries(){ return db.events.filter(function(e){return !evIsSub(e);}); }
 /* ---- invitations ----
@@ -9055,8 +9599,13 @@ function editRecord(kind,id){
   if(F[kind])F[kind]();
 }
 /* Keep the day-of running order in chronological order after an edit. */
+/* Sorts on the START of whatever is in the field. A moment is often a range —
+   "6:35 PM – 6:45 PM" is how a toast gets written — and this pattern used to be
+   anchored end to end, so a range matched nothing, took the 1e9 sentinel and
+   sorted after every other moment on the day. Unanchored, it reads the first
+   clock time it finds and ignores the rest. */
 function toMinutes(t){
-  var m=/^(\d{1,2}):(\d{2})\s*(AM|PM)?$/i.exec(String(t||'').trim());
+  var m=/(\d{1,2}):(\d{2})\s*(AM|PM)?/i.exec(String(t||'').trim());
   if(!m)return 1e9;
   var h=Number(m[1])%12, mi=Number(m[2]);
   if(m[3]&&/pm/i.test(m[3]))h+=12;
@@ -9437,6 +9986,11 @@ function mediaItems(){
     out.push({id:l.id,owner:l,field:'photo',pathField:'photoPath',eventId:null,boardId:null});
   });
   (db.events||[]).forEach(function(e){
+    /* The event's cover, keyed by the event id exactly as a lead's is keyed by
+       the lead's. eventId is set so mediaKey() files it under the event rather
+       than under /leads/ — which is also what lets that event's couple read
+       it, since the storage policy reads the second path segment. */
+    out.push({id:e.id,owner:e,field:'photo',pathField:'photoPath',eventId:e.id,boardId:null});
     ((((e.design||{}).boards)||[])).forEach(function(b){
       (b.images||[]).forEach(function(im){
         out.push({id:im.id,owner:im,field:'src',pathField:'path',eventId:e.id,boardId:b.id,caption:im.caption});
@@ -9767,7 +10321,23 @@ function sbAfterSignIn(){
   /* An invited couple is only linked to their wedding once they have signed in
      at least once — the invitation is stored against their email and claimed
      here. Safe and cheap for staff, who simply have none to claim. */
-  return sbClaimInvites();
+  return sbClaimInvites().then(function(n){
+    /* Then bring the studio down. Signing in is exactly when someone expects
+       their work to appear — most of all in a freshly installed app, which
+       starts with its own empty storage and no idea any of this exists.
+       sbSyncDown() decides whether that is safe; it declines and warns if this
+       device is holding anything of its own. */
+    return sbResolveOrg().then(function(id){
+      if(id)return sbSyncDown().then(function(){ return n; });
+      /* No studio, and two very different reasons for that. A couple invited
+         to a portal has none by design — n counts the invitations just claimed,
+         so n>0 identifies them — and so does anyone actually on the portal
+         host. Everyone else is a planner who simply was never given one, and
+         giving them one is the difference between working and losing it all. */
+      if(n>0||(typeof PORTAL_ONLY!=='undefined'&&PORTAL_ONLY))return n;
+      return sbAutoCreateStudio().then(function(){ return n; });
+    }).catch(function(){ return n; });
+  });
 }
 function sbSignIn(email){
   var cfg=sbCfg();
@@ -9851,13 +10421,49 @@ function sbUserId(){
 }
 function sbResolveOrg(){
   return sbRest('org_members?select=org_id&limit=1').then(function(r){
-    SB_STATE.org=(r&&r[0])?r[0].org_id:null; return SB_STATE.org;
+    SB_STATE.org=(r&&r[0])?r[0].org_id:null;
+    /* The save alarm says something quite different once the work has somewhere
+       else to go, and at boot it is painted before this has resolved — so a
+       signed-in planner was being told to sign in. */
+    if(SAVE_FAIL&&typeof paintSaveAlarm==='function')paintSaveAlarm();
+    return SB_STATE.org;
   });
 }
 function sbCreateOrg(name){
   return sbRest('rpc/gem_create_org',{method:'POST',body:{p_name:name}}).then(function(id){
     SB_STATE.org=id; return id;
   });
+}
+/* Creating an account never created a studio. Every new planner therefore
+   arrived signed in and backed up nowhere, and the interface told them they
+   were syncing — which is how a tester lost an afternoon of clients and a
+   timeline that had never once left her laptop.
+
+   gem_create_org() is NOT idempotent: called twice it makes two studios and
+   the second one is empty. So this runs only after sbResolveOrg() has come
+   back with nothing, and the in-flight flag stops two tabs racing it. */
+var SB_MAKING_ORG=false;
+function sbAutoCreateStudio(){
+  if(SB_MAKING_ORG||SB_STATE.org||!sbReady())return Promise.resolve(null);
+  SB_MAKING_ORG=true;
+  sbSetStatus('busy','Setting up your studio…');
+  return sbCreateOrg(prefs().bizName||'My Studio').then(function(id){
+    if(!id)return null;
+    /* Whatever is on this device now was typed before there was anywhere to
+       put it. Send it immediately, while the new studio is still empty and
+       gem_claim_sync() is certain to accept a device that has never synced. */
+    return sbSyncNow().then(function(){
+      sbSetStatus('ok','Studio ready — your work is backed up');
+      setTimeout(function(){ if(SB_SYNC.status==='ok')sbSetStatus('idle',''); },2800);
+      if(typeof render==='function')render();
+      return id;
+    });
+  }).catch(function(e){
+    /* Loudly, and permanently. Silence here is the whole bug. */
+    sbSetStatus('warn','Could not set up your studio — nothing is being backed up. '+
+      (e&&e.message?e.message:'Open Settings › Connection'));
+    return null;
+  }).then(function(r){ SB_MAKING_ORG=false; return r; });
 }
 
 /* ---------- ids ---------- */
@@ -9962,6 +10568,21 @@ function sbHash(o){
   while(i)h=(h*33^t.charCodeAt(--i))>>>0;
   return h;
 }
+/* Does this device hold edits the studio has not seen? Persisted, not held in
+   memory: a phone edited at a venue with no signal and then closed would come
+   back with the flag reset, and an automatic pull would quietly overwrite the
+   very work that had not been sent yet. */
+var SB_DIRTY_KEY='gem-sb-dirty';
+function sbDirty(){
+  /* A device that cannot write cannot persist this flag either, so hold it in
+     memory instead: work living only in the page's memory must still never be
+     pulled over by the automatic sync. */
+  if(typeof SAVE_FAIL!=='undefined'&&SAVE_FAIL)return true;
+  try{ return localStorage.getItem(SB_DIRTY_KEY)==='1'; }catch(e){ return false; }
+}
+function setSbDirty(on){
+  try{ on?localStorage.setItem(SB_DIRTY_KEY,'1'):localStorage.removeItem(SB_DIRTY_KEY); }catch(e){}
+}
 function sbVer(){ var v=null; try{ v=localStorage.getItem('gem-sb-ver'); }catch(e){} return v===null?null:Number(v); }
 function setSbVer(v){ try{ v===null?localStorage.removeItem('gem-sb-ver'):localStorage.setItem('gem-sb-ver',String(v)); }catch(e){} }
 
@@ -10006,6 +10627,16 @@ function sbPush(opts){
   var org=SB_STATE.org;
   if(!org)return Promise.reject(new Error('No studio yet.'));
   opts=opts||{};
+  /* Checked before sbMigrateIds(), which would rewrite the very ids this reads
+     and destroy the evidence. Nothing about this push is safe to attempt: the
+     prune at the end deletes whatever the payload leaves out, so a workspace
+     that has reverted to the template would take the studio down with it. */
+  if(sbLooksReseeded()){
+    var lost=new Error('This device has lost its saved work and is showing the sample again. '+
+      'Pushing now would replace your studio with the sample — pull instead.');
+    lost.reseeded=true;
+    return Promise.reject(lost);
+  }
   sbMigrateIds();
   saveLocal();
 
@@ -10091,6 +10722,7 @@ function sbPush(opts){
       event_type:s(e.eventType)||'Wedding',
       role_label:par&&e.role==='custom'?s(e.roleLabel):'',
       venue_address:e.venueAddress||{},venue_contact:e.venueContact||{},venue_notes:s(e.venueNotes),
+      photo_path:nn(e.photoPath),
       floor:{w:num(f.w)||60,h:num(f.h)||40,unit:f.unit||'ft',snap:f.snap!==false,showChairs:f.showChairs!==false}}; })],
     ['vendors',V.map(function(v){ return {id:v.id,org_id:org,name:s(v.name),category:s(v.cat),contact:s(v.contact),
       email:s(v.email),phone:s(v.phone),notes:s(v.notes),preferred:!!v.preferred,rating:num(v.rating)}; })],
@@ -10152,6 +10784,11 @@ function sbPush(opts){
       if(st[0]==='leads')st[1].forEach(function(r){
         var l=L.find(function(x){return x.id===r.id;}); if(l)r.photo_path=nn(l.photoPath);
       });
+      /* Events carry a cover of their own now, stamped by the same
+         mediaUpload() run — same refresh, same reason. */
+      if(st[0]==='events')st[1].forEach(function(r){
+        var e=E.find(function(x){return x.id===r.id;}); if(e)r.photo_path=nn(e.photoPath);
+      });
     });
     var im2=[];
     E.forEach(function(e){ ((((e.design||{}).boards)||[])).forEach(function(b){
@@ -10169,8 +10806,39 @@ function sbPush(opts){
         if(d)r.body=JSON.stringify({text:s(d.body),file:d.file||null});
       });
     }); });
+
+    /* The stamps above can be the ONLY change a table has. Its payload was
+       hashed before mediaUpload() ran, when the path was still null, so it
+       matched the previous hash and was left out of live — and the path went
+       nowhere until some unrelated edit pushed the table again. On a second
+       device that reads as a photo that never arrived. Re-hash the four
+       tables that carry a storage reference and take the ones that moved.
+       Rebuilt in steps order, never appended: live is upserted in order and
+       a child must not overtake the parent it points at. */
+    var want={}; live.forEach(function(st){ want[st[0]]=true; });
+    var grew=false;
+    ['leads','events','board_images','documents'].forEach(function(name){
+      var st=null;
+      steps.forEach(function(x){ if(x[0]===name)st=x; });
+      if(!st)return;
+      var h=sbHash(st[1]);
+      nextH[name]=h;
+      if(prevH[name]!==h&&!want[name]){ want[name]=true; grew=true; }
+    });
+    if(grew){
+      live.length=0;
+      steps.forEach(function(st){ if(want[st[0]])live.push(st); });
+    }
+    SB_SYNC.wrote=live.length;
   });
-  live.forEach(function(st){ chain=chain.then(function(){ return sbUpsert(st[0],st[1]); }); });
+  /* Built inside a .then, not alongside the chain: the block above can add a
+     table to live, and a forEach out here would already have closed over the
+     list as it stood before the uploads ran. */
+  chain=chain.then(function(){
+    var up=Promise.resolve();
+    live.forEach(function(st){ up=up.then(function(){ return sbUpsert(st[0],st[1]); }); });
+    return up;
+  });
 
   /* Prune in reverse, so children go before the parents they point at. An
      untouched table already matches, so it needs no prune. */
@@ -10194,6 +10862,10 @@ function sbPush(opts){
     mediaPrune(keep);
     setSbHashes(nextH);
     setSbVer(SB_SYNC.claimed);
+    /* Everything local is now on the server, so an automatic pull is safe
+       again. Cleared here rather than on entry: a push that fails half way
+       must leave the device marked as holding work. */
+    setSbDirty(false);
     SB_STATE.lastSync=new Date().toISOString(); SB_STATE.lastError=null;
     try{ localStorage.setItem('gem-sb-last',SB_STATE.lastSync); }catch(e){}
     return true;
@@ -10230,6 +10902,9 @@ function sbPull(){
         });
         return {id:e.id,leadId:e.lead_id,title:e.title,date:e.event_date,venue:e.venue,loc:e.location,
           startTime:e.start_time,venueAddress:e.venue_address||{},venueContact:e.venue_contact||{},venueNotes:e.venue_notes,
+          /* photo stays empty; mediaDownload() fills it from Storage after,
+             the same way a lead's and a board image's are filled. */
+          photo:null,photoPath:e.photo_path||null,
           parentId:e.parent_event_id||null,role:e.event_role||'primary',sort:e.sort_order||0,
           eventType:e.event_type||'Wedding',
           roleLabel:e.role_label||'',
@@ -10290,6 +10965,7 @@ function sbPull(){
     /* Fresh from the server: nothing is locally dirty, and this device is now
        level with the version it just read. */
     setSbHashes({});
+    setSbDirty(false);
     setSbVer(R.org_prefs[0]?Number(R.org_prefs[0].sync_version||0):null);
     SB_STATE.lastSync=new Date().toISOString();
     try{ localStorage.setItem('gem-sb-last',SB_STATE.lastSync); }catch(e){}
@@ -10314,14 +10990,31 @@ function sbSetStatus(st,msg){
   el.textContent=msg||'';
 }
 function sbAuto(){ return prefs().autoSync!==false; }
+/* Signed in, but the account was never attached to a studio — gem_create_org()
+   has not been run for it. Every push is skipped in that state, and it used to
+   be skipped in total silence: the only sign was a "none yet" pill on a
+   settings page nobody opens when they believe they are already syncing. Being
+   signed in is exactly what makes someone stop worrying about their data, so
+   this is the one state that most needs to be loud.
+   A portal client legitimately has no studio, but the pill is hidden outright
+   on the portal host, so this cannot reach them there. */
+function sbNoStudioWarn(){
+  if(typeof PORTAL_ONLY!=='undefined'&&PORTAL_ONLY)return false;
+  if(!sbReady()||SB_STATE.org)return false;
+  sbSetStatus('warn','Signed in, but no studio yet — nothing is being backed up. Settings › Connection');
+  return true;
+}
 function sbAutoQueue(){
-  if(!sbReady()||!SB_STATE.org||!sbAuto())return;
+  if(!sbReady())return;
+  if(!SB_STATE.org){ sbNoStudioWarn(); return; }
+  if(!sbAuto())return;
   clearTimeout(SB_SYNC.timer);
   /* Coalesce a burst of edits into one push rather than one per keystroke. */
   SB_SYNC.timer=setTimeout(sbSyncNow,4000);
 }
 function sbSyncNow(){
-  if(!sbReady()||!SB_STATE.org)return Promise.resolve(false);
+  if(!sbReady())return Promise.resolve(false);
+  if(!SB_STATE.org){ sbNoStudioWarn(); return Promise.resolve(false); }
   if(SB_SYNC.busy){ SB_SYNC.queued=true; return Promise.resolve(false); }
   if(!navigator.onLine){ sbSetStatus('off','Offline — will sync when you reconnect'); return Promise.resolve(false); }
   SB_SYNC.busy=true; sbSetStatus('busy','Syncing…');
@@ -10344,22 +11037,92 @@ function sbCheckRemote(){
   if(!sbReady()||!SB_STATE.org)return Promise.resolve(null);
   return sbRest('org_prefs?select=sync_version&org_id=eq.'+SB_STATE.org).then(function(r){
     if(!r||!r[0])return null;
-    var remote=Number(r[0].sync_version||0), local=sbVer();
-    if(local!==null&&remote>local)sbSetStatus('warn','Another device has newer work — pull from Settings › Connection');
-    return remote;
+    return Number(r[0].sync_version||0);
   }).catch(function(){ return null; });
+}
+
+/* ---- coming down from the studio ----
+   Pushing has always been automatic; pulling never was. An installed app on a
+   phone therefore sat on whatever it last had until somebody remembered to
+   open Settings and press Pull — which is not a thing anyone remembers at a
+   venue. These two functions close that half of the loop.
+
+   The rule is narrow on purpose: a pull REPLACES this device, so it only ever
+   happens automatically when there is provably nothing here to lose. Every
+   other case still asks a human, because the alternative is silently choosing
+   a winner between two people's work. */
+function sbAutoPull(msg){
+  if(!sbReady()||!SB_STATE.org||SB_SYNC.busy)return Promise.resolve(false);
+  SB_SYNC.busy=true; sbSetStatus('busy',msg||'Getting the latest…');
+  return sbPull().then(function(){
+    sbSetStatus('ok','Up to date');
+    setTimeout(function(){ if(SB_SYNC.status==='ok')sbSetStatus('idle',''); },2200);
+    if(typeof render==='function')render();
+    return true;
+  }).catch(function(e){
+    sbSetStatus('warn',e.message||'Could not get the latest');
+    return false;
+  }).then(function(r){ SB_SYNC.busy=false; return r; });
+}
+
+function sbSyncDown(){
+  if(!sbReady()||!SB_STATE.org||SB_SYNC.busy||!sbAuto())return Promise.resolve(false);
+  return sbCheckRemote().then(function(remote){
+    if(remote===null)return false;
+    var local=sbVer();
+
+    /* Local storage lost the workspace and the template is standing in for it.
+       The studio still holds the real thing, and there is nothing here worth
+       keeping, so take it back — this is the recovery for the failure above,
+       and it runs whether or not the version numbers differ. */
+    if(sbLooksReseeded())return sbAutoPull('Restoring your work…');
+
+    /* Never synced on this device. This is the installed app on a phone, or a
+       new browser: the studio is the truth and there is nothing here but the
+       sample. Pull without asking — the alternative is what the sample lock
+       exists to prevent, someone typing into a device whose every push
+       gem_claim_sync will refuse. */
+    if(local===null){
+      if(remote>0&&!hasOwnWork())return sbAutoPull('Getting your studio…');
+      if(remote>0)sbSetStatus('warn','This device has work your studio has not seen — open Settings › Connection');
+      return false;
+    }
+
+    if(remote<=local)return false;
+
+    /* Behind, and everything here has already been sent. Replacing this device
+       with the server cannot cost anything. */
+    if(!sbDirty()&&!SB_SYNC.timer)return sbAutoPull();
+
+    /* Behind AND holding unsent edits — two people have diverged, and picking
+       a winner is not the app's call. */
+    sbSetStatus('warn','This device has unsent edits and another is ahead — open Settings › Connection');
+    return false;
+  });
 }
 function sbWatch(){
   window.addEventListener('online',function(){
-    if(sbReady()&&SB_STATE.org){ sbSetStatus('idle',''); sbAutoQueue(); }
+    if(!sbReady()||!SB_STATE.org)return;
+    sbSetStatus('idle','');
+    /* Send what is waiting first, then take what arrived while we were out.
+       The other order would pull over edits made offline. */
+    if(SB_SYNC.timer||sbDirty())sbAutoQueue(); else sbSyncDown();
   });
   window.addEventListener('offline',function(){
     if(sbReady())sbSetStatus('off','Offline — will sync when you reconnect');
   });
   document.addEventListener('visibilitychange',function(){
     if(document.visibilityState!=='visible'||!sbReady()||!SB_STATE.org)return;
-    sbCheckRemote();
+    sbSyncDown();
   });
+  /* NEXT.md described "polling on focus plus a timer"; only the focus half was
+     ever wired. Three minutes is slow enough to be free and quick enough that
+     a planner switching from laptop to phone finds the phone already current.
+     Only while the tab is actually visible — a backgrounded phone should not
+     be waking up to poll. */
+  setInterval(function(){
+    if(document.visibilityState==='visible')sbSyncDown();
+  },180000);
   /* Flush anything still pending rather than lose it on close. */
   window.addEventListener('pagehide',function(){
     if(SB_SYNC.timer){ clearTimeout(SB_SYNC.timer); sbSyncNow(); }
@@ -10368,12 +11131,28 @@ function sbWatch(){
 
 
 /* A magic-link return must be banked before the first paint. */
-try{ sbCaptureRedirect(); }catch(e){}
+var SB_FRESH_LINK=false;
+try{ SB_FRESH_LINK=sbCaptureRedirect(); }catch(e){}
 /* Resolve the studio once at boot so a background push has somewhere to go
    without waiting for the Connection page to be opened. */
 try{
   sbWatch();
-  if(sbReady())sbResolveOrg().then(function(id){ if(id)sbCheckRemote(); }).catch(function(){});
+  if(sbReady()){
+    /* A magic-link arrival has to go through the whole post-sign-in path, not
+       just the version check. Only sbClaimInvites() attaches an invited couple
+       to their wedding, and nothing on this route was calling it — they
+       followed the link, signed in successfully, and landed in an empty app.
+       Password sign-in always ran it; the link never did. */
+    if(SB_FRESH_LINK)sbAfterSignIn().then(function(){ render(); }).catch(function(){});
+    /* An account that predates automatic creation — or one whose creation
+       failed the first time — is repaired on the next load rather than left
+       broken forever. sbAfterSignIn() does the couple-or-planner test before
+       it creates anything, and warns if it cannot. */
+    else sbResolveOrg().then(function(id){
+      if(id)return sbSyncDown();
+      return sbAfterSignIn().then(function(){ render(); });
+    }).catch(function(){ sbNoStudioWarn(); });
+  }
 }catch(e){}
 
 /* Branding and stages were only ever applied by their own edit handlers, so
@@ -10392,11 +11171,53 @@ var PORTAL_ONLY=false;
 try{ PORTAL_ONLY=portalHostMatch(); }catch(e){}
 if(PORTAL_ONLY)document.body.classList.add('portal-only');
 
+/* A manifest shortcut is only a URL — the manifest offers /?view=pipeline and
+   two others, and nothing ever read the parameter, so long-pressing the icon
+   on Android gave three shortcuts that all opened the dashboard. Only the
+   destinations the nav itself offers are accepted, so a hand-typed ?view=
+   cannot reach something that is not a real top-level view. */
+function shortcutView(){
+  var m=/[?&]view=([a-z]+)/i.exec(location.search||'');
+  if(!m)return null;
+  var want=String(m[1]).toLowerCase(), ok=null;
+  document.querySelectorAll('.nav-item').forEach(function(n){
+    if(n.dataset.view===want)ok=want;
+  });
+  return ok;
+}
+
 loadStages(); applyPrefs(); applyBrand(); paintIdentity();
 /* Photos live in IndexedDB now, so put them back on the records. Async: it
    re-renders once they land. */
 try{ mediaRehydrate(); }catch(e){}
-setView(PORTAL_ONLY?'portal':(prefs().landing||'dashboard'));
+/* Find out at boot whether this browser will keep anything, rather than after
+   an afternoon of typing. A probe write costs nothing and catches the private
+   window and the blocked-site-data case before any work is entered. */
+try{
+  var _probe='gem-boot-probe';
+  localStorage.setItem(_probe,'ok');
+  if(localStorage.getItem(_probe)!=='ok')throw new Error('write did not survive a read');
+  localStorage.removeItem(_probe);
+}catch(e){
+  SAVE_FAIL={name:(e&&e.name)||'Error',msg:(e&&e.message)||String(e),
+             quota:!!(e&&(e.name==='QuotaExceededError'||e.code===22||e.code===1014)),
+             at:new Date().toISOString()};
+  paintSaveAlarm();
+}
+try{ requestPersistence(); }catch(e){}
+/* PORTAL_ONLY wins over the parameter: a couple's host must not be steerable
+   into the studio's views by editing the URL. */
+setView(PORTAL_ONLY?'portal':(shortcutView()||prefs().landing||'dashboard'));
+/* Drop ?view= once it has been honoured, so a later reload lands on the normal
+   landing view instead of staying pinned to whichever shortcut was tapped. */
+try{
+  var _qs=new URLSearchParams(location.search);
+  if(_qs.has('view')){
+    _qs.delete('view');
+    var _q=_qs.toString();
+    history.replaceState(null,'',location.pathname+(_q?'?'+_q:''));
+  }
+}catch(e){}
 
 /* First visit gets the walkthrough; afterwards it's on demand. */
 $('#helpBtn').onclick=function(){ startTour('basics'); };

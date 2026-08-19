@@ -18,18 +18,22 @@ What you need to do, in order. Everything here is on your side — I've written 
 
 **`sw.js` must be served from the root.** A worker at `/assets/sw.js` can only control `/assets/*`, so the app would never go offline.
 
-### Generating the icons
-The app draws its own icons at runtime, but a deployed PWA wants real files. Open the app, paste this in the browser console, and three PNGs download:
+### The icons
 
-```js
-[192,512].forEach(s=>{const c=document.createElement('canvas');c.width=c.height=s;const x=c.getContext('2d');
-const g=x.createLinearGradient(0,0,s,s);g.addColorStop(0,'#E3C579');g.addColorStop(.55,'#C2A052');g.addColorStop(1,'#A8842F');
-x.fillStyle='#FAF2F3';x.fillRect(0,0,s,s);const m=s*.11,w=s-m*2;x.beginPath();x.roundRect(m,m,w,w,s*.18);x.fillStyle=g;x.fill();
-x.fillStyle='#fff';x.textAlign='center';x.textBaseline='middle';x.font=`600 ${Math.round(s*.46)}px Georgia,serif`;
-x.fillText('G',s/2,s/2+s*.02);const a=document.createElement('a');a.download=`icon-${s}.png`;a.href=c.toDataURL();a.click();});
-```
+**The four PNGs in `deploy/icons/` are the real ones — don't regenerate them.**
+The app can draw its own at runtime, but that path is a fallback for the artifact
+host, which owns `<head>` and serves no files. On `gemevents.app` the committed
+files are what ship.
 
-For the maskable icon, re-run with `m = 0` (full bleed) and save as `icon-maskable-512.png` — Android crops maskable icons to a circle, so the safe area must be filled edge to edge.
+Two rules they already follow, worth knowing before anyone replaces them:
+
+- **Every icon is fully opaque.** iOS composites `apple-touch-icon` transparency
+  against black, so a rounded-square icon on a transparent background arrives on
+  the home screen with black corners. All four were flattened onto `#FAF2F3`.
+- **`icon-180.png` is full-bleed**, cut from the same artwork as the maskable.
+  iOS applies its own rounded mask, so it wants a plain square and will round it
+  for you. `icon-maskable-512.png` is full-bleed for the same reason on Android,
+  which crops to a circle — the wordmark sits well inside that safe area.
 
 ---
 
@@ -44,28 +48,32 @@ Any static host works. Cloudflare Pages is the easiest with a `.app` domain:
 
 **`.app` is on the HSTS preload list — HTTPS is mandatory, not optional.** That's actually convenient: service workers require HTTPS anyway, so you can't accidentally deploy a non-working configuration.
 
-### Required headers
-Add a `_headers` file at the root:
+### Headers — already handled, nothing to add
+
+This deploys as an **assets-only Worker** (`wrangler.jsonc` → `assets.directory`),
+not Cloudflare Pages, so the `_headers` file in this folder is **not deployed**
+and is kept only as a reference for another host. `_headers` is a Pages/Netlify
+convention.
+
+Cloudflare's own defaults already give the behaviour that file was written to
+force. Checked against production:
 
 ```
-/sw.js
-  Cache-Control: no-cache
-  Service-Worker-Allowed: /
-
-/index.html
-  Cache-Control: no-cache
-
-/icons/*
-  Cache-Control: public, max-age=31536000, immutable
+/sw.js  →  content-type: text/javascript
+           cache-control: public, max-age=0, must-revalidate
 ```
 
-`no-cache` on `sw.js` matters — if the worker itself gets cached, users can be stuck on an old version indefinitely.
+`must-revalidate` is what matters: the worker is re-checked on every load, so
+nobody gets stranded on an old build. The same applies to `/` and the manifest.
 
 ---
 
 ## 3. Supabase, when you're ready
 
-1. Create the project, then run `01` → `05` from `/supabase` in order in the SQL Editor
+1. Create the project, then run the numbered migrations from `/supabase` **in
+   order** in the SQL Editor. There are 16 now, not 5 — see `supabase/MIGRATION.md`
+   for what each one does, and `NEXT.md` for which are already run against the
+   live project.
 2. **Authentication → URL Configuration**
    - Site URL: `https://gemevents.app`
    - Redirect URLs: `https://gemevents.app/**`
@@ -80,9 +88,21 @@ The anon key is safe in the client *because* RLS is on. The **service_role** key
 
 ## 4. Installing it
 
-- **iPhone/iPad** — Safari → Share → *Add to Home Screen*. iOS ignores `beforeinstallprompt`, so there's no in-app button; this is the only route.
-- **Android** — Chrome shows an install prompt automatically.
-- **Mac/Windows desktop** — Chrome/Edge show an install icon in the address bar. Installed, it opens in its own window with no browser chrome.
+**Settings → Data & storage → Install on this device** now covers all of this in
+the app: an **Install** button where the browser offers one, the Share-sheet
+instruction on iOS where it never will, and an *Installed* badge once it is.
+
+- **iPhone/iPad** — Safari → Share → *Add to Home Screen*. Safari never fires
+  `beforeinstallprompt`, so no in-app button can exist there; this is the only route.
+- **Android** — Chrome offers it by itself, and the Settings row offers it too.
+  The app deliberately does **not** `preventDefault()` the event, so Chrome's own
+  prompt still appears — the in-app button is a second door, not a replacement.
+- **Mac/Windows desktop** — Chrome/Edge show an install icon in the address bar.
+  Installed, it opens in its own window with no browser chrome.
+
+The manifest's three shortcuts (Today's tasks, Leads & Pipeline, Calendar) work
+from a long-press on the installed icon; they are plain `/?view=…` URLs that the
+app reads at boot.
 
 ---
 
