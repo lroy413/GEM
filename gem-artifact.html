@@ -3067,6 +3067,15 @@ function propagateLeadRename(lead,oldName){
   return n;
 }
 
+/* Names a studio types when it does not yet know. They must never become a
+   directory entry, or every workspace grows a venue called TBD.
+   A declaration, not a var: normalize() runs at boot from line 3235 and this
+   is read from inside it, so it has to hoist — the same trap FT() and IN()
+   carry a note about further down. */
+function venueVague(n){
+  return ['tbd','tba','to be confirmed','to be decided','unknown','n/a','-','—']
+    .indexOf(String(n||'').trim().toLowerCase())>=0;
+}
 function normalize(d){
   if(!d.leads)d.leads=[];
   if(!d.events)d.events=[];
@@ -3080,6 +3089,44 @@ function normalize(d){
     if(l)x.leadId=l.id;
   });
   if(!d.invoices)d.invoices=[];
+  /* A venue used to be free text on the event, with its address, coordinator
+     and load-in rules in three more fields beside it — all of which describe
+     the PLACE and were therefore stored once per night. Lift them into a
+     directory the first time we see them, exactly as vendors were lifted out
+     of events below. events[].venue keeps the name either way: a venue with no
+     record ("TBD", "their garden") is a normal state, not a missing one. */
+  if(!d.venues){
+    d.venues=[];
+    var vSeen={};
+    (d.events||[]).forEach(function(e){
+      var nm=String(e.venue||'').trim();
+      if(!nm||venueVague(nm))return;
+      var key=nm.toLowerCase(), rec=vSeen[key];
+      if(!rec){
+        rec={id:uid('vn'),name:nm,kind:'',address:{},contact:{},website:'',
+             seated:0,standing:0,notes:'',spaces:[],photo:null,photoPath:null,preferred:false};
+        vSeen[key]=rec; d.venues.push(rec);
+      }
+      /* The richest event wins the detail: a blank address must not overwrite
+         one that was filled in on another night of the same weekend. */
+      if(!Object.keys(rec.address).length&&e.venueAddress&&Object.keys(e.venueAddress).some(function(k){return e.venueAddress[k];}))
+        rec.address=e.venueAddress;
+      if(!Object.keys(rec.contact).length&&e.venueContact&&e.venueContact.name)
+        rec.contact=e.venueContact;
+      if(!rec.notes&&e.venueNotes)rec.notes=e.venueNotes;
+      e.venueId=rec.id;
+    });
+  }
+  (d.venues||[]).forEach(function(v){
+    if(!v.address)v.address={};
+    if(!v.contact)v.contact={};
+    if(!Array.isArray(v.spaces))v.spaces=[];
+    if(v.photo===undefined)v.photo=null;
+    if(v.photoPath===undefined)v.photoPath=null;
+    ['kind','website','notes'].forEach(function(k){ if(v[k]===undefined)v[k]=''; });
+    ['seated','standing'].forEach(function(k){ v[k]=Number(v[k])||0; });
+  });
+  (d.events||[]).forEach(function(e){ if(e.venueId===undefined)e.venueId=null; });
   if(!d.vendors)d.vendors=DEFAULT.vendors.slice();
   /* Vendors used to carry eventId/status/fee, so the same florist appeared
      once per event and could never be reused. Split into a global directory
@@ -6127,6 +6174,42 @@ function wireDocuments(){
 }
 
 /* A venue is often booked after the client. Say so rather than leaving a gap. */
+function venueById(id){ return id?(db.venues||[]).find(function(v){return v.id===id;})||null:null; }
+/* The record behind an event, if there is one. venueId first — the name is a
+   cache, the way an invoice's client name is a cache of its lead. */
+function venueFor(e){
+  if(!e)return null;
+  var v=venueById(e.venueId);
+  if(v)return v;
+  var nm=String(e.venue||'').trim().toLowerCase();
+  if(!nm)return null;
+  return (db.venues||[]).find(function(x){return String(x.name).trim().toLowerCase()===nm;})||null;
+}
+/* What to call the place. The record wins if there is one, so renaming a venue
+   in the directory reaches every event at once. */
+function venueOf(e){
+  var v=venueFor(e);
+  return v?v.name:String((e&&e.venue)||'').trim();
+}
+/* Address, contact and notes: the venue's if it has them, otherwise whatever
+   the event carried before there were venues at all. Nothing is lost. */
+function venueAddrOf(e){
+  var v=venueFor(e);
+  if(v&&Object.keys(v.address||{}).some(function(k){return v.address[k];}))return v.address;
+  return (e&&e.venueAddress)||{};
+}
+function venueContactOf(e){
+  var v=venueFor(e);
+  if(v&&v.contact&&v.contact.name)return v.contact;
+  return (e&&e.venueContact)||{};
+}
+function venueNotesOf(e){
+  var v=venueFor(e);
+  return (v&&v.notes)||(e&&e.venueNotes)||'';
+}
+function eventsAtVenue(id){
+  return db.events.filter(function(e){ var v=venueFor(e); return v&&v.id===id; });
+}
 function venueName(v){ return (v&&String(v).trim())?v:'Venue to be confirmed'; }
 function venueDot(v,tail){ var n=(v&&String(v).trim())?v:''; 
   return n?(n+(tail?' · '+tail:'')):(tail||'Venue to be confirmed'); }
