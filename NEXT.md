@@ -161,6 +161,23 @@ never pulled, which is what stops a fresh install overwriting the studio.
 
 ## 3 · Things worth knowing before you change the UI
 
+- **A pull that writes preferences must also APPLY them.** `sbPull()` wrote the
+  studio's branding into `settings` and stopped, so a new device kept the
+  default gold and no logo until the next reload — indistinguishable from
+  branding that had never synced. It calls `applyPrefs()`, `applyBrand()` and
+  `paintIdentity()` now. It was also gated on `org_prefs.stages` being a
+  non-empty array, so a studio that had never renamed a pipeline stage received
+  NO preferences at all. Stages are one preference among many, not the test for
+  whether the rest exist.
+- **`margin-top:auto` plus `position:sticky` means nothing follows it in flow.**
+  `.side-foot` therefore overlays the items above it whenever the list is long
+  enough to scroll — Analytics and Tax Tool were unreachable on a phone — and
+  no amount of `padding-bottom` on the scroller can push them clear, because
+  the padding sits after an element that is already last. Below 860px it is
+  `position:static` and scrolls with everything else.
+  `scratchpad/navreach.mjs` opens every nav group, scrolls to the end and
+  asserts that no `.nav-item` is behind the footer or the tab bar.
+
 - **`pullLoss()` counts WORK, not records.** A device with nothing saved seeds
   the demo — one client, its events, four documents, six vendors — so counting
   raw lengths made a brand-new phone look like it was holding six vendors the
