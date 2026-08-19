@@ -134,6 +134,17 @@ never pulled, which is what stops a fresh install overwriting the studio.
 
 ## 3 · Things worth knowing before you change the UI
 
+- **The title bar names the work, not the screen.** `pageHead(v)` returns
+  `[eyebrow, headline, sub]` — the screen's own name goes in the eyebrow at
+  label size, and the headline says what is true today (the countdown, what is
+  in the pipeline, who has replied). A screen with nothing true to say returns
+  an empty eyebrow and keeps its name as the headline rather than inventing
+  something; add to `pageHead()`, not to `TITLES`.
+- **The sidebar lock-up is a wordmark, not a tile.** A letter in a gilded
+  square is what an app shows when no logo is set, so `applyBrand()` puts
+  `no-logo` on `.brand` and the tile survives only in the collapsed rail and
+  wherever a real logo exists. `.brand .sub` must never regain
+  `text-overflow:ellipsis` — it was truncating the studio's own name.
 - **The bible is one content model, three renderers.** `bibleBlocks()` builds a
   list of blocks; `bibleHtml()` prints them (and so makes the PDF),
   `bibleDocx()` packs them into a real `.docx`, and `bibleEmail()` writes the

@@ -10,7 +10,7 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
 <meta name="apple-mobile-web-app-title" content="GEM">
 <meta name="format-detection" content="telephone=no">
-<meta name="gem-build" content="65337e84e1e5">
+<meta name="gem-build" content="5eb568c83046">
 <link rel="manifest" href="/manifest.webmanifest">
 <link rel="icon" href="/icons/icon-192.png" sizes="192x192" type="image/png">
 <link rel="apple-touch-icon" href="/icons/icon-180.png">
@@ -135,18 +135,27 @@ html.no-motion body::before{opacity:.3}
   border-bottom:1px solid var(--line);position:relative}
 .brand::after{content:"";position:absolute;left:10px;right:10px;bottom:-1px;height:1px;
   background:linear-gradient(90deg,var(--gold-line),transparent 62%)}
+/* A letter in a gilded tile is what every app shows when you have NOT given it
+   a logo — a placeholder, dressed up. So the expanded sidebar carries a
+   wordmark instead, and the tile survives only where a single mark is the
+   right answer: the collapsed rail, and wherever a real logo has been set. */
 .brand .mark{
-  width:46px;height:46px;border-radius:14px;
+  width:38px;height:38px;border-radius:11px;
   background:var(--gold-grad);
   display:grid;place-items:center;
-  font-family:var(--serif);font-size:25px;font-weight:600;color:#fff;
+  font-family:var(--serif);font-size:21px;font-weight:600;color:#fff;
   border:1px solid var(--gold-deep);
-  box-shadow:inset 0 1px 0 rgba(255,255,255,.5), 0 4px 14px rgba(143,113,48,.30);
-  text-shadow:0 1px 1px rgba(105,82,32,.3);
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.45), 0 2px 8px rgba(143,113,48,.18);
+  flex:0 0 auto;
 }
-.brand .name{font-family:var(--serif);font-size:28px;font-weight:600;letter-spacing:.06em;line-height:1}
-.brand .sub{font-size:9px;letter-spacing:2.4px;text-transform:uppercase;color:var(--muted);margin-top:5px;
-  font-weight:500;max-width:172px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.brand.no-logo .mark{display:none}
+.app.rail .brand.no-logo .mark{display:grid}
+.brand .name{font-family:var(--serif);font-size:23px;font-weight:600;letter-spacing:.17em;
+  line-height:1;text-transform:uppercase}
+/* Never truncated. A visible ellipsis in a studio's own name reads as a bug,
+   and it was the first text on the screen — "GLIMMER EVENTS MAN…". */
+.brand .sub{font-size:9px;letter-spacing:.19em;text-transform:uppercase;color:var(--muted);margin-top:7px;
+  font-weight:500;line-height:1.65}
 /* ---- collapsible nav groups ---- */
 .nav-group{display:flex;flex-direction:column}
 .nav-label{
@@ -307,6 +316,12 @@ html.no-motion body::before{opacity:.3}
 .topbar{display:flex;align-items:center;justify-content:space-between;margin-bottom:28px;gap:24px;flex-wrap:wrap}
 .page-title{font-family:var(--serif);font-size:40px;font-weight:600;line-height:1.02;text-wrap:balance;letter-spacing:-.012em}
 .page-sub{color:var(--muted);font-size:13.5px;margin-top:7px;letter-spacing:0}
+/* The screen's own name lives here, at label size — you clicked it in the nav
+   to get here, so it does not need to be the largest thing on the page. The
+   headline says what is actually true today. */
+.page-eyebrow{font-size:10px;letter-spacing:.2em;text-transform:uppercase;color:var(--gold-deep);
+  font-weight:700;margin-bottom:9px;line-height:1}
+.page-eyebrow:empty{display:none}
 
 /* Every toolbar control shares one height and sits on one baseline. */
 #pgActions{display:flex;align-items:center;gap:10px;flex-wrap:wrap;justify-content:flex-end}
@@ -758,7 +773,11 @@ body.portal-only .main{margin-left:0!important}
 .due.none{background:transparent;color:var(--muted);opacity:.7}
 .all-clear{display:flex;flex-direction:column;align-items:center;gap:9px;padding:38px 20px;
   color:var(--muted);font-size:13px;text-align:center}
-.all-clear>:first-child{font-size:20px;color:var(--gold)}
+/* The sparkle, and only the sparkle. This was `.all-clear > :first-child`,
+   which was written for the ✦ — but the ✦ is a bare text node, so the selector
+   landed on the SENTENCE instead: the message came out 20px gold and the mark
+   came out 13px grey, precisely the wrong way round. */
+.all-clear .ac-ic{font-size:19px;color:var(--gold);line-height:1}
 
 /* ---- waiting on ---- */
 .waits{padding:6px 0 8px;max-height:min(58vh,540px);overflow-y:auto}
@@ -956,9 +975,12 @@ tbody tr:hover{background:var(--pink-50)}
 .s-draft{background:var(--pink-100);color:var(--ink-soft);border-color:var(--line)}
 
 /* progress */
-.bar{height:7px;border-radius:var(--radius-pill);background:var(--pink-100);overflow:hidden;
+/* 4px, a flat fill and a hairline track. A 7px pill with a three-stop gold
+   gradient is the most generic component a web app owns, and at this size the
+   gradient was never visible anyway — it only read as "widget". */
+.bar{height:4px;border-radius:2px;background:var(--line);overflow:hidden;
   box-shadow:inset 0 1px 2px rgba(59,46,51,.05)}
-.bar > i{display:block;height:100%;background:var(--gold-grad);border-radius:var(--radius-pill);
+.bar > i{display:block;height:100%;background:var(--gold-deep);border-radius:2px;
   box-shadow:inset 0 1px 0 rgba(255,255,255,.3);transition:width .4s var(--ease)}
 
 /* timeline */
@@ -1391,7 +1413,7 @@ td.inv-col{text-align:center;width:1%}
   padding:3px 11px}
 .hr-i b{font-size:11px;color:var(--tint);font-weight:700}
 .hero-prog{display:flex;align-items:center;gap:10px;margin-top:auto;padding-top:10px;max-width:340px}
-.hero-prog .bar{flex:1;height:6px}
+.hero-prog .bar{flex:1;height:4px}
 .hero-prog .bar i{background:var(--tint)}
 .hero-prog span{font-size:11px;color:var(--muted);white-space:nowrap}
 .hero-side{display:flex;flex-direction:column;align-items:center;justify-content:center;
@@ -2507,6 +2529,7 @@ html,body{max-width:100%;overflow-x:hidden}
       <div style="display:flex;align-items:center;gap:14px">
         <button class="menu-btn" id="menuBtn" aria-label="Toggle menu">☰</button>
         <div>
+          <div class="page-eyebrow" id="pgEyebrow"></div>
           <h1 class="page-title" id="pgTitle">Dashboard</h1>
           <div class="page-sub" id="pgSub"></div>
         </div>
@@ -3394,9 +3417,81 @@ Object.defineProperty(window,'isTouch',{get:isTouchMode});
 /* The dashboard subtitle was a hardcoded string, so it read correctly on the
    day it was written and drifted ever after. Compute it from the real date —
    in the viewer's own timezone, since new Date() is local. */
-function dayLine(){
-  return new Date().toLocaleDateString('en-US',
-    {weekday:'long',month:'long',day:'numeric'})+' · A calm day of details.';
+/* The date alone. It used to arrive with " · A calm day of details." glued on,
+   because both were one subtitle; they are an eyebrow and a subtitle now. */
+function dateLine(){
+  return new Date().toLocaleDateString('en-US',{weekday:'long',month:'long',day:'numeric'});
+}
+/* ---- what the page is actually about ----
+   The title bar used to say the name of the screen you had just clicked, at
+   40px, with the only sentence carrying information set beneath it at a third
+   the size. So the screen's name moves to an eyebrow and the headline says
+   what is true right now: how long until the next event, how much is in the
+   pipeline, how many have replied. Screens with nothing true to say keep their
+   name as the headline rather than inventing something. */
+function nextPrimary(){
+  /* daysAway(), not a date-string compare — todayISO() lives inside
+     wireDocuments() and is not reachable from here. */
+  var soon=null;
+  evPrimaries().forEach(function(e){
+    if(!e.date||daysAway(e.date)<0)return;
+    if(!soon||e.date<soon.date)soon=e;
+  });
+  return soon;
+}
+function countdownLine(){
+  var e=nextPrimary();
+  if(!e)return 'A clear diary';
+  var d=daysAway(e.date);
+  if(d<=0)return 'Today · '+e.title;
+  if(d===1)return 'Tomorrow · '+e.title;
+  if(d<14)return d+' days to '+e.title;
+  var w=Math.round(d/7);
+  return w+' week'+(w===1?'':'s')+' to '+e.title;
+}
+function pageHead(v){
+  var lab=(TITLES[v]||['',''])[0], sub=(TITLES[v]||['',''])[1];
+  /* [eyebrow, headline, sub] — an empty eyebrow hides itself. */
+  if(v==='dashboard')
+    return [dateLine(),countdownLine(),'A calm day of details.'];
+  if(v==='clients'&&!state.clientId){
+    var n=db.leads.length;
+    return [lab,n?(n+' client file'+(n===1?'':'s')):'No clients yet',sub];
+  }
+  if(v==='events'&&!state.eventId){
+    var ps=evPrimaries().length, subs=db.events.length-ps;
+    return [lab,ps?(ps+' event'+(ps===1?'':'s')+' in play'):'No events yet',
+            subs?(subs+' sub-event'+(subs===1?'':'s')+' inside them'):sub];
+  }
+  if(v==='pipeline'){
+    var open=db.leads.filter(function(l){return l.stage!=='wrapped'&&l.stage!=='lost';});
+    var val=open.reduce(function(a,l){return a+(Number(l.value)||0);},0);
+    return [lab,open.length?(open.length+' live, '+money(val)+' in play'):'Nothing in the pipeline',
+            isTouchMode()?'Use a card’s menu to move it through your booking flow.'
+                         :'Drag a card between stages to move it through your flow.'];
+  }
+  if(v==='guests'){
+    var ev=activeEvent();
+    if(!ev)return [lab,'No events yet',sub];
+    var r=rosterFor(ev), yes=r.filter(function(g){return gRsvp(g,ev)==='yes';}).length;
+    return [lab,r.length?(yes+' of '+r.length+' have replied yes'):'No guests yet',ev.title];
+  }
+  if(v==='vendors'){
+    var n2=db.vendors.length;
+    return [lab,n2?(n2+' in your directory'):'No vendors yet',sub];
+  }
+  if(v==='finance'){
+    var inv=db.invoices||[];
+    var paid=inv.filter(function(x){return x.status==='paid';}).reduce(function(a,x){return a+x.amount;},0);
+    var owed=inv.filter(function(x){return x.status==='due'||x.status==='over';}).reduce(function(a,x){return a+x.amount;},0);
+    return [lab,inv.length?(money(paid)+' collected · '+money(owed)+' out'):'No invoices yet',sub];
+  }
+  if(v==='documents'){
+    var d2=db.documents||[], wait=d2.filter(function(x){return x.status==='sent';}).length;
+    return [lab,d2.length?(wait?(wait+' awaiting signature'):(d2.length+' document'+(d2.length===1?'':'s')+', all settled'))
+                        :'No documents yet',sub];
+  }
+  return ['',lab,sub];
 }
 var TITLES={
   dashboard:['Dashboard',''],
@@ -3430,36 +3525,36 @@ function setView(v,opts){
   var sb=document.getElementById('settingsBtn');
   if(sb)sb.classList.toggle('on',v==='settings');
   if(typeof markActiveGroup==='function')markActiveGroup();
-  var t=(TITLES[v]||['','']).slice();
-  if(v==='dashboard')t[1]=dayLine();
-  if(v==='pipeline')t[1]=isTouchMode()?'Use a card’s menu to move it through your booking flow.'
-                                     :'Drag a card between stages to move it through your flow.';
-  if(v==='seating')t[1]=(state.seatMode||'plan')==='plan'
+  var t=pageHead(v);
+  if(v==='seating')t[2]=(state.seatMode||'plan')==='plan'
     ? 'Arrange the room — drag tables and fixtures into place.'
     : (isTouchMode()?'Use a guest’s menu to seat them at a table.'
                     :'Drag a guest to a table to seat them.');
-  // Detail screens borrow the title bar to name what you're looking at.
+  /* A detail screen is the clearest case of the same rule: what you are
+     looking at is the headline, and what kind of thing it is is the label. */
   if(v==='clients'&&state.clientId){
     var cl=db.leads.find(function(x){return x.id===state.clientId;});
-    if(cl)t=[cl.names,'Client file · '+cl.type];
+    if(cl)t=['Client file',cl.names,cl.type+(cl.date?' · '+fmtDate(cl.date):'')];
   }else if(v==='events'&&state.eventId){
     var evx=db.events.find(function(x){return x.id===state.eventId;});
-    if(evx)t=[evx.title,'Event workspace · '+evx.venue];
+    if(evx)t=[evIsSub(evx)?roleLabel(evx,true):'Event workspace',evx.title,
+              venueName(evx.venue)+(evx.date?' · '+fmtDate(evx.date):'')];
   }else if(v==='design'&&state.boardId){
     var bd=findBoard(state.boardId);
-    if(bd)t=[bd.title,'Mood board · '+((activeEvent()||{}).title||'')];
+    if(bd)t=['Mood board',bd.title,(activeEvent()||{}).title||''];
   }else if(v==='settings'&&state.settingsPage){
     var sp=null;
     SET_PAGES.forEach(function(g){g.items.forEach(function(it){ if(it.k===state.settingsPage)sp=it; });});
-    if(sp)t=[sp.t,sp.d];
+    if(sp)t=['Settings',sp.t,sp.d];
   }else if(v==='questionnaires'&&state.qId){
     var qd=db.questionnaires.find(function(x){return x.id===state.qId;});
-    if(qd)t=[qd.title,'Questionnaire'];
+    if(qd)t=['Questionnaire',qd.title,''];
   }
   // Board-style views fill the window; document-style views scroll normally.
   var fills=(v==='pipeline'&&!state.clientId)||(v==='messages');
   document.querySelector('.main').classList.toggle('fill',!!fills);
-  $('#pgTitle').textContent=t[0]; $('#pgSub').textContent=t[1];
+  $('#pgEyebrow').textContent=t[0]||'';
+  $('#pgTitle').textContent=t[1]; $('#pgSub').textContent=t[2]||'';
   $('#pgActions').innerHTML=actionsFor(v);
   wireActions();
   render();
@@ -3722,7 +3817,7 @@ function viewDashboard(){
         group('Today',today,'today','now')+
         group(horizon===7?'This week':'Next '+horizon+' days',week,'week')+
         group('Later',later,'later')+
-        (tasks.length?'':'<div class="all-clear">✦<span>Everything is done. Enjoy the quiet.</span></div>')+
+        (tasks.length?'':'<div class="all-clear"><span class="ac-ic">✦</span><span>Everything is done. Enjoy the quiet.</span></div>')+
       '</div></div>'+
 
     // ---- waiting on others ----
@@ -3732,7 +3827,7 @@ function viewDashboard(){
           '<span class="w-dot '+w.tone+'"></span>'+
           '<div><div class="w-t">'+esc(w.t)+'</div><div class="w-m">'+esc(w.m)+'</div></div>'+
           '<span class="w-go">›</span></div>';
-      }).join(''):'<div class="all-clear">✦<span>Nothing pending. You are all caught up.</span></div>')+'</div></div>'+
+      }).join(''):'<div class="all-clear"><span class="ac-ic">✦</span><span>Nothing pending. You are all caught up.</span></div>')+'</div></div>'+
     '</div>';
   }
 
@@ -6479,6 +6574,9 @@ function applyBrand(){
       m.style.backgroundSize='cover'; m.style.backgroundPosition='center'; m.textContent=''; }
     else { m.style.background=''; m.style.backgroundImage=''; m.textContent=(p.bizName||'G').trim()[0].toUpperCase(); }
   });
+  /* A real logo is a brand; an initial in a tile is a placeholder. The class
+     is what hides the second one everywhere except the collapsed rail. */
+  document.querySelectorAll('.brand').forEach(function(b){ b.classList.toggle('no-logo',!p.logo); });
   var nm=document.querySelector('.brand .name');
   if(nm)nm.textContent=p.brandMark||'GEM';
 }
