@@ -156,6 +156,22 @@ never pulled, which is what stops a fresh install overwriting the studio.
 
 ## 3 · Things worth knowing before you change the UI
 
+- **A phone is not a narrow desktop.** Several places spent a lot of screen on
+  very little: `.stat-row` went to ONE column below 560px, so four figures cost
+  about 800px of scroll to say four numbers (two columns now, the whole row is
+  170px); the drawer's wordmark block was 100px before any navigation. When
+  something looks roomy on a phone, measure it — `getBoundingClientRect()` in a
+  390px viewport — rather than trusting how it looks in a resized desktop
+  window.
+- **The studio's name is the SUBTITLE in the brand block**, not the wordmark.
+  `.brand .name` is the short mark, which can be a single letter. Hiding the
+  subtitle to save space — which I tried first — leaves a studio whose mark is
+  "E" looking at a lone E. They sit on one row on mobile instead.
+- **The dashboard's To Do is capped by a preference**, `prefs().todoRows`,
+  default 10 with 15 and 20 in Settings › Appearance. The card also collapses,
+  remembered in `gem-todo-shut`, because Waiting On lives underneath it and a
+  full list pushed that off a phone screen entirely.
+
 - **Never index DEFAULT by position.** `normalize()` filled a missing `design`
   from `DEFAULT.events[i]` — the sample's palette, mood boards and décor handed
   to whatever event happened to sit at the same INDEX. After a pull that is the

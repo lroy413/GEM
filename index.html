@@ -10,7 +10,7 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
 <meta name="apple-mobile-web-app-title" content="GEM">
 <meta name="format-detection" content="telephone=no">
-<meta name="gem-build" content="6d9ce61a0ce0">
+<meta name="gem-build" content="309f533b37de">
 <link rel="manifest" href="/manifest.webmanifest">
 <link rel="icon" href="/icons/icon-192.png" sizes="192x192" type="image/png">
 <link rel="apple-touch-icon" href="/icons/icon-180.png">
@@ -787,6 +787,15 @@ body.portal-only .main{margin-left:0!important}
    The inner scroll is a DESKTOP device: on a phone, a scrolling box inside a
    scrolling page is the worst interaction on a touch screen, so there the page
    simply grows and the render cap below keeps that bounded. */
+/* The card header is a button now, so it needs the layout .card-h had. */
+.todo-h{display:flex;align-items:center;gap:10px;width:100%;text-align:left;
+  background:none;border:none;cursor:pointer;font-family:inherit}
+.todo-h .sec-badge{margin-left:auto}
+.todo-chev{width:8px;height:8px;flex:0 0 auto;opacity:.5;
+  transition:transform .18s var(--ease)}
+.todo-card.shut .todo-chev{transform:rotate(-90deg)}
+.todo-card.shut .tasks{display:none}
+.todo-h:focus-visible{outline:none;box-shadow:var(--ring)}
 .tasks{padding:6px 0 10px;max-height:min(72vh,900px);overflow-y:auto}
 /* Sticky inside that scroll, so you can always see which bucket you are in. */
 .tasks .tg-h{position:sticky;top:0;z-index:2;background:var(--card)}
@@ -1937,11 +1946,18 @@ td.inv-col{text-align:center;width:1%}
      event. The wordmark is the part that earns least — you have just opened
      the app, you know which one it is — so the subtitle goes, the type comes
      down, and the padding tightens. First item at about 170px instead. */
+  /* One row instead of a stacked block. The mark and the studio's name sit
+     side by side — NOT with the name hidden, which is what I tried first: on a
+     studio whose short mark is a single letter, hiding the line underneath
+     leaves a lone "E" and no idea whose app this is. */
   #sidebar{padding-top:12px}
-  .sidebar .brand{padding:8px 10px 12px;margin-bottom:10px;gap:11px}
-  .sidebar .brand .name{font-size:19px;letter-spacing:.14em}
-  .sidebar .brand .sub{display:none}
-  .sidebar .brand .mark{width:34px;height:34px}
+  .sidebar .brand{padding:6px 10px 10px;margin-bottom:8px;gap:10px;
+    display:grid;grid-template-columns:auto 1fr;align-items:center}
+  .sidebar .brand .mark{width:32px;height:32px;font-size:15px}
+  .sidebar .brand-tx{display:flex;align-items:baseline;gap:8px;min-width:0}
+  .sidebar .brand .name{font-size:16px;letter-spacing:.1em;flex:0 0 auto}
+  .sidebar .brand .sub{font-size:9px;margin-top:0;min-width:0;
+    overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
   .sidebar .srch-open{margin-bottom:2px}
 
   /* On a phone the drawer is a full-height panel you scroll anyway, so the
@@ -2716,9 +2732,14 @@ tr:hover .r-acts,.ev-card:hover .r-acts,.table-card:hover .r-acts,
 @media (max-width:560px){
   .main{padding:16px 14px calc(48px + env(safe-area-inset-bottom))}
   .sidebar{padding-bottom:calc(26px + env(safe-area-inset-bottom))}
-  .stat-row,.stat-row.cols-3{grid-template-columns:1fr;gap:12px}
-  .stat{padding:14px 16px}
-  .stat .v{font-size:28px}
+  /* Was 1fr — one figure per row, so four of them cost about 800px of scroll
+     to say four numbers. A label, a figure and a caption fit in half a phone
+     screen with room to spare. */
+  .stat-row,.stat-row.cols-3{grid-template-columns:repeat(2,1fr);gap:10px}
+  .stat{padding:12px 13px 11px}
+  .stat .v{font-size:25px;margin-top:5px}
+  .stat .k{font-size:9px;letter-spacing:1.4px}
+  .stat .d{font-size:11px;margin-top:4px}
   .page-title{font-size:26px}
   .card-h{padding:14px 16px}
   .card-h h3{font-size:19px}
@@ -4390,6 +4411,11 @@ try{ pipeCollapsed=JSON.parse(localStorage.getItem(PIPEKEY))||{}; }catch(e){ pip
 function savePipe(){ try{ localStorage.setItem(PIPEKEY,JSON.stringify(pipeCollapsed)); }catch(e){} }
 
 var TGKEY='gem-taskgroups-collapsed';
+/* The whole card, not just a group inside it. Waiting On lives underneath it,
+   and on a phone a full to-do list pushed that off the screen entirely. */
+var TODO_KEY='gem-todo-shut';
+function todoShut(){ try{ return localStorage.getItem(TODO_KEY)==='1'; }catch(e){ return false; } }
+function setTodoShut(v){ try{ localStorage.setItem(TODO_KEY,v?'1':'0'); }catch(e){} }
 var taskGroupsCollapsed={};
 try{ taskGroupsCollapsed=JSON.parse(localStorage.getItem(TGKEY))||{}; }catch(e){ taskGroupsCollapsed={}; }
 function saveTaskGroups(){ try{ localStorage.setItem(TGKEY,JSON.stringify(taskGroupsCollapsed)); }catch(e){} }
@@ -4472,7 +4498,7 @@ function viewDashboard(){
      then the week, then later. A group past the budget still shows its
      heading and its true count — "LATER 31" is information — it just does not
      draw thirty-one rows nobody is going to read on the dashboard. */
-  var TASK_CAP=20, taskShown=0, taskHidden=0;
+  var TASK_CAP=prefs().todoRows||10, taskShown=0, taskHidden=0;
   function group(title,list,key,cls){
     if(!list.length)return '';
     var room=Math.max(0,TASK_CAP-taskShown);
@@ -4524,8 +4550,12 @@ function viewDashboard(){
   function workModule(){
     return '<div class="grid-2" style="align-items:start">'+
     // ---- the to-do list, front and centre ----
-    '<div class="card"><div class="card-h"><h3>To Do</h3>'+
-      '<span class="sec-badge">'+tasks.length+' open · '+doneToday+' of '+totalTasks+' done</span></div>'+
+    '<div class="card todo-card'+(todoShut()?' shut':'')+'">'+
+      '<button class="card-h todo-h" type="button" id="todoToggle" aria-expanded="'+(!todoShut())+'">'+
+        '<h3>To Do</h3>'+
+        '<span class="sec-badge">'+tasks.length+' open · '+doneToday+' of '+totalTasks+' done</span>'+
+        '<span class="chev todo-chev" aria-hidden="true"></span>'+
+      '</button>'+
       '<div class="tasks">'+
         group('Overdue',overdue,'overdue','over')+
         group('Today',today,'today','now')+
@@ -4762,6 +4792,8 @@ function wireDashboard(){
       setTimeout(function(){ it.done=true; save(); render(); wireDashboard(); },260);
     };
   });
+  var tt=$('#todoToggle');
+  if(tt)tt.onclick=function(){ setTodoShut(!todoShut()); render(); };
   document.querySelectorAll('[data-goto]').forEach(function(w){
     w.onclick=function(){ setView(w.dataset.goto,{eventId:null,clientId:null,boardId:null,qId:null}); };
     w.onkeydown=function(e){ if(e.key==='Enter'||e.key===' '){e.preventDefault();w.click();} };
@@ -7962,6 +7994,10 @@ function prefs(){
     /* Whitelisted like everything else here, or it is dropped on the next
        rebuild — the trap autoSync and dashOrder both fell into. */
     tourDone:!!d.tourDone,
+    /* How many task rows the dashboard draws before it stops. Ten by default:
+       the point of the list is what is due, and past about ten rows it stops
+       being a list and starts being the page. */
+    todoRows:[10,15,20].indexOf(Number(d.todoRows))>=0?Number(d.todoRows):10,
     team:d.team||[
       {id:uid('tm'),name:'Glimmer M.',email:'hello@gemevents.app',role:'owner'},
       {id:uid('tm'),name:'Rosa Mendez',email:'rosa@gemevents.app',role:'planner'}
@@ -8074,6 +8110,10 @@ function settingsPage(k){
           [['comfortable','Comfortable'],['compact','Compact']].map(function(o){
             return '<option value="'+o[0]+'"'+(p.density===o[0]?' selected':'')+'>'+o[1]+'</option>';}).join('')+'</select>',
           'Compact fits more rows on screen')+
+        setRow('To-do rows','<select class="set-sel" id="s_todoRows">'+
+          [10,15,20].map(function(n){
+            return '<option value="'+n+'"'+(p.todoRows===n?' selected':'')+'>'+n+' rows</option>';}).join('')+'</select>',
+          'How much of the list the dashboard shows before it stops. The card collapses either way.')+
         setRow('Open GEM on','<select class="set-sel" id="s_landing">'+
           [['dashboard','Dashboard'],['calendar','Calendar'],['pipeline','Leads & Pipeline'],['events','Events']]
           .map(function(o){return '<option value="'+o[0]+'"'+(p.landing===o[0]?' selected':'')+'>'+o[1]+'</option>';}).join('')+'</select>')+
@@ -8582,6 +8622,10 @@ function wireSettings(){
     var el=$('#'+pair[0]); if(!el)return;
     el.onchange=function(){ p[pair[1]]=el.value; savePrefs(); applyPrefs(); if(pair[1].indexOf('biz')===0||pair[1].indexOf('planner')===0)paintIdentity(); };
   });
+  /* A number, not a string — the cap is compared with indexOf against
+     [10,15,20], and '10' is not 10. */
+  var tr=$('#s_todoRows');
+  if(tr)tr.onchange=function(){ p.todoRows=Number(tr.value)||10; savePrefs(); render(); };
   [['s_roomW','roomW'],['s_roomH','roomH']].forEach(function(pair){
     var el=$('#'+pair[0]); if(!el)return;
     el.onchange=function(){ p[pair[1]]=Math.max(10,Number(el.value)||10); savePrefs(); };
