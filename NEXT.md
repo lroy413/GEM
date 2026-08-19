@@ -37,7 +37,11 @@ sync covers. That guard is `sbCoverCol()`, and it exists because the events
 payload carried `photo_path` on every row whether or not an event had a cover,
 which made PostgREST refuse *every* events push for weeks.
 
-`21_venues.sql` belongs to the venue feature and is run with it.
+`21_venues.sql` carries the venue directory: a `venues` table, `events.venue_id`
+as a nullable FK with `on delete set null`, and RLS matching the rest. Safe to
+deploy ahead of — `sbVenueTbl()` probes for the table and the venues step is
+dropped from the payload until it answers yes, and `sbPull()` asks for venues
+separately so a 404 cannot fail the whole pull.
 
 **19 was half-applied for a day.** The table landed and the policies, grants
 and `gem_sync_health()` did not, because what reached the studio was an
@@ -156,6 +160,26 @@ never pulled, which is what stops a fresh install overwriting the studio.
 ---
 
 ## 3 · Things worth knowing before you change the UI
+
+- **The venue directory is built by the DEVICE, never by the database.**
+  Migration 21 deliberately has no backfill, and its name index is deliberately
+  not unique. An earlier draft had both, and together they were a push that
+  409s: `normalize()` lifts the same directory out of the same events with ids
+  it owns, the upsert resolves on the primary key and cannot see an expression
+  index, so a device pushing its own "The Glass Conservatory" hit the unique
+  constraint the migration's own backfill had already satisfied. Two rows with
+  the same name is a tidiness problem; a failed push is the failure this sync
+  was rebuilt to prevent. The client refuses a duplicate name where it is
+  typed, which is where the question belongs.
+- **`VENUES_LIFTED` exists because the lift has to be written down.** The guard
+  on rebuilding the directory is the existence of `d.venues`, so if the first
+  lift is never saved, a studio that then adds one venue by hand has an array
+  on the next load — and the guard sees it and never rebuilds the rest, quietly
+  emptying the directory.
+- **`.dh-band > *` sets `position:relative` at the same specificity and later
+  in the sheet than anything you add for a child of the band.** A watermark
+  written as `.vn-band-mark{position:absolute}` loses, becomes a flex item, and
+  shoves the name to the far side. Qualify it: `.dh-band .vn-band-mark`.
 
 - **The demo is recognised by fingerprint as well as by flag.** `sample` is a
   local boolean; a demo record that has been round-tripped through Supabase
@@ -363,6 +387,12 @@ exists.
 
 ## 6 · Open, not started
 
+- **Venue photographs in the portal.** A venue cover is filed under
+  `<org>/venues/<id>`, and the storage policy's client branch reads the second
+  path segment as an event id — `gem_uuid()` returns null for the literal
+  `venues`, so the couple's branch never matches. That is deliberate: directory
+  imagery is the studio's. If a venue photograph should ever appear in a
+  portal, it needs its own policy rather than a moved file.
 - **Branded email** — Resend or similar + SPF/DKIM on `gemevents.app`, then
   Supabase SMTP. Blocks the portal invitations being useful.
 - **The portal's first thirty seconds.** Portal-only mode is decided at boot by
