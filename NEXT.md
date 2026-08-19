@@ -27,6 +27,12 @@ and the events payload carries that key on every row whether or not anything
 has a cover — so until the column exists, PostgREST refuses *every* events
 push, not only the ones with a photograph. Migration first, then deploy.
 
+This build also carries six bug fixes — `BUGS.md` is the report they came from.
+One of them changes what the invoices payload contains: `lead_id` is finally
+populated, having gone up null on every push since the first sync. That column
+has existed since migration 01, so it needs nothing new — but it does mean the
+first push after this build writes a join the database has never held.
+
 ---
 
 ## 1 · How deployment works

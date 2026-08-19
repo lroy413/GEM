@@ -3845,6 +3845,13 @@ function leadCard(l){
     '</div>'+
   '</div>';
 }
+/* The pipeline board's edge fades have to be recomputed on resize, but
+   wireBoard() runs on every render of this view — and a window listener
+   outlives the DOM render() replaces, so registering one there left a dead
+   handler behind on each pass, still holding the detached board. One
+   listener, registered once at boot, calls whichever updater is current. */
+var boardFit=null;
+addEventListener('resize',function(){ if(boardFit)boardFit(); });
 function wireBoard(){
   var dragId=null;
   document.querySelectorAll('[data-pstage]').forEach(function(btn){
@@ -3866,13 +3873,13 @@ function wireBoard(){
     col.addEventListener('drop',function(e){
       e.preventDefault();col.classList.remove('drag-over');
       var lead=db.leads.find(function(l){return l.id===dragId;});
-      if(lead){lead.stage=col.dataset.stage;save();render();wireBoard();}
+      if(lead){lead.stage=col.dataset.stage;save();render();}
     });
   });
   document.querySelectorAll('.lead-move').forEach(function(sel){
     sel.onchange=function(){
       var lead=db.leads.find(function(l){return l.id===sel.dataset.move;});
-      if(lead){lead.stage=sel.value;save();render();wireBoard();}
+      if(lead){lead.stage=sel.value;save();render();}
     };
   });
   // Fade the edges only while there is actually more board to reach.
@@ -3889,7 +3896,7 @@ function wireBoard(){
       lane.classList.toggle('at-end',max>4&&scroller.scrollLeft>=max-4);
     };
     scroller.addEventListener('scroll',update,{passive:true});
-    addEventListener('resize',update);
+    boardFit=update;
     var step=function(){ return Math.max(220,scroller.clientWidth*0.8); };
     var prev=$('#boardPrev'), next=$('#boardNext');
     if(prev)prev.onclick=function(){ scroller.scrollLeft-=step(); };
@@ -3975,7 +3982,7 @@ function viewClientDetail(id){
         '<div style="padding:18px 22px">'+
           '<div class="kv"><span>Venue</span><b>'+esc(venueName(ev.venue))+'</b></div>'+
           '<div class="kv"><span>Location</span><b>'+esc(ev.loc)+'</b></div>'+
-          '<div class="kv"><span>Guests attending</span><b>'+ev.guests.filter(function(g){return g.rsvp==='yes';}).length+' of '+ev.guests.length+'</b></div>'+
+          '<div class="kv"><span>Guests attending</span><b>'+rosterFor(ev).filter(function(g){return gRsvp(g,ev)==='yes';}).length+' of '+rosterFor(ev).length+'</b></div>'+
           '<div class="kv"><span>Planning progress</span><b>'+(evPct(ev))+'%</b></div>'+
           /* The whole weekend in date order, each row its own workspace. The
              client file is where a planner checks what is still to come, so
@@ -5149,7 +5156,13 @@ function bookingsForEvent(eid){ return db.bookings.filter(function(b){return b.e
 function bookingsForVendor(vid){ return db.bookings.filter(function(b){return b.vendorId===vid;}); }
 function eventForLead(lead){
   if(!lead)return null;
-  return db.events.find(function(e){return e.leadId===lead.id;})||
+  /* A sub-event inherits its parent's leadId, so "first event with this id"
+     could be the rehearsal dinner — and after a pull it often was, because
+     sbPull() asks for rows in no particular order. The client file then wore
+     the wrong night's venue and read its guest count off a sub-event, whose
+     own guests array is always empty. Ask for the primary first. */
+  return db.events.find(function(e){return e.leadId===lead.id&&!evIsSub(e);})||
+         db.events.find(function(e){return e.leadId===lead.id;})||
          db.events.find(function(e){return e.title===lead.names;})||null;
 }
 function stars(n){
@@ -5457,7 +5470,7 @@ function wireBoardDetail(){
         if(--pending===0){
           if(added&&save()) toast(added+(added>1?' photos added ✦':' photo added ✦'));
           else if(added) b.images.splice(-added);   // quota refused: roll back
-          render(); wireBoardDetail();
+          render();
         }
       });
     });
@@ -5477,19 +5490,19 @@ function wireBoardDetail(){
     x.onclick=function(e){
       e.preventDefault(); e.stopPropagation();
       b.images=b.images.filter(function(im){return im.id!==x.dataset.delimg;});
-      save(); render(); wireBoardDetail();
+      save(); render();
     };
   });
   document.querySelectorAll('[data-delsw]').forEach(function(x){
-    x.onclick=function(){ b.swatches.splice(Number(x.dataset.delsw),1); save(); render(); wireBoardDetail(); };
+    x.onclick=function(){ b.swatches.splice(Number(x.dataset.delsw),1); save(); render(); };
   });
   document.querySelectorAll('[data-delidea]').forEach(function(x){
-    x.onclick=function(){ b.ideas=b.ideas.filter(function(i){return i.id!==x.dataset.delidea;}); save(); render(); wireBoardDetail(); };
+    x.onclick=function(){ b.ideas=b.ideas.filter(function(i){return i.id!==x.dataset.delidea;}); save(); render(); };
   });
   var ii=$('#ideaInput'), ai=$('#addIdea');
   function addIdea(){
     var v=ii.value.trim(); if(!v)return;
-    b.ideas.push({id:uid('idea'),text:v}); save(); render(); wireBoardDetail();
+    b.ideas.push({id:uid('idea'),text:v}); save(); render();
   }
   if(ai) ai.onclick=addIdea;
   if(ii) ii.onkeydown=function(e){ if(e.key==='Enter'){e.preventDefault();addIdea();} };
@@ -5730,7 +5743,7 @@ function wireClientDetail(){
   if(up)up.onclick=function(e){
     e.stopPropagation();
     var ev=eventForLead(l);
-    uploadDocFor(ev&&ev.id,function(){ render(); wireClientDetail(); });
+    uploadDocFor(ev&&ev.id,function(){ render(); });
   };
   document.querySelectorAll('.doc-open').forEach(function(b){
     b.onclick=function(e){ e.stopPropagation();
@@ -5824,7 +5837,7 @@ function wireClientDetail(){
       if(!dataUrl){toast('Could not read that image.');return;}
       var prev=l.photo; l.photo=dataUrl;
       if(!save()){ l.photo=prev; }
-      render(); wireClientDetail();
+      render();
     });
   };
   if(photo)photo.addEventListener('keydown',function(e){
@@ -8036,7 +8049,7 @@ function openClientModal(existing){
     /* A rename has to reach the records that cached the old name, or the
        client's invoices quietly stop appearing on their file. */
     var moved=propagateLeadRename(l,wasNamed);
-    save();closeModal();render();wireClientDetail();
+    save();closeModal();render();
     toast(moved?('Client updated — '+moved+' linked record'+(moved===1?'':'s')+' followed ✓'):'Client updated ✓');
   };
 }
@@ -9481,6 +9494,11 @@ function deleteRecord(kind,id){
     if(kind==='vendor'){ db.bookings=db.bookings.filter(function(b){return b.vendorId!==id;}); }
     if(kind==='event'){ db.bookings=db.bookings.filter(function(b){return b.eventId!==id;}); }
     if(kind==='lead'){ db.events.forEach(function(e){ if(e.leadId===id)e.leadId=null; });
+      /* An invoice matches on leadId when it has one and falls back to the
+         cached name when it does not (see invoicesForLead). Left pointing at
+         a deleted client it can never attach to anyone again, so clear it and
+         let the name do the work it used to. */
+      (db.invoices||[]).forEach(function(x){ if(x.leadId===id)x.leadId=null; });
       if(state.clientId===id)state.clientId=null; }
     if(kind==='questionnaire'&&state.qId===id)state.qId=null;
     afterChange();
@@ -10526,6 +10544,10 @@ function sbMigrateIds(){
   ['invoices','documents','questionnaires','messages'].forEach(function(k){
     (db[k]||[]).forEach(function(r){ fix(r,'eventId'); });
   });
+  /* An invoice points at its client as well as its event, and leadId is the
+     join — the name beside it is only a cache. Left unrewritten, the first
+     push sent every invoice pointing at a lead id that no longer existed. */
+  (db.invoices||[]).forEach(function(r){ fix(r,'leadId'); });
   (db.submissions||[]).forEach(function(s){ fix(s,'leadId'); });
   ['activeEventId','eventId','clientId','boardId','qId'].forEach(function(k){ fix(state,k); });
   return Object.keys(map).length;
@@ -10630,6 +10652,12 @@ function sbPush(opts){
   if(lf&&!lf.id){ lf.id=uuidv4(); }
   var evIds=E.map(function(e){return e.id;});
   var has=function(id){ return evIds.indexOf(id)>=0; };
+  /* has() answers "is this an EVENT id?". An invoice also carries a leadId,
+     and asking has() about it always said no — so lead_id went up null on
+     every push and the join the invoice list depends on was never written.
+     Lead ids need their own guard. */
+  var leadIds=L.map(function(l){return l.id;});
+  var hasLead=function(id){ return leadIds.indexOf(id)>=0; };
 
   var timeline=[],checklist=[],budget=[],tables=[],guests=[],fitems=[],
       palette=[],boards=[],swatches=[],ideas=[],decor=[],images=[];
@@ -10723,7 +10751,7 @@ function sbPush(opts){
     ['vendor_bookings',B.filter(function(b){return has(b.eventId);}).map(function(b){ return {id:b.id,org_id:org,
       vendor_id:b.vendorId,event_id:b.eventId,status:b.status||'quote',fee:num(b.fee),notes:s(b.notes)}; })],
     ['invoices',(db.invoices||[]).map(function(i){ return {id:i.id,org_id:org,event_id:has(i.eventId)?i.eventId:null,
-      number:s(i.num),client_name:s(invoiceClientName(i)),lead_id:has(i.leadId)?i.leadId:null,amount:num(i.amount),due_date:nn(i.due),
+      number:s(i.num),client_name:s(invoiceClientName(i)),lead_id:hasLead(i.leadId)?i.leadId:null,amount:num(i.amount),due_date:nn(i.due),
       status:INV_OUT[i.status]||i.status||'draft'}; })],
     ['documents',(db.documents||[]).map(function(d){ return {id:d.id,org_id:org,event_id:has(d.eventId)?d.eventId:null,
       title:s(d.title),type:d.type||'other',status:d.status||'draft',amount:num(d.amount),
