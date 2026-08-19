@@ -161,6 +161,50 @@ never pulled, which is what stops a fresh install overwriting the studio.
 
 ## 3 · Things worth knowing before you change the UI
 
+- **Two faces, both inlined, both OFL.** Cormorant Garamond 600 for display,
+  Karla 400–800 for everything else. Karla is a VARIABLE file — one 24KB woff2
+  covers the whole weight axis, declared `font-weight:400 800` with
+  `format('woff2-variations')`. Do not add per-weight faces; ask the variable
+  file for the weight. The artifact CSP blocks font CDNs, so anything new has
+  to be base64 in the same way.
+- **An icon has to say what its screen does.** The first drawn set was
+  internally consistent and still wrong — a diamond for Dashboard, a bulleted
+  list for Guests, an abstract cluster for Vendors. They are literal now: a
+  panel layout, a person with a tick, a tag, a photograph for the archive, a
+  clipboard for questionnaires, an eye for the portal, a receipt for invoicing,
+  a pie with a slice set aside for tax. And settings is a **gear** — testers
+  did not know the lozenge opened settings. It is the one place where the
+  universal symbol beats a house one.
+
+- **Three surface tiers, and they mean something.** `PLATE` (imagery or deep
+  ink, no border, `--radius-plate`) for the one thing you are meant to look at;
+  `CARD` (hairline + contact shadow, `--radius`) for working surfaces; `RECESS`
+  (`--sunk` fill, `--sunk-line` inset, no shadow, `--radius-sm`) for figures,
+  empty states and clear days — things that support a card rather than compete
+  with one. Before this everything was one surface, so nothing on a screen was
+  more important than anything else. If you add a panel, pick a tier.
+- **The house gold is a metal, and it stops reading as one when it fills a
+  shape.** `var(--gold-grad)` across an event card banner, an archive tile or a
+  venue tile is a slab of poster colour; all three were corrected to a pale
+  wash or to tinted ink. Gold belongs in hairlines, marks and small type.
+  Anything painted on it has to be re-checked for contrast — the event card's
+  date chip was white on translucent black and became invisible.
+- **The rail icons are drawn, not typed.** No font has nineteen geometric marks
+  at one optical weight: the shade blocks (▥▤▧) came out dense and black while
+  the part-circles (◐◑◒) rendered a third the size. They are inline SVG on one
+  20×20 grid at one stroke weight now, in `<svg class="ic">`, and there is no
+  font substitution left to defend against.
+- **Case has a rule now.** Section and card headings are Title Case — they read
+  as named parts of a document. Everything you *do* is sentence case: buttons,
+  modal titles, row actions. It had drifted about half and half.
+
+- **A day with nothing on it is information.** The week strip's `.quiet` cells
+  go flat and unlifted on purpose, so the days that hold something are the ones
+  the eye lands on — but `.quiet` came after `.today` at the same specificity
+  and was flattening today along with the rest. `.wk-d.quiet.today` puts the
+  ring back. Today is the anchor for reading every other column; it is marked
+  whether or not it holds anything.
+
 - **The venue directory is built by the DEVICE, never by the database.**
   Migration 21 deliberately has no backfill, and its name index is deliberately
   not unique. An earlier draft had both, and together they were a push that
