@@ -10,7 +10,7 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
 <meta name="apple-mobile-web-app-title" content="GEM">
 <meta name="format-detection" content="telephone=no">
-<meta name="gem-build" content="a080c713def1">
+<meta name="gem-build" content="4bd31022a077">
 <link rel="manifest" href="/manifest.webmanifest">
 <link rel="icon" href="/icons/icon-192.png" sizes="192x192" type="image/png">
 <link rel="apple-touch-icon" href="/icons/icon-180.png">
@@ -764,7 +764,22 @@ body.portal-only .main{margin-left:0!important}
 .nb-dl{font-size:9.5px;letter-spacing:1.9px;text-transform:uppercase;color:var(--muted);font-weight:600;margin-top:4px}
 
 /* ---- task list ---- */
-.tasks{padding:6px 0 10px;max-height:min(58vh,540px);overflow-y:auto}
+/* About fifteen rows before it scrolls — a row is 57px and a group header 34,
+   so 900px is roughly fifteen tasks and three headings. It was 540px, which
+   showed nine and made a busy week look like a short list.
+   The inner scroll is a DESKTOP device: on a phone, a scrolling box inside a
+   scrolling page is the worst interaction on a touch screen, so there the page
+   simply grows and the render cap below keeps that bounded. */
+.tasks{padding:6px 0 10px;max-height:min(72vh,900px);overflow-y:auto}
+/* Sticky inside that scroll, so you can always see which bucket you are in. */
+.tasks .tg-h{position:sticky;top:0;z-index:2;background:var(--card)}
+.tasks .tg-h.fixed{background:var(--card)}
+.tg-cap{padding:12px 22px 4px;font-size:11.5px;color:var(--muted);
+  border-top:1px solid var(--line);margin-top:6px}
+@media (max-width:860px){
+  .tasks{max-height:none;overflow:visible}
+  .tasks .tg-h{position:static}
+}
 .tgroup{padding:0}
 .tg-h{display:flex;align-items:center;gap:8px;width:100%;padding:13px 22px 7px;
   font-family:var(--sans);font-size:9.5px;letter-spacing:1.7px;text-transform:uppercase;
@@ -1673,11 +1688,16 @@ td.inv-col{text-align:center;width:1%}
 .wk-h .link-btn{flex:0 0 auto;margin-left:auto}
 .wk-sum{flex:1 1 auto;min-width:0;font-size:12.5px;color:var(--ink-soft);
   overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.wk-days{display:grid;grid-template-columns:repeat(7,1fr);gap:8px}
+/* minmax(0,1fr), NOT 1fr. A bare 1fr is minmax(auto,1fr), and that auto
+   minimum is the column's min-content width — so one long unbreakable string
+   in one cell blows that column out and pushes the rest off the screen. It did
+   exactly that on a phone: a task called "Send invitations and open
+   registration" took Saturday two and a half columns wide, off the edge. */
+.wk-days{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:8px}
 /* These had no resting shadow — only one on hover — so on a palette where the
    card and the page sit close together the whole strip dissolved into the
    background. Every other card in the app is lifted; these are cards too. */
-.wk-d{background:linear-gradient(180deg,var(--ivory),var(--card));
+.wk-d{min-width:0;background:linear-gradient(180deg,var(--ivory),var(--card));
   border:1px solid var(--line);border-radius:var(--radius);
   padding:9px 10px 10px;cursor:pointer;min-height:92px;display:flex;flex-direction:column;gap:7px;
   box-shadow:inset 0 1px 0 rgba(255,255,255,.7), var(--shadow-sm);
@@ -1710,14 +1730,18 @@ td.inv-col{text-align:center;width:1%}
   display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:2;overflow:hidden}
 .wk-ev::before{content:"";position:absolute;left:0;top:1px;bottom:1px;width:3px;border-radius:2px;
   background:var(--d,var(--gold))}
-.wk-t,.wk-due,.wk-more{font-size:10.5px;color:var(--muted);line-height:1.3;
-  overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.wk-due{color:var(--warn);font-weight:600}
+/* Two lines and then cut, rather than one line that never ends — nowrap here
+   was the other half of the blow-out above. */
+.wk-x .wk-t,.wk-x .wk-due,.wk-x .wk-more{font-size:10.5px;color:var(--muted);
+  line-height:1.3;min-width:0;overflow-wrap:anywhere;overflow:hidden;
+  display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:2}
+.wk-x .wk-due,.wk-x .wk-more{-webkit-line-clamp:1}
+.wk-x .wk-due{color:var(--warn);font-weight:600}
 @media (max-width:860px){
   /* Seven columns on a phone gives each day 40px, which fits a number and
      nothing else — the very problem this rewrite exists to fix. Two rows of
      the same seven days, each wide enough to say something. */
-  .wk-days{grid-template-columns:repeat(4,1fr)}
+  .wk-days{grid-template-columns:repeat(4,minmax(0,1fr))}
   .wk-sum{white-space:normal;flex-basis:100%;order:3}
   .wk-h{flex-wrap:wrap;row-gap:4px}
 }
@@ -1847,8 +1871,50 @@ td.inv-col{text-align:center;width:1%}
   .stat-row.cols-3 .stat .v{font-size:27px}
   .grid-2{grid-template-columns:1fr}
   .page-title{font-size:30px}
-  .menu-btn{display:inline-grid!important}
+  /* The hamburger is redundant once the bar is there, and it was sitting on
+     top of the page title. */
+  .menu-btn{display:none!important}
+  /* Clear the bar, and the home indicator under it. */
+  .main{padding-bottom:calc(74px + env(safe-area-inset-bottom,0px))}
 }
+/* ---- the phone's tool bar ----
+   The hamburger sat top-left, over the headline, at the far end of a thumb's
+   reach, with nineteen destinations behind it. This is the same navigation
+   from the bottom of the screen, where a hand actually is. Glass so the page
+   keeps scrolling visibly underneath rather than ending in a solid slab. */
+.tabbar{display:none;position:fixed;left:0;right:0;bottom:0;z-index:60;
+  grid-template-columns:repeat(5,1fr);align-items:stretch;
+  padding:6px 4px calc(6px + env(safe-area-inset-bottom,0px));
+  background:rgba(255,253,251,.84);
+  -webkit-backdrop-filter:blur(22px) saturate(1.6);backdrop-filter:blur(22px) saturate(1.6);
+  border-top:1px solid var(--line);
+  box-shadow:0 -8px 28px rgba(120,70,80,.10)}
+/* No backdrop-filter (older Android, Firefox): fall back to a solid surface
+   rather than leaving the page legible through a 72%-opaque bar. */
+@supports not ((backdrop-filter:blur(1px)) or (-webkit-backdrop-filter:blur(1px))){
+  .tabbar{background:var(--ivory)}
+}
+.tab{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;
+  min-height:46px;padding:5px 2px;border:0;background:none;cursor:pointer;
+  color:var(--muted);font-family:var(--sans);border-radius:12px;
+  transition:color .14s var(--ease),background-color .14s var(--ease)}
+.tab-ic{width:21px;height:21px}
+.tab-l{font-size:9.5px;font-weight:600;letter-spacing:.02em;line-height:1}
+.tab:active{background:var(--pink-100)}
+.tab.active{color:var(--gold-deep)}
+.tab:focus-visible{outline:none;box-shadow:var(--ring)}
+/* Declared after the base display:none above, not in the media block further
+   up the sheet — same specificity, so source order decides and the base was
+   winning. */
+@media (max-width:860px){
+  .tabbar{display:grid}
+  /* The drawer's own footer sits where the bar is, so give it the same
+     clearance the page gets. The bar stays ABOVE the drawer on purpose:
+     tapping More again is how you close it. */
+  #sidebar{padding-bottom:calc(78px + env(safe-area-inset-bottom,0px))}
+}
+/* Printing a page should not print its navigation. */
+@media print{ .tabbar{display:none!important} }
 .menu-btn{display:none;place-items:center;width:40px;height:40px;border-radius:11px;border:1px solid var(--line);background:var(--card);font-size:18px;cursor:pointer}
 
 /* ============ EVENT SWITCHER + MINI SELECTS ============ */
@@ -2002,16 +2068,44 @@ select.mini:focus-visible{outline:none;box-shadow:var(--ring)}
 .cal-key i{width:8px;height:8px;border-radius:50%;display:inline-block}
 .cal-head{display:grid;grid-template-columns:repeat(7,1fr);border-bottom:1px solid var(--line)}
 .cal-head div{padding:10px 12px;font-size:10.5px;letter-spacing:1.4px;text-transform:uppercase;color:var(--muted);font-weight:600}
-.cal-grid{display:grid;grid-template-columns:repeat(7,1fr)}
-.cal-cell{min-height:104px;border-right:1px solid var(--line);border-bottom:1px solid var(--line);padding:8px 9px;display:flex;flex-direction:column;gap:3px}
+/* minmax(0,1fr): a bare 1fr takes its minimum from the column's min-content
+   width, and the chips below are nowrap — so a task called "Send invitations
+   and open registration" widened one day until the week ran off the screen. */
+.cal-grid{display:grid;grid-template-columns:repeat(7,minmax(0,1fr))}
+.cal-cell{min-width:0;min-height:104px;border-right:1px solid var(--line);border-bottom:1px solid var(--line);padding:8px 9px;display:flex;flex-direction:column;gap:3px;overflow:hidden}
 .cal-cell:nth-child(7n){border-right:none}
 .cal-cell.muted{background:var(--pink-50)}
 .cal-cell.today{background:linear-gradient(180deg,#FFFBF2,var(--card));box-shadow:inset 0 0 0 2px var(--gold-soft)}
 .cal-d{font-size:12px;font-weight:600;color:var(--ink-soft);font-variant-numeric:tabular-nums}
 .cal-cell.today .cal-d{color:var(--gold)}
 .cal-ev{font-size:10.5px;display:flex;align-items:center;gap:5px;background:var(--pink-50);border-radius:6px;padding:3px 6px;
-  white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  min-width:0;overflow:hidden}
+.cal-ev .cal-t{min-width:0;flex:1 1 auto;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .cal-dot{width:6px;height:6px;border-radius:50%;flex:0 0 6px}
+/* The month as a list. On a phone a cell is about fifty pixels across, which
+   holds a date and nothing else — so the grid keeps the shape of the month and
+   this says what is actually in it. Hidden above the breakpoint, where the
+   chips in the grid can carry their own labels. */
+.cal-dots{display:none;flex-wrap:wrap;gap:3px;margin-top:3px}
+.cal-agenda{display:none;border-top:1px solid var(--line)}
+.cag-day{display:flex;gap:14px;padding:11px 20px;border-bottom:1px solid var(--line)}
+.cag-day:last-child{border-bottom:none}
+.cag-day.today{background:linear-gradient(180deg,#FFFBF2,var(--card))}
+.cag-d{flex:0 0 34px;display:flex;flex-direction:column;align-items:center;line-height:1}
+.cag-dow{font-size:9px;letter-spacing:1.1px;text-transform:uppercase;color:var(--muted);font-weight:600}
+.cag-n{font-family:var(--serif);font-size:20px;font-weight:600;margin-top:3px;
+  font-variant-numeric:tabular-nums}
+.cag-day.today .cag-n{color:var(--gold)}
+.cag-items{flex:1 1 auto;min-width:0;display:flex;flex-direction:column;gap:5px;padding-top:2px}
+.cag-i{display:flex;align-items:baseline;gap:7px;font-size:12.5px;color:var(--ink-soft);min-width:0}
+.cag-i span{min-width:0;overflow-wrap:anywhere}
+@media (max-width:700px){
+  .cal-dots{display:flex}
+  .cal-ev,.cal-more{display:none}
+  .cal-agenda{display:block}
+  .cal-cell{min-height:52px}
+  .cal-cell.empty{background:var(--pink-50)}
+}
 .cal-more{font-size:10px;color:var(--muted);padding-left:4px}
 
 /* ============ DOCUMENTS ============ */
@@ -2532,7 +2626,19 @@ tr:hover .r-acts,.ev-card:hover .r-acts,.table-card:hover .r-acts,
 .lead:focus-visible{outline:2px solid var(--gold);outline-offset:2px}
 
 /* horizontal scroll container for any wide table */
-.tbl-wrap{overflow-x:auto;-webkit-overflow-scrolling:touch}
+/* A table too wide for a phone scrolls inside its own wrapper rather than
+   pushing the page sideways — which is right, and gave no sign it was
+   possible. These four layers are the CSS-only scroll shadow: two covers
+   painted in local coordinates so they travel with the content, and two
+   shadows painted in scroll coordinates so they sit at the edges. The shadow
+   appears only when there is more table to reach, and disappears when you
+   arrive, with no JavaScript measuring anything. */
+.tbl-wrap{overflow-x:auto;-webkit-overflow-scrolling:touch;
+  background:
+    linear-gradient(to right,var(--card) 40%,rgba(255,255,255,0)) left center/26px 100% no-repeat local,
+    linear-gradient(to left, var(--card) 40%,rgba(255,255,255,0)) right center/26px 100% no-repeat local,
+    radial-gradient(farthest-side at 0 50%, rgba(59,46,51,.16),rgba(59,46,51,0)) left center/13px 100% no-repeat scroll,
+    radial-gradient(farthest-side at 100% 50%,rgba(59,46,51,.16),rgba(59,46,51,0)) right center/13px 100% no-repeat scroll}
 
 /* touch-only move controls (drag-and-drop has no touch equivalent) */
 .move-sel:focus-visible{outline:none;box-shadow:var(--ring)}
@@ -2915,6 +3021,12 @@ html,body{max-width:100%;overflow-x:hidden}
     </div>
   </aside>
   <button class="scrim" id="scrim" aria-label="Close menu" tabindex="-1"></button>
+
+  <!-- Five, not nineteen, and not a scrolling row: what is off the end of a
+       scroller is invisible, and you can never learn where a thing lives.
+       These are the five a planner reaches for on a phone; More opens the
+       same grouped sidebar the desktop has. -->
+  <nav class="tabbar" id="tabbar" aria-label="Main"><button class="tab" type="button" data-view="dashboard" aria-label="Today"><svg class="tab-ic" viewBox="0 0 20 20" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M2.8 3h6.1v8H2.8ZM11.1 3h6.1v4.6h-6.1ZM11.1 9.7h6.1V17h-6.1ZM2.8 13.2h6.1V17H2.8Z"/></svg><span class="tab-l">Today</span></button><button class="tab" type="button" data-view="events" aria-label="Events"><svg class="tab-ic" viewBox="0 0 20 20" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M10 2.4 11.9 8.1 17.6 10 11.9 11.9 10 17.6 8.1 11.9 2.4 10 8.1 8.1Z"/></svg><span class="tab-l">Events</span></button><button class="tab" type="button" data-view="clients" aria-label="Clients"><svg class="tab-ic" viewBox="0 0 20 20" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="10" cy="7.3" r="2.9"/><path d="M4.2 16.6a5.8 5.8 0 0 1 11.6 0"/></svg><span class="tab-l">Clients</span></button><button class="tab" type="button" data-view="calendar" aria-label="Calendar"><svg class="tab-ic" viewBox="0 0 20 20" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M3.2 4.8h13.6v12H3.2Z"/><path d="M3.2 8.6h13.6"/><path d="M6.8 2.6v3.2M13.2 2.6v3.2"/></svg><span class="tab-l">Calendar</span></button><button class="tab" type="button" id="tabMore" aria-label="More"><svg class="tab-ic" viewBox="0 0 20 20" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M2.8 5.4h14.4M2.8 10h14.4M2.8 14.6h14.4"/></svg><span class="tab-l">More</span></button></nav>
 
   <main class="main">
     <div class="topbar">
@@ -4049,6 +4161,7 @@ function setView(v,opts){
   if(opts&&opts.venueId!==undefined)state.venueId=opts.venueId;
   if(opts&&opts.settingsPage!==undefined){state.settingsPage=opts.settingsPage;state.helpOpen=null;}
   document.querySelectorAll('.nav-item').forEach(function(n){n.classList.toggle('active',n.dataset.view===v);});
+  document.querySelectorAll('.tab[data-view]').forEach(function(n){n.classList.toggle('active',n.dataset.view===v);});
   var sb=document.getElementById('settingsBtn');
   if(sb)sb.classList.toggle('on',v==='settings');
   if(typeof markActiveGroup==='function')markActiveGroup();
@@ -4310,8 +4423,16 @@ function viewDashboard(){
   }
   /* Today is deliberately not collapsible — it is the one group that
      should never be hideable. */
+  /* Twenty rows, allocated in order of urgency: overdue first, then today,
+     then the week, then later. A group past the budget still shows its
+     heading and its true count — "LATER 31" is information — it just does not
+     draw thirty-one rows nobody is going to read on the dashboard. */
+  var TASK_CAP=20, taskShown=0, taskHidden=0;
   function group(title,list,key,cls){
     if(!list.length)return '';
+    var room=Math.max(0,TASK_CAP-taskShown);
+    var vis=list.slice(0,room);
+    taskShown+=vis.length; taskHidden+=list.length-vis.length;
     var fixed=(key==='today');
     var collapsed=!fixed&&!!taskGroupsCollapsed[key];
     var head=fixed
@@ -4320,7 +4441,7 @@ function viewDashboard(){
           '<span>'+title+'</span><span class="tg-n">'+list.length+'</span>'+
           '<span class="chev tg-chev" aria-hidden="true"></span></button>';
     return '<div class="tgroup'+(cls?' '+cls:'')+(collapsed?' collapsed':'')+'" data-group="'+key+'">'+
-      head+'<div class="tg-items"><div class="tg-items-inner">'+list.map(taskRow).join('')+'</div></div></div>';
+      head+'<div class="tg-items"><div class="tg-items-inner">'+vis.map(taskRow).join('')+'</div></div></div>';
   }
 
   var doneToday=0;
@@ -4366,6 +4487,8 @@ function viewDashboard(){
         group(horizon===7?'This week':'Next '+horizon+' days',week,'week')+
         group('Later',later,'later')+
         (tasks.length?'':'<div class="all-clear"><span class="ac-ic">✦</span><span>Everything is done. Enjoy the quiet.</span></div>')+
+        (taskHidden?'<div class="tg-cap">Showing the '+taskShown+' most urgent of '+tasks.length+
+          ' \u00b7 the rest are further out.</div>':'')+
       '</div></div>'+
 
     // ---- waiting on others ----
@@ -6994,19 +7117,41 @@ function viewCalendar(){
     if(x.status==='due'||x.status==='over') push(x.due,{k:'invoice',t:x.num+' · '+money(x.amount),c:'#D99A54'});
   });
 
-  var cells='';
+  var cells='', agenda='';
   for(var i=0;i<start;i++) cells+='<div class="cal-cell muted"></div>';
+  var DOWS=['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
   for(var d=1;d<=days;d++){
     var iso=y+'-'+String(m+1).padStart(2,'0')+'-'+String(d).padStart(2,'0');
     var items=byDay[iso]||[];
     var isToday=(y+'-'+m+'-'+d)===tKey;
-    cells+='<div class="cal-cell'+(isToday?' today':'')+'">'+
+    cells+='<div class="cal-cell'+(isToday?' today':'')+(items.length?'':' empty')+'">'+
       '<div class="cal-d">'+d+'</div>'+
+      /* The dots carry the whole day at phone width, where a cell is fifty
+         pixels and no label of any length fits in one. They are hidden on a
+         screen wide enough for the chips below to say something. */
+      (items.length?'<div class="cal-dots">'+items.slice(0,6).map(function(it){
+        return '<i class="cal-dot" style="background:'+it.c+'"></i>';
+      }).join('')+'</div>':'')+
       items.slice(0,3).map(function(it){
-        return '<div class="cal-ev" title="'+esc(it.t)+'"><span class="cal-dot" style="background:'+it.c+'"></span>'+esc(it.t)+'</div>';
+        return '<div class="cal-ev" title="'+esc(it.t)+'"><span class="cal-dot" style="background:'+it.c+'"></span>'+
+          '<span class="cal-t">'+esc(it.t)+'</span></div>';
       }).join('')+
       (items.length>3?'<div class="cal-more">+'+(items.length-3)+' more</div>':'')+
     '</div>';
+    /* And the same month as a list, for the screens the grid cannot speak on.
+       Built here rather than in a second pass so it cannot drift from what the
+       grid is showing. */
+    if(items.length){
+      var dt=new Date(y,m,d);
+      agenda+='<div class="cag-day'+(isToday?' today':'')+'">'+
+        '<div class="cag-d"><span class="cag-dow">'+DOWS[dt.getDay()]+'</span>'+
+          '<span class="cag-n">'+d+'</span></div>'+
+        '<div class="cag-items">'+items.map(function(it){
+          return '<div class="cag-i"><i class="cal-dot" style="background:'+it.c+'"></i>'+
+            '<span>'+esc(it.t)+'</span></div>';
+        }).join('')+'</div>'+
+      '</div>';
+    }
   }
   var names=['January','February','March','April','May','June','July','August','September','October','November','December'];
   return '<div class="card"><div class="card-h"><h3>'+names[m]+' '+y+'</h3>'+
@@ -7017,7 +7162,10 @@ function viewCalendar(){
       '<span><i style="background:#D99A54"></i>Invoice</span>'+
     '</div></div>'+
     '<div class="cal-head">'+['Sun','Mon','Tue','Wed','Thu','Fri','Sat'].map(function(x){return '<div>'+x+'</div>';}).join('')+'</div>'+
-    '<div class="cal-grid">'+cells+'</div></div>';
+    '<div class="cal-grid">'+cells+'</div>'+
+    (agenda?'<div class="cal-agenda">'+agenda+'</div>'
+           :'<div class="cal-agenda"><div class="empty-hint">Nothing on in '+names[m]+'.</div></div>')+
+  '</div>';
 }
 
 /* --- Contracts & Documents --- */
@@ -12228,11 +12376,27 @@ $('#content').addEventListener('keydown',function(e){
 
 var sidebarEl=document.getElementById('sidebar'), scrimEl=document.getElementById('scrim');
 function setNav(open){
+  var tm=document.getElementById('tabMore');
+  if(tm)tm.classList.toggle('active',!!open);
   sidebarEl.classList.toggle('open',open);
   scrimEl.classList.toggle('show',open);
   scrimEl.tabIndex=open?0:-1;
 }
 $('#menuBtn').onclick=function(){ setNav(!sidebarEl.classList.contains('open')); };
+document.querySelectorAll('.tab[data-view]').forEach(function(t){
+  t.onclick=function(){
+    setNav(false);
+    setView(t.dataset.view,{eventId:null,clientId:null,boardId:null,qId:null,settingsPage:null,venueId:null});
+  };
+});
+/* More is the drawer, which already holds all nineteen destinations grouped
+   exactly as the desktop rail does — there is no second menu to keep in step. */
+var tabMore=$('#tabMore');
+if(tabMore)tabMore.onclick=function(){
+  var open=!sidebarEl.classList.contains('open');
+  setNav(open);
+  tabMore.classList.toggle('active',open);
+};
 
 /* Re-render only when crossing a layout boundary, so copy and controls
    match what the viewport is actually showing. */
