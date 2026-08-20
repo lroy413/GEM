@@ -644,6 +644,40 @@ never pulled, which is what stops a fresh install overwriting the studio.
     button in the portal, and a balance with no link shows the terms instead.
     A real in-app card payment needs a payment processor and a server to hold
     its secret — neither exists here yet.
+- **A sub-event asks six questions, not nineteen.** A rehearsal dinner needs a
+  name, which occasion it is, a date and a start time; its client comes from
+  the block (`leadId` is hidden when `parentId` is set) and its type is
+  resolved upward by `evType()`. The venue is one select — "Same place —
+  `<venue>`" or "Somewhere else" — gating thirteen fields through the
+  `elsewhere` showIf.
+  - **"Same place" copies, it does not look up.** `onSave` reads `venueSame`
+    and, when it is `'yes'`, writes the parent's `venue`, `loc`,
+    `venueNotes`, `venueAddress` and `venueContact` onto the child as **fresh
+    objects**. Sixty-odd readers of `e.venue` then keep working without
+    knowing a parent exists, and editing one venue does not silently edit the
+    other. Inheritance at read time was the alternative and was rejected:
+    `e.venue` alone has 66 call sites, and one missed reader is a blank venue
+    on the day.
+  - **The hidden fields are the danger.** A hidden field reads back as empty,
+    so the copy branch is not a nicety — without it, choosing "Same place"
+    would wipe the venue the sub-event already had. Any future field put
+    behind a `showIf` needs the same treatment in `onSave`.
+  - **The default is read off the record, never assumed.** A new sub-event
+    starts on "same place"; an existing one starts on whatever it actually
+    holds, so opening the form never quietly proposes to move an event. Blank
+    counts as the same place — that is what an unanswered venue meant.
+  - **The option names the place, not the parent.** "Same as Candace &
+    Lawrence — Cliffside Estate" ran off the end of the select on a phone;
+    the modal header already says which block this belongs to.
+- **The active sub-event chip drops its date.** The switcher is context — the
+  header directly above it already carries the date of the event you are
+  looking at, so repeating it on the chip that says "you are here" was the
+  same fact three times in 80px. Every other chip keeps its date, because
+  that is the thing you are choosing between.
+- **The cover control lives on the banner, not in the content.** It sits in
+  `.vb-edit` over the image where the photo it changes actually is; the
+  `.vb-cover-row` in the content only appears when there is no cover at all.
+  Whose photo is showing is in the button's `title`, not a line of body text.
 - **Row actions are blocked on sample records by design.** `sampleBlock()` is a
   capture-phase gate on `.main`: it calls `preventDefault()` and
   `stopPropagation()` before any handler sees the click. A test that clicks
