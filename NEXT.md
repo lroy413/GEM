@@ -501,6 +501,29 @@ never pulled, which is what stops a fresh install overwriting the studio.
   literal string "NaN" where the collision guard belongs. Guarded inside
   `uid()` now. Ids already stored keep their NaN; they are still unique
   strings and rewriting them would break every reference.
+- **`x.onclick = fn` hands the handler the click event.** Every function
+  wired that way must therefore take no arguments, or refuse a DOM event.
+  `openGuestModal(ev)` and `openSwatchModal(board)` both took one, so Add
+  guest built a modal around a MouseEvent and Add colour said "Adding to ."
+  and threw on save. Both are wrapped at the wiring now *and* guard
+  themselves; `openTableModal`, `openVendorModal`, `openDocModal`,
+  `openQuestionnaireModal`, `openLeadModal`, `openInvoiceModal`,
+  `openBoardModal` and `openQuestionModal` take nothing and are safe bare.
+- **The guest list has two modes** (`prefs().guestView`, in the whitelist):
+  the grid, and a deck — `guestStack()` / `guestCard()`. The deck renders
+  three cards from the same records with the same class names, so
+  `wireGuests()` wires it without knowing it exists; position lives in
+  `state.guestIdx` and is clamped by `guestIdx(n)` because a search can make
+  the list shorter than the card you were on. Its swipe handlers are
+  **assigned, not added** — `render()` re-wires the view and several callers
+  still follow it with a `wireGuests()` of their own, so a stacking listener
+  fires twice and one swipe dealt two cards.
+- **Invoices are a ledger line, not a document.** `{num, client, leadId,
+  amount, due, status}` and nothing else — no body, no template, no PDF, no
+  send. Documents are the paperwork: title, type, event, value, a body you
+  write in-app, an optional uploaded file, a signature flow, and templates
+  from Settings › Templates. The two are separate collections and neither
+  knows about the other; an invoice created in-app appears on Finance only.
 - **Row actions are blocked on sample records by design.** `sampleBlock()` is a
   capture-phase gate on `.main`: it calls `preventDefault()` and
   `stopPropagation()` before any handler sees the click. A test that clicks
