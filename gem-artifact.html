@@ -3022,6 +3022,19 @@ tr:hover .r-acts,.ev-card:hover .r-acts,.table-card:hover .r-acts,
 .vb-thumb{width:38px;height:38px;flex:0 0 38px;border-radius:10px;border:1px solid var(--line);
   background-size:cover;background-position:center;box-shadow:var(--shadow-sm)}
 .vb-cover-row{display:flex;align-items:center;gap:11px;margin-top:15px;flex-wrap:wrap}
+/* The cover control, on the cover. Same corner and the same weight as the edit
+   and delete on an event card's banner, so it reads as "this picture" rather
+   than as a row of settings under the thing it changes. */
+.vb-edit{position:absolute;top:12px;right:14px;display:flex;gap:7px;z-index:2}
+.vb-ic{width:34px;height:34px;display:grid;place-items:center;cursor:pointer;
+  border-radius:11px;border:1px solid rgba(255,255,255,.45);
+  background:rgba(0,0,0,.28);color:#fff;padding:0;
+  -webkit-backdrop-filter:blur(6px);backdrop-filter:blur(6px);
+  transition:background-color .14s var(--ease),border-color .14s var(--ease)}
+.vb-ic svg{width:17px;height:17px}
+.vb-ic:hover{background:rgba(0,0,0,.45);border-color:rgba(255,255,255,.7)}
+.vb-ic:focus-visible{outline:none;box-shadow:0 0 0 2px rgba(255,255,255,.85)}
+@media (pointer:coarse),(max-width:560px){ .vb-ic{width:38px;height:38px} }
 .vb-cover{cursor:pointer;font-size:11.5px;font-weight:600;color:var(--ink-soft);
   background:rgba(255,255,255,.82);border:1px solid var(--line);border-radius:999px;padding:5px 12px}
 .vb-cover:hover{color:var(--gold);border-color:var(--gold)}
@@ -3164,8 +3177,8 @@ tr:hover .r-acts,.ev-card:hover .r-acts,.table-card:hover .r-acts,
   /* Setting a cover is something you do once. It does not need a permanent
      button between the address and the coordinator on a phone — the venue's
      own screen and the edit modal both carry it. */
-  .venue-band .vb-setup{display:none}
-  .venue-band.has-cover .vb-setup{display:flex}
+  /* The row only exists now when there is no picture, which is exactly when
+     the prompt is worth its space — so nothing to hide. */
   .vb-note{font-size:12.5px;line-height:1.55}
   #pgActions{width:100%;justify-content:flex-start;gap:9px}
   /* Two 42px marks do not need a whole row under the title. Only tightens
@@ -6367,10 +6380,14 @@ function viewEventDetail(id){
   var switcher=(blk.length>1?
     '<div class="wknd-bar"><span class="ew-k">'+esc(prim.title)+'</span>'+
       blk.map(function(x){
-        return '<button type="button" class="ew-b'+(x.id===e.id?' on':'')+'" data-ev="'+x.id+'"'+
-          (x.id===e.id?' aria-current="true"':'')+'>'+
+        /* The date is here so you can compare where you might go. The one you
+           are already on is not a destination, and its date is in the banner
+           a couple of hundred pixels above — so it says its name and stops. */
+        var here=x.id===e.id;
+        return '<button type="button" class="ew-b'+(here?' on':'')+'" data-ev="'+x.id+'"'+
+          (here?' aria-current="true"':'')+'>'+
           '<span class="ew-r">'+esc(roleLabel(x,true))+'</span>'+
-          '<span class="ew-d">'+fmtDate(x.date)+'</span></button>';
+          (here?'':'<span class="ew-d">'+fmtDate(x.date)+'</span>')+'</button>';
       }).join('')+
       '<button type="button" class="ew-add" data-addsub="'+prim.id+'">+ Sub-event</button>'+
     '</div>'
@@ -6409,6 +6426,24 @@ function viewEventDetail(id){
         (e.startTime?'<span class="vb-time">'+esc(e.startTime)+' start</span>':'')+
         '<span class="vb-count">'+daysAway(e.date)+' days away</span>'+
       '</div>'+
+      /* On the picture, the way the event card's own edit and delete are. The
+         title says which photograph it is and where it came from, so the fact
+         that this one is the client's costs nothing on screen. */
+      '<div class="vb-edit">'+
+        '<label class="vb-ic" id="evCover" tabindex="0" role="button" '+
+          'title="'+(ownCover?'Replace this event’s cover photo'
+                             :'Add a cover photo — showing the client’s at the moment')+'" '+
+          'aria-label="'+(ownCover?'Replace cover photo':'Add a cover photo')+'">'+
+          '<input type="file" id="evCoverInput" accept="image/*" hidden>'+
+          '<svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5" '+
+            'stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">'+
+            '<path d="M3 6.8h2.6L7 4.6h6l1.4 2.2H17v8.6H3Z"/><circle cx="10" cy="11" r="2.6"/></svg>'+
+        '</label>'+
+        (ownCover?'<button type="button" class="vb-ic" id="evCoverClear" '+
+          'title="Remove this event’s cover photo" aria-label="Remove cover photo">'+
+          '<svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6" '+
+            'stroke-linecap="round" aria-hidden="true"><path d="M6 6l8 8M14 6l-8 8"/></svg></button>':'')+
+      '</div>'+
     '</div>':'')+
     '<div class="vb-main">'+
       (cover?'':'<div class="vb-k">Venue</div>'+
@@ -6429,21 +6464,18 @@ function viewEventDetail(id){
          else is there, and where. */
       (cover?'<div class="vb-switch">'+switcher+'</div>':'')+
       (addr.length?'<a class="vb-map" href="https://maps.google.com/?q='+mapQ+'" target="_blank" rel="noopener">Open in Maps ›</a>':'')+
-      /* A thumbnail here, not a wash behind the band. The band carries copy in
-         all four corners — venue contact, date, site notes — and the hero's
-         left-to-right scrim leaves the right-hand column unprotected, so a
-         photograph behind it put the coordinator's phone number on top of a
-         picture. The dashboard hero is the surface built to wear one; this is
-         only where you set it, so it shows what you set. */
-      '<div class="vb-cover-row vb-setup">'+
-        (cover?'<span class="vb-thumb" style="background-image:url('+cover+')" aria-hidden="true"></span>':'')+
+      /* Only when there is no picture yet, which is the only time this is
+         information rather than furniture. Once there IS one, the control
+         lives on the picture — see vb-edit in the banner above. A thumbnail of
+         the photo, a button to replace it and a line explaining where it came
+         from, all sitting in the content under a header that already shows the
+         photo, is the same fact three more times. */
+      (cover?'':'<div class="vb-cover-row">'+
         '<label class="vb-cover" id="evCover" tabindex="0">'+
           '<input type="file" id="evCoverInput" accept="image/*" hidden>'+
-          (ownCover?'Replace cover photo':'Add a cover photo')+
+          'Add a cover photo'+
         '</label>'+
-        (ownCover?'<button type="button" class="vb-cover-x" id="evCoverClear">Remove</button>':'')+
-        (cover&&!ownCover?'<em class="vb-cover-n">Showing the client’s photo</em>':'')+
-      '</div>'+
+      '</div>')+
     '</div>'+
     '<div class="vb-side">'+
       (cover?'':'<div class="vb-when"><span class="vb-day">'+fmtDate(e.date)+'</span>'+
@@ -13468,6 +13500,14 @@ function openEventModal(existing,parentId){
   var used=parent?evChildren(parent.id).map(function(x){return evRole(x);}):[];
   var free=roleOpts.filter(function(r){return used.indexOf(r.value)<0&&r.value!=='other';})[0];
   var defRole=evRole(e)!=='primary'?evRole(e):(free?free.value:'other');
+  /* A new sub-event starts as "same place"; an existing one is read off what
+     it actually holds, so opening the form never silently proposes to move it.
+     Blank counts as the same place — that is what an unanswered venue meant. */
+  var sameVenue=isSub&&parent&&(!e||!String(e.venue||'').trim()||
+                                String(e.venue).trim()===String(parent.venue||'').trim());
+  /* Shown when this is not a sub-event at all, or when the answer above is
+     that it happens somewhere else. */
+  var elsewhere=function(v){ return !v.parentId||v.venueSame==='no'; };
   openEditor({
     title:e?'Edit event':(isSub?'New sub-event':'New Event'),
     sub:e?e.title:(isSub?'Part of '+parent.title:'Events are usually created from a booked lead.'),
@@ -13493,7 +13533,10 @@ function openEventModal(existing,parentId){
     fields:[
       {id:'title',label:'Event name',value:e&&e.title,required:true,full:true,
        placeholder:isSub?'Rehearsal Dinner':''},
-      {id:'leadId',label:'Client',type:'select',value:(e&&e.leadId)||(parent&&parent.leadId),options:opts,full:true},
+      /* A sub-event's client is its parent's, always — asking again is an
+         invitation to contradict the block it belongs to. */
+      {id:'leadId',label:'Client',type:'select',value:(e&&e.leadId)||(parent&&parent.leadId),options:opts,full:true,
+       showIf:function(v){ return !v.parentId; }},
       /* Present rather than revealed: openEditor builds its fields once, and a
          field that appears mid-edit loses whatever was typed in it. */
       {id:'newClient',label:'New client’s name',value:'',placeholder:'e.g. Okafor & Bello',
@@ -13525,19 +13568,34 @@ function openEventModal(existing,parentId){
         showIf:function(v){ return !!v.parentId&&v.role==='custom'; }}:null),
       {id:'date',label:'Event date',type:'date',value:e&&e.date,required:true},
       {id:'startTime',label:'Start time',value:e&&e.startTime,placeholder:'4:30 PM',fmt:'time'},
-      {id:'venue',label:'Venue',value:e&&e.venue,placeholder:'To be confirmed'},
-      {id:'loc',label:'City / region',value:e&&e.loc},
-      {id:'line1',label:'Street address',value:a.line1,full:true},
-      {id:'line2',label:'Suite / entrance',value:a.line2,full:true},
-      {id:'city',label:'City',value:a.city},
-      {id:'region',label:'State / region',value:a.region},
-      {id:'postal',label:'Postal code',value:a.postal},
-      {id:'country',label:'Country',value:a.country},
-      {id:'vcName',label:'Venue contact',value:vc.name},
-      {id:'vcRole',label:'Their role',value:vc.role},
-      {id:'vcPhone',label:'Contact phone',type:'tel',value:vc.phone},
-      {id:'vcEmail',label:'Contact email',type:'email',value:vc.email},
-      {id:'venueNotes',label:'Site notes',type:'textarea',value:e&&e.venueNotes,full:true}
+      /* Most of a weekend happens in one place. Asking a rehearsal dinner for
+         a street address, a postcode, a country, a coordinator's name, their
+         role, their phone, their email and site notes — eleven fields you
+         leave blank, and blank means "No address on file" on its own page,
+         which is worse than the answer you already had. One question first,
+         and the eleven appear only when the answer is that it is somewhere
+         else. */
+      (isSub&&parent?{id:'venueSame',label:'Where is it',type:'select',full:true,
+        value:sameVenue?'yes':'no',
+        /* The header already says which block this belongs to, so the option
+           names the place rather than the parent — "Same as Candace &
+           Lawrence — Cliffside Estate" ran off the end of the select. */
+        options:[{value:'yes',label:parent.venue?'Same place — '+parent.venue:'Same place as the main event'},
+                 {value:'no',label:'Somewhere else'}],
+        showIf:function(v){ return !!v.parentId; }}:null),
+      {id:'venue',label:'Venue',value:e&&e.venue,placeholder:'To be confirmed',showIf:elsewhere},
+      {id:'loc',label:'City / region',value:e&&e.loc,showIf:elsewhere},
+      {id:'line1',label:'Street address',value:a.line1,full:true,showIf:elsewhere},
+      {id:'line2',label:'Suite / entrance',value:a.line2,full:true,showIf:elsewhere},
+      {id:'city',label:'City',value:a.city,showIf:elsewhere},
+      {id:'region',label:'State / region',value:a.region,showIf:elsewhere},
+      {id:'postal',label:'Postal code',value:a.postal,showIf:elsewhere},
+      {id:'country',label:'Country',value:a.country,showIf:elsewhere},
+      {id:'vcName',label:'Venue contact',value:vc.name,showIf:elsewhere},
+      {id:'vcRole',label:'Their role',value:vc.role,showIf:elsewhere},
+      {id:'vcPhone',label:'Contact phone',type:'tel',value:vc.phone,showIf:elsewhere},
+      {id:'vcEmail',label:'Contact email',type:'email',value:vc.email,showIf:elsewhere},
+      {id:'venueNotes',label:'Site notes',type:'textarea',value:e&&e.venueNotes,full:true,showIf:elsewhere}
     ].filter(Boolean),
     onSave:function(v){
       /* floor was missing here, so a brand-new event had no room envelope and
@@ -13562,7 +13620,6 @@ function openEventModal(existing,parentId){
       /* A sub-event has no type of its own — it belongs to its parent's block,
          and evType() resolves it upward. */
       if(!v.parentId||v.parentId==='')rec.eventType=v.eventType||typeOf||'Wedding';
-      rec.venue=v.venue; rec.loc=v.loc; rec.venueNotes=v.venueNotes;
       /* parentId and role move together — the database checks that a primary
          has no parent and a sub-event does, and rejects the pair if they
          disagree. Detaching an event returns it to being its own primary. */
@@ -13577,8 +13634,24 @@ function openEventModal(existing,parentId){
         if(np)rec.sort=evChildren(np).filter(function(x){return x.id!==rec.id;}).length;
         else rec.sort=0;
       }
-      rec.venueAddress={line1:v.line1,line2:v.line2,city:v.city,region:v.region,postal:v.postal,country:v.country};
-      rec.venueContact={name:v.vcName,role:v.vcRole,phone:v.vcPhone,email:v.vcEmail};
+      /* "Same as the rest of the weekend" hides the thirteen venue fields, so
+         reading them back would blank the venue rather than leave it alone.
+         Copy the parent's answers across instead. A copy, not a lookup: the
+         sub-event then holds a real venue, and all sixty-odd places that read
+         e.venue keep working without knowing a parent exists. */
+      var vpar=rec.parentId?evById(rec.parentId):null;
+      if(vpar&&v.venueSame==='yes'){
+        var pa=vpar.venueAddress||{}, pc=vpar.venueContact||{};
+        rec.venue=vpar.venue||''; rec.loc=vpar.loc||''; rec.venueNotes=vpar.venueNotes||'';
+        /* Fresh objects — sharing the parent's would make editing one edit both. */
+        rec.venueAddress={line1:pa.line1||'',line2:pa.line2||'',city:pa.city||'',
+                          region:pa.region||'',postal:pa.postal||'',country:pa.country||''};
+        rec.venueContact={name:pc.name||'',role:pc.role||'',phone:pc.phone||'',email:pc.email||''};
+      }else{
+        rec.venue=v.venue; rec.loc=v.loc; rec.venueNotes=v.venueNotes;
+        rec.venueAddress={line1:v.line1,line2:v.line2,city:v.city,region:v.region,postal:v.postal,country:v.country};
+        rec.venueContact={name:v.vcName,role:v.vcRole,phone:v.vcPhone,email:v.vcEmail};
+      }
       if(!e){ db.events.push(rec); state.activeEventId=rec.id; }
       closeModal(); save();
       if(!e){ setView('events',{eventId:rec.id});
