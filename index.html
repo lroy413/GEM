@@ -10,7 +10,7 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
 <meta name="apple-mobile-web-app-title" content="GEM">
 <meta name="format-detection" content="telephone=no">
-<meta name="gem-build" content="a240dea06428">
+<meta name="gem-build" content="9a73dfaf9956">
 <link rel="manifest" href="/manifest.webmanifest">
 <link rel="icon" href="/icons/icon-192.png" sizes="192x192" type="image/png">
 <link rel="apple-touch-icon" href="/icons/icon-180.png">
@@ -178,6 +178,23 @@ html.no-motion body::before{opacity:.3}
   flex:0 0 auto;
 }
 .brand.no-logo .mark{display:none}
+/* ---- and when there IS one, the logo is the masthead ----
+   A studio's logo is usually a wordmark, and a wordmark forced through a 38px
+   rounded square arrives as four of its letters. Meanwhile the row it sat in
+   was 240px wide and mostly empty, with a single serif letter next to it. So
+   with a logo set the mark becomes a plate across the whole width, the picture
+   is contained rather than cropped, and the short mark stands down — the logo
+   is already the wordmark, and printing both said the same thing twice. */
+/* The panel's own close button lives in this corner, so the plate starts
+   below it rather than under it — a logo with no margin of its own would
+   otherwise run straight beneath the ✕. */
+.brand:not(.no-logo){flex-direction:column;align-items:stretch;gap:9px;padding:46px 10px 18px}
+.brand:not(.no-logo) .mark{width:100%;height:58px;border-radius:12px;
+  border:1px solid var(--line);background-color:#fff;
+  box-shadow:0 1px 3px rgba(59,46,51,.06)}
+.brand:not(.no-logo) .name{display:none}
+.brand:not(.no-logo) .brand-tx{flex:0 0 auto;text-align:center}
+.brand:not(.no-logo) .sub{margin-top:0}
 /* The event you are working on, at the top of the rail. The sidebar had no
    sense of place at all — four collapsed group headers and nothing saying
    which job you were in the middle of. */
@@ -332,6 +349,10 @@ html.no-motion body::before{opacity:.3}
 .app.rail .rail-btn{right:0;left:0;margin:0 auto;top:10px;font-size:15px}
 
 .app.rail .brand{justify-content:center;padding:34px 0 18px;gap:0}
+/* Collapsed there is no width to be a masthead in, so the plate goes back to
+   being a tile — still containing the picture rather than cropping it. */
+.app.rail .brand:not(.no-logo){padding:46px 0 18px}
+.app.rail .brand:not(.no-logo) .mark{width:38px;height:38px;margin:0 auto;box-shadow:none}
 @media (max-width:860px){ .brand{padding-top:34px} }
 .app.rail .brand-tx,
 .app.rail .srch-open span:nth-child(2),
@@ -468,7 +489,19 @@ html.no-motion body::before{opacity:.3}
 .bp-mark{width:38px;height:38px;flex:0 0 38px;border-radius:11px;background:var(--gold-grad);
   color:var(--on-accent,#fff);display:grid;place-items:center;font-family:var(--serif);font-size:19px;
   font-weight:600;overflow:hidden;border:1px solid var(--gold-deep)}
-.bp-mark img{width:100%;height:100%;object-fit:cover}
+.bp-mark img{width:100%;height:100%;object-fit:contain}
+/* With a logo the preview shows what the sidebar shows: the mark across the
+   width, the studio's name under it, and no short mark repeating what the
+   picture already says. */
+.bp-bar.has-logo{flex-direction:column;align-items:stretch;gap:9px;padding:16px 18px}
+/* Held to roughly the sidebar's width, because that is what this is a preview
+   of — stretched across the whole settings column it read as a black band. */
+.bp-bar.has-logo .bp-mark{width:100%;max-width:260px;margin:0 auto;height:54px;flex:0 0 54px;
+  border-radius:12px;background:#fff;border-color:var(--line);padding:5px}
+/* height:100% cannot resolve inside a centred grid item, so the picture took
+   its own height from its width and overflowed the plate. */
+.bp-bar.has-logo .bp-mark img{width:auto;height:auto;max-width:100%;max-height:44px}
+.bp-bar.has-logo .bp-tx{text-align:center}
 .bp-tx b{display:block;font-family:var(--serif);font-size:19px;letter-spacing:.05em}
 .bp-tx em{font-style:normal;display:block;font-size:10px;letter-spacing:2px;text-transform:uppercase;color:var(--muted)}
 .bp-body{display:flex;align-items:center;gap:10px;flex-wrap:wrap;padding:16px 18px;background:var(--bg-1)}
@@ -479,8 +512,21 @@ html.no-motion body::before{opacity:.3}
   box-shadow:inset 0 1px 0 rgba(255,255,255,.4)}
 .bp-note{font-size:11.5px;color:var(--muted);flex:1;min-width:160px}
 
-.logo-row{display:flex;align-items:center;gap:9px;flex-wrap:wrap}
-.logo-thumb{width:40px;height:40px;border-radius:11px;object-fit:cover;border:1px solid var(--line);
+.logo-row{display:flex;align-items:center;gap:12px;flex-wrap:wrap}
+.logo-acts{display:flex;gap:8px;flex-wrap:wrap}
+/* The same plate the sidebar draws, at the same proportions, so this row is a
+   preview and not a thumbnail. */
+.logo-plate{flex:1 1 200px;min-width:150px;max-width:260px;height:56px;
+  border:1px solid var(--line);border-radius:12px;background:#fff;padding:5px;
+  display:grid;place-items:center;overflow:hidden}
+/* max-height:100% is indefinite inside a centred grid item — the picture took
+   its height from its width and spilled past the plate. Fixed pixels resolve. */
+.logo-plate img{width:auto;height:auto;max-width:100%;max-height:46px;object-fit:contain}
+@media (max-width:560px){
+  .logo-plate{flex:1 1 100%;max-width:none}
+  .logo-acts{flex:1 1 100%}
+}
+.logo-thumb{width:40px;height:40px;border-radius:11px;object-fit:contain;background:#fff;border:1px solid var(--line);
   display:grid;place-items:center}
 .logo-thumb.empty{background:var(--gold-grad);color:var(--on-accent,#fff);
   font-family:var(--serif);font-size:19px;font-weight:600;border-color:var(--gold-deep)}
@@ -1227,7 +1273,7 @@ tbody tr:hover{background:var(--pink-50)}
 .iv-sheet{padding:34px 36px 26px;max-width:720px;margin:0 auto}
 .iv-top{display:flex;justify-content:space-between;gap:26px;align-items:flex-start;
   padding-bottom:20px;border-bottom:2px solid var(--gold)}
-.iv-logo{width:44px;height:44px;object-fit:cover;border-radius:9px;margin-bottom:9px;display:block}
+.iv-logo{height:44px;width:auto;max-width:170px;object-fit:contain;border-radius:9px;margin-bottom:9px;display:block}
 .iv-biz{font-family:var(--serif);font-size:20px;font-weight:600;line-height:1.2}
 .iv-fine{font-size:12px;color:var(--muted);line-height:1.5}
 .iv-id{text-align:right;flex:0 0 auto}
@@ -2416,6 +2462,13 @@ td.inv-brk,td.g-brk{display:none}
   .sidebar .brand .name{font-size:16px;letter-spacing:.1em;flex:0 0 auto}
   .sidebar .brand .sub{font-size:9px;margin-top:0;min-width:0;
     overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  /* Same masthead on the phone drawer, a little shorter — the drawer is the
+     one place the studio's own logo is worth the room. */
+  /* The drawer's close button is a 42px touch target here, not the 28px one
+     the desktop draws, so the plate starts lower than it does there. */
+  .sidebar .brand:not(.no-logo){display:block;padding:48px 10px 10px}
+  .sidebar .brand:not(.no-logo) .mark{width:100%;height:44px}
+  .sidebar .brand:not(.no-logo) .brand-tx{display:block;text-align:center;margin-top:6px}
   .sidebar .srch-open{margin-bottom:2px}
 
   /* On a phone the drawer is a full-height panel you scroll anyway, so the
@@ -2662,7 +2715,7 @@ select.rsvp-sel[data-r="no"]{background-color:#FBF4F4;border-color:#EDD1D1;color
   radial-gradient(300px 120px at 20% 0%, rgba(231,200,107,.30), transparent 70%),
   radial-gradient(320px 140px at 85% 100%, rgba(228,170,179,.32), transparent 70%);pointer-events:none}
 .portal-hero > *{position:relative;z-index:1}
-.ph-logo{width:56px;height:56px;border-radius:16px;object-fit:cover;margin:0 auto 12px;display:block;
+.ph-logo{height:56px;width:auto;max-width:220px;border-radius:16px;object-fit:contain;margin:0 auto 12px;display:block;
   border:1px solid var(--gold-line);box-shadow:var(--shadow-sm)}
 .ph-mark{width:56px;height:56px;border-radius:16px;margin:0 auto 12px;background:var(--gold-grad);
   color:var(--on-accent,#fff);display:grid;place-items:center;font-family:var(--serif);font-size:27px;
@@ -8327,9 +8380,15 @@ function openPhotoCrop(file,opts,done){
   /* 1 is a face — a circle to frame it by and a square to export, because the
      avatar, the card tile and the dashboard hero each mask that square their
      own way. A wider ratio is a cover: the same drag-and-zoom, a rectangular
-     frame, and an export shaped like the place it is going. */
-  var AR=opts.aspect||1;
-  var round=AR===1;
+     frame, and an export shaped like the place it is going.
+     'auto' is a logo: the frame takes the shape of the file that arrived, so a
+     wordmark stays a wordmark and an emblem stays square. Paired with
+     opts.contain the picture starts whole rather than filling the frame, so
+     pressing Use photo without touching anything keeps what was uploaded. */
+  var AUTO=opts.aspect==='auto';
+  var AR=AUTO?1:(opts.aspect||1);
+  var round=!AUTO&&AR===1;
+  var CONTAIN=!!opts.contain;
   /* Bound the working image before it is ever decoded into the page: a modern
      phone camera file is 4000px wide and there is no reason to hold that. */
   shrinkImage(file,1400,function(url){
@@ -8341,6 +8400,15 @@ function openPhotoCrop(file,opts,done){
   });
 
   function cropStage(img,url){
+    if(AUTO){
+      /* Between a square and a long banner. Anything outside that is framed to
+         the nearest of the two rather than given a stage the modal cannot
+         hold — and the wide end is generous, because a frame narrower than
+         the file pads the export with white and every place the logo appears
+         then shows it a size smaller. */
+      var nat=(img.naturalWidth||img.width)/(img.naturalHeight||img.height||1);
+      AR=Math.max(1,Math.min(4.5,nat||1));
+    }
     md.className='modal'+(round?'':' modal-wide-crop');
     md.innerHTML='<h3>'+esc(opts.title||'Frame the photo')+'</h3>'+
       '<p class="sub">'+esc(opts.sub||'Drag the picture to move it, and zoom to fill the circle.')+'</p>'+
@@ -8355,9 +8423,9 @@ function openPhotoCrop(file,opts,done){
         '<input type="range" id="cropZoom" min="1" max="3" step="0.01" value="1" aria-label="Zoom">'+
         '<span class="cz-i lg" aria-hidden="true">+</span>'+
       '</div>'+
-      '<div class="crop-hint">'+(round
+      '<div class="crop-hint">'+esc(opts.hint||(round
         ?'Everything inside the circle is what people will see.'
-        :'What sits inside the frame is what fills the card.')+'</div>'+
+        :'What sits inside the frame is what fills the card.'))+'</div>'+
       '<div class="modal-actions">'+
         '<button class="btn btn-ghost" id="cropCancel">Cancel</button>'+
         '<button class="btn btn-gold" id="cropSave">Use photo</button>'+
@@ -8374,12 +8442,16 @@ function openPhotoCrop(file,opts,done){
     var W=stage.clientWidth||320, H=stage.clientHeight||Math.round(W/AR);
     /* At zoom 1 the picture exactly covers the frame — whichever of its sides
        runs out first — so there is never a gap to drag into. */
-    var kFit=Math.max(W/nw,H/nh), k=kFit, ox=0, oy=0;
+    var kFit=CONTAIN?Math.min(W/nw,H/nh):Math.max(W/nw,H/nh), k=kFit, ox=0, oy=0;
 
     function clamp(){
       var dw=nw*k, dh=nh*k;
-      ox=Math.min(0,Math.max(W-dw,ox));
-      oy=Math.min(0,Math.max(H-dh,oy));
+      /* Cover: the frame is always full, so the picture may only be dragged as
+         far as its own edges. Contain: the picture can be smaller than the
+         frame, and then it sits in the middle of it rather than jammed into a
+         corner by a clamp written for the other case. */
+      if(dw<=W)ox=(W-dw)/2; else ox=Math.min(0,Math.max(W-dw,ox));
+      if(dh<=H)oy=(H-dh)/2; else oy=Math.min(0,Math.max(H-dh,oy));
     }
     function paint(){
       clamp();
@@ -8441,6 +8513,9 @@ function openPhotoCrop(file,opts,done){
       var cv=document.createElement('canvas');
       cv.width=OUT; cv.height=Math.round(OUT/AR);
       var ctx=cv.getContext('2d');
+      /* JPEG has no transparency, so anything the picture does not cover would
+         export black. White is what a logo expects to sit on. */
+      ctx.fillStyle='#FFFFFF'; ctx.fillRect(0,0,cv.width,cv.height);
       ctx.drawImage(img,(-ox)/k,(-oy)/k,W/k,H/k,0,0,cv.width,cv.height);
       var out=null;
       try{ out=cv.toDataURL('image/jpeg',0.86); }catch(err){ out=null; }
@@ -9249,8 +9324,11 @@ function applyBrand(){
   root.setProperty('--muted',    hsl(ink.h,Math.max(ink.s-8,3),Math.min(ink.l+32,68)));
 
   document.querySelectorAll('.brand .mark').forEach(function(m){
-    if(p.logo){ m.style.background='#fff'; m.style.backgroundImage='url('+p.logo+')';
-      m.style.backgroundSize='cover'; m.style.backgroundPosition='center'; m.textContent=''; }
+    /* contain, not cover: a logo is artwork with edges, and cropping it to
+       fill a box is how "CONCRETE" became "ONCRE". */
+    if(p.logo){ m.style.background=''; m.style.backgroundImage='url('+p.logo+')';
+      m.style.backgroundSize='contain'; m.style.backgroundRepeat='no-repeat';
+      m.style.backgroundPosition='center'; m.textContent=''; }
     else { m.style.background=''; m.style.backgroundImage=''; m.textContent=(p.bizName||'G').trim()[0].toUpperCase(); }
   });
   /* A real logo is a brand; an initial in a tile is a placeholder. The class
@@ -9552,21 +9630,30 @@ function settingsPage(k){
     return back+'<div class="set-page">'+
       '<p class="set-intro">Make GEM look like your studio. Everything here carries through to the interface, your client portal and every document you print.</p>'+
       '<div class="brand-preview" id="brandPreview">'+
-        '<div class="bp-bar"><span class="bp-mark">'+(p.logo?'<img src="'+p.logo+'" alt="">':esc((p.bizName||'G')[0].toUpperCase()))+'</span>'+
-          '<span class="bp-tx"><b>'+esc(p.brandMark||'GEM')+'</b><em>'+esc(p.bizName)+'</em></span></div>'+
+        '<div class="bp-bar'+(p.logo?' has-logo':'')+'">'+
+          (p.logo?'<span class="bp-mark"><img src="'+p.logo+'" alt=""></span>'
+                 :'<span class="bp-mark">'+esc((p.bizName||'G')[0].toUpperCase())+'</span>')+
+          '<span class="bp-tx">'+(p.logo?'':'<b>'+esc(p.brandMark||'GEM')+'</b>')+
+            '<em>'+esc(p.bizName)+'</em></span></div>'+
         '<div class="bp-body"><span class="bp-chip">Booked</span><span class="bp-btn">Primary action</span>'+
           '<span class="bp-note">This is how a card, a button and a label will read.</span></div>'+
       '</div>'+
       '<div class="set-gh" style="margin-top:20px">Identity</div>'+
       '<div class="set-card">'+
+        /* Shown at the size it is actually used, so what you approve here is
+           what appears in the sidebar rather than a 40px thumbnail of it. */
         setRow('Logo','<span class="logo-row">'+
-          (p.logo?'<img class="logo-thumb" src="'+p.logo+'" alt="Current logo">':'<span class="logo-thumb empty">'+esc((p.bizName||'G')[0].toUpperCase())+'</span>')+
-          '<button class="btn btn-ghost btn-sm" id="b_logoPick">'+(p.logo?'Replace':'Upload')+'</button>'+
-          (p.logo?'<button class="btn btn-ghost btn-sm" id="b_logoClear">Remove</button>':'')+
+          (p.logo?'<span class="logo-plate"><img src="'+p.logo+'" alt="Current logo"></span>'
+                 :'<span class="logo-thumb empty">'+esc((p.bizName||'G')[0].toUpperCase())+'</span>')+
+          '<span class="logo-acts">'+
+            '<button class="btn btn-ghost btn-sm" id="b_logoPick">'+(p.logo?'Replace':'Upload')+'</button>'+
+            (p.logo?'<button class="btn btn-ghost btn-sm" id="b_logoClear">Remove</button>':'')+
+          '</span>'+
           '<input type="file" id="b_logoFile" accept="image/*" hidden></span>',
-          'A square mark works best — it is cropped to a rounded square')+
+          'Any shape. A wordmark is shown across the top of the sidebar; you frame it on upload')+
         setRow('Short mark','<input class="set-in" id="b_brandMark" value="'+esc(p.brandMark||'GEM')+'" maxlength="12">',
-          'The word beside your logo')+
+          p.logo?'Stands in for the logo where there is no room for it — it is hidden while your logo is set'
+                :'The wordmark at the top of the sidebar until you upload a logo')+
         setRow('Studio name','<input class="set-in" id="b_bizName" value="'+esc(p.bizName)+'">')+
       '</div>'+
       '<div class="set-gh" style="margin-top:22px">Palette</div>'+
@@ -10158,12 +10245,19 @@ function wireSettings(){
       var f=lf.files&&lf.files[0]; lf.value='';
       if(!f)return;
       if(!/^image\//.test(f.type)){ toast('Choose an image file.'); return; }
-      shrinkImage(f,320,function(url){
-        if(!url){ toast('Could not read that image.'); return; }
-        var prev=p.logo; p.logo=url;
-        if(!savePrefsSafe()){ p.logo=prev; return; }
-        applyBrand(); render(); toast('Logo updated ✦');
-      });
+      /* The same framing step every other picture in GEM gets. 'auto' takes the
+         shape of the file, so a wordmark is framed as a wordmark, and contain
+         starts it whole — press Use photo without touching anything and you
+         keep what you uploaded. 320px was also too small for a mark that now
+         spans the sidebar on a 2× screen. */
+      openPhotoCrop(f,{aspect:'auto',contain:true,out:900,title:'Frame your logo',
+        sub:'Drag to move it, zoom to trim the edges. It is shown whole wherever it appears — never cropped to a square.',
+        hint:'Leave it as it is to keep the file exactly as you uploaded it.'},
+        function(url){
+          var prev=p.logo; p.logo=url;
+          if(!savePrefsSafe()){ p.logo=prev; return; }
+          closeModal(); applyBrand(); render(); toast('Logo updated ✦');
+        });
     };
   }
   var lc=$('#b_logoClear');
@@ -12705,7 +12799,7 @@ function printCss(){ return ''+
  '*{box-sizing:border-box}'+
  'body{font:13px/1.55 -apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;color:#2b2226;margin:32px 30px}'+
  '.pr-head{border-bottom:2px solid '+accentHex()+';padding-bottom:14px;margin-bottom:20px;position:relative}'+
- '.pr-logo{width:38px;height:38px;object-fit:cover;border-radius:8px;float:right;margin-left:14px}'+
+ '.pr-logo{height:38px;width:auto;max-width:150px;object-fit:contain;border-radius:8px;float:right;margin-left:14px}'+
  '.pr-brand{font-size:9px;letter-spacing:2.4px;text-transform:uppercase;color:'+accentHex()+';font-weight:700}'+
  '.pr-head h1{font-family:Georgia,serif;font-size:27px;margin:7px 0 5px;font-weight:600}'+
  '.pr-sub{font-size:12px;color:#5e4e54}'+
@@ -12739,7 +12833,7 @@ function invPrintCss(){ var a=accentHex(); return ''+
  '.pi-sheet{max-width:none}'+
  '.pi-top{display:flex;justify-content:space-between;gap:26px;align-items:flex-start;'+
    'padding-bottom:16px;border-bottom:2px solid '+a+'}'+
- '.pi-logo{width:42px;height:42px;object-fit:cover;border-radius:7px;margin-bottom:8px;display:block}'+
+ '.pi-logo{height:42px;width:auto;max-width:160px;object-fit:contain;border-radius:7px;margin-bottom:8px;display:block}'+
  '.pi-biz{font-family:Georgia,serif;font-size:18px;font-weight:600;line-height:1.2}'+
  '.pi-fine{font-size:10.5px;color:#7b6a70;line-height:1.5}'+
  '.pi-id{text-align:right}'+
@@ -13258,7 +13352,7 @@ function bibleEmail(ev,opts){
 }
 function bibleCss(){ return ''+
  '.bib-cover{text-align:center;padding:26px 0 30px;border-bottom:2px solid '+accentHex()+';margin-bottom:26px}'+
- '.bib-logo{width:54px;height:54px;object-fit:cover;border-radius:11px;margin:0 auto 12px;display:block}'+
+ '.bib-logo{height:54px;width:auto;max-width:200px;object-fit:contain;border-radius:11px;margin:0 auto 12px;display:block}'+
  '.bib-cover h1{font-family:Georgia,serif;font-size:34px;margin:8px 0 6px;font-weight:600;letter-spacing:-.01em}'+
  '.bib-sub2{font-size:13px;color:#5e4e54}'+
  '.bib-stamp{font-size:10px;letter-spacing:1.6px;text-transform:uppercase;color:#8b7b80;margin-top:10px}'+

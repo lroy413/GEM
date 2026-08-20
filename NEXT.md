@@ -644,6 +644,39 @@ never pulled, which is what stops a fresh install overwriting the studio.
     button in the portal, and a balance with no link shows the terms instead.
     A real in-app card payment needs a payment processor and a server to hold
     its secret — neither exists here yet.
+- **A studio's logo is a wordmark, not an avatar.** It was drawn into a 38px
+  rounded square with `object-fit:cover`, so "CONCRETE" arrived as "ONCRE" —
+  in a 240px-wide row that was otherwise empty apart from a single serif
+  letter beside it.
+  - **With a logo set, the logo IS the masthead.** `.brand:not(.no-logo)`
+    turns the row into a column: the mark becomes a plate across the whole
+    sidebar (58px tall, 44 on the phone drawer), the picture is `contain`, and
+    `.name` — the short mark — stands down, because printing a wordmark beside
+    a wordmark says the same thing twice. Collapsed to the rail it goes back
+    to a 38px tile, still contained.
+  - **Every other place the logo appears is `contain` too**, and the document
+    and portal marks are `height:Npx;width:auto;max-width:…` rather than
+    squares — a 3.75:1 wordmark inside a 44px square is a 12px-tall smudge.
+  - **The panel's close button lives in that corner.** The plate starts below
+    it (46px desktop, 48px phone where the button is a 42px touch target), or
+    a logo with no margin of its own runs straight under the ✕.
+  - **`openPhotoCrop` grew two options for this**: `aspect:'auto'` takes the
+    shape of the file that arrived (clamped to 1–4.5, and generous at the wide
+    end because a frame narrower than the file pads the export with white),
+    and `contain:true` starts the picture whole instead of filling the frame —
+    so pressing Use photo without touching anything keeps what was uploaded.
+    `clamp()` centres rather than corner-pins when the picture is smaller than
+    the frame, and the export fills white first (JPEG has no alpha, so a
+    letterbox would come out black).
+  - **`height:100%` does not resolve inside a centred grid item.** Both the
+    settings plate and the branding preview had the picture take its height
+    from its width and spill out of the box (610×163 inside a 54px plate).
+    Fixed pixel `max-height` is what works there.
+  - **`scratchpad/logo-test.mjs`** uploads a real 3.75:1 file at 1400 and
+    390px and checks the frame shape, the whole-picture start, the stored
+    result, `background-size:contain`, the plate width, the retired short mark
+    and the ✕ clearance. `crop-cover-test.mjs` proves the 16:9 cover crop
+    still fills its frame, since both share `openPhotoCrop`.
 - **A person's card is two things, and they must not share a line.** Both the
   wedding-party row and the phone guest card were laid out as one wrapped
   flex row — name, chips and buttons all competing for the same width. The
