@@ -769,6 +769,15 @@ body.portal-only .main{margin-left:0!important}
    The inner scroll is a DESKTOP device: on a phone, a scrolling box inside a
    scrolling page is the worst interaction on a touch screen, so there the page
    simply grows and the render cap below keeps that bounded. */
+/* The card header is a button now, so it needs the layout .card-h had. */
+.todo-h{display:flex;align-items:center;gap:10px;width:100%;text-align:left;
+  background:none;border:none;cursor:pointer;font-family:inherit}
+.todo-h .sec-badge{margin-left:auto}
+.todo-chev{width:8px;height:8px;flex:0 0 auto;opacity:.5;
+  transition:transform .18s var(--ease)}
+.todo-card.shut .todo-chev{transform:rotate(-90deg)}
+.todo-card.shut .tasks{display:none}
+.todo-h:focus-visible{outline:none;box-shadow:var(--ring)}
 .tasks{padding:6px 0 10px;max-height:min(72vh,900px);overflow-y:auto}
 /* Sticky inside that scroll, so you can always see which bucket you are in. */
 .tasks .tg-h{position:sticky;top:0;z-index:2;background:var(--card)}
@@ -886,6 +895,18 @@ body.portal-only .main{margin-left:0!important}
 .fig-d{font-size:11px;color:var(--muted);margin-top:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 
 @media (max-width:1100px){ .figs{grid-template-columns:repeat(3,1fr)} }
+/* Matches the 860px where .grid-2 drops to a single column — the moment the
+   two cards stop being side by side is the moment their order starts to
+   matter. */
+@media (max-width:860px){
+  /* Side by side on a desktop, the to-do list and Waiting On are read in one
+     glance and their order says nothing. Stacked on a phone it says a lot:
+     ten open tasks is 560px of scrolling before you reach the three things
+     that are sitting with somebody else. Waiting On is the shorter card and
+     the one you cannot act on from here, so on a phone it goes first and the
+     list you work down follows it. */
+  .grid-2>.todo-card{order:2}
+}
 @media (max-width:560px){
   .figs{grid-template-columns:repeat(2,1fr)}
   .next-band{padding:16px 18px;gap:14px}
@@ -1153,7 +1174,126 @@ tbody tr:hover{background:var(--pink-50)}
   width:100%;max-width:470px;padding:28px;border:1px solid var(--line);
   display:flex;flex-direction:column;max-height:88vh;
   animation:rise .24s var(--ease)}
+/* The couple's side of an invoice: what is left to pay, and a way to pay it. */
+.pp-list{padding:6px 0}
+.pp-row{display:flex;align-items:center;gap:12px;flex-wrap:wrap;padding:13px 22px;
+  border-bottom:1px solid var(--line)}
+.pp-row:last-child{border-bottom:none}
+.pp-m{flex:1 1 150px;min-width:0}
+.pp-m b{font-size:14px}
+.pp-d{display:block;font-size:11.5px;color:var(--muted);margin-top:2px}
+.pp-a{font-weight:600;font-size:15px;font-variant-numeric:tabular-nums;margin-left:auto}
+.pp-of{font-weight:400;font-size:11.5px;color:var(--muted)}
+.pp-pay{text-decoration:none;flex:0 0 auto}
+.pp-terms{padding:0 22px 13px;font-size:11.5px;color:var(--muted)}
+@media (max-width:700px){
+  .pp-row{padding:12px 16px;gap:8px 10px}
+  .pp-a{margin-left:0}
+  .pp-pay{margin-left:auto}
+}
+
+/* ---- the invoice, on screen ----
+   The same markup the printer gets, at the same proportions, so what a studio
+   sees before it sends is what lands. */
+.iv-bar{display:flex;align-items:center;flex-wrap:wrap;gap:10px 14px;margin-bottom:14px}
+.iv-bal{font-size:13px;color:var(--ink-soft);font-weight:600}
+.iv-acts{margin-left:auto;display:flex;gap:8px;flex-wrap:wrap}
+.iv-link{font-size:12.5px;color:var(--ink-soft);background:var(--gold-soft);
+  border:1px solid var(--gold-line);border-radius:var(--radius-sm);
+  padding:11px 15px;margin-bottom:14px;overflow-wrap:anywhere}
+.iv-link a{color:var(--gold-deep)}
+.iv-link .iv-lnote{display:block;color:var(--muted);font-size:11.5px;margin-top:3px}
+.iv-link-none{background:var(--sunk);border-color:var(--sunk-line);color:var(--muted)}
+.iv-doc{font-size:12.5px;color:var(--ink-soft);margin-bottom:14px}
+.iv-card{padding:0;overflow:hidden}
+.iv-sheet{padding:34px 36px 26px;max-width:720px;margin:0 auto}
+.iv-top{display:flex;justify-content:space-between;gap:26px;align-items:flex-start;
+  padding-bottom:20px;border-bottom:2px solid var(--gold)}
+.iv-logo{width:44px;height:44px;object-fit:cover;border-radius:9px;margin-bottom:9px;display:block}
+.iv-biz{font-family:var(--serif);font-size:20px;font-weight:600;line-height:1.2}
+.iv-fine{font-size:12px;color:var(--muted);line-height:1.5}
+.iv-id{text-align:right;flex:0 0 auto}
+.iv-word{font-size:10.5px;letter-spacing:.22em;text-transform:uppercase;color:var(--gold);font-weight:700}
+.iv-num{font-family:var(--serif);font-size:25px;font-weight:600;margin:2px 0 8px;
+  font-variant-numeric:tabular-nums}
+.iv-dates{font-size:12px;color:var(--ink-soft);line-height:1.7}
+.iv-dates span{color:var(--muted)}
+.iv-parties{display:flex;gap:44px;flex-wrap:wrap;margin:22px 0 20px}
+.iv-ck{font-size:10px;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);
+  font-weight:600;margin-bottom:5px}
+.iv-cname{font-size:14.5px;font-weight:600}
+.iv-lines{width:100%;border-collapse:collapse}
+.iv-lines th{text-align:left;font-size:10px;letter-spacing:.1em;text-transform:uppercase;
+  color:var(--muted);font-weight:600;border-bottom:1px solid var(--line);padding:9px 10px;background:none}
+.iv-lines td{padding:11px 10px;border-bottom:1px solid var(--line);font-size:13.5px;vertical-align:top}
+.iv-r{text-align:right;font-variant-numeric:tabular-nums;white-space:nowrap}
+.iv-sums{margin-top:16px;margin-left:auto;max-width:300px}
+.iv-sline{display:flex;justify-content:space-between;gap:20px;padding:5px 10px;font-size:13.5px}
+.iv-sline span{color:var(--muted)}
+.iv-sline b{font-variant-numeric:tabular-nums}
+.iv-stot{border-top:1px solid var(--line);margin-top:5px;padding-top:10px;font-size:15px}
+.iv-stot b{font-size:19px;font-weight:600}
+.iv-sbal{border-top:1px solid var(--line);margin-top:5px;padding-top:10px}
+.iv-sbal b{color:var(--gold-deep);font-size:16px}
+.iv-pays{margin-top:22px;padding-top:14px;border-top:1px solid var(--line)}
+.iv-pay{display:flex;justify-content:space-between;gap:16px;font-size:12.5px;padding:3px 0;color:var(--ink-soft)}
+.iv-pay b{font-variant-numeric:tabular-nums}
+.iv-notes{margin-top:22px;padding:13px 16px;background:var(--sunk);border-radius:var(--radius-sm);
+  font-size:12.5px;color:var(--ink-soft);white-space:pre-wrap}
+.iv-foot{margin-top:24px;padding-top:13px;border-top:1px solid var(--line);
+  text-align:center;font-size:11px;color:var(--muted)}
+.inv-bal{font-size:11.5px;color:var(--gold-deep);margin-top:2px}
+@media (max-width:700px){
+  .iv-sheet{padding:22px 18px 18px}
+  .iv-top{flex-direction:column;gap:14px}
+  .iv-id{text-align:left}
+  .iv-parties{gap:20px}
+  .iv-parties>div{flex:1 1 46%}
+  .iv-sums{max-width:none}
+  /* Qty and Rate are arithmetic you can do from Amount; on a phone the
+     description and what it comes to are what you are checking. */
+  .iv-lines th:nth-child(2),.iv-lines td:nth-child(2),
+  .iv-lines th:nth-child(3),.iv-lines td:nth-child(3){display:none}
+}
+
+/* The invoice editor is a table of lines, not a column of fields. */
+.modal-wide{max-width:640px}
 .modal h3{font-family:var(--serif);font-size:26px;font-weight:600;margin-bottom:5px;letter-spacing:-.012em}
+.lbl-note{font-weight:400;text-transform:none;letter-spacing:0;color:var(--muted);font-size:11px}
+.il-head,.il-row{display:grid;grid-template-columns:1fr 62px 92px 92px 30px;gap:8px;align-items:center}
+.il-head{font-size:10px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);
+  font-weight:600;padding:0 2px 6px}
+.il-head span:nth-child(2),.il-head span:nth-child(3),.il-head span:nth-child(4){text-align:right}
+.il-row{margin-bottom:7px}
+.il-row input{width:100%;font-family:var(--sans);font-size:13px;padding:9px 10px;
+  border:1px solid var(--line);border-radius:9px;background:var(--card);color:var(--ink)}
+.il-row input:focus{outline:none;border-color:var(--gold-line);box-shadow:var(--ring)}
+.il-row .il-qty,.il-row .il-rate{text-align:right}
+.il-amt{text-align:right;font-size:13px;font-weight:600;font-variant-numeric:tabular-nums}
+.il-x{width:28px;height:28px;border-radius:8px;border:1px solid var(--line);background:var(--card);
+  color:var(--muted);cursor:pointer;font-size:11px;line-height:1;padding:0}
+.il-x:hover{background:#F9E5E5;color:#A75252;border-color:#EDD1D1}
+.il-sums{margin-top:16px;padding-top:12px;border-top:1px solid var(--line)}
+.il-sums .kv{display:flex;align-items:center;justify-content:space-between;padding:5px 2px;font-size:13px}
+.il-sums .kv span{color:var(--muted)}
+.il-sums .kv b{font-variant-numeric:tabular-nums}
+.il-sums .kv-tot{border-top:1px solid var(--line);margin-top:6px;padding-top:10px;font-size:15px}
+.il-sums .kv-tot b{font-size:18px;font-weight:600}
+.il-taxr{width:56px;padding:4px 6px;font-size:12px;text-align:right;
+  border:1px solid var(--line);border-radius:7px;background:var(--card);
+  font-family:var(--sans);color:var(--ink)}
+@media (max-width:600px){
+  .il-head{display:none}
+  /* Each line becomes its own little card: what it is on the first row, how
+     many and how much on the second, what that comes to on the third. */
+  .il-row{grid-template-columns:1fr 1fr 30px;gap:8px;padding:11px;margin-bottom:9px;
+    border:1px solid var(--line);border-radius:11px;background:var(--sunk)}
+  .il-row .il-desc{grid-column:1/3;grid-row:1}
+  .il-row .il-x{grid-column:3;grid-row:1}
+  .il-row .il-qty{grid-column:1;grid-row:2}
+  .il-row .il-rate{grid-column:2;grid-row:2}
+  .il-amt{grid-column:1/-1;grid-row:3;text-align:right;padding-top:2px}
+}
 .modal p.sub{color:var(--muted);font-size:12.5px;margin-bottom:22px;line-height:1.5}
 .field{margin-bottom:14px}
 .field label{display:block;font-size:11px;font-weight:600;color:var(--ink-soft);margin-bottom:6px;
@@ -1743,6 +1883,14 @@ td.inv-col{text-align:center;width:1%}
   .wk-days{grid-template-columns:repeat(4,minmax(0,1fr))}
   .wk-sum{white-space:normal;flex-basis:100%;order:3}
   .wk-h{flex-wrap:wrap;row-gap:4px}
+  /* 92px is the height a day needs to hold two lines of what is on it. A
+     clear day holds a weekday and a number, and on a phone seven of those
+     were 190px of empty tiles above the work. The minimum now belongs to the
+     days that have something in it; a row still levels up to its tallest
+     tile, so a week with one wedding in it keeps its shape and a week with
+     nothing in it stops charging for the space. */
+  .wk-d{min-height:0;padding:8px 10px}
+  .wk-d:not(.quiet){min-height:86px}
 }
 @media (max-width:900px){
   .wk-days{grid-template-columns:repeat(4,1fr)}
@@ -1751,7 +1899,10 @@ td.inv-col{text-align:center;width:1%}
     padding:12px 26px}
   .hero-days{font-size:38px}
   .hero-body{padding:20px 22px 8px}
-  .hero-t{font-size:27px}
+  /* The title is the way into the event, and a 27px line box is a 29px
+     target. The negative margin gives the padding back to the layout, so the
+     hit area grows and nothing moves. */
+  .hero-t{font-size:27px;padding:4px 0;margin:-4px 0}
 }
 /* Which job a task belongs to, at a glance. The weight does the separating as
    much as the hue, so it still reads if the colour does not register. */
@@ -1783,11 +1934,74 @@ td.inv-col{text-align:center;width:1%}
 /* The per-chip dropdown was the touch fallback; tap-to-seat replaces it and
    is both faster and less cluttered, so it goes back to being desktop-only. */
 @media (pointer:coarse),(max-width:860px){ .seat-wrap .move-sel{display:none} }
+/* ---- the guest list as a deck ----
+   Three cards, back to front. The two behind are scaled and pushed down so
+   the stack has a depth you can see; only the top one takes a tap. */
+.gv-seg{margin:0;padding:2px}
+.gv-seg .seg-b{padding:5px 12px;font-size:11.5px}
+.gstack{padding:18px 18px 16px}
+.gstack:focus{outline:none}
+.gstack:focus-visible{outline:none;box-shadow:var(--ring);border-radius:var(--radius)}
+/* A floor under the deck. Without it a guest with no meal and no dietary
+   note makes the card 50px shorter than the one before, and Next jumps out
+   from under the thumb that is tapping it. */
+.gs-deck{position:relative;display:grid;touch-action:pan-y;min-height:186px}
+/* Every card occupies the same grid cell, so the stack is as tall as the
+   tallest of the three and nothing below it moves as you shuffle. */
+.gs-card{grid-area:1/1;position:relative;
+  background:var(--card);border:1px solid var(--line);border-radius:var(--radius);
+  padding:18px 20px 16px;box-shadow:var(--shadow-sm);
+  transition:transform .22s var(--ease),opacity .22s var(--ease)}
+.gs-card.d1{transform:translateY(14px) scale(.955);opacity:.75;z-index:1}
+.gs-card.d2{transform:translateY(26px) scale(.912);opacity:.45;z-index:0}
+.gs-card.d0{z-index:2;box-shadow:var(--shadow);cursor:grab}
+.gs-card.d0:active{cursor:grabbing}
+/* The card you are working on deals in from the side you shuffled towards. */
+@keyframes gs-in-right{from{transform:translateX(34%) rotate(2.5deg);opacity:0}to{transform:none;opacity:1}}
+@keyframes gs-in-left{from{transform:translateX(-34%) rotate(-2.5deg);opacity:0}to{transform:none;opacity:1}}
+.gstack.from-right .gs-card.d0{animation:gs-in-right .24s var(--ease)}
+.gstack.from-left  .gs-card.d0{animation:gs-in-left  .24s var(--ease)}
+.gs-acts{position:absolute;top:12px;right:14px}
+.gs-acts .r-acts{opacity:1;margin:0}
+.gs-name{font-family:var(--serif);font-size:23px;font-weight:600;line-height:1.15;padding-right:74px}
+.gs-party{font-size:12.5px;color:var(--muted);margin-top:3px}
+.gs-fields{display:flex;flex-wrap:wrap;gap:12px 20px;margin-top:16px;align-items:flex-start}
+.gc-f{display:flex;flex-direction:column;gap:3px;align-items:flex-start;min-width:0;font-size:13.5px}
+.gc-k{font-size:10.5px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);font-weight:600}
+.gc-none{color:var(--muted)}
+/* The invite ticks, one chip per sub-event — the same answer the grid's
+   columns give, for the one guest in your hand. */
+.gs-inv{display:flex;flex-wrap:wrap;gap:8px;margin-top:16px;padding-top:14px;
+  border-top:1px solid var(--line)}
+.gs-chip{display:inline-flex;align-items:center;gap:8px;padding:4px 9px 4px 12px;
+  border:1px solid var(--line);border-radius:var(--radius-pill);cursor:pointer;
+  transition:border-color .14s var(--ease),background-color .14s var(--ease)}
+.gs-chip.on{background:var(--gold-soft);border-color:var(--gold-line)}
+.gs-chip:hover{border-color:var(--gold-line)}
+.gs-ck{font-size:11px;font-weight:600;letter-spacing:.03em;color:var(--ink-soft)}
+.gs-chip .inv-box{position:relative;width:26px;height:26px}
+/* Room for the two cards behind the top one, which sit outside its box. */
+.gs-bar{display:flex;align-items:center;gap:12px;margin-top:44px}
+.gs-bar .gs-n{margin:0 auto;font-size:12.5px;color:var(--muted);font-variant-numeric:tabular-nums}
+.gs-bar .gs-n b{color:var(--ink);font-size:14px}
+.gs-hint{margin-top:10px;text-align:center;font-size:11.5px;color:var(--muted)}
+@media (max-width:700px){
+  .gstack{padding:14px 13px 12px}
+  .gs-card{padding:16px 16px 14px}
+  .gs-name{font-size:21px}
+  .gs-bar{margin-top:40px}
+}
+@media (prefers-reduced-motion:reduce){
+  .gs-card{transition:none}
+  .gstack.from-right .gs-card.d0,.gstack.from-left .gs-card.d0{animation:none}
+}
+
 /* --- wide tables on a narrow screen ---
    The guest grid is 908px wide on a 375px phone, and with a column per
    sub-event the newest information sits furthest right. Two problems: nothing
    said the table scrolled, and once you scrolled you could no longer see whose
    row you were reading. */
+td.inv-brk{display:none}
 .g-tbl-wrap{
   /* Scroll shadow on the right edge only — background-attachment:local pins it
      to the content, so it fades out exactly when you reach the end and there
@@ -1801,11 +2015,87 @@ td.inv-col{text-align:center;width:1%}
 }
 /* Narrow screens only. At desktop widths the grid fits, and pinning the name
    column there just draws a divider that separates nothing. */
-@media (max-width:860px){
+@media (min-width:701px) and (max-width:860px){
   .g-tbl th:first-child,.g-tbl td:first-child{
     position:sticky;left:0;z-index:2;background:var(--card);
     box-shadow:1px 0 0 var(--line)}
   .g-tbl tr:hover td:first-child{background:var(--bg-2)}
+}
+/* Below 700px a pinned name column stops helping: six columns plus one per
+   sub-event is over 900px of table on a 390px screen, so answering "has she
+   replied" means scrolling sideways past everything else, and the sticky name
+   eats a third of what is left. Every headed table becomes one card per row
+   instead — the same DOM, so every select, tick and row action keeps the
+   handler it already had, and rotating the phone re-lays it out with no
+   re-render at all. See labelCells(), which puts the column names where
+   content:attr() can reach them. */
+@media (max-width:700px){
+  .cards-wrap,.g-tbl-wrap{background:none;overflow-x:visible}
+  .as-cards,.as-cards tbody,.as-cards tr,.as-cards td{display:block;width:auto}
+  .as-cards colgroup{display:none}
+  /* The header's only irreplaceable job on a phone is a bulk control, so the
+     labelled columns go and anything with a button in it stays. */
+  .as-cards thead{display:block}
+  .as-cards thead tr{display:flex;flex-wrap:wrap;gap:6px;padding:0 0 12px;
+    border:0;background:none;margin:0}
+  .as-cards thead th:not(.inv-col){display:none}
+  .as-cards thead th.inv-col{display:flex;align-items:center;gap:6px;padding:6px 10px;
+    border:1px solid var(--line);border-radius:var(--radius-pill);background:var(--card);
+    text-align:left;font-size:11px}
+  .as-cards thead th.inv-col .inv-n{display:inline;font-size:10.5px}
+  .as-cards thead th.inv-col .inv-all{display:inline-block;margin:0}
+  /* A card is a wrapping row of fields, not a stack of them. One value per
+     line reads as a form and makes the list twice as long to scroll as the
+     table it replaced; label-over-value fields pack two or three to a line. */
+  .as-cards tr{position:relative;display:flex;flex-wrap:wrap;gap:6px 13px;
+    border:1px solid var(--line);border-radius:var(--radius-sm);
+    background:var(--card);padding:11px 13px;margin-bottom:8px}
+  /* align-items:flex-start, or a column of stretched children turns every
+     inline badge into a full-width bar. */
+  /* align-items:flex-start, or a column of stretched children turns every
+     inline badge into a full-width bar. overflow-wrap, because an email
+     address is one unbreakable word and a card has no sideways scroll to
+     absorb it. */
+  .as-cards td{border:0;padding:0;display:flex;flex-direction:column;gap:2px;
+    align-items:flex-start;font-size:13px;text-align:left;
+    min-width:0;max-width:100%;overflow-wrap:anywhere}
+  .as-cards td a,.as-cards td b,.as-cards td span{max-width:100%}
+  .as-cards td::before{content:attr(data-l);
+    font-size:10px;letter-spacing:.08em;text-transform:uppercase;
+    color:var(--muted);font-weight:600;line-height:1.2}
+  /* The first column is the card's title — what the row is — not a labelled
+     value, and it keeps the whole first line clear of the row actions parked
+     in the corner. */
+  /* The title line is also what reserves room for the actions floated over the
+     corner: without a minimum it can be shorter than the buttons are tall, and
+     the first field underneath ends up sitting behind them. */
+  .as-cards td:first-child{flex:1 0 100%;font-size:15.5px;line-height:1.25}
+  .as-cards.has-acts td:first-child{padding-right:74px;min-height:34px;justify-content:center}
+  .as-cards td:first-child::before{content:none}
+  .as-cards td:first-child b{font-weight:600}
+  /* A field holding nothing but an em-dash is a row of furniture. The table
+     needs the empty cell to keep its columns; a card does not. */
+  .as-cards td.is-none,.as-cards td:empty{display:none}
+  /* A cell whose header was blank is an action column: no label, and it goes
+     to the card's top-right rather than taking a field slot. */
+  .as-cards td:not([data-l]):not(:first-child){position:absolute;top:9px;right:11px;padding:0}
+  .as-cards .r-acts{position:absolute;top:10px;right:12px;margin:0;opacity:1}
+  .as-cards td:not([data-l]) .r-acts{position:static}
+  /* Money reads as money whichever column it was in. */
+  .as-cards td[style*="right"]{text-align:left}
+  /* Only the RSVP picker gets a ceiling: its options are one word each, and
+     without it the widest ("Attending") sets a column the card does not have
+     to give. Everything else keeps its natural width — a status that reads
+     "Contract O…" is worse than a wide select. */
+  .g-tbl td.g-rsvp select.mini{max-width:118px}
+  /* Invite ticks read as a row of chips along the bottom of the card, which
+     is the one-sweep answer the wide grid gave and the scroller took away. */
+  .g-tbl td.inv-brk{display:block;flex:1 0 100%;height:0;padding:0;margin:0}
+  .g-tbl td.inv-col{flex-direction:row;align-items:center;gap:7px;
+    padding:3px 9px 3px 5px;border:1px solid var(--line);
+    border-radius:var(--radius-pill)}
+  .g-tbl td.inv-col::before{font-size:10px}
+  .g-tbl td.inv-col .inv-box{width:28px;height:28px}
 }
 /* --- the weekend, as the couple sees it in the portal --- */
 .ph-block{display:flex;flex-wrap:wrap;justify-content:center;gap:10px;margin-top:20px}
@@ -1883,7 +2173,7 @@ td.inv-col{text-align:center;width:1%}
    keeps scrolling visibly underneath rather than ending in a solid slab. */
 .tabbar{display:none;position:fixed;left:0;right:0;bottom:0;z-index:60;
   grid-template-columns:repeat(5,1fr);align-items:stretch;
-  padding:6px 4px calc(6px + env(safe-area-inset-bottom,0px));
+  padding:4px 4px calc(4px + env(safe-area-inset-bottom,0px));
   background:rgba(255,253,251,.84);
   -webkit-backdrop-filter:blur(22px) saturate(1.6);backdrop-filter:blur(22px) saturate(1.6);
   border-top:1px solid var(--line);
@@ -1893,12 +2183,12 @@ td.inv-col{text-align:center;width:1%}
 @supports not ((backdrop-filter:blur(1px)) or (-webkit-backdrop-filter:blur(1px))){
   .tabbar{background:var(--ivory)}
 }
-.tab{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;
-  min-height:46px;padding:5px 2px;border:0;background:none;cursor:pointer;
+.tab{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;
+  min-height:40px;padding:3px 2px;border:0;background:none;cursor:pointer;
   color:var(--muted);font-family:var(--sans);border-radius:12px;
   transition:color .14s var(--ease),background-color .14s var(--ease)}
-.tab-ic{width:21px;height:21px}
-.tab-l{font-size:9.5px;font-weight:600;letter-spacing:.02em;line-height:1}
+.tab-ic{width:19px;height:19px}
+.tab-l{font-size:9px;font-weight:600;letter-spacing:.02em;line-height:1}
 .tab:active{background:var(--pink-100)}
 .tab.active{color:var(--gold-deep)}
 .tab:focus-visible{outline:none;box-shadow:var(--ring)}
@@ -1913,6 +2203,26 @@ td.inv-col{text-align:center;width:1%}
   /* .side-foot is position:sticky;bottom:0 inside a 100vh scroller, so it
      sticks to the SCROLLPORT and padding on the container cannot lift it —
      it has to be told where the bar is. */
+  /* ---- the drawer's own header, on a phone ----
+     263px of an 844px screen went by before the first navigation item: a
+     28px inset, then a 100px wordmark block, then search, then the active
+     event. The wordmark is the part that earns least — you have just opened
+     the app, you know which one it is — so the subtitle goes, the type comes
+     down, and the padding tightens. First item at about 170px instead. */
+  /* One row instead of a stacked block. The mark and the studio's name sit
+     side by side — NOT with the name hidden, which is what I tried first: on a
+     studio whose short mark is a single letter, hiding the line underneath
+     leaves a lone "E" and no idea whose app this is. */
+  #sidebar{padding-top:12px}
+  .sidebar .brand{padding:6px 10px 10px;margin-bottom:8px;gap:10px;
+    display:grid;grid-template-columns:auto 1fr;align-items:center}
+  .sidebar .brand .mark{width:32px;height:32px;font-size:15px}
+  .sidebar .brand-tx{display:flex;align-items:baseline;gap:8px;min-width:0}
+  .sidebar .brand .name{font-size:16px;letter-spacing:.1em;flex:0 0 auto}
+  .sidebar .brand .sub{font-size:9px;margin-top:0;min-width:0;
+    overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .sidebar .srch-open{margin-bottom:2px}
+
   /* On a phone the drawer is a full-height panel you scroll anyway, so the
      user chip does not need to follow you down it — and while it was sticky
      it parked on top of the last two tools, which is how Analytics and Tax
@@ -1987,6 +2297,17 @@ select.mini:focus-visible{outline:none;box-shadow:var(--ring)}
 
 /* ============ DESIGN STUDIO ============ */
 .palette{display:flex;flex-wrap:wrap;gap:18px;padding:20px 22px}
+/* The hex beside the picker in the Add colour modal. It is a button because
+   tapping it copies — a florist asks for the number, not the name. */
+.hex-copy{display:flex;align-items:center;gap:10px;width:100%;margin-top:8px;
+  padding:9px 13px;border:1px solid var(--line);border-radius:11px;background:var(--pink-50);
+  font-family:var(--sans);font-size:14px;font-weight:600;letter-spacing:.06em;
+  color:var(--ink);cursor:pointer;font-variant-numeric:tabular-nums;
+  transition:border-color .14s var(--ease),background-color .14s var(--ease)}
+.hex-copy:hover{border-color:var(--gold-line);background:var(--gold-soft)}
+.hex-copy:focus-visible{outline:none;box-shadow:var(--ring)}
+.hex-copy .hex-c{margin-left:auto;font-size:10.5px;font-weight:600;letter-spacing:.09em;
+  text-transform:uppercase;color:var(--muted)}
 .swatch{width:104px}
 .swatch .chip{height:78px;border-radius:12px;border:1px solid rgba(0,0,0,.06);box-shadow:var(--shadow-sm)}
 .sw-name{font-size:12.5px;font-weight:600;margin-top:8px}
@@ -2538,6 +2859,10 @@ tr:hover .r-acts,.ev-card:hover .r-acts,.table-card:hover .r-acts,
 .vb-name{font-family:var(--serif);font-size:32px;font-weight:600;line-height:1.05;margin-top:6px;letter-spacing:-.012em}
 .vb-name.tbc{color:var(--muted);font-style:italic}
 .vb-addr{font-size:13px;color:var(--ink-soft);margin-top:9px;line-height:1.65}
+/* One line on a phone, the postal block on anything wider. Both are rendered;
+   only one is ever shown, so no JavaScript has to know the viewport. */
+.vb-addr-1{display:none}
+.vb-addr-n{display:inline}
 .vb-addr.muted{color:var(--muted)}
 .vb-map{display:inline-block;margin-top:10px;font-size:12px;font-weight:600;color:var(--gold);
   text-decoration:none;border-bottom:1px solid var(--gold-line);padding-bottom:1px}
@@ -2580,6 +2905,17 @@ tr:hover .r-acts,.ev-card:hover .r-acts,.table-card:hover .r-acts,
 .ev-h:hover{background:var(--pink-50)}
 .ev-h:focus-visible{outline:none;box-shadow:var(--ring)}
 .ev-h-r{display:flex;align-items:center;gap:9px;flex:0 0 auto}
+/* flex:0 0 auto is right on a desktop, where this group is a couple of pills
+   beside a title. On the vendor directory it is a search box and a category
+   picker whose widest option ("Hair & Make-up") set a width the header could
+   not give back — at 360px it hung 26px past the card. Below 700px the group
+   takes the width it has and wraps under the title if that is not enough. */
+@media (max-width:700px){
+  .card-h{flex-wrap:wrap;row-gap:8px}
+  .ev-h-r{flex:1 1 100%;min-width:0}
+  .ev-h-r .v-search{flex:1 1 auto;min-width:0}
+  .ev-h-r select.mini{flex:0 1 auto;min-width:0;max-width:48%}
+}
 .ev-chev{width:7px;height:7px;opacity:.4}
 .ev-h:hover .ev-chev{opacity:.8}
 .ev-sec.collapsed .ev-chev{transform:rotate(-45deg) translate(-1px,1px)}
@@ -2677,7 +3013,34 @@ tr:hover .r-acts,.ev-card:hover .r-acts,.table-card:hover .r-acts,
   .topbar{align-items:flex-start;gap:16px}
   /* Controls keep their natural width — stretching them to fill the row
      made a "+ Add Table" button read like a page-wide banner. */
+  /* ---- the venue card, condensed ----
+     It was the first thing between the planner and the event, and it ran to
+     about a thousand pixels: four address lines, a Maps link, cover controls,
+     the date block, the coordinator, then site notes. */
+  .vb-addr-n{display:none}
+  .vb-addr-1{display:inline}
+  /* The date, the start and the countdown are all repeated by the Countdown
+     figure a few hundred pixels below. Saying them twice costs about ninety
+     pixels of a phone screen for nothing. */
+  .venue-band:not(.has-cover) .vb-when{display:none}
+  /* The back link sat in its own band of air between the header and the card. */
+  .main .back-link{margin-bottom:8px}
+  /* Setting a cover is something you do once. It does not need a permanent
+     button between the address and the coordinator on a phone — the venue's
+     own screen and the edit modal both carry it. */
+  .venue-band .vb-setup{display:none}
+  .venue-band.has-cover .vb-setup{display:flex}
+  .vb-note{font-size:12.5px;line-height:1.55}
   #pgActions{width:100%;justify-content:flex-start;gap:9px}
+  /* Two 42px marks do not need a whole row under the title. Only tightens
+     where :has() is supported; everywhere else this is today's layout. */
+  #pgActions:has(.btn-icon){width:auto;justify-content:flex-end;margin-left:auto}
+  .topbar:has(#pgActions .btn-icon){flex-wrap:nowrap;align-items:flex-start}
+  /* A phone does not have room for a word beside every mark. The label goes,
+     the title and aria-label stay, and the button becomes a square big enough
+     to hit — 42px, not a 15px strip of text. */
+  .btn-icon .bl{display:none}
+  .btn-icon{width:42px;min-width:42px;padding:0;justify-content:center;font-size:16px}
   .ev-switch{flex:0 1 auto;min-width:0;max-width:none}
 }
 
@@ -2685,9 +3048,35 @@ tr:hover .r-acts,.ev-card:hover .r-acts,.table-card:hover .r-acts,
 @media (max-width:560px){
   .main{padding:16px 14px calc(48px + env(safe-area-inset-bottom))}
   .sidebar{padding-bottom:calc(26px + env(safe-area-inset-bottom))}
-  .stat-row,.stat-row.cols-3{grid-template-columns:1fr;gap:12px}
-  .stat{padding:14px 16px}
-  .stat .v{font-size:28px}
+  /* Was 1fr — one figure per row, so four of them cost about 800px of scroll
+     to say four numbers. A label, a figure and a caption fit in half a phone
+     screen with room to spare. */
+  /* The task tick measures 24px, and it is the most-used control here. It
+     already carried a -9px ::after, so the real target was 39 — widened to 45,
+     which clears the 44 both platforms ask for. The box itself does not change
+     size; only what counts as hitting it. */
+  .tbox::after{inset:-12px}
+  /* A phone number on a vendor is a thing you tap standing in a loading bay,
+     and it was an 11.5px line with no padding: a 15px-tall target. */
+  .v-links a,.vc-l a{display:inline-flex;align-items:center;min-height:34px;
+    padding:2px 0;font-size:12.5px}
+  .v-links{gap:6px 16px}
+  .stat-row,.stat-row.cols-3{grid-template-columns:repeat(2,1fr);gap:10px}
+  .stat{padding:12px 13px 11px}
+  .stat .v{font-size:25px;margin-top:5px}
+  /* 9px of letter-spaced capitals is a label you squint at. The stat row went
+     to two columns on a phone, which gave the width back — the label can
+     have a readable size again. */
+  .stat .k{font-size:10.5px;letter-spacing:1.1px}
+  /* The same floor for the other eyebrow labels, which were set for a desktop
+     where you are further from a larger screen. The two exceptions are the
+     month grid, where nine columns of 9px is the price of seeing the whole
+     month and the agenda under it carries the same days at full size, and the
+     floor plan, whose labels are drawn to the scale of the table they sit on
+     and would spill out of it at any fixed size. */
+  .setup-k,.hero-k,.ph-studio,.fig-head,.fig-k,.wk-dow,
+  .hero-dl,.tg-h,.cag-dow,.samp-tag.mini{font-size:10.5px;letter-spacing:1.2px}
+  .stat .d{font-size:11px;margin-top:4px}
   .page-title{font-size:26px}
   .card-h{padding:14px 16px}
   .card-h h3{font-size:19px}
@@ -2921,6 +3310,10 @@ html,body{max-width:100%;overflow-x:hidden}
   .seg-b{min-height:40px;padding:0 16px}
   .fp-snap{min-height:40px;display:inline-flex;align-items:center;gap:7px}
   .fp-snap input{width:20px;height:20px}
+  /* A bare checkbox renders at 13px. Its label is the real target and is
+     already a full-width row, so this is about seeing whether it is ticked,
+     not about hitting it. */
+  .c-mk input,.field input[type=checkbox],#modal input[type=checkbox]{width:20px;height:20px}
   .rate{min-height:40px;font-size:17px;padding:4px 6px}
   /* Raise the shared control height so buttons, selects and inputs all
      grow together — bumping only .btn left it 2px taller than the
@@ -3382,7 +3775,10 @@ function isSampleRecord(kind,id){
     var r=(db[coll]||[]).find(function(x){return x.id===id;});
     if(!r)return false;
     if(sampleHit(coll,r))return true;
-    if(r.eventId)return isSampleEvent(db.events.find(function(x){return x.id===r.eventId;}));
+    if(r.eventId&&isSampleEvent(db.events.find(function(x){return x.id===r.eventId;})))return true;
+    /* An invoice belongs to a client as often as to an event, and the sample's
+       two are attached to the lead, not the wedding. */
+    if(r.leadId&&isSampleLead(db.leads.find(function(x){return x.id===r.leadId;})))return true;
     return false;
   }
   /* guest, table, timeline, checklist, budget, decor — all live inside an
@@ -3488,14 +3884,37 @@ var SAMPLE_PRINTS={
     'lumen event rentals|orders@lumenrentals.com',
     'gilded cake studio|tomas@gildedcake.com'
   ],
-  leads:['priya & sam|priya.sharma@example.com']
+  leads:['priya & sam|priya.sharma@example.com'],
+  /* The paperwork needs prints for the same reason the vendors did, and for a
+     while it needed them more: until the push learned to hold it back, every
+     studio that ever synced a device carrying the sample put these rows in
+     their own database, and they came back down with a uuid and no flag. The
+     keys are deliberately narrow — a number and a client, a title and its
+     value — so a studio that has genuinely written a "Full Planning Agreement"
+     for £58,000 keeps it. */
+  invoices:['gem-1042|priya & sam|29000','gem-1051|priya & sam|29000'],
+  documents:['full planning agreement|contract|58000','floral design proposal|proposal|9600',
+             'rentals change order #1|proposal|1200','day-of vendor release|other|0'],
+  questionnaires:['wedding day details|a few details so we can build your timeline.'],
+  submissions:['elena & marcus|elena.r@example.com']
 };
+/* Each collection is fingerprinted on the fields that survive a round trip
+   through Supabase — which is the whole point of a print, so it must not read
+   anything the pull drops. */
+var SAMPLE_KEY={
+  vendors:function(r){ return lowKey(r.name)+'|'+lowKey(r.email); },
+  leads:function(r){ return lowKey(r.names)+'|'+lowKey(r.email); },
+  submissions:function(r){ return lowKey(r.names)+'|'+lowKey(r.email); },
+  invoices:function(r){ return lowKey(r.num)+'|'+lowKey(r.client)+'|'+(Number(r.amount)||0); },
+  documents:function(r){ return lowKey(r.title)+'|'+lowKey(r.type)+'|'+(Number(r.amount)||0); },
+  questionnaires:function(r){ return lowKey(r.title)+'|'+lowKey(r.intro); }
+};
+function lowKey(v){ return String(v==null?'':v).trim().toLowerCase(); }
 function samplePrint(k,r){
   if(!r||r.adopted||sampleAdopted())return false;
-  var list=SAMPLE_PRINTS[k];
-  if(!list)return false;
-  return list.indexOf(String(r.name||r.names||'').trim().toLowerCase()+'|'+
-                      String(r.email||'').trim().toLowerCase())>=0;
+  var list=SAMPLE_PRINTS[k], key=SAMPLE_KEY[k];
+  if(!list||!key)return false;
+  return list.indexOf(key(r))>=0;
 }
 
 /* Anything on this device that is NOT the seeded sample. This is what decides
@@ -3550,6 +3969,10 @@ function removeSampleData(){
      vendor no longer in the directory is a row the screen cannot draw. */
   var goneVendors={};
   (db.vendors||[]).forEach(function(v){ if(sampleHit('vendors',v))goneVendors[v.id]=true; });
+  /* Same for the client file: an invoice raised against the sample couple goes
+     with them, whether or not it names the wedding. */
+  var goneLeads={};
+  (db.leads||[]).forEach(function(l){ if(isSampleLead(l))goneLeads[l.id]=true; });
 
   Object.keys(SAMPLE_IDS).forEach(function(k){
     if(!db[k])return;
@@ -3557,8 +3980,8 @@ function removeSampleData(){
       var drop=sampleHit(k,r)||(k==='events'&&inGone(r.id));
       /* Paperwork attached to the sample wedding belongs to it even when the
          record itself was never flagged. */
-      if(!drop&&r.eventId&&inGone(r.eventId)&&
-         ['documents','invoices','questionnaires','messages'].indexOf(k)>=0)drop=true;
+      if(!drop&&['documents','invoices','questionnaires','messages'].indexOf(k)>=0&&
+         ((r.eventId&&inGone(r.eventId))||(r.leadId&&goneLeads[r.leadId])))drop=true;
       if(drop)n++;
       return !drop;
     });
@@ -3619,10 +4042,127 @@ function invoicesForLead(l){
 }
 /* The client's display name, always read through the lead so a rename shows
    everywhere at once rather than wherever a copy happened to be stored. */
+/* Local, not toISOString(). That is UTC, and it hands a planner in California
+   tomorrow's date from 4pm onwards — which on an invoice means a due date that
+   is already wrong the day it is written. */
+function todayLocal(){
+  var n=new Date();
+  return n.getFullYear()+'-'+String(n.getMonth()+1).padStart(2,'0')+'-'+String(n.getDate()).padStart(2,'0');
+}
 function invoiceClientName(x){
   var l=x.leadId?leadById(x.leadId):null;
   return l?l.names:(x.client||'');
 }
+/* ============================================================
+ * An invoice is a document, not a ledger line
+ *
+ * It used to be a number, a client, a total and a status — so "New invoice"
+ * produced a row in a list and nothing a couple could ever be shown. What a
+ * studio actually sends has lines on it, a tax figure, terms, and somewhere to
+ * pay. The lines are the record now and the total is derived from them.
+ *
+ * `amount` is still written on every change and stays authoritative when there
+ * are no lines. Everything that reads an invoice's value reads it — the
+ * dashboard alert, the stat row, the CSV export, the Supabase column — and an
+ * invoice whose total disagreed with its own lines would be worse than one
+ * with no lines at all.
+ * ============================================================ */
+function invItems(x){ return (x&&x.items)||[]; }
+function invLineTotal(l){ return (Number(l&&l.qty)||0)*(Number(l&&l.rate)||0); }
+function invSub(x){
+  var it=invItems(x);
+  if(!it.length)return Number(x&&x.amount)||0;
+  return Math.round(it.reduce(function(a,l){ return a+invLineTotal(l); },0)*100)/100;
+}
+function invTaxRate(x){ return Number((x&&x.taxRate)||0)||0; }
+function invTax(x){ return Math.round(invSub(x)*invTaxRate(x))/100; }
+function invTotal(x){ return Math.round((invSub(x)+invTax(x))*100)/100; }
+function invPayments(x){ return (x&&x.payments)||[]; }
+function invPaid(x){
+  var ps=invPayments(x);
+  /* An invoice marked paid by hand — every one of them, before payments could
+     be recorded at all — has no rows to add up, and its balance must still be
+     nil rather than the whole total outstanding. */
+  if(!ps.length)return (x&&x.status==='paid')?invTotal(x):0;
+  return Math.round(ps.reduce(function(a,y){ return a+(Number(y.amount)||0); },0)*100)/100;
+}
+function invBalance(x){ return Math.round((invTotal(x)-invPaid(x))*100)/100; }
+/* Call after anything that changes the lines, the tax or the payments. */
+function invRecalc(x){
+  if(!x)return x;
+  if(invItems(x).length)x.amount=invTotal(x);
+  if(x.status!=='draft'){
+    if(invBalance(x)<=0.004)x.status='paid';
+    else if(x.status==='paid')x.status='due';
+  }
+  return x;
+}
+/* Overdue is a fact about today, not a stored state — an invoice does not
+   become late because someone happened to open the app. */
+function invStatus(x){
+  if(!x)return 'draft';
+  if(x.status==='paid'||x.status==='draft')return x.status;
+  if(x.due&&x.due<todayLocal()&&invBalance(x)>0.004)return 'over';
+  return 'due';
+}
+var INV_LBL={draft:'Draft',due:'Due',over:'Overdue',paid:'Paid'};
+var INV_CLS={draft:'s-draft',due:'s-due',over:'s-over',paid:'s-paid'};
+/* Highest number seen plus one, so deleting the last invoice does not hand the
+   next one a number a client has already been sent. */
+function invNextNum(){
+  var pre=prefs().invPrefix||'GEM-', top=0;
+  (db.invoices||[]).forEach(function(x){
+    var m=String(x.num||'').match(/(\d+)\s*$/);
+    if(m&&Number(m[1])>top)top=Number(m[1]);
+  });
+  return pre+(top?top+1:1001);
+}
+function invById(id){ return (db.invoices||[]).find(function(x){return x.id===id;})||null; }
+/* ---- a document labelled Invoice IS an invoice ----
+ * Filing the PDF your accountant produced and then typing the same figures
+ * into a second screen is not filing, it is double entry. Label a document
+ * Invoice — whether you created it here or uploaded it — and the invoice
+ * appears, linked both ways: the sheet says which file it was filed with, the
+ * document knows which invoice it raised.
+ *
+ * Only ever created, never silently overwritten. Once the invoice exists the
+ * studio may have added lines, tax and payments to it that the document knows
+ * nothing about, and the file is the attachment, not the source of truth.
+ */
+function invoiceForDoc(d){
+  if(!d)return null;
+  if(d.type!=='invoice'){
+    /* Relabelled away — the invoice stays, because it may have payments on it,
+       but the two stop claiming each other. */
+    if(d.invoiceId){
+      var was=invById(d.invoiceId);
+      if(was&&was.docId===d.id)was.docId=null;
+      d.invoiceId=null;
+    }
+    return null;
+  }
+  if(d.invoiceId&&invById(d.invoiceId))return invById(d.invoiceId);
+  var ev=d.eventId?evById(d.eventId):null;
+  var lead=ev?leadForEvent(ev):null;
+  var x={
+    id:uid('i'), num:invNextNum(),
+    leadId:lead?lead.id:null, client:lead?lead.names:(ev?ev.title:''),
+    eventId:d.eventId||null,
+    issued:d.sent||todayLocal(), due:'',
+    /* The document's own state is the best guess at the invoice's: a signed
+       one has been settled, a sent one is owed, a draft is neither. */
+    status:d.status==='signed'?'paid':(d.status==='sent'?'due':'draft'),
+    items:[], taxRate:0, amount:Number(d.amount)||0,
+    notes:prefs().payTerms||'', payments:[], payLink:'', docId:d.id
+  };
+  invRecalc(x);
+  db.invoices.unshift(x);
+  d.invoiceId=x.id;
+  return x;
+}
+/* The invoice's own link if it has one, else whatever the studio uses for
+   everything. Empty means the portal shows the terms instead of a button. */
+function invPayLink(x){ return String((x&&x.payLink)||prefs().payLink||'').trim(); }
 /* Called after a lead is renamed. The cached copies exist because the database
    column is NOT NULL and the CSV export and search read them; they just have
    to be corrected rather than left to rot. */
@@ -4026,11 +4566,20 @@ function stageOf(id){return STAGES.find(function(s){return s.id===id;});}
    millisecond — deleting one then matches both. Sequence + entropy. */
 var _uidSeq=0;
 function uid(prefix){
+  /* var hoisting, not a typo. normalize() mints ids at load — vendors lifted
+     out of bookings, venues lifted out of event locations — and it runs above
+     this line, so _uidSeq is still `undefined` then and `undefined++` is NaN.
+     Every id minted in that window carried the literal string "NaN" where the
+     counter belongs, which is ugly but worse than ugly: the counter is the
+     only thing separating two ids minted in the same millisecond, and NaN++
+     stays NaN, so it separated nothing. One comparison removes the ordering
+     dependency for good. */
+  if(!(_uidSeq>=0))_uidSeq=0;
   return (prefix||'x')+Date.now().toString(36)+(_uidSeq++).toString(36)+Math.random().toString(36).slice(2,6);
 }
 var _justDragged=false;   // set during HTML5 drag so drop doesn't also navigate
 var _now=new Date();
-var state={view:'dashboard',eventId:null,clientId:null,boardId:null,qId:null,venueId:null,settingsPage:null,helpOpen:null,seatMode:'plan',floorSel:null,chkTab:'planner',chkOpen:null,heroIdx:0,activeEventId:(db.events[0]||{}).id,
+var state={view:'dashboard',eventId:null,clientId:null,boardId:null,qId:null,venueId:null,settingsPage:null,helpOpen:null,seatMode:'plan',floorSel:null,chkTab:'planner',chkOpen:null,heroIdx:0,guestIdx:0,gsDir:null,invoiceId:null,activeEventId:(db.events[0]||{}).id,
            calY:_now.getFullYear(),calM:_now.getMonth()};
 function activeEvent(){return db.events.find(function(e){return e.id===state.activeEventId;})||db.events[0];}
 
@@ -4132,8 +4681,15 @@ function pageHead(v){
   }
   if(v==='finance'){
     var inv=db.invoices||[];
-    var paid=inv.filter(function(x){return x.status==='paid';}).reduce(function(a,x){return a+x.amount;},0);
-    var owed=inv.filter(function(x){return x.status==='due'||x.status==='over';}).reduce(function(a,x){return a+x.amount;},0);
+    /* An open invoice is its own page — the studio's running total is not what
+       you came here to read. */
+    if(state.invoiceId){
+      var one=invById(state.invoiceId);
+      if(one)return ['Invoice',one.num||'Invoice',
+        [invoiceClientName(one),one.due?'due '+fmtDate(one.due):''].filter(Boolean).join(' · ')];
+    }
+    var paid=inv.reduce(function(a,x){return a+invPaid(x);},0);
+    var owed=inv.filter(function(x){return x.status!=='draft';}).reduce(function(a,x){return a+Math.max(0,invBalance(x));},0);
     return [lab,inv.length?(money(paid)+' collected · '+money(owed)+' out'):'No invoices yet',sub];
   }
   if(v==='documents'){
@@ -4173,7 +4729,9 @@ function setView(v,opts){
   if(opts&&opts.boardId!==undefined)state.boardId=opts.boardId;
   if(opts&&opts.qId!==undefined)state.qId=opts.qId;
   if(opts&&opts.venueId!==undefined)state.venueId=opts.venueId;
+  if(opts&&opts.invoiceId!==undefined)state.invoiceId=opts.invoiceId;
   if(opts&&opts.settingsPage!==undefined){state.settingsPage=opts.settingsPage;state.helpOpen=null;}
+  if(v!=='finance'&&(!opts||opts.invoiceId===undefined))state.invoiceId=null;
   document.querySelectorAll('.nav-item').forEach(function(n){n.classList.toggle('active',n.dataset.view===v);});
   document.querySelectorAll('.tab[data-view]').forEach(function(n){n.classList.toggle('active',n.dataset.view===v);});
   var sb=document.getElementById('settingsBtn');
@@ -4182,9 +4740,13 @@ function setView(v,opts){
   if(typeof openActiveGroup==='function')openActiveGroup();
   if(typeof paintNavEvent==='function')paintNavEvent();
   var t=pageHead(v);
+  /* Both of these said "drag" on a phone. The floor plan does drag on touch —
+     it is built on pointer events — but the seating list does not: tap-to-seat
+     replaced the per-guest menu the copy still described. */
   if(v==='seating')t[2]=(state.seatMode||'plan')==='plan'
-    ? 'Arrange the room — drag tables and fixtures into place.'
-    : (isTouchMode()?'Use a guest’s menu to seat them at a table.'
+    ? (isTouchMode()?'Drag a table to move it, tap it to seat guests.'
+                    :'Arrange the room — drag tables and fixtures into place.')
+    : (isTouchMode()?'Tap a guest, then tap a table to seat them.'
                     :'Drag a guest to a table to seat them.');
   /* A detail screen is the clearest case of the same rule: what you are
      looking at is the headline, and what kind of thing it is is the label. */
@@ -4252,9 +4814,16 @@ function evSwitcher(){
 function actionsFor(v){
   if(v==='pipeline')return '<button class="btn btn-gold" id="addLead">＋ New lead</button>';
   if(v==='clients')return state.clientId?'':'<button class="btn btn-gold" id="addClient">＋ New client</button>';
-  if(v==='finance')return '<button class="btn btn-ghost" id="exportInv">Export CSV</button> <button class="btn btn-gold" id="addInv">＋ New invoice</button>';
+  /* The invoice's own actions live on the sheet; the list's belong to the
+     list, and offering "New invoice" while reading one is a way to lose the
+     one you were reading. */
+  if(v==='finance')return state.invoiceId?'':
+    '<button class="btn btn-ghost" id="exportInv">Export CSV</button> <button class="btn btn-gold" id="addInv">＋ New invoice</button>';
   if(v==='events')return state.eventId
-    ?'<button class="btn btn-quiet" id="printEvent">⎙ Print</button> <button class="btn btn-quiet" id="editEvent">✎ Edit event</button>'
+    ?'<button class="btn btn-quiet btn-icon" id="printEvent" title="Print" aria-label="Print">'+
+       '⎙<span class="bl"> Print</span></button> '+
+     '<button class="btn btn-quiet btn-icon" id="editEvent" title="Edit event" aria-label="Edit event">'+
+       '✎<span class="bl"> Edit event</span></button>'
     :'<button class="btn btn-gold" id="addEvent">＋ New event</button>';
   if(v==='guests')return evSwitcher()+' <button class="btn btn-ghost" id="importGuests">⇪ Import CSV</button>'+
     ' <button class="btn btn-ghost" id="exportGuests">Export</button>'+
@@ -4278,12 +4847,18 @@ function wireActions(){
   var e=$('#addEvent'); if(e)e.onclick=function(){openEventModal(null);};
   var pe=$('#printEvent'); if(pe)pe.onclick=function(){openPrintMenu(evById(state.eventId));};
   var ee=$('#editEvent'); if(ee)ee.onclick=function(){openEventModal(evById(state.eventId));};
-  var g=$('#addGuest'); if(g)g.onclick=openGuestModal;
+  /* Wrapped, not assigned bare. openGuestModal and openSwatchModal both take
+     an optional first argument, and `x.onclick=fn` hands the handler the
+     MouseEvent — so "Add guest" opened a modal built around a click event, and
+     "Add colour" said "Adding to ." and then threw on save, because a
+     MouseEvent has no .swatches to push onto. The ones below take no argument
+     and are safe bare; these two are not. */
+  var g=$('#addGuest'); if(g)g.onclick=function(){openGuestModal();};
   var ig=$('#importGuests'); if(ig)ig.onclick=function(){openImportModal(activeEvent());};
   var eg=$('#exportGuests'); if(eg)eg.onclick=exportGuestsCsv;
   var t=$('#addTable'); if(t)t.onclick=openTableModal;
   var v=$('#addVendor'); if(v)v.onclick=openVendorModal;
-  var sw=$('#addSwatch'); if(sw)sw.onclick=openSwatchModal;
+  var sw=$('#addSwatch'); if(sw)sw.onclick=function(){openSwatchModal();};
   var dc=$('#addDoc'); if(dc)dc.onclick=openDocModal;
   var du=$('#uploadDoc'); if(du)du.onclick=function(){ uploadDocFor((activeEvent()||{}).id); };
   var cp=$('#calPrev'); if(cp)cp.onclick=function(){shiftMonth(-1);};
@@ -4342,7 +4917,76 @@ function render(){
   else if(state.view==='venues'){ el.innerHTML=viewVenues(); wireVenues(); }
   else if(state.view==='documents'){ el.innerHTML=viewDocuments(); wireDocuments(); }
   else if(state.view==='portal'){ el.innerHTML=viewPortal(); wirePortal(); }
-  else if(state.view==='finance')el.innerHTML=viewFinance();
+  else if(state.view==='finance'){
+    el.innerHTML= state.invoiceId?viewInvoiceDetail(state.invoiceId):viewFinance();
+    wireFinance();
+  }
+  labelCells(el);
+}
+
+/* --- wide tables, on a phone ---
+ * Nine screens render a table of five or six columns. On a 390px phone every
+ * one of them is wider than the screen, so it scrolls sideways inside its
+ * wrapper: Amount sits off the right edge, the client's name wraps to three
+ * lines to make room, and by the time you have scrolled to the number you
+ * can no longer see whose it is.
+ *
+ * Below 700px each row lays out as a card instead. The stylesheet does the
+ * layout; the only thing it cannot do is know what to call each value, since
+ * the column name lives in a <th> in a different row. So this copies the
+ * header text onto each cell as data-l, once per render, and CSS reads it
+ * back with content:attr(). No view had to be rewritten, no second render
+ * exists to drift, and rotating the phone re-lays it out with no JS at all.
+ *
+ * Only tables with a header row qualify. The others are two-column lists that
+ * already read fine at any width, and labelling them would add a caption to
+ * every line for no gain.
+ */
+function labelCells(root){
+  var tables=(root||document).querySelectorAll('table');
+  for(var i=0;i<tables.length;i++){
+    var t=tables[i], head=t.tHead&&t.tHead.rows[0];
+    if(!head||!head.cells.length)continue;
+    var names=[],j;
+    for(j=0;j<head.cells.length;j++){
+      /* A header can hold a bulk control as well as a name — the guest grid's
+         invite columns carry an "all/none" button. Take the first text node,
+         which is the name, not the button's label. */
+      var c=head.cells[j], first=c.firstChild;
+      var txt=(first&&first.nodeType===3?first.nodeValue:c.textContent)||'';
+      names.push(txt.replace(/\s+/g,' ').trim());
+    }
+    t.classList.add('as-cards');
+    /* The wrapper is the horizontal scroller. It has to be told to stop being
+       one, and it is a parent, which CSS can only reach with :has() — a class
+       is the same answer without the browser floor. */
+    var wrap=t.parentNode;
+    if(wrap&&wrap.classList&&wrap.classList.contains('tbl-wrap'))wrap.classList.add('cards-wrap');
+    var rows=t.tBodies[0]?t.tBodies[0].rows:[], acts=false;
+    for(j=0;j<rows.length;j++){
+      var cells=rows[j].cells;
+      for(var k=0;k<cells.length;k++){
+        /* An action column has a blank header, and a cell that already knows
+           its own name keeps it. */
+        /* A cell holding nothing but an em-dash is a column keeping its shape.
+           A card has no columns to keep, so it says nothing instead of
+           saying "Signed —". */
+        var txt=(cells[k].textContent||'').replace(/\s+/g,'').trim();
+        if(txt===''||txt==='\u2014'||txt==='\u2013'||txt==='-')cells[k].classList.add('is-none');
+        if(cells[k].getAttribute('data-l')||!names[k]){
+          if(!names[k]&&k>0)acts=true;
+          continue;
+        }
+        cells[k].setAttribute('data-l',names[k]);
+      }
+      /* Row actions can also live inside a labelled cell — the guest grid puts
+         them in Table — and they float over the card's corner either way. */
+      if(rows[j].querySelector('.r-acts'))acts=true;
+    }
+    /* Only a table with something in that corner needs the title line to keep
+       clear of it. */
+    if(acts)t.classList.add('has-acts');
+  }
 }
 
 /* --- Dashboard: what needs doing first, money second --- */
@@ -4359,6 +5003,11 @@ try{ pipeCollapsed=JSON.parse(localStorage.getItem(PIPEKEY))||{}; }catch(e){ pip
 function savePipe(){ try{ localStorage.setItem(PIPEKEY,JSON.stringify(pipeCollapsed)); }catch(e){} }
 
 var TGKEY='gem-taskgroups-collapsed';
+/* The whole card, not just a group inside it. Waiting On lives underneath it,
+   and on a phone a full to-do list pushed that off the screen entirely. */
+var TODO_KEY='gem-todo-shut';
+function todoShut(){ try{ return localStorage.getItem(TODO_KEY)==='1'; }catch(e){ return false; } }
+function setTodoShut(v){ try{ localStorage.setItem(TODO_KEY,v?'1':'0'); }catch(e){} }
 var taskGroupsCollapsed={};
 try{ taskGroupsCollapsed=JSON.parse(localStorage.getItem(TGKEY))||{}; }catch(e){ taskGroupsCollapsed={}; }
 function saveTaskGroups(){ try{ localStorage.setItem(TGKEY,JSON.stringify(taskGroupsCollapsed)); }catch(e){} }
@@ -4441,7 +5090,7 @@ function viewDashboard(){
      then the week, then later. A group past the budget still shows its
      heading and its true count — "LATER 31" is information — it just does not
      draw thirty-one rows nobody is going to read on the dashboard. */
-  var TASK_CAP=20, taskShown=0, taskHidden=0;
+  var TASK_CAP=prefs().todoRows||10, taskShown=0, taskHidden=0;
   function group(title,list,key,cls){
     if(!list.length)return '';
     var room=Math.max(0,TASK_CAP-taskShown);
@@ -4493,8 +5142,12 @@ function viewDashboard(){
   function workModule(){
     return '<div class="grid-2" style="align-items:start">'+
     // ---- the to-do list, front and centre ----
-    '<div class="card"><div class="card-h"><h3>To Do</h3>'+
-      '<span class="sec-badge">'+tasks.length+' open · '+doneToday+' of '+totalTasks+' done</span></div>'+
+    '<div class="card todo-card'+(todoShut()?' shut':'')+'">'+
+      '<button class="card-h todo-h" type="button" id="todoToggle" aria-expanded="'+(!todoShut())+'">'+
+        '<h3>To Do</h3>'+
+        '<span class="sec-badge">'+tasks.length+' open · '+doneToday+' of '+totalTasks+' done</span>'+
+        '<span class="chev todo-chev" aria-hidden="true"></span>'+
+      '</button>'+
       '<div class="tasks">'+
         group('Overdue',overdue,'overdue','over')+
         group('Today',today,'today','now')+
@@ -4731,6 +5384,8 @@ function wireDashboard(){
       setTimeout(function(){ it.done=true; save(); render(); wireDashboard(); },260);
     };
   });
+  var tt=$('#todoToggle');
+  if(tt)tt.onclick=function(){ setTodoShut(!todoShut()); render(); };
   document.querySelectorAll('[data-goto]').forEach(function(w){
     w.onclick=function(){ setView(w.dataset.goto,{eventId:null,clientId:null,boardId:null,qId:null}); };
     w.onkeydown=function(e){ if(e.key==='Enter'||e.key===' '){e.preventDefault();w.click();} };
@@ -5448,7 +6103,17 @@ function viewEventDetail(id){
     '<div class="vb-main">'+
       (cover?'':'<div class="vb-k">Venue</div>'+
         '<div class="vb-name'+(e.venue?'':' tbc')+'">'+esc(venueName(e.venue))+'</div>')+
-      (addr.length?'<div class="vb-addr">'+addr.map(esc).join(cover?' · ':'<br>')+'</div>'
+      /* Four stacked lines of address is four lines of a phone screen for one
+         fact. Joined with middots on a phone, kept stacked where there is room
+         for a proper postal block. */
+      /* Both forms are rendered and CSS picks one, so nothing has to know the
+         viewport — but they must be SEPARATE elements. Joining the stacked
+         lines with <br> and hiding the <br> leaves the text behind, which is
+         how this first shipped: the address printed twice, run together. */
+      (addr.length?'<div class="vb-addr">'+
+                     '<span class="vb-addr-n">'+addr.map(esc).join(cover?' · ':'<br>')+'</span>'+
+                     '<span class="vb-addr-1">'+esc(addr.join(', '))+'</span>'+
+                   '</div>'
                   :'<div class="vb-addr muted">No address on file</div>')+
       /* Sits with the map link because both answer the same question — what
          else is there, and where. */
@@ -5460,7 +6125,7 @@ function viewEventDetail(id){
          photograph behind it put the coordinator's phone number on top of a
          picture. The dashboard hero is the surface built to wear one; this is
          only where you set it, so it shows what you set. */
-      '<div class="vb-cover-row">'+
+      '<div class="vb-cover-row vb-setup">'+
         (cover?'<span class="vb-thumb" style="background-image:url('+cover+')" aria-hidden="true"></span>':'')+
         '<label class="vb-cover" id="evCover" tabindex="0">'+
           '<input type="file" id="evCoverInput" accept="image/*" hidden>'+
@@ -5617,6 +6282,89 @@ function viewEventDetail(id){
 
 /* --- Guests & RSVP --- */
 var RSVP={yes:{lbl:'Attending',cls:'s-paid'},no:{lbl:'Declined',cls:'s-over'},pending:{lbl:'Pending',cls:'s-due'},invited:{lbl:'Invited',cls:'s-draft'}};
+/* ============================================================
+ * The guest list as a deck
+ *
+ * A grid answers "who is coming" — you sweep it. A deck answers "what
+ * about this one": one guest at a time, their RSVP under your thumb, and
+ * the next one a shuffle away. It is the shape of the job on the evening
+ * the replies come in, and of standing at a door with a phone.
+ *
+ * Same records, same handlers. The RSVP picker keeps class rsvp-sel and
+ * its data-gid, the invite ticks keep .inv-chk, so wireGuests() wires the
+ * deck without knowing it exists.
+ * ============================================================ */
+function guestViewMode(){ return prefs().guestView==='stack'?'stack':'list'; }
+/* The position has to survive a re-render — every RSVP change causes one —
+   and be clamped, because searching can make the list shorter than the card
+   you were on. */
+function guestIdx(n){
+  var i=state.guestIdx||0;
+  if(!n)return 0;
+  i=((i%n)+n)%n;
+  state.guestIdx=i;
+  return i;
+}
+function guestCard(e,x,subs,sub,depth){
+  var tb=e.tables.find(function(t){return t.id===gTable(x,e);});
+  var cur=gRsvp(x,e);
+  var top=depth===0;
+  var f=function(label,body,cls){
+    return '<div class="gc-f'+(cls?' '+cls:'')+'"><span class="gc-k">'+label+'</span>'+body+'</div>';
+  };
+  return '<div class="gs-card d'+depth+'"'+(top?'':' aria-hidden="true"')+'>'+
+    (top?'<div class="gs-acts">'+rowActions('guest',x.id)+'</div>':'')+
+    '<div class="gs-name">'+esc(x.name)+'</div>'+
+    (x.party?'<div class="gs-party">'+esc(x.party)+'</div>':'')+
+    '<div class="gs-fields">'+
+      f('RSVP','<select class="mini rsvp-sel" data-gid="'+esc(x.id)+'"'+(top?'':' tabindex="-1"')+
+        ' aria-label="RSVP for '+esc(x.name)+'">'+
+        Object.keys(RSVP).map(function(k){
+          return '<option value="'+k+'"'+(cur===k?' selected':'')+'>'+RSVP[k].lbl+'</option>';
+        }).join('')+'</select>')+
+      (gMeal(x,e)?f('Meal','<b>'+esc(gMeal(x,e))+'</b>'):'')+
+      (x.diet?f('Dietary','<span class="status s-due">'+esc(x.diet)+'</span>'):'')+
+      f('Table',tb?'<span class="pill">'+esc(tb.name)+'</span>':'<span class="gc-none">Unseated</span>')+
+    '</div>'+
+    /* Only on the primary, and only on the card you are actually working —
+       three decorative decks of tick boxes would all answer to the same
+       handler. */
+    (!sub&&subs.length&&top?'<div class="gs-inv">'+subs.map(function(sv){
+      var on=!!inviteOf(x.id,sv.id);
+      var r=on?gRsvp(x,sv):null;
+      return '<label class="gs-chip'+(on?' on':'')+'"><span class="gs-ck">'+esc(roleLabel(sv,true))+'</span>'+
+        '<span class="inv-box'+(on?' on':'')+'">'+
+        '<input type="checkbox" class="inv-chk" data-gid="'+esc(x.id)+'" data-eid="'+esc(sv.id)+'"'+(on?' checked':'')+
+        ' aria-label="'+esc(x.name)+' invited to '+esc(sv.title)+'">'+
+        '<span class="inv-tick">'+(on?(r==='yes'?'✓':r==='no'?'✕':'·'):'')+'</span></span></label>';
+    }).join('')+'</div>':'')+
+  '</div>';
+}
+function guestStack(e,g,subs,sub){
+  var n=g.length;
+  if(!n)return '<div class="empty-hint" style="padding:26px 22px">No guests match that search.</div>';
+  var i=guestIdx(n), deck='', k;
+  /* Three cards, dealt back to front: the one in hand and two behind it. Any
+     more and the depth stops reading as a stack and starts looking like a
+     rendering fault. */
+  for(k=Math.min(2,n-1);k>=0;k--)deck+=guestCard(e,g[(i+k)%n],subs,sub,k);
+  return '<div class="gstack'+(state.gsDir?' from-'+state.gsDir:'')+'" tabindex="0" '+
+      'aria-label="Guest '+(i+1)+' of '+n+'. Use the arrow keys or swipe to move through the list.">'+
+    '<div class="gs-deck" id="gsDeck">'+deck+'</div>'+
+    '<div class="gs-bar">'+
+      '<button type="button" class="btn btn-ghost btn-sm" id="gsPrev" aria-label="Previous guest">‹ Back</button>'+
+      '<span class="gs-n"><b>'+(i+1)+'</b> of '+n+'</span>'+
+      '<button type="button" class="btn btn-gold btn-sm" id="gsNext" aria-label="Next guest">Next ›</button>'+
+    '</div>'+
+    '<div class="gs-hint">'+(isTouchMode()?'Swipe the card':'Drag the card')+', or use ← and →.</div>'+
+  '</div>';
+}
+function guestShuffle(d){
+  state.gsDir=d>0?'right':'left';
+  state.guestIdx=(state.guestIdx||0)+d;
+  render();                       /* render() wires the view itself */
+  var st=$('.gstack'); if(st)st.focus();
+}
 function viewGuests(){
   var e=activeEvent(); if(!e)return '<div class="card" style="padding:40px;text-align:center;color:var(--muted)">No events yet.</div>';
   /* On the primary the grid is the master list, and gains a tick-box column
@@ -5661,8 +6409,15 @@ function viewGuests(){
     (sub?'Invited to '+esc(roleLabel(e,true)):'Guest List')+'</h3>'+
     '<span class="ev-h-r">'+
       '<input class="v-search" id="guestSearch" placeholder="Search guests…" value="'+esc(state.guestQ||'')+'" aria-label="Search guests">'+
+      '<span class="seg gv-seg" role="tablist" aria-label="How to show the guest list">'+
+        [['list','List'],['stack','Stack']].map(function(m){
+          return '<button type="button" class="seg-b'+(guestViewMode()===m[0]?' on':'')+'" data-guestview="'+m[0]+'" '+
+            'role="tab" aria-selected="'+(guestViewMode()===m[0])+'">'+m[1]+'</button>';
+        }).join('')+
+      '</span>'+
       '<span class="pill">'+(q?g.length+' of '+all.length:String(g.length))+'</span>'+
     '</span></div>'+
+    (guestViewMode()==='stack'?guestStack(e,g,subs,sub):
     '<div class="tbl-wrap g-tbl-wrap"><table class="g-tbl"><thead><tr><th>Guest</th><th>Party</th><th>RSVP</th><th>Meal</th><th>Dietary</th><th>Table</th>'+
       /* One column per sub-event, only on the primary. This is the whole point
          of the feature: who is asked to what, readable in a single sweep. */
@@ -5681,25 +6436,33 @@ function viewGuests(){
     g.map(function(x){
       var tb=e.tables.find(function(t){return t.id===gTable(x,e);});
       var cur=gRsvp(x,e);
-      return '<tr><td><b>'+esc(x.name)+'</b></td><td>'+esc(x.party)+'</td>'+
-        '<td><select class="mini rsvp-sel" data-gid="'+esc(x.id)+'" aria-label="RSVP for '+esc(x.name)+'">'+
+      /* Every cell carries the column name it belongs to. On a desktop the
+         header row says it once; below 700px the table lays out as cards and
+         each value needs its own label, and reading it off data-l costs no
+         second render — the selects and ticks keep the handlers they had. */
+      return '<tr><td class="g-name"><b>'+esc(x.name)+'</b></td><td data-l="Party"'+(x.party?'':' class="is-none"')+'>'+esc(x.party)+'</td>'+
+        '<td data-l="RSVP" class="g-rsvp"><select class="mini rsvp-sel" data-gid="'+esc(x.id)+'" aria-label="RSVP for '+esc(x.name)+'">'+
           Object.keys(RSVP).map(function(k){return '<option value="'+k+'"'+(cur===k?' selected':'')+'>'+RSVP[k].lbl+'</option>';}).join('')+
         '</select></td>'+
-        '<td>'+(gMeal(x,e)?esc(gMeal(x,e)):'<span style="color:var(--muted)">—</span>')+'</td>'+
-        '<td>'+(x.diet?'<span class="status s-due">'+esc(x.diet)+'</span>':'<span style="color:var(--muted)">—</span>')+'</td>'+
-        '<td>'+(tb?'<span class="pill">'+esc(tb.name)+'</span>':'<span style="color:var(--muted)">Unseated</span>')+rowActions('guest',x.id)+'</td>'+
+        '<td data-l="Meal"'+(gMeal(x,e)?'':' class="is-none"')+'>'+(gMeal(x,e)?esc(gMeal(x,e)):'<span style="color:var(--muted)">—</span>')+'</td>'+
+        '<td data-l="Dietary"'+(x.diet?'':' class="is-none"')+'>'+(x.diet?'<span class="status s-due">'+esc(x.diet)+'</span>':'<span style="color:var(--muted)">—</span>')+'</td>'+
+        '<td data-l="Table" class="g-seat">'+(tb?'<span class="pill">'+esc(tb.name)+'</span>':'<span style="color:var(--muted)">Unseated</span>')+rowActions('guest',x.id)+'</td>'+
+        /* A zero-height full-width cell, invisible everywhere except a phone
+           card, where it breaks the line so the invite chips group together
+           instead of trailing off the end of Table. */
+        (!sub&&subs.length?'<td class="inv-brk" aria-hidden="true"></td>':'')+
         (!sub?subs.map(function(s){
           var on=!!inviteOf(x.id,s.id);
           var r=on?gRsvp(x,s):null;
-          return '<td class="inv-col"><label class="inv-box'+(on?' on':'')+'">'+
+          return '<td class="inv-col" data-l="'+esc(roleLabel(s,true))+'"><label class="inv-box'+(on?' on':'')+'">'+
             '<input type="checkbox" class="inv-chk" data-gid="'+esc(x.id)+'" data-eid="'+esc(s.id)+'"'+(on?' checked':'')+
             ' aria-label="'+esc(x.name)+' invited to '+esc(s.title)+'">'+
             '<span class="inv-tick">'+(on?(r==='yes'?'✓':r==='no'?'✕':'·'):'')+'</span></label></td>';
         }).join(''):'')+
       '</tr>';
-    }).join('')+'</tbody></table></div>'+
-    (!sub&&subs.length?'<div class="inv-key">Tick to invite. <b>✓</b> attending · <b>✕</b> declined · <b>·</b> awaiting reply — '+
-      'switch to a sub-event above to set its RSVPs, meals and seating.</div>':'')+
+    }).join('')+'</tbody></table></div>')+
+    (!sub&&subs.length?'<div class="inv-key">Tick to invite. <b>✓</b> attending · <b>✕</b> declined · <b>·</b> awaiting reply'+
+      (guestViewMode()==='stack'?'.':' — switch to a sub-event above to set its RSVPs, meals and seating.')+'</div>':'')+
   '</div>'+
   '<div class="card"><div class="card-h"><h3>Meal Counts</h3><span class="sec-badge">'+yes+' attending</span></div><div style="padding:8px 0 12px">'+mealRows+'</div></div>';
 }
@@ -5746,9 +6509,54 @@ function wireGuests(){
       toast((on?'Removed ':'Invited ')+rows.length+(on?' from ':' to ')+sub.title);
     };
   });
+  document.querySelectorAll('[data-guestview]').forEach(function(b){
+    b.onclick=function(){
+      var q=prefs(); q.guestView=b.dataset.guestview; savePrefs();
+      state.guestIdx=0; state.gsDir=null;
+      render();
+    };
+  });
+  var nx=$('#gsNext'); if(nx)nx.onclick=function(){ guestShuffle(1); };
+  var pv=$('#gsPrev'); if(pv)pv.onclick=function(){ guestShuffle(-1); };
+  var st=$('.gstack');
+  if(st){
+    st.onkeydown=function(ev){
+      if(ev.key==='ArrowRight'){ ev.preventDefault(); guestShuffle(1); }
+      else if(ev.key==='ArrowLeft'){ ev.preventDefault(); guestShuffle(-1); }
+    };
+    /* Swipe, because a deck that only moves by a button is a list with extra
+       steps. Pointer events, so one code path covers a finger and a mouse.
+       A gesture that starts on the RSVP picker belongs to the picker. */
+    var deck=$('#gsDeck'), x0=null, y0=null;
+    if(deck){
+      /* Assigned, not addEventListener'd. render() re-wires the view and
+         several callers still follow it with wireGuests() of their own, so a
+         listener that stacks fires twice — a single swipe dealt two cards. */
+      deck.onpointerdown=function(ev){
+        if(ev.target.closest('select,button,input,label,a')){ x0=null; return; }
+        x0=ev.clientX; y0=ev.clientY;
+      };
+      deck.onpointerup=function(ev){
+        if(x0==null)return;
+        var dx=ev.clientX-x0, dy=ev.clientY-y0;
+        x0=null;
+        /* Horizontal and deliberate, or it is a scroll that happened to end
+           a few pixels sideways. */
+        if(Math.abs(dx)<44||Math.abs(dx)<Math.abs(dy)*1.4)return;
+        guestShuffle(dx<0?1:-1);
+      };
+    }
+  }
+  /* The direction is for the one animation it triggered. Left set, every
+     later re-render — an RSVP change, a tick — would deal the same card in
+     again. */
+  state.gsDir=null;
   var gs=$('#guestSearch');
   if(gs)gs.oninput=function(){
     state.guestQ=gs.value;
+    /* A narrower search means a shorter deck; start it at the top rather than
+       wherever the old one happened to be. */
+    state.guestIdx=0;
     var pos=gs.selectionStart;
     render(); wireGuests();
     /* Re-rendering the view replaces the input, so focus and caret have to be
@@ -6693,13 +7501,18 @@ function vendorTeamMarkup(ev,editable){
     return '<div class="empty-hint" style="padding:26px 20px">No vendors booked yet.'+
       (editable?'<div class="sec-actions" style="justify-content:center"><button class="btn btn-ghost btn-sm" data-addbooking="'+esc(ev.id)+'">＋ Book a vendor</button></div>':'')+'</div>';
   }
-  return '<div class="tbl-wrap"><table><tbody>'+bk.map(function(b){
+  /* The one table in the app with no header row that still needs the phone
+     card layout: a vendor name, a status picker and the row actions come to
+     449px of columns on a 360px card, so it was the last thing left scrolling
+     sideways. It says what its own cells are called, since there is no header
+     for labelCells() to read them off. */
+  return '<div class="tbl-wrap cards-wrap"><table class="as-cards has-acts"><tbody>'+bk.map(function(b){
       var v=vendorById(b.vendorId)||{name:'(removed vendor)'};
       var st=VSTATUS[b.status]||VSTATUS.quote;
       return '<tr><td><b>'+esc(v.name)+'</b><div class="v-sub">'+esc(v.cat||'')+(v.contact?' · '+esc(v.contact):'')+'</div>'+
         '<div class="v-links">'+(v.phone?'<a href="tel:'+esc(String(v.phone).replace(/[^\d+]/g,''))+'">'+esc(v.phone)+'</a>':'')+
         (v.email?'<a href="mailto:'+esc(v.email)+'">'+esc(v.email)+'</a>':'')+'</div></td>'+
-        '<td style="text-align:right">'+
+        '<td style="text-align:right" data-l="Booking">'+
           (editable?'<select class="mini bstat-sel" data-bid="'+esc(b.id)+'" aria-label="Status for '+esc(v.name)+'">'+
             Object.keys(VSTATUS).map(function(k){return '<option value="'+k+'"'+(b.status===k?' selected':'')+'>'+VSTATUS[k].lbl+'</option>';}).join('')+
           '</select>':'<span class="status '+st.cls+'">'+st.lbl+'</span>')+
@@ -7252,10 +8065,11 @@ function uploadDocFor(eventId,after){
                amount:Number(v.amount)||0,eventId:v.eventId||eventId||null,
                body:'',file:null,sent:'',signed:''};
         db.documents.push(d);
+        var raised=invoiceForDoc(d);
         closeModal();
         /* docAttach saves and re-renders once the blob is in IndexedDB. */
         docAttach(d.id,f);
-        toast('Filed under '+docTypeLabel(v.type));
+        toast(raised?('Filed, and raised '+raised.num+' ✦'):('Filed under '+docTypeLabel(v.type)));
       }
     });
   };
@@ -7905,6 +8719,7 @@ function prefs(){
     dashOrder:Array.isArray(d.dashOrder)?d.dashOrder:null,
     dashHidden:d.dashHidden||{},
     clientView:d.clientView==='cards'?'cards':'list',
+    guestView:d.guestView==='stack'?'stack':'list',
     portalDocs:d.portalDocs!==false,
     portalPayments:d.portalPayments!==false,
     portalQuestionnaires:d.portalQuestionnaires!==false,
@@ -7931,6 +8746,18 @@ function prefs(){
     /* Whitelisted like everything else here, or it is dropped on the next
        rebuild — the trap autoSync and dashOrder both fell into. */
     tourDone:!!d.tourDone,
+    /* How many task rows the dashboard draws before it stops. Ten by default:
+       the point of the list is what is due, and past about ten rows it stops
+       being a list and starts being the page. */
+    todoRows:[10,15,20].indexOf(Number(d.todoRows))>=0?Number(d.todoRows):10,
+    /* Invoicing. Whitelisted like everything else, or it saves, looks right,
+       and comes back as the default on the next reload. */
+    bizTaxId:d.bizTaxId||'',
+    invPrefix:d.invPrefix||'GEM-',
+    taxLabel:d.taxLabel||'Tax',
+    taxRate:Number(d.taxRate)||0,
+    payTerms:d.payTerms||'Payment due within 14 days of the date above.',
+    payLink:d.payLink||'',
     team:d.team||[
       {id:uid('tm'),name:'Glimmer M.',email:'hello@gemevents.app',role:'owner'},
       {id:uid('tm'),name:'Rosa Mendez',email:'rosa@gemevents.app',role:'planner'}
@@ -8017,7 +8844,24 @@ function settingsPage(k){
         setRow('Email','<input class="set-in" id="s_bizEmail" type="email" value="'+esc(p.bizEmail)+'">')+
         setRow('Phone','<input class="set-in" id="s_bizPhone" type="tel" value="'+esc(p.bizPhone)+'">')+
         setRow('Address','<input class="set-in" id="s_bizAddress" value="'+esc(p.bizAddress)+'">')+
-      '</div><div class="set-note">Changes appear immediately in the sidebar and on printed documents.</div></div>';
+        setRow('Tax / company number','<input class="set-in" id="s_bizTaxId" value="'+esc(p.bizTaxId)+'">',
+               'Printed under your address on every invoice')+
+      '</div>'+
+      '<div class="fig-head" style="margin:24px 0 8px">Invoicing</div>'+
+      '<div class="set-card">'+
+        setRow('Invoice numbers start','<input class="set-in" id="s_invPrefix" value="'+esc(p.invPrefix)+'">',
+               'The prefix; the number after it counts up from the highest you have used')+
+        setRow('Tax label','<input class="set-in" id="s_taxLabel" value="'+esc(p.taxLabel)+'">',
+               'VAT, Sales tax, GST — whatever your invoices say')+
+        setRow('Default tax rate','<input class="set-in" id="s_taxRate" type="number" step="any" value="'+esc(p.taxRate)+'">',
+               'Applied to a new invoice; every invoice can override it')+
+        setRow('Default terms','<input class="set-in" id="s_payTerms" value="'+esc(p.payTerms)+'">',
+               'Printed at the foot of the invoice')+
+        setRow('Payment link','<input class="set-in" id="s_payLink" value="'+esc(p.payLink)+'" placeholder="https://buy.stripe.com/…">',
+               'Your own checkout — Stripe, Square, PayPal, a bank page. A couple with a balance sees it as a Pay button in their portal.')+
+      '</div>'+
+      '<div class="set-note">GEM does not take card details itself, and does not touch the money — '+
+        'the Pay button opens whatever you paste above, so payment lands with your processor exactly as it does today.</div></div>';
   }
   if(k==='team'){
     return back+'<div class="set-page">'+
@@ -8043,6 +8887,10 @@ function settingsPage(k){
           [['comfortable','Comfortable'],['compact','Compact']].map(function(o){
             return '<option value="'+o[0]+'"'+(p.density===o[0]?' selected':'')+'>'+o[1]+'</option>';}).join('')+'</select>',
           'Compact fits more rows on screen')+
+        setRow('To-do rows','<select class="set-sel" id="s_todoRows">'+
+          [10,15,20].map(function(n){
+            return '<option value="'+n+'"'+(p.todoRows===n?' selected':'')+'>'+n+' rows</option>';}).join('')+'</select>',
+          'How much of the list the dashboard shows before it stops. The card collapses either way.')+
         setRow('Open GEM on','<select class="set-sel" id="s_landing">'+
           [['dashboard','Dashboard'],['calendar','Calendar'],['pipeline','Leads & Pipeline'],['events','Events']]
           .map(function(o){return '<option value="'+o[0]+'"'+(p.landing===o[0]?' selected':'')+'>'+o[1]+'</option>';}).join('')+'</select>')+
@@ -8546,11 +9394,20 @@ function wireSettings(){
   // text + select fields save on change
   [['s_bizName','bizName'],['s_plannerName','plannerName'],['s_plannerRole','plannerRole'],
    ['s_bizEmail','bizEmail'],['s_bizPhone','bizPhone'],['s_bizAddress','bizAddress'],
+   ['s_bizTaxId','bizTaxId'],['s_invPrefix','invPrefix'],['s_taxLabel','taxLabel'],
+   ['s_payTerms','payTerms'],['s_payLink','payLink'],
    ['s_density','density'],['s_landing','landing'],['s_defaultTable','defaultTable'],
    ['s_taskHorizon','taskHorizon']].forEach(function(pair){
     var el=$('#'+pair[0]); if(!el)return;
     el.onchange=function(){ p[pair[1]]=el.value; savePrefs(); applyPrefs(); if(pair[1].indexOf('biz')===0||pair[1].indexOf('planner')===0)paintIdentity(); };
   });
+  /* A rate is arithmetic, and '8.5' times a subtotal is NaN. */
+  var tr=$('#s_taxRate');
+  if(tr)tr.onchange=function(){ p.taxRate=Number(tr.value)||0; savePrefs(); };
+  /* A number, not a string — the cap is compared with indexOf against
+     [10,15,20], and '10' is not 10. */
+  var tr=$('#s_todoRows');
+  if(tr)tr.onchange=function(){ p.todoRows=Number(tr.value)||10; savePrefs(); render(); };
   [['s_roomW','roomW'],['s_roomH','roomH']].forEach(function(pair){
     var el=$('#'+pair[0]); if(!el)return;
     el.onchange=function(){ p[pair[1]]=Math.max(10,Number(el.value)||10); savePrefs(); };
@@ -9394,11 +10251,33 @@ function viewPortal(){
     }).join(''):'<div class="empty-hint">No messages yet.</div>')+'</div>'+
     '<div class="composer"><input id="pMsgInput" placeholder="Reply to your planner…" aria-label="Message">'+
       '<button class="btn btn-gold" id="pSendMsg">Send</button></div></div>'+
-  (inv.length?'<div class="card" style="margin-top:20px"><div class="card-h"><h3>Payment Schedule</h3></div>'+
-    '<div class="tbl-wrap"><table><thead><tr><th>Invoice</th><th>Due</th><th>Status</th><th style="text-align:right">Amount</th></tr></thead><tbody>'+
-    inv.map(function(x){var cls={paid:'s-paid',due:'s-due',over:'s-over',draft:'s-draft'}[x.status],lbl={paid:'Paid',due:'Due',over:'Overdue',draft:'Draft'}[x.status];
-      return '<tr><td><b>'+esc(x.num)+'</b></td><td>'+fmtDate(x.due)+'</td><td><span class="status '+cls+'">'+lbl+'</span></td><td style="text-align:right"><span class="val">'+money(x.amount)+'</span></td></tr>';
-    }).join('')+'</tbody></table></div></div>':'');
+  /* A couple never sees a draft — it is a figure the studio has not committed
+     to yet, and the portal is the one screen where a wrong number is a
+     conversation rather than an edit. */
+  (function(){
+    var shown=inv.filter(function(x){return x.status!=='draft';});
+    if(!shown.length)return '';
+    var owed=shown.reduce(function(a,x){return a+Math.max(0,invBalance(x));},0);
+    return '<div class="card" style="margin-top:20px"><div class="card-h"><h3>Payment Schedule</h3>'+
+      (owed?'<span class="sec-badge">'+money(owed)+' outstanding</span>':'<span class="sec-badge">Settled in full</span>')+
+      '</div><div class="pp-list">'+shown.map(function(x){
+        var st=invStatus(x), bal=invBalance(x), link=invPayLink(x);
+        return '<div class="pp-row">'+
+          '<div class="pp-m"><b>'+esc(x.num)+'</b>'+
+            '<span class="pp-d">'+(x.due?'Due '+fmtDate(x.due):'No due date')+
+              (invPaid(x)&&bal>0.004?' · '+money(invPaid(x))+' received':'')+'</span></div>'+
+          '<span class="status '+INV_CLS[st]+'">'+INV_LBL[st]+'</span>'+
+          '<span class="pp-a">'+money(bal>0.004?bal:invTotal(x))+
+            (bal>0.004&&invPaid(x)?'<span class="pp-of"> of '+money(invTotal(x))+'</span>':'')+'</span>'+
+          /* The one honest "pay in app" there is without a payment processor:
+             the studio's own checkout, opened from the invoice it belongs to.
+             With no link the terms are shown instead, because a Pay button
+             that does nothing is worse than no button. */
+          (bal>0.004&&link?'<a class="btn btn-gold btn-sm pp-pay" href="'+esc(link)+'" target="_blank" rel="noopener">Pay</a>':'')+
+        '</div>'+
+        (bal>0.004&&!link&&x.notes?'<div class="pp-terms">'+esc(x.notes)+'</div>':'');
+      }).join('')+'</div></div>';
+  })();
 }
 function wirePortal(){
   var e=activeEvent(); if(!e)return;
@@ -9484,24 +10363,196 @@ function openAnswerModal(qid){
 function emptyState(msg){return '<div class="card" style="padding:40px;text-align:center;color:var(--muted)">'+esc(msg)+'</div>';}
 
 /* --- Finance --- */
+/* ---------- the invoice, as the client will see it ----------
+ * Deliberately the same object on screen, on paper and in the portal: one
+ * markup builder, three frames around it. A studio that sends a PDF which
+ * does not match what the couple sees when they log in has two invoices. */
+function invDocMarkup(x,forPrint){
+  var pf=prefs();
+  var lead=x.leadId?leadById(x.leadId):null;
+  var ev=x.eventId?evById(x.eventId):null;
+  var a=(lead&&lead.address)||{};
+  var billTo=[invoiceClientName(x),a.line1,a.line2,
+              [a.city,a.region,a.postcode].filter(Boolean).join(' '),a.country,
+              lead&&lead.email].filter(Boolean);
+  var items=invItems(x);
+  var st=invStatus(x), bal=invBalance(x), paid=invPaid(x);
+  var C=forPrint?'':'iv-';                       /* print CSS is prefix-free */
+  var k=function(n){ return forPrint?('pi-'+n):('iv-'+n); };
+  return '<div class="'+k('sheet')+'">'+
+    '<div class="'+k('top')+'">'+
+      '<div class="'+k('from')+'">'+
+        (pf.logo?'<img class="'+k('logo')+'" src="'+esc(pf.logo)+'" alt="">':'')+
+        '<div class="'+k('biz')+'">'+esc(pf.bizName)+'</div>'+
+        (pf.bizAddress?'<div class="'+k('fine')+'">'+esc(pf.bizAddress)+'</div>':'')+
+        (pf.bizEmail?'<div class="'+k('fine')+'">'+esc(pf.bizEmail)+'</div>':'')+
+        (pf.bizPhone?'<div class="'+k('fine')+'">'+esc(pf.bizPhone)+'</div>':'')+
+        (pf.bizTaxId?'<div class="'+k('fine')+'">'+esc(pf.bizTaxId)+'</div>':'')+
+      '</div>'+
+      '<div class="'+k('id')+'">'+
+        '<div class="'+k('word')+'">Invoice</div>'+
+        '<div class="'+k('num')+'">'+esc(x.num||'')+'</div>'+
+        '<div class="'+k('dates')+'">'+
+          (x.issued?'<div><span>Issued</span> '+fmtDate(x.issued)+'</div>':'')+
+          (x.due?'<div><span>Due</span> '+fmtDate(x.due)+'</div>':'')+
+        '</div>'+
+      '</div>'+
+    '</div>'+
+    '<div class="'+k('parties')+'">'+
+      '<div><div class="'+k('ck')+'">Billed to</div>'+
+        billTo.map(function(l,i){return '<div class="'+(i?k('fine'):k('cname'))+'">'+esc(l)+'</div>';}).join('')+
+      '</div>'+
+      /* An event titled after the couple says nothing a second time — most
+         weddings are, so this is the common case, not the edge. */
+      (ev&&ev.title!==invoiceClientName(x)?'<div><div class="'+k('ck')+'">For</div><div class="'+k('cname')+'">'+esc(ev.title)+'</div>'+
+        (ev.date?'<div class="'+k('fine')+'">'+fmtDate(ev.date)+'</div>':'')+
+        (ev.venue?'<div class="'+k('fine')+'">'+esc(venueName(ev.venue))+'</div>':'')+'</div>'
+       :(ev?'<div><div class="'+k('ck')+'">For</div>'+
+          '<div class="'+k('cname')+'">'+fmtDate(ev.date)+'</div>'+
+          (ev.venue?'<div class="'+k('fine')+'">'+esc(venueName(ev.venue))+'</div>':'')+'</div>':''))+
+    '</div>'+
+    '<table class="'+k('lines')+'"><thead><tr>'+
+      '<th>Description</th><th class="'+k('r')+'">Qty</th><th class="'+k('r')+'">Rate</th><th class="'+k('r')+'">Amount</th>'+
+      '</tr></thead><tbody>'+
+      (items.length?items.map(function(l){
+        return '<tr><td>'+esc(l.desc||'—')+'</td><td class="'+k('r')+'">'+esc(l.qty)+'</td>'+
+          '<td class="'+k('r')+'">'+money(l.rate)+'</td><td class="'+k('r')+'">'+money(invLineTotal(l))+'</td></tr>';
+      }).join('')
+      /* An invoice written before there were lines still has to print. Its
+         total is the whole record, so it prints as the whole record. */
+      :'<tr><td>'+esc(ev?ev.title+' — planning services':'Services')+'</td><td class="'+k('r')+'">1</td>'+
+        '<td class="'+k('r')+'">'+money(x.amount)+'</td><td class="'+k('r')+'">'+money(x.amount)+'</td></tr>')+
+    '</tbody></table>'+
+    '<div class="'+k('sums')+'">'+
+      '<div class="'+k('sline')+'"><span>Subtotal</span><b>'+money(invSub(x))+'</b></div>'+
+      (invTaxRate(x)?'<div class="'+k('sline')+'"><span>'+esc(pf.taxLabel||'Tax')+' '+invTaxRate(x)+'%</span><b>'+money(invTax(x))+'</b></div>':'')+
+      '<div class="'+k('sline')+' '+k('stot')+'"><span>Total</span><b>'+money(invTotal(x))+'</b></div>'+
+      (paid?'<div class="'+k('sline')+'"><span>Paid</span><b>−'+money(paid)+'</b></div>':'')+
+      (paid?'<div class="'+k('sline')+' '+k('sbal')+'"><span>Balance due</span><b>'+money(bal)+'</b></div>':'')+
+    '</div>'+
+    (invPayments(x).length?'<div class="'+k('pays')+'"><div class="'+k('ck')+'">Payments received</div>'+
+      invPayments(x).map(function(pm){
+        return '<div class="'+k('pay')+'"><span>'+fmtDate(pm.at)+(pm.method?' · '+esc(pm.method):'')+
+          (pm.ref?' · '+esc(pm.ref):'')+'</span><b>'+money(pm.amount)+'</b></div>';
+      }).join('')+'</div>':'')+
+    (x.notes?'<div class="'+k('notes')+'">'+esc(x.notes)+'</div>':'')+
+    '<div class="'+k('foot')+'">'+esc(pf.bizName)+
+      (pf.bizEmail?' · '+esc(pf.bizEmail):'')+'</div>'+
+  '</div>';
+}
+function viewInvoiceDetail(id){
+  var x=invById(id);
+  if(!x)return '<button class="back-link" data-backinv>‹ Back to Finance</button>'+emptyState('That invoice has gone.');
+  var st=invStatus(x), doc=x.docId?(db.documents||[]).find(function(d){return d.id===x.docId;}):null;
+  var link=invPayLink(x);
+  return '<button class="back-link" data-backinv>‹ Back to Finance</button>'+
+  '<div class="iv-bar">'+
+    '<span class="status '+INV_CLS[st]+'">'+INV_LBL[st]+'</span>'+
+    '<span class="iv-bal">'+(invBalance(x)>0.004?money(invBalance(x))+' outstanding':'Settled in full')+'</span>'+
+    '<span class="iv-acts">'+
+      '<button class="btn btn-ghost btn-sm btn-icon" id="ivPrint" title="Print or save as PDF" aria-label="Print"><svg class="ic" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M6 8V3h8v5"/><path d="M6 14H4.2A1.2 1.2 0 0 1 3 12.8V9.2A1.2 1.2 0 0 1 4.2 8h11.6A1.2 1.2 0 0 1 17 9.2v3.6a1.2 1.2 0 0 1-1.2 1.2H14"/><path d="M6 12h8v5H6z"/></svg><span class="bl">Print</span></button>'+
+      '<button class="btn btn-ghost btn-sm btn-icon" id="ivEdit" title="Edit" aria-label="Edit"><svg class="ic" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M13.6 3.7a1.7 1.7 0 0 1 2.4 2.4L7.4 14.7 4 15.7l1-3.4Z"/></svg><span class="bl">Edit</span></button>'+
+      (x.status==='draft'?'<button class="btn btn-gold btn-sm" id="ivSend">Mark sent</button>':'')+
+      (invBalance(x)>0.004?'<button class="btn btn-gold btn-sm" id="ivPay">Record payment</button>':'')+
+    '</span>'+
+  '</div>'+
+  (link?'<div class="iv-link"><b>Payment link</b> <a href="'+esc(link)+'" target="_blank" rel="noopener">'+esc(link)+'</a>'+
+    '<span class="iv-lnote">your couple sees this as a Pay button in their portal</span></div>':
+    '<div class="iv-link iv-link-none">No payment link. Add one on this invoice, or a studio default in '+
+      '<button type="button" class="link-btn" data-setpay>Settings › Business</button>, and the portal shows a Pay button.</div>')+
+  (doc?'<div class="iv-doc">Filed with <b>'+esc(doc.title)+'</b>'+
+    (doc.file?' · <button type="button" class="link-btn" data-ivfile="'+esc(doc.id)+'">open the file</button>':'')+'</div>':'')+
+  '<div class="card iv-card">'+invDocMarkup(x,false)+'</div>';
+}
+function wireFinance(){
+  var b=$('[data-backinv]'); if(b)b.onclick=function(){ setView('finance',{invoiceId:null}); };
+  var x=state.invoiceId?invById(state.invoiceId):null;
+  var e=$('#ivEdit'); if(e)e.onclick=function(){ openInvoiceModal(x); };
+  var pr=$('#ivPrint'); if(pr)pr.onclick=function(){ printInvoice(x); };
+  var sd=$('#ivSend'); if(sd)sd.onclick=function(){
+    x.status='due'; if(!x.issued)x.issued=todayLocal();
+    invRecalc(x); save(); render();
+    toast(x.num+' marked sent ✦');
+  };
+  var pay=$('#ivPay'); if(pay)pay.onclick=function(){ openPaymentModal(x); };
+  var sp=$('[data-setpay]'); if(sp)sp.onclick=function(){ setView('settings',{settingsPage:'business'}); };
+  var fl=$('[data-ivfile]');
+  if(fl)fl.onclick=function(){
+    docOpen(fl.dataset.ivfile).then(function(ok){
+      if(!ok)toast('That file is not on this device yet — pull to fetch it.');
+    });
+  };
+}
+function openPaymentModal(x){
+  if(!x)return;
+  var bal=invBalance(x);
+  openEditor({
+    title:'Record a payment',
+    sub:x.num+' · '+money(bal)+' outstanding',
+    twoCol:true,
+    saveLabel:'Record',
+    fields:[
+      {id:'amount',label:'Amount',type:'number',value:bal,required:true},
+      {id:'at',label:'Date',type:'date',value:todayLocal()},
+      {id:'method',label:'Method',type:'select',value:'Bank transfer',
+       options:['Bank transfer','Card','Cash','Cheque','Other']},
+      {id:'ref',label:'Reference',value:''}
+    ],
+    onSave:function(v){
+      if(!x.payments)x.payments=[];
+      x.payments.push({id:uid('pm'),at:v.at||todayLocal(),amount:Number(v.amount)||0,
+                       method:v.method||'',ref:v.ref||''});
+      if(x.status==='draft')x.status='due';
+      invRecalc(x);
+      save(); closeModal(); render();
+      toast(money(Number(v.amount)||0)+' recorded'+(invBalance(x)<=0.004?' — settled in full ✦':' ✦'));
+    }
+  });
+}
+function printInvoice(x){
+  if(!x){toast('Open an invoice first ✦');return;}
+  var pf=prefs();
+  var w=document.getElementById('printFrame');
+  if(!w){ w=document.createElement('iframe'); w.id='printFrame';
+    w.style.cssText='position:fixed;right:0;bottom:0;width:0;height:0;border:0;visibility:hidden';
+    document.body.appendChild(w); }
+  var doc=w.contentDocument;
+  doc.open();
+  doc.write('<!doctype html><meta charset="utf-8"><title>'+esc(x.num||'Invoice')+'</title>'+
+    '<style>'+printCss()+invPrintCss()+'</style><body>'+invDocMarkup(x,true)+'</body>');
+  doc.close();
+  setTimeout(function(){ w.contentWindow.focus(); w.contentWindow.print(); },220);
+}
 function viewFinance(){
   /* Invoices stand on their own; the budget card needs an event, and there may
      not be one — a new studio, or the sample data removed. */
   var e=db.events[0];
   var estT=e?e.budget.reduce(function(a,b){return a+b.est;},0):0;
   var actT=e?e.budget.reduce(function(a,b){return a+b.act;},0):0;
-  var paid=db.invoices.filter(function(x){return x.status==='paid';}).reduce(function(a,x){return a+x.amount;},0);
-  var out=db.invoices.filter(function(x){return x.status==='due'||x.status==='over';}).reduce(function(a,x){return a+x.amount;},0);
+  /* What has actually come in, and what is still owed — a part-paid invoice
+     is neither wholly collected nor wholly outstanding, and reading .amount
+     for both put it in one column at full value. */
+  var paid=db.invoices.reduce(function(a,x){return a+invPaid(x);},0);
+  var out=db.invoices.filter(function(x){return x.status!=='draft';}).reduce(function(a,x){return a+Math.max(0,invBalance(x));},0);
+  var late=db.invoices.filter(function(x){return invStatus(x)==='over';}).length;
+  var dueN=db.invoices.filter(function(x){return invStatus(x)==='due';}).length;
   return ''+
   '<div class="stat-row cols-3">'+
     stat('Collected',money(paid),'this season','up')+
-    stat('Outstanding',money(out),db.invoices.filter(function(x){return x.status==='due';}).length+' due · '+db.invoices.filter(function(x){return x.status==='over';}).length+' overdue')+
-    stat('Drafts',money(db.invoices.filter(function(x){return x.status==='draft';}).reduce(function(a,x){return a+x.amount;},0)),'ready to send')+
+    stat('Outstanding',money(out),dueN+' due · '+late+' overdue')+
+    stat('Drafts',money(db.invoices.filter(function(x){return x.status==='draft';}).reduce(function(a,x){return a+invTotal(x);},0)),'ready to send')+
   '</div>'+
   '<div class="card" style="margin-bottom:20px"><div class="card-h"><h3>Invoices</h3><span class="pill">'+db.invoices.length+'</span></div>'+
     '<div class="tbl-wrap"><table><thead><tr><th>Invoice</th><th>Client</th><th>Due</th><th>Status</th><th style="text-align:right">Amount</th></tr></thead><tbody>'+
-    db.invoices.map(function(x){var cls={paid:'s-paid',due:'s-due',over:'s-over',draft:'s-draft'}[x.status],lbl={paid:'Paid',due:'Due',over:'Overdue',draft:'Draft'}[x.status];
-      return '<tr><td><b>'+esc(x.num)+'</b></td><td>'+esc(invoiceClientName(x))+'</td><td>'+fmtDate(x.due)+'</td><td><span class="status '+cls+'">'+lbl+'</span></td><td style="text-align:right"><span class="val">'+money(x.amount)+'</span>'+rowActions('invoice',x.id)+'</td></tr>';
+    db.invoices.map(function(x){
+      var st=invStatus(x), bal=invBalance(x);
+      return '<tr class="row-link" data-invoice="'+esc(x.id)+'" tabindex="0" role="link">'+
+        '<td><b>'+esc(x.num)+'</b></td><td>'+esc(invoiceClientName(x))+'</td>'+
+        '<td>'+(x.due?fmtDate(x.due):'—')+'</td>'+
+        '<td><span class="status '+INV_CLS[st]+'">'+INV_LBL[st]+'</span></td>'+
+        '<td style="text-align:right"><span class="val">'+money(invTotal(x))+'</span>'+
+        (bal>0.004&&invPaid(x)?'<div class="inv-bal">'+money(bal)+' left</div>':'')+
+        rowActions('invoice',x.id)+'</td></tr>';
     }).join('')+'</tbody></table></div></div>'+
   (e?
   '<div class="card"><div class="card-h"><h3>Budget · '+esc(e.title)+'</h3><span class="sec-badge">'+money(actT)+' of '+money(estT)+' committed</span></div>'+
@@ -9539,27 +10590,131 @@ function openLeadModal(){
     save();closeModal();setView('pipeline');
   };
 }
-function openInvoiceModal(){
-  var opts=db.leads.map(function(l){return '<option value="'+esc(l.id)+'">'+esc(l.names)+'</option>';}).join('');
-  md.className='modal';md.innerHTML='<h3>New Invoice</h3><p class="sub">Bill a client — sent securely from GEM.</p>'+
-    '<div class="field"><label>Client</label><select id="f_client">'+opts+'</select></div>'+
-    '<div class="field"><label>Amount</label><input id="f_amt" type="number" placeholder="29000"></div>'+
-    '<div class="field"><label>Due date</label><input id="f_due" type="date"></div>'+
-    '<div class="modal-actions"><button class="btn btn-ghost" id="mCancel">Cancel</button><button class="btn btn-gold" id="mSave">Create</button></div>';
+/* One row of the invoice. Kept as a function because the modal builds them at
+   render time and again every time you add a line. */
+function invLineRow(l){
+  l=l||{desc:'',qty:1,rate:0};
+  return '<div class="il-row" data-il>'+
+    '<input class="il-desc" data-k="desc" value="'+esc(l.desc||'')+'" placeholder="Planning fee, second photographer, travel…" aria-label="Description">'+
+    '<input class="il-qty" data-k="qty" type="number" step="any" value="'+esc(l.qty==null?1:l.qty)+'" aria-label="Quantity">'+
+    '<input class="il-rate" data-k="rate" type="number" step="any" value="'+esc(l.rate==null?'':l.rate)+'" placeholder="0" aria-label="Rate">'+
+    '<span class="il-amt">'+money(invLineTotal(l))+'</span>'+
+    '<button type="button" class="il-x" data-ilx aria-label="Remove line">✕</button>'+
+  '</div>';
+}
+function openInvoiceModal(existing){
+  /* A DOM event is not an invoice — see the note in wirePageActions. */
+  if(existing&&typeof existing.preventDefault==='function')existing=null;
+  var creating=!existing;
+  var x=existing||{num:invNextNum(),leadId:(db.leads[0]||{}).id||null,client:'',eventId:null,
+                   issued:todayLocal(),due:'',status:'draft',items:[],taxRate:Number(prefs().taxRate)||0,
+                   notes:prefs().payTerms||'',payments:[],payLink:''};
+  var lines=invItems(x).length?invItems(x).map(function(l){return {desc:l.desc,qty:l.qty,rate:l.rate};})
+                              :[{desc:'',qty:1,rate:Number(x.amount)||0}];
+  var pf=prefs();
+  md.className='modal modal-wide';
+  md.innerHTML='<h3>'+(creating?'New invoice':'Edit invoice')+'</h3>'+
+    '<p class="sub">'+(creating?'The lines are the invoice — the total comes from them.':esc(x.num))+'</p>'+
+    '<div class="modal-scroll">'+
+    '<div class="fgrid">'+
+      '<div class="field"><label>Client</label><select id="f_client">'+
+        '<option value="">—</option>'+
+        db.leads.map(function(l){return '<option value="'+esc(l.id)+'"'+(x.leadId===l.id?' selected':'')+'>'+esc(l.names)+'</option>';}).join('')+
+      '</select></div>'+
+      '<div class="field"><label>Event</label><select id="f_ievent">'+
+        '<option value="">Not tied to an event</option>'+
+        db.events.map(function(e){return '<option value="'+esc(e.id)+'"'+(x.eventId===e.id?' selected':'')+'>'+(evIsSub(e)?'└ ':'')+esc(e.title)+'</option>';}).join('')+
+      '</select></div>'+
+      '<div class="field"><label>Number</label><input id="f_inum" value="'+esc(x.num||'')+'"></div>'+
+      '<div class="field"><label>Status</label><select id="f_istatus">'+
+        ['draft','due','paid'].map(function(k){return '<option value="'+k+'"'+(x.status===k?' selected':'')+'>'+INV_LBL[k]+'</option>';}).join('')+
+      '</select></div>'+
+      '<div class="field"><label>Issued</label><input id="f_iissued" type="date" value="'+esc(x.issued||'')+'"></div>'+
+      '<div class="field"><label>Due</label><input id="f_due" type="date" value="'+esc(x.due||'')+'"></div>'+
+    '</div>'+
+    '<div class="fig-head" style="margin:18px 0 8px">Lines</div>'+
+    '<div class="il-head"><span>Description</span><span>Qty</span><span>Rate</span><span>Amount</span><span></span></div>'+
+    '<div id="ilBody">'+lines.map(invLineRow).join('')+'</div>'+
+    '<button type="button" class="btn btn-ghost btn-sm" id="ilAdd" style="margin-top:8px">＋ Add line</button>'+
+    '<div class="il-sums">'+
+      '<div class="kv"><span>Subtotal</span><b id="ilSub">—</b></div>'+
+      '<div class="kv"><span>'+esc(pf.taxLabel||'Tax')+
+        ' <input id="f_itax" type="number" step="any" class="il-taxr" value="'+esc(x.taxRate==null?0:x.taxRate)+'" aria-label="Tax rate percent">%</span>'+
+        '<b id="ilTax">—</b></div>'+
+      '<div class="kv kv-tot"><span>Total</span><b id="ilTot">—</b></div>'+
+    '</div>'+
+    '<div class="field" style="margin-top:14px"><label>Notes &amp; terms</label>'+
+      '<textarea id="f_inotes" rows="2" class="notes-box" placeholder="Payment due within 14 days.">'+esc(x.notes||'')+'</textarea></div>'+
+    '<div class="field"><label>Payment link <span class="lbl-note">optional — overrides the studio default</span></label>'+
+      '<input id="f_ipay" value="'+esc(x.payLink||'')+'" placeholder="'+esc(pf.payLink||'https://…')+'"></div>'+
+    '</div>'+
+    '<div class="modal-actions">'+
+      (creating?'':'<button class="btn btn-danger" id="mDel">Delete</button><span style="flex:1"></span>')+
+      '<button class="btn btn-ghost" id="mCancel">Cancel</button>'+
+      '<button class="btn btn-gold" id="mSave">'+(creating?'Create':'Save')+'</button></div>';
   ov.classList.add('show');
+  var body=$('#ilBody');
+  function read(){
+    return [].map.call(body.querySelectorAll('[data-il]'),function(r){
+      return {desc:r.querySelector('[data-k="desc"]').value,
+              qty:Number(r.querySelector('[data-k="qty"]').value)||0,
+              rate:Number(r.querySelector('[data-k="rate"]').value)||0};
+    });
+  }
+  function paint(){
+    var draft={items:read(),taxRate:Number($('#f_itax').value)||0};
+    [].forEach.call(body.querySelectorAll('[data-il]'),function(r,i){
+      r.querySelector('.il-amt').textContent=money(invLineTotal(draft.items[i]));
+    });
+    $('#ilSub').textContent=money(invSub(draft));
+    $('#ilTax').textContent=money(invTax(draft));
+    $('#ilTot').textContent=money(invTotal(draft));
+  }
+  /* Delegated, so a line added after this runs is wired too. */
+  body.oninput=paint;
+  body.onclick=function(ev){
+    var x2=ev.target.closest('[data-ilx]'); if(!x2)return;
+    var rows=body.querySelectorAll('[data-il]');
+    /* Never leave it with none — an invoice with no lines has no total and no
+       way to get one back. */
+    if(rows.length<2){ rows[0].querySelectorAll('input').forEach(function(i){i.value=i.dataset.k==='qty'?1:'';}); }
+    else x2.closest('[data-il]').remove();
+    paint();
+  };
+  $('#ilAdd').onclick=function(){ body.insertAdjacentHTML('beforeend',invLineRow(null)); paint(); };
+  $('#f_itax').oninput=paint;
+  paint();
   $('#mCancel').onclick=closeModal;
+  var del=$('#mDel');
+  if(del)del.onclick=function(){ closeModal(); deleteRecord('invoice',x.id); };
   $('#mSave').onclick=function(){
     var lead=leadById($('#f_client').value);
-    db.invoices.unshift({id:uid('i'),leadId:lead?lead.id:null,client:lead?lead.names:'',
-      num:'GEM-'+(1064+db.invoices.length),amount:Number($('#f_amt').value)||0,
-      due:$('#f_due').value||'2026-12-01',status:'draft'});
-    save();closeModal();setView('finance');
+    var items=read().filter(function(l){ return l.desc.trim()||l.rate; });
+    var rec=existing||{id:uid('i'),payments:[]};
+    rec.leadId=lead?lead.id:null;
+    rec.client=lead?lead.names:(rec.client||'');
+    rec.eventId=$('#f_ievent').value||null;
+    rec.num=$('#f_inum').value.trim()||invNextNum();
+    rec.issued=$('#f_iissued').value||todayLocal();
+    rec.due=$('#f_due').value||'';
+    rec.status=$('#f_istatus').value||'draft';
+    rec.items=items;
+    rec.taxRate=Number($('#f_itax').value)||0;
+    rec.notes=$('#f_inotes').value;
+    rec.payLink=$('#f_ipay').value.trim();
+    if(!items.length)rec.amount=Number(rec.amount)||0;
+    invRecalc(rec);
+    if(!existing)db.invoices.unshift(rec);
+    save(); closeModal();
+    setView('finance',{invoiceId:rec.id});
   };
 }
 /* Quick add: built for typing several in a row, because nobody adds one guest.
    "Save & add another" keeps the sheet open and the cursor in the name field;
    the link out goes to the full list for anything more involved. */
 function openGuestModal(ev){
+  /* Belt and braces for the trap above: a DOM event is not an event record. */
+  if(ev&&typeof ev.preventDefault==='function')ev=null;
   var e=ev||activeEvent(); if(!e){toast('Create an event first ✦');return;}
   /* Guests belong to the primary. Adding one from a sub-event adds them to the
      weekend's list and invites them to that night, which is what "add a guest
@@ -9658,18 +10813,94 @@ function openVendorModal(){
     }
   });
 }
+/* --- naming a colour ---
+ * The picker is a grid of squares with no words on it, so every colour arrived
+ * called whatever the planner could think of at the time — and the field is
+ * required, which turned "pin this green" into a naming exercise. These are
+ * the names a planner and a florist already use with each other, so the nearest
+ * one is a real starting point rather than "darkseagreen".
+ */
+var SWATCH_NAMES=[
+  ['Ivory','#FFFFF0'],['White','#FFFFFF'],['Pearl','#EDE9E3'],['Cream','#F5F0E1'],
+  ['Champagne','#EFE0B8'],['Butter','#F2E394'],['Sand','#E3D5B8'],['Taupe','#A99A8C'],
+  ['Stone','#9A958C'],['Blush','#F5DDE0'],['Dusty Rose','#C9A0A6'],['Rose Gold','#E0BFB8'],
+  ['Peach','#FFCBA4'],['Coral','#F0806A'],['Terracotta','#C56B4E'],['Rust','#A6522C'],
+  ['Copper','#B87333'],['Gold','#C9A24B'],['Mustard','#D4A017'],['Marigold','#E8A33D'],
+  ['Apricot','#F4C89A'],['Oat','#EAE0CE'],['Sage','#A8B79A'],['Pistachio','#C9DDA4'],
+  ['Celadon','#B2C9AE'],['Mint','#CDE7DA'],['Seafoam','#A5D2C0'],['Moss','#7F8C4F'],
+  ['Eucalyptus','#7D9A88'],['Fern','#5A7A52'],['Olive','#6B7043'],['Forest','#2E4A34'],
+  ['Emerald','#2E7D5B'],['Teal','#2A7F7F'],['Powder Blue','#B8D3E3'],['Sky','#7FB3D5'],
+  ['Cornflower','#9BB4DA'],['Denim','#4E6E8E'],['Fog','#D6D8D6'],['Cherry','#B3222F'],
+  ['Berry','#8E2C4E'],
+  ['Slate','#6B7A8F'],['Navy','#1F3350'],['Ink','#23303D'],['Lavender','#C7BEDC'],
+  ['Lilac','#B5A0C9'],['Mauve','#8E7A85'],['Plum','#6B3F5B'],['Burgundy','#6E2338'],
+  ['Wine','#4A1F2B'],['Charcoal','#3B3E42'],['Espresso','#4A3728'],['Chocolate','#5C4033'],
+  ['Silver','#C4C6C8'],['Pewter','#8A8D8F'],['Black','#1A1A1A']
+];
+function hexRgb(h){
+  h=String(h||'').replace('#','');
+  if(h.length===3)h=h[0]+h[0]+h[1]+h[1]+h[2]+h[2];
+  var n=parseInt(h,16); if(isNaN(n)||h.length!==6)return null;
+  return [(n>>16)&255,(n>>8)&255,n&255];
+}
+/* Plain RGB distance calls #FF0000 and #00FF00 equally far apart as two
+   near-identical creams. The redmean weighting is the cheapest correction that
+   roughly matches what an eye does, and it is the difference between a pale
+   green being called "Sage" and being called "Stone". */
+function nearestSwatchName(hex){
+  var a=hexRgb(hex); if(!a)return '';
+  var best=null,bd=Infinity;
+  for(var i=0;i<SWATCH_NAMES.length;i++){
+    var b=hexRgb(SWATCH_NAMES[i][1]);
+    var rm=(a[0]+b[0])/2, dr=a[0]-b[0], dg=a[1]-b[1], db=a[2]-b[2];
+    var d=(2+rm/256)*dr*dr + 4*dg*dg + (2+(255-rm)/256)*db*db;
+    if(d<bd){bd=d;best=SWATCH_NAMES[i][0];}
+  }
+  return best;
+}
 /* Pass a board to pin the colour to that board; omit for the event palette. */
 function openSwatchModal(board){
+  /* A DOM event is not a board — see the note on the wiring in wirePageActions. */
+  if(board&&typeof board.preventDefault==='function')board=null;
   var e=activeEvent(); if(!e){toast('Create an event first ✦');return;}
-  md.className='modal';md.innerHTML='<h3>Add colour</h3><p class="sub">Adding to '+esc(board?board.title:e.title+'’s palette')+'.</p>'+
-    '<div class="field"><label>Name</label><input id="f_cname" placeholder="e.g. Powder Blush"></div>'+
-    '<div class="field"><label>Colour</label><input id="f_chex" type="color" value="#F5DDE0" style="height:46px;padding:4px"></div>'+
+  if(!e.design)e.design={palette:[],boards:[],decor:[]};
+  if(!e.design.palette)e.design.palette=[];
+  if(board&&!board.swatches)board.swatches=[];
+  var start='#F5DDE0';
+  md.className='modal';md.innerHTML='<h3>Add colour</h3><p class="sub">Adding to '+
+      esc(board?(board.title||'this board'):((e.title||'this event')+'’s palette'))+'.</p>'+
+    '<div class="field"><label>Name</label><input id="f_cname" placeholder="e.g. Powder Blush" value="'+esc(nearestSwatchName(start))+'"></div>'+
+    '<div class="field"><label>Colour</label>'+
+      '<input id="f_chex" type="color" value="'+start+'" style="height:46px;padding:4px">'+
+      /* The hex is what a florist, a printer and a linen supplier all ask for,
+         and the picker never shows it. Tap it to copy. */
+      '<button type="button" class="hex-copy" id="f_chexcopy" title="Copy hex">'+
+        '<span id="f_chexval">'+start.toUpperCase()+'</span><span class="hex-c">copy</span></button>'+
+    '</div>'+
     '<div class="modal-actions"><button class="btn btn-ghost" id="mCancel">Cancel</button><button class="btn btn-gold" id="mSave">Add colour</button></div>';
   ov.classList.add('show');
+  var nameEl=$('#f_cname'), hexEl=$('#f_chex'), valEl=$('#f_chexval');
+  /* The suggestion follows the picker until the planner writes their own name,
+     and then it stops — "Bridesmaid green" must not be overwritten by the next
+     nudge of the colour wheel. */
+  var named=false;
+  nameEl.oninput=function(){ named=true; };
+  hexEl.oninput=hexEl.onchange=function(){
+    var h=hexEl.value; valEl.textContent=h.toUpperCase();
+    if(!named||!nameEl.value.trim())nameEl.value=nearestSwatchName(h);
+  };
+  $('#f_chexcopy').onclick=function(){
+    var h=hexEl.value.toUpperCase();
+    if(navigator.clipboard&&navigator.clipboard.writeText)navigator.clipboard.writeText(h);
+    toast(h+' copied ✦');
+  };
   $('#mCancel').onclick=closeModal;
   $('#mSave').onclick=function(){
-    var n=$('#f_cname').value.trim(); if(!n){$('#f_cname').focus();return;}
-    (board?board.swatches:e.design.palette).push({hex:$('#f_chex').value,name:n});
+    /* The name is no longer a gate — the picker always has a colour and there
+       is always a name for it, so an empty field takes the suggestion rather
+       than refusing to save. */
+    var n=nameEl.value.trim()||nearestSwatchName(hexEl.value)||'Untitled';
+    (board?board.swatches:e.design.palette).push({hex:hexEl.value,name:n});
     save();closeModal();render();
     if(board)wireBoardDetail(); else wireDesign();
   };
@@ -9732,10 +10963,14 @@ function openDocModal(){
   $('#mSave').onclick=function(){
     var t=$('#f_dtitle').value.trim(); if(!t){$('#f_dtitle').focus();return;}
     var chosen=tp?tpls.find(function(x){return x.id===tp.value;}):null;
-    db.documents.push({id:uid('doc'),eventId:$('#f_devent').value,title:t,type:$('#f_dtype').value,
+    var nd={id:uid('doc'),eventId:$('#f_devent').value,title:t,type:$('#f_dtype').value,
       status:'draft',sent:null,signed:null,amount:Number($('#f_damt').value)||0,
-      body:chosen?chosen.body:''});
-    save();closeModal();setView('documents');
+      body:chosen?chosen.body:''};
+    db.documents.push(nd);
+    var raised2=invoiceForDoc(nd);
+    save();closeModal();
+    if(raised2){ toast('Raised '+raised2.num+' ✦'); setView('finance',{invoiceId:raised2.id}); }
+    else setView('documents');
   };
 }
 function openClientModal(existing){
@@ -10762,6 +11997,42 @@ function printCss(){ return ''+
    'justify-content:center;font-size:7px;text-transform:uppercase;letter-spacing:.5px;color:#7b6a70;text-align:center}'+
  '@page{margin:14mm}'+
  'tr{break-inside:avoid}';
+}
+/* The printed invoice. Same builder as the screen — invDocMarkup() swaps the
+   class prefix — so the two cannot drift into being different documents. */
+function invPrintCss(){ var a=accentHex(); return ''+
+ '.pi-sheet{max-width:none}'+
+ '.pi-top{display:flex;justify-content:space-between;gap:26px;align-items:flex-start;'+
+   'padding-bottom:16px;border-bottom:2px solid '+a+'}'+
+ '.pi-logo{width:42px;height:42px;object-fit:cover;border-radius:7px;margin-bottom:8px;display:block}'+
+ '.pi-biz{font-family:Georgia,serif;font-size:18px;font-weight:600;line-height:1.2}'+
+ '.pi-fine{font-size:10.5px;color:#7b6a70;line-height:1.5}'+
+ '.pi-id{text-align:right}'+
+ '.pi-word{font-size:9px;letter-spacing:2.4px;text-transform:uppercase;color:'+a+';font-weight:700}'+
+ '.pi-num{font-family:Georgia,serif;font-size:22px;font-weight:600;margin:2px 0 7px}'+
+ '.pi-dates{font-size:10.5px;color:#5e4e54;line-height:1.7}'+
+ '.pi-dates span{color:#8b7b80}'+
+ '.pi-parties{display:flex;gap:40px;margin:20px 0 18px}'+
+ '.pi-ck{font-size:8.5px;letter-spacing:1.4px;text-transform:uppercase;color:#8b7b80;font-weight:700;margin-bottom:4px}'+
+ '.pi-cname{font-size:12.5px;font-weight:600}'+
+ '.pi-lines{width:100%;border-collapse:collapse}'+
+ '.pi-lines th{text-align:left;font-size:8.5px;letter-spacing:1.3px;text-transform:uppercase;color:#7b6a70;'+
+   'border-bottom:1px solid #d8c9cc;padding:7px 8px}'+
+ '.pi-lines td{padding:9px 8px;border-bottom:1px solid #eee3e5;font-size:11.5px;vertical-align:top}'+
+ '.pi-r{text-align:right;white-space:nowrap}'+
+ '.pi-sums{margin-top:14px;margin-left:auto;width:270px}'+
+ '.pi-sline{display:flex;justify-content:space-between;gap:18px;padding:4px 8px;font-size:11.5px}'+
+ '.pi-sline span{color:#7b6a70}'+
+ '.pi-stot{border-top:1px solid #d8c9cc;margin-top:4px;padding-top:8px;font-size:13px}'+
+ '.pi-stot b{font-size:16px}'+
+ '.pi-sbal{border-top:1px solid #d8c9cc;margin-top:4px;padding-top:8px}'+
+ '.pi-sbal b{color:'+a+'}'+
+ '.pi-pays{margin-top:18px;padding-top:11px;border-top:1px solid #eee3e5}'+
+ '.pi-pay{display:flex;justify-content:space-between;gap:14px;font-size:10.5px;padding:2px 0;color:#5e4e54}'+
+ '.pi-notes{margin-top:18px;padding:11px 13px;background:#faf5f2;border-left:2px solid '+a+';'+
+   'font-size:10.5px;color:#5e4e54;white-space:pre-wrap}'+
+ '.pi-foot{margin-top:22px;padding-top:11px;border-top:1px solid #eee3e5;text-align:center;'+
+   'font-size:9.5px;color:#8b7b80}';
 }
 function openPrintMenu(ev){
   if(!ev){toast('Open an event first ✦');return;}
@@ -11965,6 +13236,17 @@ function deleteRecord(kind,id){
       if(state.activeEventId===id)state.activeEventId=(db.events[0]||{}).id;
       if(state.eventId===id)state.eventId=null;
     }
+    /* A document and the invoice it raised are linked, not owned. Deleting
+       either leaves the other standing — the invoice may have payments on it,
+       and the file may be the only copy of what was signed — but neither is
+       left pointing at something that has gone. */
+    if(kind==='document'){
+      (db.invoices||[]).forEach(function(x){ if(x.docId===id)x.docId=null; });
+    }
+    if(kind==='invoice'){
+      (db.documents||[]).forEach(function(d){ if(d.invoiceId===id)d.invoiceId=null; });
+      if(state.invoiceId===id)state.invoiceId=null;
+    }
     /* A deleted table must not leave anyone seated at it — on the guest row
        for the primary, and on any invitation that used it. */
     if(kind==='table'&&c.ev){
@@ -12057,7 +13339,14 @@ function editRecord(kind,id){
               {id:'amount',label:'Value',type:'number',value:it.amount},
               {id:'eventId',label:'Event',type:'select',value:it.eventId,
                options:db.events.map(function(e){return {value:e.id,label:e.title};})}],
-      onSave:function(v){ Object.assign(it,v); closeModal(); afterChange(); }});},
+      onSave:function(v){
+        Object.assign(it,v);
+        /* Relabelling a filed document Invoice raises one, exactly as
+           creating it that way would have. */
+        var raised=invoiceForDoc(it);
+        closeModal(); afterChange();
+        if(raised)toast('Raised '+raised.num+' ✦');
+      }});},
     questionnaire:function(){ openEditor({title:'Edit questionnaire',onDelete:del,deleteLabel:it.title,
       fields:[{id:'title',label:'Title',value:it.title,required:true},
               {id:'intro',label:'Intro for the client',type:'textarea',value:it.intro},
@@ -12303,7 +13592,7 @@ function toast(msg){
    sample freely; only the writes are stopped. */
 var SAMPLE_SAFE=['[data-openevent]','[data-client]','[data-back]','[data-backdesign]','[data-backq]',
   '[data-ev]','[data-evtoggle]','[data-seatmode]','[data-setup]','[data-print]','[data-gotoev]',
-  '[data-clientview]','[data-bibaud]','[data-bibsec]','#bibPdf','#bibDoc','#bibMail','#bibAll','#clientBible',
+  '[data-clientview]','[data-guestview]','#gsNext','#gsPrev','.gstack','[data-invoice]','[data-backinv]','#ivPrint','[data-bibaud]','[data-bibsec]','#bibPdf','#bibDoc','#bibMail','#bibAll','#clientBible',
   '[data-board]','[data-q]','[data-adopt]','[data-sampleinfo]','.ev-card','.ev-sub','.ew-b','.wk-row',
   '#evSwitch','#printEvent','#exportGuests','#exportInv','#calPrev','#calNext','#calToday',
   '#seatPickCancel','#sampleAdopt','#sampleRemove','.back-link','.srch-row','.tour-x',
@@ -12378,7 +13667,7 @@ function markActiveGroup(){
    survives re-renders without needing to re-bind. */
 function drillFrom(el){
   if(_justDragged)return false;              // a completed drag must not navigate
-  var open=el.closest('[data-client],[data-openevent],[data-back],[data-board],[data-backdesign],[data-q],[data-backq]');
+  var open=el.closest('[data-client],[data-openevent],[data-back],[data-board],[data-backdesign],[data-q],[data-backq],[data-invoice]');
   if(!open)return false;
   if(open.dataset.backq!==undefined){ setView('questionnaires',{qId:null}); return true; }
   if(open.dataset.q){ setView('questionnaires',{qId:open.dataset.q}); return true; }
@@ -12387,6 +13676,7 @@ function drillFrom(el){
   if(open.dataset.back!==undefined){ setView(open.dataset.back,{clientId:null,eventId:null}); return true; }
   if(open.dataset.openevent){ setView('events',{eventId:open.dataset.openevent,clientId:null}); return true; }
   if(open.dataset.client){ setView('clients',{clientId:open.dataset.client,eventId:null}); return true; }
+  if(open.dataset.invoice){ setView('finance',{invoiceId:open.dataset.invoice}); return true; }
   return false;
 }
 $('#content').addEventListener('click',function(e){
@@ -13321,6 +14611,20 @@ function sbCoverCol(){
   }
   return SB_COVER_COL;
 }
+/* Migration 22 turned an invoice into a document — lines, tax, terms, payments
+   and the file it was filed with. A studio that has not run it yet still has
+   to be able to push, and naming a column the database lacks fails the whole
+   table, so the payload asks first. Same shape as sbCoverCol above. */
+var SB_INV_COLS=null;
+function sbInvCols(){
+  if(SB_INV_COLS===null){
+    SB_INV_COLS=false;
+    sbRest('invoices?select=items&limit=1')
+      .then(function(){ SB_INV_COLS=true; })
+      .catch(function(){ SB_INV_COLS=false; });
+  }
+  return SB_INV_COLS;
+}
 function sbPush(opts){
   var org=SB_STATE.org;
   if(!org)return Promise.reject(new Error('No studio yet.'));
@@ -13356,6 +14660,19 @@ function sbPush(opts){
   };
   var L=notSample(db.leads,'lead'), E=notSample(db.events,'event'),
       V=notSample(db.vendors,'vendor'), B=notSample(db.bookings,'booking');
+  /* The paperwork was never filtered, and that is how the demo wedding got
+     into a real studio's database and stayed there. Leads, events, vendors and
+     bookings were held back; invoices, documents, questionnaires and form
+     submissions went up with everything else. The event they belong to was
+     held back, so they arrived with a null event_id — orphaned, but present —
+     and every device the studio has pulled them back down ever since. Worse,
+     they come down without the flag and with a uuid in place of the fixed id,
+     so "Remove sample" could no longer see them: GEM-1042 and GEM-1051 for
+     Priya & Sam outlived the wedding they belonged to.
+     Leaving them out now also cleans up: the prune retires whatever this
+     device sent last time and is no longer sending. */
+  var IV=notSample(db.invoices,'invoice'), DC=notSample(db.documents,'document'),
+      QN=notSample(db.questionnaires,'questionnaire'), SU=notSample(db.submissions,'submission');
   /* A venue is never sample: the directory is lifted out of whatever events a
      device holds, and the sample's own venue goes when the sample does. */
   var VN=db.venues||[];
@@ -13371,6 +14688,8 @@ function sbPush(opts){
      Lead ids need their own guard. */
   var leadIds=L.map(function(l){return l.id;});
   var hasLead=function(id){ return leadIds.indexOf(id)>=0; };
+  /* A document may name an invoice the sample filter has just held back. */
+  var invIds=IV.map(function(i){return i.id;});
 
   var timeline=[],checklist=[],budget=[],tables=[],guests=[],fitems=[],
       palette=[],boards=[],swatches=[],ideas=[],decor=[],images=[];
@@ -13406,7 +14725,7 @@ function sbPush(opts){
   });
 
   var qs=[],qq=[],qa=[];
-  (db.questionnaires||[]).forEach(function(q){
+  QN.forEach(function(q){
     qs.push({id:q.id,org_id:org,event_id:has(q.eventId)?q.eventId:null,title:s(q.title),intro:s(q.intro),status:q.status||'draft'});
     (q.questions||[]).forEach(function(x,i){
       qq.push({id:x.id,org_id:org,questionnaire_id:q.id,prompt:s(x.prompt),kind:x.kind||'short_text',
@@ -13473,15 +14792,34 @@ function sbPush(opts){
     ['board_swatches',swatches],['board_ideas',ideas],['board_images',images],['decor_items',decor],
     ['vendor_bookings',B.filter(function(b){return has(b.eventId);}).map(function(b){ return {id:b.id,org_id:org,
       vendor_id:b.vendorId,event_id:b.eventId,status:b.status||'quote',fee:num(b.fee),notes:s(b.notes)}; })],
-    ['invoices',(db.invoices||[]).map(function(i){ return {id:i.id,org_id:org,event_id:has(i.eventId)?i.eventId:null,
-      number:s(i.num),client_name:s(invoiceClientName(i)),lead_id:hasLead(i.leadId)?i.leadId:null,amount:num(i.amount),due_date:nn(i.due),
-      status:INV_OUT[i.status]||i.status||'draft'}; })],
-    ['documents',(db.documents||[]).map(function(d){ return {id:d.id,org_id:org,event_id:has(d.eventId)?d.eventId:null,
+    ['invoices',IV.map(function(i){
+      var row={id:i.id,org_id:org,event_id:has(i.eventId)?i.eventId:null,
+        number:s(i.num),client_name:s(invoiceClientName(i)),lead_id:hasLead(i.leadId)?i.leadId:null,
+        /* Derived, not stored — an invoice whose column disagreed with its own
+           lines would be wrong in every report that reads the column. */
+        amount:num(invTotal(i)),due_date:nn(i.due),
+        status:INV_OUT[i.status]||i.status||'draft'};
+      if(sbInvCols()){
+        row.issued_date=nn(i.issued);
+        row.notes=s(i.notes);
+        row.tax_rate=num(i.taxRate);
+        row.items=invItems(i);
+        row.payments=invPayments(i);
+        row.pay_link=s(i.payLink);
+      }
+      return row;
+    })],
+    ['documents',DC.map(function(d){ var r={id:d.id,org_id:org,event_id:has(d.eventId)?d.eventId:null,
       title:s(d.title),type:d.type||'other',status:d.status||'draft',amount:num(d.amount),
       /* The attachment's metadata rides in the body column alongside any typed
          text, so no extra migration is needed for it. */
       body:JSON.stringify({text:s(d.body),file:d.file||null}),
-      sent_at:nn(d.sent),signed_at:nn(d.signed)}; })],
+      sent_at:nn(d.sent),signed_at:nn(d.signed)};
+      /* The link lives on this side only: documents are upserted after
+         invoices, so by the time this row lands the invoice it names exists.
+         The other direction would be a circular foreign key. */
+      if(sbInvCols())r.invoice_id=(d.invoiceId&&invIds.indexOf(d.invoiceId)>=0)?d.invoiceId:null;
+      return r; })],
     ['questionnaires',qs],['questions',qq],['answers',qa],
     /* messages.event_id is NOT NULL, so a message whose event has gone is
        dropped rather than sent with a null that the database will reject. */
@@ -13491,7 +14829,7 @@ function sbPush(opts){
       body:s(m.body),sender_id:me}; })],
     ['lead_forms',lf?[{id:lf.id,org_id:org,slug:s(lf.slug)||'inquire',title:s(lf.title)||'Enquiry',
       intro:s(lf.intro),fields:lf.fields||[],active:lf.active!==false}]:[]],
-    ['form_submissions',lf?(db.submissions||[]).map(function(x){ return {id:x.id,form_id:lf.id,org_id:org,
+    ['form_submissions',lf?SU.map(function(x){ return {id:x.id,form_id:lf.id,org_id:org,
       payload:x,names:s(x.names),email:s(x.email),phone:s(x.phone),
       event_date:nn(x.date),status:x.status||'new'}; }):[]]
   ];
@@ -13808,11 +15146,18 @@ function sbPull(opts){
       bookings:R.vendor_bookings.map(function(b){ return {id:b.id,vendorId:b.vendor_id,eventId:b.event_id,
         status:b.status,fee:Number(b.fee),notes:b.notes||''}; }),
       invoices:R.invoices.map(function(i){ return {id:i.id,client:i.client_name,num:i.number,amount:Number(i.amount),
-        due:i.due_date,status:INV_IN[i.status]||i.status,eventId:i.event_id,leadId:i.lead_id||null}; }),
+        due:i.due_date,status:INV_IN[i.status]||i.status,eventId:i.event_id,leadId:i.lead_id||null,
+        /* Absent until migration 22, so every one of these has to survive the
+           column not being there at all. */
+        issued:i.issued_date||'',notes:i.notes||'',taxRate:Number(i.tax_rate)||0,
+        items:Array.isArray(i.items)?i.items:[],
+        payments:Array.isArray(i.payments)?i.payments:[],
+        payLink:i.pay_link||'',docId:null}; }),
       documents:R.documents.map(function(d){ return {id:d.id,title:d.title,type:d.type,status:d.status,
         amount:Number(d.amount),eventId:d.event_id,
         body:(function(){ try{ var j=JSON.parse(d.body||'{}'); return typeof j.text==='string'?j.text:(d.body||''); }catch(e){ return d.body||''; } })(),
         file:(function(){ try{ return (JSON.parse(d.body||'{}')||{}).file||null; }catch(e){ return null; } })(),
+        invoiceId:d.invoice_id||null,
         sent:d.sent_at?String(d.sent_at).slice(0,10):'',signed:d.signed_at?String(d.signed_at).slice(0,10):''}; }),
       questionnaires:R.questionnaires.map(function(q){ return {id:q.id,title:q.title,intro:q.intro,status:q.status,
         eventId:q.event_id,
@@ -13826,6 +15171,13 @@ function sbPull(opts){
         role:m.sender_role,body:m.body,at:m.created_at}; }),
       submissions:R.form_submissions.map(function(x){ return Object.assign({},x.payload||{},{id:x.id,status:x.status}); })
     };
+    /* The wire carries the link one way — on the document — so the invoice's
+       side is rebuilt here rather than stored twice and allowed to disagree. */
+    next.documents.forEach(function(d){
+      if(!d.invoiceId)return;
+      var x=next.invoices.find(function(i){return i.id===d.invoiceId;});
+      if(x)x.docId=d.id; else d.invoiceId=null;
+    });
     if(R.lead_forms&&R.lead_forms[0]){
       var f=R.lead_forms[0];
       next.leadForm={id:f.id,slug:f.slug,title:f.title,intro:f.intro||'',

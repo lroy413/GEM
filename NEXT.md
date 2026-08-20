@@ -156,6 +156,22 @@ never pulled, which is what stops a fresh install overwriting the studio.
 
 ## 3 · Things worth knowing before you change the UI
 
+- **A phone is not a narrow desktop.** Several places spent a lot of screen on
+  very little: `.stat-row` went to ONE column below 560px, so four figures cost
+  about 800px of scroll to say four numbers (two columns now, the whole row is
+  170px); the drawer's wordmark block was 100px before any navigation. When
+  something looks roomy on a phone, measure it — `getBoundingClientRect()` in a
+  390px viewport — rather than trusting how it looks in a resized desktop
+  window.
+- **The studio's name is the SUBTITLE in the brand block**, not the wordmark.
+  `.brand .name` is the short mark, which can be a single letter. Hiding the
+  subtitle to save space — which I tried first — leaves a studio whose mark is
+  "E" looking at a lone E. They sit on one row on mobile instead.
+- **The dashboard's To Do is capped by a preference**, `prefs().todoRows`,
+  default 10 with 15 and 20 in Settings › Appearance. The card also collapses,
+  remembered in `gem-todo-shut`, because Waiting On lives underneath it and a
+  full list pushed that off a phone screen entirely.
+
 - **Never index DEFAULT by position.** `normalize()` filled a missing `design`
   from `DEFAULT.events[i]` — the sample's palette, mood boards and décor handed
   to whatever event happened to sit at the same INDEX. After a pull that is the
@@ -457,6 +473,89 @@ never pulled, which is what stops a fresh install overwriting the studio.
   replace matching the backup-restore handler instead of the boot sequence.
 - Check a class name is free before styling it — `.ev-switch` was already the
   active-event `<select>`.
+- **Every headed table becomes cards below 700px.** Nine screens render a
+  five- or six-column table; all of them were wider than a 390px phone, so
+  they scrolled sideways inside `.tbl-wrap` — Amount sat off the right edge and
+  the client's name wrapped to three lines to make room. `labelCells()` runs
+  once per `render()`, copies each `<th>`'s text onto the cells beneath it as
+  `data-l`, and tags the table `.as-cards` (plus `.has-acts` when a row has
+  actions, and `.cards-wrap` on the scroller so it can stop being one). CSS
+  reads the labels back with `content:attr(data-l)`. Consequences worth
+  knowing before you touch a table:
+  - There is **no phone-only render**, so nothing can drift and rotating the
+    phone re-lays out with no JavaScript at all.
+  - A cell holding only an em-dash gets `.is-none` and disappears on a card —
+    a table needs the empty cell to keep its column; a card does not.
+  - The **first cell is the card's title**, so put what the row *is* in
+    column one. A cell whose header is blank is treated as the action column
+    and floats to the card's top-right corner.
+  - A header `<th>` may carry a bulk control (the guest grid's invite
+    columns); those stay as chips above the cards. Everything else in `thead`
+    is hidden.
+  - Only tables **with a header row** qualify. The one exception is the vendor
+    team table, which has none and still overflowed; it declares
+    `class="as-cards has-acts"` and its own `data-l` in the markup.
+- **`uid()` is called before its own counter is initialised.** `normalize()`
+  mints ids at load and runs above `var _uidSeq=0`, so the counter was
+  `undefined` and `undefined++` is NaN — every id minted in that window had the
+  literal string "NaN" where the collision guard belongs. Guarded inside
+  `uid()` now. Ids already stored keep their NaN; they are still unique
+  strings and rewriting them would break every reference.
+- **`x.onclick = fn` hands the handler the click event.** Every function
+  wired that way must therefore take no arguments, or refuse a DOM event.
+  `openGuestModal(ev)` and `openSwatchModal(board)` both took one, so Add
+  guest built a modal around a MouseEvent and Add colour said "Adding to ."
+  and threw on save. Both are wrapped at the wiring now *and* guard
+  themselves; `openTableModal`, `openVendorModal`, `openDocModal`,
+  `openQuestionnaireModal`, `openLeadModal`, `openInvoiceModal`,
+  `openBoardModal` and `openQuestionModal` take nothing and are safe bare.
+- **The guest list has two modes** (`prefs().guestView`, in the whitelist):
+  the grid, and a deck — `guestStack()` / `guestCard()`. The deck renders
+  three cards from the same records with the same class names, so
+  `wireGuests()` wires it without knowing it exists; position lives in
+  `state.guestIdx` and is clamped by `guestIdx(n)` because a search can make
+  the list shorter than the card you were on. Its swipe handlers are
+  **assigned, not added** — `render()` re-wires the view and several callers
+  still follow it with a `wireGuests()` of their own, so a stacking listener
+  fires twice and one swipe dealt two cards.
+- **An invoice is a document now** — `viewInvoiceDetail()` and
+  `invDocMarkup()`. Things to know before you touch one:
+  - **The lines are the record; the total is derived.** `invSub` → `invTax` →
+    `invTotal`, and `invRecalc()` writes the answer back to `amount` on every
+    change. Everything else in the app reads `amount` — the dashboard alert,
+    the stat row, the CSV export, the Supabase column — so an invoice whose
+    stored total disagreed with its own lines would be wrong everywhere at
+    once. An invoice with no lines keeps `amount` as its own truth, which is
+    every invoice written before this existed.
+  - **Overdue is computed, not stored.** `invStatus()` compares the due date
+    with `todayLocal()`; nothing writes `'over'` to disk, so an invoice does
+    not become late because someone opened the app.
+  - **`invDocMarkup(x, forPrint)` builds one document two ways** — the class
+    prefix is the only difference (`iv-` on screen, `pi-` in the print frame).
+    A studio whose PDF did not match its portal would have two invoices.
+  - **A document labelled Invoice raises one**, via `invoiceForDoc()` — on
+    creation, on upload, and on relabelling. Created only, never overwritten:
+    once the invoice exists it may carry lines and payments the file knows
+    nothing about. Deleting either side unlinks; neither cascades.
+  - **The link goes one way on the wire.** `documents.invoice_id` only —
+    documents are upserted after invoices, so the row it names exists by then.
+    Both directions would be a circular foreign key that fails whichever table
+    goes first. The pull rebuilds `invoice.docId` from the document side.
+  - **Migration 22 carries the lines** (`items`, `payments`, `tax_rate`,
+    `issued_date`, `notes`, `pay_link` as jsonb/scalars). `sbInvCols()` probes
+    for it exactly as `sbCoverCol()` does, so a studio that has not run 22 can
+    still push — naming a column the database lacks fails the whole table.
+  - **Paying in the app means the studio's own checkout.** GEM never touches
+    the money: `prefs().payLink` (or the invoice's own) is opened by a Pay
+    button in the portal, and a balance with no link shows the terms instead.
+    A real in-app card payment needs a payment processor and a server to hold
+    its secret — neither exists here yet.
+- **Row actions are blocked on sample records by design.** `sampleBlock()` is a
+  capture-phase gate on `.main`: it calls `preventDefault()` and
+  `stopPropagation()` before any handler sees the click. A test that clicks
+  `[data-edit]` on the sample and finds nothing happened has found the gate,
+  not a bug — exercise create buttons instead, or adopt/remove the sample
+  first.
 
 ---
 

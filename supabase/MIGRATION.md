@@ -121,6 +121,10 @@ be made by hand. All twenty-one were applied by hand before the repo
 was connected, so `supabase_migrations.schema_migrations` has never heard of
 them; without the seed the integration treats every one as pending.
 
+The seed covers 01–21, which is everything that had been applied by hand. **22
+is the first migration deployed from git** — push it and the integration
+applies it and records it. Nothing to do by hand.
+
 That is not a tidiness step. **01-05 are not re-runnable.** They use bare
 `create table`, `create type` and `create policy`, so a second pass errors with
 "already exists". 06 onward were written defensively (`if not exists`,
@@ -140,6 +144,16 @@ database and rebuilds it from these files. Every row in the studio goes with it.
 - Make it re-runnable, the way 06-21 are. It costs a few characters and it is
   the difference between a failed deploy and a no-op.
 - End it with a `select` of booleans that proves it did what it says.
+- **Never add a foreign key in both directions between two tables the push
+  sends.** `sbPush` upserts a table at a time, so whichever goes first names
+  a row that does not exist yet and fails the whole table. Migration 22 keeps
+  the document→invoice link on the document alone for exactly this reason, and
+  the pull rebuilds the other side in memory.
+- **A new column needs a probe in the app before the payload names it.** A
+  studio that has not run the migration yet still has to be able to push, and
+  PostgREST rejects the whole table when it is sent a column that is not
+  there. `sbCoverCol()` and `sbInvCols()` are the pattern: one `select` of the
+  new column, cached, defaulting to false.
 
 ## Gotchas
 
