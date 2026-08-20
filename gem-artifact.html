@@ -5365,6 +5365,16 @@ var TITLES={
 function setView(v,opts){
   state.view=v;
   if(opts&&opts.eventId!==undefined)state.eventId=opts.eventId;
+  /* ---- opening an event IS choosing it ----
+     There were two ideas of "which event" and only one of them moved. Opening
+     a workspace set state.eventId; the event everything ELSE reads —
+     activeEvent(), and so the guest list, the seating chart, the design studio,
+     the day-of console and the card at the top of the nav — came from
+     state.activeEventId, which only the switcher and a couple of links ever
+     wrote. So you could open the Halloween screening, tap Guests, and be
+     looking at a wedding. One assignment: what you opened is what you are
+     working on. */
+  if(opts&&opts.eventId&&evById(opts.eventId))state.activeEventId=opts.eventId;
   if(opts&&opts.clientId!==undefined)state.clientId=opts.clientId;
   if(opts&&opts.boardId!==undefined)state.boardId=opts.boardId;
   if(opts&&opts.qId!==undefined)state.qId=opts.qId;

@@ -679,6 +679,16 @@ never pulled, which is what stops a fresh install overwriting the studio.
     `sbTagCol()` probes for it exactly as `sbAttireCol()` does. Verified
     against local Postgres: default, containment query, and the check refusing
     an object.
+- **There were two ideas of "which event", and only one of them moved.**
+  `state.eventId` is the workspace you have open; `state.activeEventId` is what
+  `activeEvent()` returns — and that is what the guest list, the seating chart,
+  the design studio, the day-of console and the nav's "working on" card all
+  read. Only the event switcher and a couple of links ever wrote it, so opening
+  a different event from the Events grid and then tapping Guests showed you the
+  previous event's guests. `setView()` now sets both: what you opened is what
+  you are working on. `scratchpad/active-event-test.mjs` covers it, and fails
+  against the build before the fix — two events, open one, check the card, the
+  guest list and the seating chart all followed.
 - **The sidebar is three bands, not one long scroll.** The whole panel scrolled
   and the user chip was pinned to the bottom of it with `position:sticky`,
   which meant it floated OVER the tools as they passed underneath — a nav item
