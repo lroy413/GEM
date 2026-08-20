@@ -10,7 +10,7 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
 <meta name="apple-mobile-web-app-title" content="GEM">
 <meta name="format-detection" content="telephone=no">
-<meta name="gem-build" content="990cb5dc48d8">
+<meta name="gem-build" content="f9fdcb9b0d75">
 <link rel="manifest" href="/manifest.webmanifest">
 <link rel="icon" href="/icons/icon-192.png" sizes="192x192" type="image/png">
 <link rel="apple-touch-icon" href="/icons/icon-180.png">
@@ -1952,6 +1952,17 @@ td.inv-col{text-align:center;width:1%}
 /* The per-chip dropdown was the touch fallback; tap-to-seat replaces it and
    is both faster and less cluttered, so it goes back to being desktop-only. */
 @media (pointer:coarse),(max-width:860px){ .seat-wrap .move-sel{display:none} }
+/* Whose guest. Two hues that are clearly a pair rather than a status — this
+   is not good news or bad news, it is which half of the room. */
+.g-side{display:inline-block;padding:2px 9px;border-radius:var(--radius-pill);
+  font-size:11.5px;font-weight:600;white-space:nowrap;
+  background:var(--pink-100);border:1px solid var(--line);color:var(--ink-soft)}
+.g-side.s-A{background:var(--gold-soft);border-color:var(--gold-line);color:var(--gold-deep)}
+.g-side.s-B{background:#E8EDE6;border-color:#D3DED0;color:#4E6B4A}
+.side-seg{width:100%;display:flex}
+.side-seg .seg-b{flex:1 1 0;min-width:0;padding:8px 6px;font-size:12px;
+  overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+
 /* ---- the guest list as a deck ----
    Three cards, back to front. The two behind are scaled and pushed down so
    the stack has a depth you can see; only the top one takes a tap. */
@@ -4079,6 +4090,53 @@ function invoicesForLead(l){
 function todayLocal(){
   var n=new Date();
   return n.getFullYear()+'-'+String(n.getMonth()+1).padStart(2,'0')+'-'+String(n.getDate()).padStart(2,'0');
+}
+/* ---- which side of the family ----
+ * A wedding guest list is two guest lists. Who invited whom decides the
+ * seating plan, whether the numbers are fair, and who to chase when a family
+ * stops replying — and the field was already in the record and on the wire,
+ * hardcoded to 'A' for everyone the app had ever added.
+ *
+ * Only weddings. A corporate gala has no sides, and asking about them is a
+ * question with no right answer.
+ */
+function evHasSides(e){ return evType(evPrimary(e)||e)==='Wedding'; }
+/* The couple's own names when the client file has them — "Candace" reads
+ * better than "Partner 1" on eighty rows — and a first name only, because the
+ * surname is on the guest beside it. */
+function sideNames(e){
+  var l=leadForEvent(evPrimary(e)||e)||{};
+  var first=function(n){ return String(n||'').trim().split(/\s+/)[0]||''; };
+  return {A:first(l.partnerA)||'Partner 1', B:first(l.partnerB)||'Partner 2'};
+}
+function sideLabel(e,v){
+  if(!v)return 'Both';
+  var n=sideNames(e);
+  return v==='B'?n.B:n.A;
+}
+function sideOptions(e){
+  var n=sideNames(e);
+  return [{value:'A',label:n.A},{value:'B',label:n.B},{value:'',label:'Both / neither'}];
+}
+/* ---- what is on the menu ----
+ * The meal picker offered Beef, Fish, Vegetarian and Kids to every studio in
+ * the world, none of whom had said so. There is no menu until a planner types
+ * one, so the field takes anything and offers back only what this event has
+ * actually used — the first guest is typed, the eightieth is picked.
+ */
+function mealOptions(e){
+  var seen={}, out=[];
+  var add=function(m){ m=String(m||'').trim(); if(!m||seen[m.toLowerCase()])return;
+                       seen[m.toLowerCase()]=1; out.push(m); };
+  (((evPrimary(e)||e)||{}).meals||[]).forEach(add);
+  /* Every event of the weekend, so the rehearsal dinner's menu is offered on
+     the wedding and the other way round. */
+  evBlock(evPrimary(e)||e).forEach(function(x){
+    (x.guests||[]).forEach(function(g){ add(g.meal); });
+    (db.invites||[]).forEach(function(i){ if(i.eventId===x.id)add(i.meal); });
+  });
+  out.sort(function(a,b){ return a.localeCompare(b); });
+  return out;
 }
 function invoiceClientName(x){
   var l=x.leadId?leadById(x.leadId):null;
@@ -6353,6 +6411,7 @@ function guestCard(e,x,subs,sub,depth){
         Object.keys(RSVP).map(function(k){
           return '<option value="'+k+'"'+(cur===k?' selected':'')+'>'+RSVP[k].lbl+'</option>';
         }).join('')+'</select>')+
+      (evHasSides(e)&&x.side?f('Whose','<span class="g-side s-'+x.side+'">'+esc(sideLabel(e,x.side))+'</span>'):'')+
       (gMeal(x,e)?f('Meal','<b>'+esc(gMeal(x,e))+'</b>'):'')+
       (x.diet?f('Dietary','<span class="status s-due">'+esc(x.diet)+'</span>'):'')+
       f('Table',tb?'<span class="pill">'+esc(tb.name)+'</span>':'<span class="gc-none">Unseated</span>')+
@@ -6409,8 +6468,12 @@ function viewGuests(){
   var q=(state.guestQ||'').trim().toLowerCase();
   var all=rosterFor(e);
   var g=q?all.filter(function(x){
-    return [x.name,x.party,gMeal(x,e),x.diet,x.email].join(' ').toLowerCase().indexOf(q)>-1;
+    return [x.name,x.party,gMeal(x,e),x.diet,x.email,
+            evHasSides(e)?sideLabel(e,x.side):''].join(' ').toLowerCase().indexOf(q)>-1;
   }):all;
+  var sides=evHasSides(e), sn=sideNames(e);
+  var sideA=g.filter(function(x){return x.side==='A';}).length;
+  var sideB=g.filter(function(x){return x.side==='B';}).length;
   var yes=g.filter(function(x){return gRsvp(x,e)==='yes';}).length;
   var no=g.filter(function(x){return gRsvp(x,e)==='no';}).length;
   var wait=g.filter(function(x){var r=gRsvp(x,e);return r==='pending'||r==='invited';}).length;
@@ -6419,7 +6482,7 @@ function viewGuests(){
   g.forEach(function(x){ if(gRsvp(x,e)==='yes'&&gMeal(x,e)) meals[gMeal(x,e)]=(meals[gMeal(x,e)]||0)+1; });
   var mealRows=Object.keys(meals).map(function(m){
     var pct=yes?Math.round(meals[m]/yes*100):0;
-    return '<div class="bud-row"><div class="cat">'+esc(m)+'</div><div class="track"><div class="bar" style="height:12px"><i style="width:'+pct+'%"></i></div></div><div class="amt"><b>'+meals[m]+'</b> guests</div></div>';
+    return '<div class="bud-row"><div class="cat">'+esc(m)+'</div><div class="track"><div class="bar" style="height:12px"><i style="width:'+pct+'%"></i></div></div><div class="amt"><b>'+meals[m]+'</b> guest'+(meals[m]===1?'':'s')+'</div></div>';
   }).join('')||'<div style="padding:18px 22px;color:var(--muted);font-size:13px">No meal selections yet.</div>';
 
   return ''+
@@ -6428,6 +6491,10 @@ function viewGuests(){
     stat('Attending',String(yes),no+' declined','up')+
     stat('Awaiting Reply',String(wait),'needs a follow-up')+
     stat('Dietary Needs',String(diets.length),'special meals')+
+    /* Only when it has been filled in on anybody — a row of zeroes is not a
+       fact about the wedding, it is a fact about the data entry. */
+    (sides&&(sideA||sideB)?stat('The Split',sideA+' · '+sideB,
+      sn.A+' and '+sn.B+(g.length-sideA-sideB?' · '+(g.length-sideA-sideB)+' shared':'')):'')+
   '</div>'+
   (diets.length?'<div class="card" style="margin-bottom:20px"><div class="card-h"><h3>Dietary Alerts</h3><span class="sec-badge">Share with catering</span></div>'+
     '<div style="padding:16px 22px;display:flex;flex-wrap:wrap;gap:10px">'+diets.map(function(d){
@@ -6449,7 +6516,8 @@ function viewGuests(){
       '<span class="pill">'+(q?g.length+' of '+all.length:String(g.length))+'</span>'+
     '</span></div>'+
     (guestViewMode()==='stack'?guestStack(e,g,subs,sub):
-    '<div class="tbl-wrap g-tbl-wrap"><table class="g-tbl"><thead><tr><th>Guest</th><th>Party</th><th>RSVP</th><th>Meal</th><th>Dietary</th><th>Table</th>'+
+    '<div class="tbl-wrap g-tbl-wrap"><table class="g-tbl"><thead><tr><th>Guest</th><th>Party</th>'+
+      (sides?'<th>Side</th>':'')+'<th>RSVP</th><th>Meal</th><th>Dietary</th><th>Table</th>'+
       /* One column per sub-event, only on the primary. This is the whole point
          of the feature: who is asked to what, readable in a single sweep. */
       /* The header doubles as a bulk control. Ticking 150 guests one at a time
@@ -6472,6 +6540,7 @@ function viewGuests(){
          each value needs its own label, and reading it off data-l costs no
          second render — the selects and ticks keep the handlers they had. */
       return '<tr><td class="g-name"><b>'+esc(x.name)+'</b></td><td data-l="Party"'+(x.party?'':' class="is-none"')+'>'+esc(x.party)+'</td>'+
+        (sides?'<td data-l="Side"><span class="g-side s-'+(x.side||'x')+'">'+esc(sideLabel(e,x.side))+'</span></td>':'')+
         '<td data-l="RSVP" class="g-rsvp"><select class="mini rsvp-sel" data-gid="'+esc(x.id)+'" aria-label="RSVP for '+esc(x.name)+'">'+
           Object.keys(RSVP).map(function(k){return '<option value="'+k+'"'+(cur===k?' selected':'')+'>'+RSVP[k].lbl+'</option>';}).join('')+
         '</select></td>'+
@@ -10757,7 +10826,28 @@ function openGuestModal(ev){
     '<div class="field"><label>Full name</label><input id="f_gname" placeholder="e.g. Eleanor Vance"></div>'+
     '<div class="field"><label>Party / group</label><input id="f_gparty" placeholder="e.g. Vance Family"></div>'+
     '<div class="field"><label>RSVP</label><select id="f_grsvp"><option value="invited">Invited</option><option value="pending">Pending</option><option value="yes">Attending</option><option value="no">Declined</option></select></div>'+
-    '<div class="field"><label>Meal choice</label><select id="f_gmeal"><option value="">Not selected</option><option>Beef</option><option>Fish</option><option>Vegetarian</option><option>Kids</option></select></div>'+
+    /* Weddings only — a corporate gala has no sides, and asking is a question
+       with no right answer. */
+    (evHasSides(prim)?'<div class="field"><label>Whose guest</label>'+
+      '<div class="seg side-seg" role="radiogroup" aria-label="Whose guest">'+
+        /* Nothing is preselected but "Both / neither", which is the only
+           answer the app actually knows. Defaulting to partner 1 is how every
+           guest ended up on one side of a wedding in the first place — and
+           because the choice survives Save & add another, a whole family is
+           one tap and then a run of names. */
+        sideOptions(prim).map(function(o){
+          var on=o.value==='';
+          return '<button type="button" class="seg-b'+(on?' on':'')+'" data-side="'+esc(o.value)+'" '+
+            'role="radio" aria-checked="'+on+'">'+esc(o.label)+'</button>';
+        }).join('')+
+      '</div></div>':'')+
+    /* A list, not a menu. Whatever this weekend has already served is offered;
+       anything else is typed and joins the list for the next guest. */
+    '<div class="field"><label>Meal choice</label>'+
+      '<input id="f_gmeal" list="gmealList" placeholder="'+
+        (mealOptions(prim).length?'Start typing, or pick one':'e.g. Beef — the first one sets the list')+'">'+
+      '<datalist id="gmealList">'+mealOptions(prim).map(function(m){
+        return '<option value="'+esc(m)+'"></option>';}).join('')+'</datalist></div>'+
     '<div class="field"><label>Dietary needs <span style="font-weight:400;color:var(--muted)">(optional)</span></label><input id="f_gdiet" placeholder="e.g. Nut allergy"></div>'+
     '<div class="modal-actions wrap"><button class="link-btn ma-lead" id="gFull">Open the full guest list ›</button>'+
       '<button class="btn btn-ghost" id="mCancel">Cancel</button>'+
@@ -10766,12 +10856,25 @@ function openGuestModal(ev){
     '<div class="gm-count" id="gCount"></div>';
   ov.classList.add('show');
   setTimeout(function(){ var f=$('#f_gname'); if(f)f.focus(); },60);
+  /* "Save & add another" is how a family gets entered, and a family is all on
+     one side — so the choice stays put between saves. */
+  md.querySelectorAll('.side-seg .seg-b').forEach(function(b){
+    b.onclick=function(){
+      md.querySelectorAll('.side-seg .seg-b').forEach(function(o){
+        o.classList.toggle('on',o===b); o.setAttribute('aria-checked',o===b);
+      });
+    };
+  });
 
   function add(){
     var n=$('#f_gname').value.trim();
     if(!n){ $('#f_gname').focus(); return false; }
-    var g={id:uid('g'),name:n,party:$('#f_gparty').value.trim()||'Guest',side:'A',
-      rsvp:$('#f_grsvp').value,meal:$('#f_gmeal').value,diet:$('#f_gdiet').value.trim(),tableId:null};
+    var sideBtn=md.querySelector('.side-seg .seg-b.on');
+    var g={id:uid('g'),name:n,party:$('#f_gparty').value.trim()||'Guest',
+      /* Was hardcoded to 'A', so every guest anyone ever added belonged to
+         partner 1 whether or not they did. */
+      side:sideBtn?sideBtn.dataset.side:'',
+      rsvp:$('#f_grsvp').value,meal:$('#f_gmeal').value.trim(),diet:$('#f_gdiet').value.trim(),tableId:null};
     prim.guests.push(g);
     /* On a sub-event the RSVP and meal just chosen describe THAT night, so
        they go on the invitation rather than the guest row. */
@@ -10787,6 +10890,11 @@ function openGuestModal(ev){
   $('#mAnother').onclick=function(){
     if(!add())return;
     ['f_gname','f_gparty','f_gdiet'].forEach(function(id){ var el=$('#'+id); if(el)el.value=''; });
+    /* A meal typed for this guest is on the menu for the next one, without
+       waiting for the modal to be reopened. */
+    var ml=$('#gmealList'), mv=$('#f_gmeal').value.trim();
+    if(ml&&mv&&!ml.querySelector('option[value="'+mv.replace(/"/g,'\\"')+'"]'))
+      ml.insertAdjacentHTML('beforeend','<option value="'+esc(mv)+'"></option>');
     $('#gCount').textContent=added+' added — keep going, or Cancel when you are done.';
     $('#f_gname').focus();
   };
@@ -13316,19 +13424,27 @@ function editRecord(kind,id){
     lead:function(){ openClientModal(it); },
     guest:function(){ openEditor({title:'Edit guest',sub:ev&&ev.title,twoCol:true,onDelete:del,deleteLabel:it.name,
       fields:[{id:'name',label:'Full name',value:it.name,required:true},
-              {id:'party',label:'Party / group',value:it.party},
+              {id:'party',label:'Party / group',value:it.party}].concat(
+              evHasSides(ev)?[{id:'side',label:'Whose guest',type:'select',value:it.side||'',
+                               options:sideOptions(ev)}]:[]).concat([
+
               {id:'rsvp',label:evIsSub(ev)?'RSVP · '+roleLabel(ev,true):'RSVP',type:'select',value:gRsvp(it,ev),
                options:Object.keys(RSVP).map(function(k){return {value:k,label:RSVP[k].lbl};})},
-              {id:'meal',label:evIsSub(ev)?'Meal · '+roleLabel(ev,true):'Meal',type:'select',value:gMeal(it,ev),
-               options:['','Beef','Fish','Vegetarian','Kids']},
+              /* combo, not select: the four hardcoded options were somebody
+                 else's menu, offered to every studio in the world. */
+              {id:'meal',label:evIsSub(ev)?'Meal · '+roleLabel(ev,true):'Meal',type:'combo',value:gMeal(it,ev),
+               options:mealOptions(ev),placeholder:'e.g. Beef'},
               {id:'diet',label:'Dietary needs',value:it.diet,full:true},
-              {id:'email',label:'Email',type:'email',value:it.email,full:true}],
+              {id:'email',label:'Email',type:'email',value:it.email,full:true}]),
       /* rsvp and meal belong to whichever event is open — the guest row for a
          primary, the invitation for a sub-event. Name, party and dietary needs
          are the person, so they always write to the guest. */
       onSave:function(v){
         it.name=v.name; it.party=v.party; it.diet=v.diet; it.email=v.email;
-        gSet(it,ev,'rsvp',v.rsvp); gSet(it,ev,'meal',v.meal);
+        /* Only on a wedding — on anything else the field was not shown and
+           v.side is undefined, which must not wipe what is there. */
+        if(v.side!==undefined)it.side=v.side;
+        gSet(it,ev,'rsvp',v.rsvp); gSet(it,ev,'meal',(v.meal||'').trim());
         if(v.rsvp==='no')gSet(it,ev,'tableId',null);
         closeModal(); afterChange(); }});},
     table:function(){ openEditor({title:'Edit table',sub:ev&&ev.title,onDelete:del,deleteLabel:it.name,
@@ -13592,10 +13708,15 @@ function exportGuestsCsv(){
   var e=activeEvent();
   var roster=rosterFor(e);
   if(!e||!roster.length){ toast('No guests to export.'); return; }
-  var rows=[['Name','Party','RSVP','Meal','Dietary','Email','Table']];
+  /* The caterer and the venue both get sent this file, and on a wedding whose
+     guest each one is is part of what it is for. */
+  var sides=evHasSides(e);
+  var rows=[['Name','Party'].concat(sides?['Whose guest']:[])
+            .concat(['RSVP','Meal','Dietary','Email','Table'])];
   roster.forEach(function(g){
     var t=e.tables.find(function(x){return x.id===gTable(g,e);});
-    rows.push([g.name,g.party||'',(RSVP[gRsvp(g,e)]||{}).lbl||'',gMeal(g,e),g.diet||'',g.email||'',t?t.name:'']);
+    rows.push([g.name,g.party||''].concat(sides?[sideLabel(e,g.side)]:[])
+      .concat([(RSVP[gRsvp(g,e)]||{}).lbl||'',gMeal(g,e),g.diet||'',g.email||'',t?t.name:'']));
   });
   downloadCsv('glimmer-guests-'+e.title.toLowerCase().replace(/[^a-z0-9]+/g,'-')+'.csv',rows);
   toast('Guest list exported ✦');

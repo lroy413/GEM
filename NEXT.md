@@ -501,6 +501,23 @@ never pulled, which is what stops a fresh install overwriting the studio.
   literal string "NaN" where the collision guard belongs. Guarded inside
   `uid()` now. Ids already stored keep their NaN; they are still unique
   strings and rewriting them would break every reference.
+- **Two dropdowns used to answer questions nobody had asked.** The meal picker
+  offered Beef / Fish / Vegetarian / Kids to every studio in the world, and
+  `guest.side` — a column that has existed since migration 01 and round-trips
+  through Supabase already — was hardcoded to `'A'` on every guest the app ever
+  added, so everyone belonged to partner 1. Both are real now:
+  - `mealOptions(e)` is derived, never declared: the meals already used across
+    this weekend's events and invitations. The field is a `combo`, so the first
+    guest's meal is typed and the eightieth is picked. There is no menu screen
+    to fill in first, and no option the studio did not put there.
+  - `evHasSides(e)` gates the side control to weddings — a corporate gala has
+    no sides and asking is a question with no right answer. `sideNames(e)` uses
+    the couple's own first names from the client file. The default is "Both /
+    neither", the only answer the app actually knows; it persists across "Save
+    & add another", so a family is one tap then a run of names.
+  - No migration: `guests.side` is already in the schema, the push already
+    sends it and the pull already reads it. It was only ever the UI that was
+    missing.
 - **The phone bar's height is the buttons' height.** `.tab` is `min-height:44px`
   with the content filling it exactly; `.tabbar` carries no vertical padding of
   its own, so there is no strip that looks like the bar but does not answer a
