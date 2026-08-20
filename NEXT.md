@@ -525,6 +525,14 @@ never pulled, which is what stops a fresh install overwriting the studio.
   counts that disagree the week of the wedding — a bridesmaid RSVPs, eats and
   sits like everyone else. Migration 23 adds the column; `sbRoleCol()` probes
   for it the way `sbCoverCol()` does.
+- **A card that lists something needs the action that adds to it.** The
+  Wedding Party card had no way to put anyone in it — you scrolled past it to
+  the guest list, found the person and edited a field. `openPartyAddModal()`
+  does both cases in one action: pick a name already on the list (they get a
+  role, not a second row) or type a new one (a guest is created with it). The
+  picker deliberately offers only guests who are NOT already standing up, and
+  `showIf` hides the name and party fields the moment an existing guest is
+  chosen.
 - **Silence is the good case.** The Wedding Party card printed "Attending"
   beside every name — which says nothing eight times, since standing up
   already implies coming. The RSVP now appears only when it is NOT a yes, and

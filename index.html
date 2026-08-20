@@ -10,7 +10,7 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
 <meta name="apple-mobile-web-app-title" content="GEM">
 <meta name="format-detection" content="telephone=no">
-<meta name="gem-build" content="00da20864e53">
+<meta name="gem-build" content="6e768efb456a">
 <link rel="manifest" href="/manifest.webmanifest">
 <link rel="icon" href="/icons/icon-192.png" sizes="192x192" type="image/png">
 <link rel="apple-touch-icon" href="/icons/icon-180.png">
@@ -6810,6 +6810,11 @@ function viewGuests(){
           '</div>';
         }).join('')+'</div></div>';
     }).join('')+'</div>'+
+    /* The card had no way to put anybody in it. Making someone a bridesmaid
+       meant scrolling past the whole card to the guest list, finding her, and
+       editing a field — so the action that belongs to this card lives on it,
+       at the end, where you are when you think of the next name. */
+    '<div class="sec-actions"><button class="btn btn-ghost btn-sm" id="wpAdd">＋ Add to the wedding party</button></div>'+
     '<div class="wp-foot"><b>'+total+'</b> standing up, in processional order. '+
       'The count beside each role is what the florist and the venue both ask for.</div></div>';
   })():'')+
@@ -6951,6 +6956,8 @@ function wireGuests(){
     ev2.stopPropagation();
     openEventModal(null,evPrimary(activeEvent()).id);
   };
+  var wa=$('#wpAdd');
+  if(wa)wa.onclick=function(ev2){ ev2.stopPropagation(); openPartyAddModal(); };
   document.querySelectorAll('[data-attire]').forEach(function(b){
     b.onclick=function(ev2){ ev2.stopPropagation(); openAttireModal(b.dataset.attire); };
   });
@@ -10948,6 +10955,58 @@ function wireFinance(){
       if(!ok)toast('That file is not on this device yet — pull to fetch it.');
     });
   };
+}
+/* Half a wedding party is already on the guest list — the bride's sister, the
+ * best friend who was always coming — and half is not. One action has to do
+ * both, or a planner has to know which case they are in before they can start.
+ * So: pick a name off the list, or type a new one, and either way they end up
+ * as one guest with a role rather than a guest and a duplicate.
+ */
+function openPartyAddModal(){
+  var e=activeEvent(), prim=evPrimary(e)||e;
+  if(!prim){ toast('Create an event first ✦'); return; }
+  /* Anyone not already standing up, alphabetically — this is a list you scan
+     for a name, not the order the guest list happens to be in. */
+  var free=(prim.guests||[]).filter(function(g){ return !String(g.role||'').trim(); })
+    .slice().sort(function(a,b){ return String(a.name).localeCompare(String(b.name)); });
+  var isNew=function(v){ return !v.who; };
+  openEditor({
+    title:'Add to the wedding party',
+    sub:prim.title,
+    twoCol:true,
+    saveLabel:'Add',
+    fields:[
+      {id:'who',label:'Who',type:'select',value:'',full:true,
+       options:[{value:'',label:'＋ Someone not on the guest list yet'}]
+         .concat(free.map(function(g){
+           return {value:g.id,label:g.name+(g.party?' · '+g.party:'')};
+         }))},
+      {id:'name',label:'Full name',value:'',full:true,required:true,showIf:isNew,
+       placeholder:'e.g. Jasmine Jones'},
+      {id:'party',label:'Party / group',value:'',showIf:isNew,placeholder:'e.g. Bride’s family'},
+      {id:'role',label:'Role',type:'combo',value:'',options:roleNames(),
+       placeholder:'Bridesmaid, Best Man…'},
+      {id:'side',label:'Whose guest',type:'select',value:'',options:sideOptions(prim),
+       showIf:function(){ return evHasSides(prim); }}
+    ],
+    onSave:function(v){
+      var role=(v.role||'').trim();
+      if(!role){ toast('Give them a role — Bridesmaid, Best Man, anything.'); return; }
+      var g=v.who?(prim.guests||[]).find(function(x){return x.id===v.who;}):null;
+      if(g){
+        /* Already a guest: they get a role, not a second row. */
+        g.role=role;
+        if(v.side!==undefined&&v.side!=='')g.side=v.side;
+      }else{
+        if(!(v.name||'').trim()){ toast('They need a name.'); return; }
+        g={id:uid('g'),name:v.name.trim(),party:(v.party||'').trim()||'Wedding party',
+           side:v.side||'',role:role,rsvp:'yes',meal:'',diet:'',tableId:null};
+        prim.guests.push(g);
+      }
+      save(); closeModal(); render();
+      toast(g.name+' — '+role+' ✦');
+    }
+  });
 }
 /* Small on purpose. Attire is edited eight times in a row, from a chip on the
    list, not once from the bottom of a long guest form. */
