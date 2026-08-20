@@ -501,6 +501,15 @@ never pulled, which is what stops a fresh install overwriting the studio.
   literal string "NaN" where the collision guard belongs. Guarded inside
   `uid()` now. Ids already stored keep their NaN; they are still unique
   strings and rewriting them would break every reference.
+- **The phone bar's height is the buttons' height.** `.tab` is `min-height:44px`
+  with the content filling it exactly; `.tabbar` carries no vertical padding of
+  its own, so there is no strip that looks like the bar but does not answer a
+  tap. Two things to know before shrinking it again: the icon size is NOT what
+  makes it tall — the min-height does the measuring, so taking 2px off the icon
+  costs legibility and saves nothing; and the safe-area inset is `max()`, never
+  `+`, because a 34px home indicator already is the clearance and adding to it
+  makes the bar 4px taller than the screen needs. 45px on a phone with no
+  indicator, 79px with one.
 - **`x.onclick = fn` hands the handler the click event.** Every function
   wired that way must therefore take no arguments, or refuse a DOM event.
   `openGuestModal(ev)` and `openSwatchModal(board)` both took one, so Add

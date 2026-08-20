@@ -2164,16 +2164,25 @@ td.inv-brk{display:none}
      top of the page title. */
   .menu-btn{display:none!important}
   /* Clear the bar, and the home indicator under it. */
-  .main{padding-bottom:calc(74px + env(safe-area-inset-bottom,0px))}
+  /* Bar plus a little air. It was 74px for a 49px bar — 25px of nothing at the
+     foot of every page. */
+  .main{padding-bottom:calc(58px + env(safe-area-inset-bottom,0px))}
 }
 /* ---- the phone's tool bar ----
    The hamburger sat top-left, over the headline, at the far end of a thumb's
    reach, with nineteen destinations behind it. This is the same navigation
    from the bottom of the screen, where a hand actually is. Glass so the page
    keeps scrolling visibly underneath rather than ending in a solid slab. */
+/* The bar's height IS the buttons' height. It used to carry 4px of its own
+   padding above and below them, which did two unhelpful things at once: it
+   made the bar taller than it needed to be, and it left a strip along the top
+   and bottom edge that looked like the bar but did not answer a tap.
+   max(), not +, on the inset. Adding 4px to a 34px home-indicator inset makes
+   the bar 38px taller than the screen needs; the inset already IS the clearance
+   — the padding only has to matter on a phone that has none. */
 .tabbar{display:none;position:fixed;left:0;right:0;bottom:0;z-index:60;
   grid-template-columns:repeat(5,1fr);align-items:stretch;
-  padding:4px 4px calc(4px + env(safe-area-inset-bottom,0px));
+  padding:0 4px max(0px, env(safe-area-inset-bottom,0px));
   background:rgba(255,253,251,.84);
   -webkit-backdrop-filter:blur(22px) saturate(1.6);backdrop-filter:blur(22px) saturate(1.6);
   border-top:1px solid var(--line);
@@ -2183,12 +2192,16 @@ td.inv-brk{display:none}
 @supports not ((backdrop-filter:blur(1px)) or (-webkit-backdrop-filter:blur(1px))){
   .tabbar{background:var(--ivory)}
 }
-.tab{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;
-  min-height:40px;padding:3px 2px;border:0;background:none;cursor:pointer;
+/* 44px, and the content fills it exactly — 5 + 22 + 3 + 9.5 + 4. Taking the
+   height out of the icon was the wrong place to take it from: at 19px the icon
+   was three pixels smaller and the bar was not one pixel shorter, because the
+   min-height was doing the measuring either way. */
+.tab{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;
+  min-height:44px;padding:5px 2px 4px;border:0;background:none;cursor:pointer;
   color:var(--muted);font-family:var(--sans);border-radius:12px;
   transition:color .14s var(--ease),background-color .14s var(--ease)}
-.tab-ic{width:19px;height:19px}
-.tab-l{font-size:9px;font-weight:600;letter-spacing:.02em;line-height:1}
+.tab-ic{width:22px;height:22px}
+.tab-l{font-size:9.5px;font-weight:600;letter-spacing:.02em;line-height:1}
 .tab:active{background:var(--pink-100)}
 .tab.active{color:var(--gold-deep)}
 .tab:focus-visible{outline:none;box-shadow:var(--ring)}
