@@ -501,6 +501,20 @@ never pulled, which is what stops a fresh install overwriting the studio.
   literal string "NaN" where the collision guard belongs. Guarded inside
   `uid()` now. Ids already stored keep their NaN; they are still unique
   strings and rewriting them would break every reference.
+- **Attire is a chain, not a tick.** `guest.attire` is `{item, size, status,
+  due, note}` in one jsonb column (migration 24, object-checked) — a value
+  object with no identity, the same reasoning as `invoices.items`. The states
+  are `ATTIRE_STEPS`, and `attireStep()` returning an index is what lets the
+  chip colour itself by progress and the summary count by stage. It is edited
+  from the chip on the Wedding Party card, never from the guest form: eight
+  dresses is eight modals if the only way in is the row's pencil. An empty
+  record is deleted rather than stored, or every guest on a 200-name list
+  carries a row of blanks to every device.
+- **The rehearsal was already expressible.** A rehearsal is a sub-event with
+  `role:'rehearsal'` and attendance is a row in `db.invites`; `rehearsals(e)`
+  finds them and the party card adds the one action the app was missing —
+  invite everyone standing up, in one tap. With no rehearsal on the weekend the
+  bar offers to make one rather than hiding.
 - **The wedding party is guests with a role, not a second list.** `guest.role`
   is free text; `PARTY_ROLES` supplies the conventional names — both forms of
   each, because a wedding party is not a gendered list — and the number beside
