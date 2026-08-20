@@ -525,6 +525,19 @@ never pulled, which is what stops a fresh install overwriting the studio.
   counts that disagree the week of the wedding — a bridesmaid RSVPs, eats and
   sits like everyone else. Migration 23 adds the column; `sbRoleCol()` probes
   for it the way `sbCoverCol()` does.
+- **The event switcher is context, not an action.** It sits in `#pgActions`
+  with the buttons, which on the guest screen made four controls of equal
+  weight wrap onto two ragged lines. Below 700px it takes its own full-width
+  line — but only where the group also carries `.btn-icon`, i.e. only where
+  there are enough actions to need it; breaking it out on Seating or Design
+  costs a row to gain nothing. The `#pgActions:has(.btn-icon)` compaction that
+  tucks Print/Edit beside the title now excludes groups holding a switcher or
+  a primary button, or it squeezes the whole guest toolbar into the title's
+  row.
+- **A screen's primary action belongs at both ends of a long list.** Add guest
+  lived only in the topbar, so on a 200-name list you scrolled up, added one
+  and scrolled back. `#addGuestFoot` repeats it at the foot of the card, the
+  way `.sec-actions` already does for Book a vendor.
 - **The guest card is not the generic table card.** Below 700px `.g-tbl` gets
   its own layout: name and the RSVP picker on line one, the party quietly on
   line two with the row actions right-aligned beside it, and the facts as chips

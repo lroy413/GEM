@@ -3151,9 +3151,20 @@ tr:hover .r-acts,.ev-card:hover .r-acts,.table-card:hover .r-acts,
   .vb-note{font-size:12.5px;line-height:1.55}
   #pgActions{width:100%;justify-content:flex-start;gap:9px}
   /* Two 42px marks do not need a whole row under the title. Only tightens
-     where :has() is supported; everywhere else this is today's layout. */
-  #pgActions:has(.btn-icon){width:auto;justify-content:flex-end;margin-left:auto}
-  .topbar:has(#pgActions .btn-icon){flex-wrap:nowrap;align-items:flex-start}
+     where :has() is supported; everywhere else this is today's layout.
+     Icon-ONLY, though: once the group also carries an event picker or a
+     primary button — the guest screen has all three — squeezing it onto the
+     title's row is what made it wrap into a ragged block. */
+  #pgActions:has(.btn-icon):not(:has(.ev-switch)):not(:has(.btn-gold)){
+    width:auto;justify-content:flex-end;margin-left:auto}
+  .topbar:has(#pgActions .btn-icon):not(:has(#pgActions .ev-switch)):not(:has(#pgActions .btn-gold)){
+    flex-wrap:nowrap;align-items:flex-start}
+  /* The event picker is context, not an action — which event you are looking
+     at, not something you do. On the one screen carrying enough actions to
+     need icons, it takes its own line and they form a single row beneath it.
+     Everywhere else the picker and one button already share a line, and
+     breaking them apart would cost a row to gain nothing. */
+  #pgActions:has(.btn-icon) .ev-switch{flex:1 0 100%;max-width:none}
   /* A phone does not have room for a word beside every mark. The label goes,
      the title and aria-label stay, and the button becomes a square big enough
      to hit — 42px, not a 15px strip of text. */
@@ -3180,6 +3191,9 @@ tr:hover .r-acts,.ev-card:hover .r-acts,.table-card:hover .r-acts,
     padding:2px 0;font-size:12.5px}
   .v-links{gap:6px 16px}
   .stat-row,.stat-row.cols-3{grid-template-columns:repeat(2,1fr);gap:10px}
+  /* An odd number of figures in a two-column grid leaves the last one beside
+     a hole. Letting it span reads as a decision rather than a gap. */
+  .stat-row>.stat:last-child:nth-child(odd){grid-column:1/-1}
   .stat{padding:12px 13px 11px}
   .stat .v{font-size:25px;margin-top:5px}
   /* 9px of letter-spaced capitals is a label you squint at. The stat row went
@@ -4912,7 +4926,10 @@ function pageHead(v){
     var ev=activeEvent();
     if(!ev)return [lab,'No events yet',sub];
     var r=rosterFor(ev), yes=r.filter(function(g){return gRsvp(g,ev)==='yes';}).length;
-    return [lab,r.length?(yes+' of '+r.length+' have replied yes'):'No guests yet',ev.title];
+    /* The subtitle used to be the event's name — which the switcher sitting
+       directly under it already says, in a bigger font, as a control. Two
+       lines to tell you the same thing once. */
+    return [lab,r.length?(yes+' of '+r.length+' have replied yes'):'No guests yet',sub];
   }
   if(v==='vendors'){
     var n2=db.vendors.length;
@@ -5087,8 +5104,19 @@ function actionsFor(v){
      '<button class="btn btn-quiet btn-icon" id="editEvent" title="Edit event" aria-label="Edit event">'+
        '✎<span class="bl"> Edit event</span></button>'
     :'<button class="btn btn-gold" id="addEvent">＋ New event</button>';
-  if(v==='guests')return evSwitcher()+' <button class="btn btn-ghost" id="importGuests">⇪ Import CSV</button>'+
-    ' <button class="btn btn-ghost" id="exportGuests">Export</button>'+
+  /* The switcher is context, not an action, and the two CSV utilities are
+     things you do twice a year. Below 700px the switcher takes its own line
+     and those two become icons, so the row reads as one primary action rather
+     than four buttons of equal weight wrapping onto two lines. */
+  if(v==='guests')return evSwitcher()+
+    ' <button class="btn btn-ghost btn-icon" id="importGuests" title="Import a CSV" aria-label="Import a CSV">'+
+      '<svg class="ic" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">'+
+      '<path d="M10 13V3"/><path d="M6.6 6.4 10 3l3.4 3.4"/><path d="M3.5 12.5v3a1.5 1.5 0 0 0 1.5 1.5h10a1.5 1.5 0 0 0 1.5-1.5v-3"/></svg>'+
+      '<span class="bl"> Import CSV</span></button>'+
+    ' <button class="btn btn-ghost btn-icon" id="exportGuests" title="Export a CSV" aria-label="Export a CSV">'+
+      '<svg class="ic" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">'+
+      '<path d="M10 3v10"/><path d="M6.6 9.6 10 13l3.4-3.4"/><path d="M3.5 12.5v3a1.5 1.5 0 0 0 1.5 1.5h10a1.5 1.5 0 0 0 1.5-1.5v-3"/></svg>'+
+      '<span class="bl"> Export</span></button>'+
     ' <button class="btn btn-gold" id="addGuest">＋ Add guest</button>';
   if(v==='seating')return evSwitcher()+' <button class="btn btn-gold" id="addTable">＋ Add table</button>';
   if(v==='vendors')return '<button class="btn btn-gold" id="addVendor">＋ Add vendor</button>';
@@ -6799,6 +6827,14 @@ function viewGuests(){
         }).join(''):'')+
       '</tr>';
     }).join('')+'</tbody></table></div>')+
+    /* Adding a guest is the thing you do most on this screen, and it lived
+       only in the topbar — so on a 200-name list you scrolled to the top,
+       added one, and scrolled back to where you were. It lives at the end of
+       the list too now, which is where you are when you think of the next
+       name. */
+    '<div class="sec-actions"><button class="btn btn-ghost btn-sm" id="addGuestFoot">＋ Add guest</button>'+
+      (q?'<span class="sec-badge" style="margin-left:auto">'+g.length+' of '+all.length+' shown</span>':'')+
+    '</div>'+
     (!sub&&subs.length?'<div class="inv-key">Tick to invite. <b>✓</b> attending · <b>✕</b> declined · <b>·</b> awaiting reply'+
       (guestViewMode()==='stack'?'.':' — switch to a sub-event above to set its RSVPs, meals and seating.')+'</div>':'')+
   '</div>'+
@@ -6888,6 +6924,7 @@ function wireGuests(){
       render();
     };
   });
+  var agf=$('#addGuestFoot'); if(agf)agf.onclick=function(){ openGuestModal(); };
   var nx=$('#gsNext'); if(nx)nx.onclick=function(){ guestShuffle(1); };
   var pv=$('#gsPrev'); if(pv)pv.onclick=function(){ guestShuffle(-1); };
   var st=$('.gstack');
