@@ -525,6 +525,40 @@ never pulled, which is what stops a fresh install overwriting the studio.
   counts that disagree the week of the wedding — a bridesmaid RSVPs, eats and
   sits like everyone else. Migration 23 adds the column; `sbRoleCol()` probes
   for it the way `sbCoverCol()` does.
+- **A card that lists something needs the action that adds to it.** The
+  Wedding Party card had no way to put anyone in it — you scrolled past it to
+  the guest list, found the person and edited a field. `openPartyAddModal()`
+  does both cases in one action: pick a name already on the list (they get a
+  role, not a second row) or type a new one (a guest is created with it). The
+  picker deliberately offers only guests who are NOT already standing up, and
+  `showIf` hides the name and party fields the moment an existing guest is
+  chosen.
+- **Silence is the good case.** The Wedding Party card printed "Attending"
+  beside every name — which says nothing eight times, since standing up
+  already implies coming. The RSVP now appears only when it is NOT a yes, and
+  declined carries the warning colour. Same reasoning moved the side chip up
+  to the role heading when a whole group shares one, instead of repeating it
+  down the card.
+- **Chips go in one right-aligned block, not loose in the row.** `.wp-tags`
+  wraps them as a unit, so a person with an allergy and a person without still
+  line up down the card — before it, `margin-left:auto` on the last chip put
+  "Attending" alone on a second line and left rows 32px and 63px tall
+  alternately. `.wp-role` is 230px because that is what the longest
+  conventional role plus its count plus a side chip needs; narrower and
+  "Honour Attendant" wraps while "Bridesmaid" does not.
+- **The event switcher is context, not an action.** It sits in `#pgActions`
+  with the buttons, which on the guest screen made four controls of equal
+  weight wrap onto two ragged lines. Below 700px it takes its own full-width
+  line — but only where the group also carries `.btn-icon`, i.e. only where
+  there are enough actions to need it; breaking it out on Seating or Design
+  costs a row to gain nothing. The `#pgActions:has(.btn-icon)` compaction that
+  tucks Print/Edit beside the title now excludes groups holding a switcher or
+  a primary button, or it squeezes the whole guest toolbar into the title's
+  row.
+- **A screen's primary action belongs at both ends of a long list.** Add guest
+  lived only in the topbar, so on a 200-name list you scrolled up, added one
+  and scrolled back. `#addGuestFoot` repeats it at the foot of the card, the
+  way `.sec-actions` already does for Book a vendor.
 - **The guest card is not the generic table card.** Below 700px `.g-tbl` gets
   its own layout: name and the RSVP picker on line one, the party quietly on
   line two with the row actions right-aligned beside it, and the facts as chips

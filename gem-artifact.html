@@ -1938,15 +1938,29 @@ td.inv-col{text-align:center;width:1%}
 .wp-list{padding:4px 0}
 .wp-grp{display:flex;gap:18px;padding:13px 22px;border-bottom:1px solid var(--line)}
 .wp-grp:last-child{border-bottom:none}
-.wp-role{flex:0 0 148px;font-size:10.5px;letter-spacing:.1em;text-transform:uppercase;
-  color:var(--muted);font-weight:600;padding-top:4px;display:flex;align-items:baseline;gap:7px}
+/* Wide enough for the longest conventional role plus its count and its side,
+   so the column reads straight down instead of wrapping under Groomsman and
+   not under Bridesmaid. */
+.wp-role{flex:0 0 230px;font-size:10.5px;letter-spacing:.1em;text-transform:uppercase;
+  color:var(--muted);font-weight:600;padding-top:3px;display:flex;align-items:center;gap:6px;
+  flex-wrap:wrap}
 .wp-n{font-size:11px;letter-spacing:0;color:var(--ink-soft);background:var(--sunk);
   border-radius:var(--radius-pill);padding:1px 7px;font-weight:600}
 .wp-people{flex:1 1 auto;min-width:0;display:flex;flex-direction:column;gap:7px}
-.wp-p{display:flex;align-items:center;flex-wrap:wrap;gap:8px}
-.wp-nm{font-size:14px;font-weight:600}
-.wp-r{margin-left:auto;font-size:11.5px;color:var(--muted);white-space:nowrap}
-.wp-r.ok{color:var(--ok,#4E7A55)}
+/* Name left, chips right, and the chips wrap as a block rather than one at a
+   time — which is what had "Attending" alone on a second line under the people
+   who happened to have an allergy, and left every row a different height. */
+.wp-p{display:flex;align-items:center;gap:10px;min-height:30px}
+.wp-nm{flex:1 1 auto;min-width:0;font-size:14px;font-weight:600;overflow-wrap:anywhere}
+.wp-tags{flex:0 1 auto;display:flex;align-items:center;justify-content:flex-end;
+  flex-wrap:wrap;gap:7px}
+/* Shown only when it is not a yes, so it reads as an exception rather than a
+   column. Declined is the one that needs to catch an eye. */
+.wp-r{font-size:11.5px;font-weight:600;white-space:nowrap;
+  padding:2px 10px;border-radius:var(--radius-pill);
+  background:var(--pink-100);border:1px solid var(--line);color:var(--ink-soft)}
+.wp-r.r-no{background:#F9E5E5;border-color:#EDD1D1;color:#A75252}
+.wp-role .g-side{letter-spacing:0;text-transform:none;font-weight:600;font-size:11px;padding:1px 8px}
 .wp-foot{padding:12px 22px 14px;font-size:11.5px;color:var(--muted);border-top:1px solid var(--line)}
 .wp-bar{display:flex;align-items:center;flex-wrap:wrap;gap:8px 16px;
   padding:12px 22px;border-bottom:1px solid var(--line);background:var(--sunk)}
@@ -3030,7 +3044,11 @@ tr:hover .r-acts,.ev-card:hover .r-acts,.table-card:hover .r-acts,
    takes the width it has and wraps under the title if that is not enough. */
 @media (max-width:700px){
   .card-h{flex-wrap:wrap;row-gap:8px}
-  .ev-h-r{flex:1 1 100%;min-width:0}
+  /* Only the groups that actually need the width: a search box or a picker
+     cannot shrink to nothing, so they take their own line. A header whose
+     right-hand side is one small button does not, and giving it a whole row
+     was costing every such card 40px to hold a single Print. */
+  .ev-h-r:has(input),.ev-h-r:has(select){flex:1 1 100%;min-width:0}
   .ev-h-r .v-search{flex:1 1 auto;min-width:0}
   .ev-h-r select.mini{flex:0 1 auto;min-width:0;max-width:48%}
 }
@@ -3151,9 +3169,20 @@ tr:hover .r-acts,.ev-card:hover .r-acts,.table-card:hover .r-acts,
   .vb-note{font-size:12.5px;line-height:1.55}
   #pgActions{width:100%;justify-content:flex-start;gap:9px}
   /* Two 42px marks do not need a whole row under the title. Only tightens
-     where :has() is supported; everywhere else this is today's layout. */
-  #pgActions:has(.btn-icon){width:auto;justify-content:flex-end;margin-left:auto}
-  .topbar:has(#pgActions .btn-icon){flex-wrap:nowrap;align-items:flex-start}
+     where :has() is supported; everywhere else this is today's layout.
+     Icon-ONLY, though: once the group also carries an event picker or a
+     primary button — the guest screen has all three — squeezing it onto the
+     title's row is what made it wrap into a ragged block. */
+  #pgActions:has(.btn-icon):not(:has(.ev-switch)):not(:has(.btn-gold)){
+    width:auto;justify-content:flex-end;margin-left:auto}
+  .topbar:has(#pgActions .btn-icon):not(:has(#pgActions .ev-switch)):not(:has(#pgActions .btn-gold)){
+    flex-wrap:nowrap;align-items:flex-start}
+  /* The event picker is context, not an action — which event you are looking
+     at, not something you do. On the one screen carrying enough actions to
+     need icons, it takes its own line and they form a single row beneath it.
+     Everywhere else the picker and one button already share a line, and
+     breaking them apart would cost a row to gain nothing. */
+  #pgActions:has(.btn-icon) .ev-switch{flex:1 0 100%;max-width:none}
   /* A phone does not have room for a word beside every mark. The label goes,
      the title and aria-label stay, and the button becomes a square big enough
      to hit — 42px, not a 15px strip of text. */
@@ -3180,6 +3209,9 @@ tr:hover .r-acts,.ev-card:hover .r-acts,.table-card:hover .r-acts,
     padding:2px 0;font-size:12.5px}
   .v-links{gap:6px 16px}
   .stat-row,.stat-row.cols-3{grid-template-columns:repeat(2,1fr);gap:10px}
+  /* An odd number of figures in a two-column grid leaves the last one beside
+     a hole. Letting it span reads as a decision rather than a gap. */
+  .stat-row>.stat:last-child:nth-child(odd){grid-column:1/-1}
   .stat{padding:12px 13px 11px}
   .stat .v{font-size:25px;margin-top:5px}
   /* 9px of letter-spaced capitals is a label you squint at. The stat row went
@@ -4912,7 +4944,10 @@ function pageHead(v){
     var ev=activeEvent();
     if(!ev)return [lab,'No events yet',sub];
     var r=rosterFor(ev), yes=r.filter(function(g){return gRsvp(g,ev)==='yes';}).length;
-    return [lab,r.length?(yes+' of '+r.length+' have replied yes'):'No guests yet',ev.title];
+    /* The subtitle used to be the event's name — which the switcher sitting
+       directly under it already says, in a bigger font, as a control. Two
+       lines to tell you the same thing once. */
+    return [lab,r.length?(yes+' of '+r.length+' have replied yes'):'No guests yet',sub];
   }
   if(v==='vendors'){
     var n2=db.vendors.length;
@@ -5087,8 +5122,19 @@ function actionsFor(v){
      '<button class="btn btn-quiet btn-icon" id="editEvent" title="Edit event" aria-label="Edit event">'+
        '✎<span class="bl"> Edit event</span></button>'
     :'<button class="btn btn-gold" id="addEvent">＋ New event</button>';
-  if(v==='guests')return evSwitcher()+' <button class="btn btn-ghost" id="importGuests">⇪ Import CSV</button>'+
-    ' <button class="btn btn-ghost" id="exportGuests">Export</button>'+
+  /* The switcher is context, not an action, and the two CSV utilities are
+     things you do twice a year. Below 700px the switcher takes its own line
+     and those two become icons, so the row reads as one primary action rather
+     than four buttons of equal weight wrapping onto two lines. */
+  if(v==='guests')return evSwitcher()+
+    ' <button class="btn btn-ghost btn-icon" id="importGuests" title="Import a CSV" aria-label="Import a CSV">'+
+      '<svg class="ic" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">'+
+      '<path d="M10 13V3"/><path d="M6.6 6.4 10 3l3.4 3.4"/><path d="M3.5 12.5v3a1.5 1.5 0 0 0 1.5 1.5h10a1.5 1.5 0 0 0 1.5-1.5v-3"/></svg>'+
+      '<span class="bl"> Import CSV</span></button>'+
+    ' <button class="btn btn-ghost btn-icon" id="exportGuests" title="Export a CSV" aria-label="Export a CSV">'+
+      '<svg class="ic" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">'+
+      '<path d="M10 3v10"/><path d="M6.6 9.6 10 13l3.4-3.4"/><path d="M3.5 12.5v3a1.5 1.5 0 0 0 1.5 1.5h10a1.5 1.5 0 0 0 1.5-1.5v-3"/></svg>'+
+      '<span class="bl"> Export</span></button>'+
     ' <button class="btn btn-gold" id="addGuest">＋ Add guest</button>';
   if(v==='seating')return evSwitcher()+' <button class="btn btn-gold" id="addTable">＋ Add table</button>';
   if(v==='vendors')return '<button class="btn btn-gold" id="addVendor">＋ Add vendor</button>';
@@ -6686,9 +6732,11 @@ function viewGuests(){
     var late=partyMembers(e).filter(attireLate).length;
     var atRehearsal=r1?partyMembers(e).filter(function(g){return !!inviteOf(g.id,r1.id);}).length:0;
     var total=partyMembers(e).length;
+    /* The badge said what the per-role counts and the line below already say,
+       and cost the header a second row to say it. The total moved into the
+       footer sentence, where it reads as English. */
     return '<div class="card" style="margin-bottom:20px"><div class="card-h"><h3>Wedding Party</h3>'+
-    '<span class="ev-h-r"><span class="sec-badge">'+total+' standing up</span>'+
-      '<button class="btn btn-ghost btn-sm" data-printparty>Print</button></span></div>'+
+    '<span class="ev-h-r"><button class="btn btn-ghost btn-sm" data-printparty>Print</button></span></div>'+
     /* One line that answers the three questions a planner has about this list:
        is everyone coming to the rehearsal, is the attire moving, and is
        anything late. Each half only appears once it has something to say. */
@@ -6703,30 +6751,54 @@ function viewGuests(){
         '<b>'+ready+' of '+tracked+'</b> ready to wear'+(late?' · '+late+' overdue':'')+'</span>':'')+
     '</div>'+
     '<div class="wp-list">'+party.map(function(grp){
+      /* A whole role usually belongs to one side, and saying so on every row
+         was the same chip four times down the card. It moves up to the
+         heading when the group agrees and stays per-person when it does
+         not. */
+      var gs=null, mixed=false;
+      grp.people.forEach(function(g){
+        if(gs===null)gs=g.side||''; else if((g.side||'')!==gs)mixed=true;
+      });
+      var groupSide=(sides&&!mixed&&gs)?gs:null;
       return '<div class="wp-grp">'+
-        '<div class="wp-role">'+esc(grp.role)+'<span class="wp-n">'+grp.people.length+'</span></div>'+
+        '<div class="wp-role">'+esc(grp.role)+'<span class="wp-n">'+grp.people.length+'</span>'+
+          (groupSide?'<span class="g-side s-'+groupSide+'">'+esc(sideLabel(e,groupSide))+'</span>':'')+
+        '</div>'+
         '<div class="wp-people">'+grp.people.map(function(g){
           var r=gRsvp(g,e), a=attireOf(g), on=r1?!!inviteOf(g.id,r1.id):false;
           return '<div class="wp-p">'+
             '<span class="wp-nm">'+esc(g.name)+'</span>'+
-            (sides&&g.side?'<span class="g-side s-'+g.side+'">'+esc(sideLabel(e,g.side))+'</span>':'')+
-            (g.diet?'<span class="status s-due">'+esc(g.diet)+'</span>':'')+
-            /* The attire chip is the editor. Eight people is eight modals if
-               the only way in is the row's pencil. */
-            '<button type="button" class="wp-at'+(a.status?' set s'+attireStep(g):'')+
-              (attireLate(g)?' late':'')+'" data-attire="'+esc(g.id)+'" '+
-              'title="'+esc(a.item||'Attire')+'">'+
-              esc(a.status||'Attire')+(a.size?' · '+esc(a.size):'')+'</button>'+
-            (r1?'<button type="button" class="wp-reh'+(on?' on':'')+'" data-reh="'+esc(g.id)+'" '+
-              'data-rehev="'+esc(r1.id)+'" aria-pressed="'+on+'" '+
-              'title="'+(on?'Coming to the ':'Not at the ')+esc(roleLabel(r1,true).toLowerCase())+'">'+
-              (on?'✓':'')+' Rehearsal</button>':'')+
-            '<span class="wp-r'+(r==='yes'?' ok':'')+'">'+((RSVP[r]||{}).lbl||'')+'</span>'+
+            /* The chips are one block, right-aligned, so a row with an allergy
+               and a row without still line up down the card. */
+            '<span class="wp-tags">'+
+              ((sides&&!groupSide&&g.side)?'<span class="g-side s-'+g.side+'">'+esc(sideLabel(e,g.side))+'</span>':'')+
+              (g.diet?'<span class="status s-due">'+esc(g.diet)+'</span>':'')+
+              /* The attire chip is the editor. Eight people is eight modals if
+                 the only way in is the row's pencil. */
+              '<button type="button" class="wp-at'+(a.status?' set s'+attireStep(g):'')+
+                (attireLate(g)?' late':'')+'" data-attire="'+esc(g.id)+'" '+
+                'title="'+esc(a.item||'Attire')+'">'+
+                esc(a.status||'Attire')+(a.size?' · '+esc(a.size):'')+'</button>'+
+              (r1?'<button type="button" class="wp-reh'+(on?' on':'')+'" data-reh="'+esc(g.id)+'" '+
+                'data-rehev="'+esc(r1.id)+'" aria-pressed="'+on+'" '+
+                'title="'+(on?'Coming to the ':'Not at the ')+esc(roleLabel(r1,true).toLowerCase())+'">'+
+                (on?'✓':'')+' Rehearsal</button>':'')+
+              /* Somebody standing up is coming — that is what standing up
+                 means, and printing "Attending" beside all eight of them says
+                 nothing eight times. What is worth a line is the one who has
+                 not replied, or the one who has pulled out. */
+              (r==='yes'?'':'<span class="wp-r r-'+esc(r)+'">'+((RSVP[r]||{}).lbl||'')+'</span>')+
+            '</span>'+
           '</div>';
         }).join('')+'</div></div>';
     }).join('')+'</div>'+
-    '<div class="wp-foot">In processional order. The count beside each role is what the florist and the '+
-      'venue both ask for.</div></div>';
+    /* The card had no way to put anybody in it. Making someone a bridesmaid
+       meant scrolling past the whole card to the guest list, finding her, and
+       editing a field — so the action that belongs to this card lives on it,
+       at the end, where you are when you think of the next name. */
+    '<div class="sec-actions"><button class="btn btn-ghost btn-sm" id="wpAdd">＋ Add to the wedding party</button></div>'+
+    '<div class="wp-foot"><b>'+total+'</b> standing up, in processional order. '+
+      'The count beside each role is what the florist and the venue both ask for.</div></div>';
   })():'')+
   (sub?'<div class="inv-note">Showing <b>'+esc(roleLabel(e))+'</b> · '+esc(e.title)+
       '. These RSVPs, meals and seats belong to this event alone — the master guest list lives on '+
@@ -6799,6 +6871,14 @@ function viewGuests(){
         }).join(''):'')+
       '</tr>';
     }).join('')+'</tbody></table></div>')+
+    /* Adding a guest is the thing you do most on this screen, and it lived
+       only in the topbar — so on a 200-name list you scrolled to the top,
+       added one, and scrolled back to where you were. It lives at the end of
+       the list too now, which is where you are when you think of the next
+       name. */
+    '<div class="sec-actions"><button class="btn btn-ghost btn-sm" id="addGuestFoot">＋ Add guest</button>'+
+      (q?'<span class="sec-badge" style="margin-left:auto">'+g.length+' of '+all.length+' shown</span>':'')+
+    '</div>'+
     (!sub&&subs.length?'<div class="inv-key">Tick to invite. <b>✓</b> attending · <b>✕</b> declined · <b>·</b> awaiting reply'+
       (guestViewMode()==='stack'?'.':' — switch to a sub-event above to set its RSVPs, meals and seating.')+'</div>':'')+
   '</div>'+
@@ -6858,6 +6938,8 @@ function wireGuests(){
     ev2.stopPropagation();
     openEventModal(null,evPrimary(activeEvent()).id);
   };
+  var wa=$('#wpAdd');
+  if(wa)wa.onclick=function(ev2){ ev2.stopPropagation(); openPartyAddModal(); };
   document.querySelectorAll('[data-attire]').forEach(function(b){
     b.onclick=function(ev2){ ev2.stopPropagation(); openAttireModal(b.dataset.attire); };
   });
@@ -6888,6 +6970,7 @@ function wireGuests(){
       render();
     };
   });
+  var agf=$('#addGuestFoot'); if(agf)agf.onclick=function(){ openGuestModal(); };
   var nx=$('#gsNext'); if(nx)nx.onclick=function(){ guestShuffle(1); };
   var pv=$('#gsPrev'); if(pv)pv.onclick=function(){ guestShuffle(-1); };
   var st=$('.gstack');
@@ -10854,6 +10937,58 @@ function wireFinance(){
       if(!ok)toast('That file is not on this device yet — pull to fetch it.');
     });
   };
+}
+/* Half a wedding party is already on the guest list — the bride's sister, the
+ * best friend who was always coming — and half is not. One action has to do
+ * both, or a planner has to know which case they are in before they can start.
+ * So: pick a name off the list, or type a new one, and either way they end up
+ * as one guest with a role rather than a guest and a duplicate.
+ */
+function openPartyAddModal(){
+  var e=activeEvent(), prim=evPrimary(e)||e;
+  if(!prim){ toast('Create an event first ✦'); return; }
+  /* Anyone not already standing up, alphabetically — this is a list you scan
+     for a name, not the order the guest list happens to be in. */
+  var free=(prim.guests||[]).filter(function(g){ return !String(g.role||'').trim(); })
+    .slice().sort(function(a,b){ return String(a.name).localeCompare(String(b.name)); });
+  var isNew=function(v){ return !v.who; };
+  openEditor({
+    title:'Add to the wedding party',
+    sub:prim.title,
+    twoCol:true,
+    saveLabel:'Add',
+    fields:[
+      {id:'who',label:'Who',type:'select',value:'',full:true,
+       options:[{value:'',label:'＋ Someone not on the guest list yet'}]
+         .concat(free.map(function(g){
+           return {value:g.id,label:g.name+(g.party?' · '+g.party:'')};
+         }))},
+      {id:'name',label:'Full name',value:'',full:true,required:true,showIf:isNew,
+       placeholder:'e.g. Jasmine Jones'},
+      {id:'party',label:'Party / group',value:'',showIf:isNew,placeholder:'e.g. Bride’s family'},
+      {id:'role',label:'Role',type:'combo',value:'',options:roleNames(),
+       placeholder:'Bridesmaid, Best Man…'},
+      {id:'side',label:'Whose guest',type:'select',value:'',options:sideOptions(prim),
+       showIf:function(){ return evHasSides(prim); }}
+    ],
+    onSave:function(v){
+      var role=(v.role||'').trim();
+      if(!role){ toast('Give them a role — Bridesmaid, Best Man, anything.'); return; }
+      var g=v.who?(prim.guests||[]).find(function(x){return x.id===v.who;}):null;
+      if(g){
+        /* Already a guest: they get a role, not a second row. */
+        g.role=role;
+        if(v.side!==undefined&&v.side!=='')g.side=v.side;
+      }else{
+        if(!(v.name||'').trim()){ toast('They need a name.'); return; }
+        g={id:uid('g'),name:v.name.trim(),party:(v.party||'').trim()||'Wedding party',
+           side:v.side||'',role:role,rsvp:'yes',meal:'',diet:'',tableId:null};
+        prim.guests.push(g);
+      }
+      save(); closeModal(); render();
+      toast(g.name+' — '+role+' ✦');
+    }
+  });
 }
 /* Small on purpose. Attire is edited eight times in a row, from a chip on the
    list, not once from the bottom of a long guest form. */
