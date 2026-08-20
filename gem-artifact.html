@@ -1942,18 +1942,26 @@ td.inv-col{text-align:center;width:1%}
    so the column reads straight down instead of wrapping under Groomsman and
    not under Bridesmaid. */
 .wp-role{flex:0 0 230px;font-size:10.5px;letter-spacing:.1em;text-transform:uppercase;
-  color:var(--muted);font-weight:600;padding-top:3px;display:flex;align-items:center;gap:6px;
-  flex-wrap:wrap}
+  color:var(--muted);font-weight:600;display:flex;align-items:center;gap:6px;
+  flex-wrap:wrap;align-self:flex-start;padding-top:12px}
 .wp-n{font-size:11px;letter-spacing:0;color:var(--ink-soft);background:var(--sunk);
   border-radius:var(--radius-pill);padding:1px 7px;font-weight:600}
-.wp-people{flex:1 1 auto;min-width:0;display:flex;flex-direction:column;gap:7px}
-/* Name left, chips right, and the chips wrap as a block rather than one at a
-   time — which is what had "Attending" alone on a second line under the people
-   who happened to have an allergy, and left every row a different height. */
-.wp-p{display:flex;align-items:center;gap:10px;min-height:30px}
-.wp-nm{flex:1 1 auto;min-width:0;font-size:14px;font-weight:600;overflow-wrap:anywhere}
-.wp-tags{flex:0 1 auto;display:flex;align-items:center;justify-content:flex-end;
-  flex-wrap:wrap;gap:7px}
+.wp-people{flex:1 1 auto;min-width:0;display:flex;flex-direction:column}
+/* Two columns, and only two: everything known about the person on the left,
+   the two buttons on the right at a fixed width. The old row let the chips
+   and the name compete for the same space, so an allergy pushed the buttons
+   onto a second line and every row landed at a different height with the
+   buttons at a different place on each one. */
+.wp-p{display:flex;align-items:flex-start;gap:14px;padding:9px 0;
+  border-top:1px solid var(--line)}
+.wp-p:first-child{border-top:none}
+.wp-who{flex:1 1 auto;min-width:0;display:flex;flex-direction:column;gap:4px;padding-top:3px}
+.wp-nm{font-size:14.5px;font-weight:600;line-height:1.25;overflow-wrap:anywhere}
+/* One caption line, chips first and the garment in words after them, so a
+   person with three things to say about them still reads as one block. */
+.wp-sub{display:flex;flex-wrap:wrap;align-items:center;gap:6px;line-height:1.3}
+.wp-gm{font-size:11.5px;color:var(--muted)}
+.wp-acts{flex:0 0 auto;display:flex;align-items:flex-start;gap:8px}
 /* Shown only when it is not a yes, so it reads as an exception rather than a
    column. Declined is the one that needs to catch an eye. */
 .wp-r{font-size:11.5px;font-weight:600;white-space:nowrap;
@@ -1970,34 +1978,44 @@ td.inv-col{text-align:center;width:1%}
 .wp-warn b{color:var(--gold-deep)}
 .wp-late b{color:var(--danger,#A75252)}
 .wp-bar .link-btn{font-size:12px}
-/* The attire chip is a button, and it looks like the state it is in: outlined
-   and quiet before anyone has said anything, filling with gold as the chain
-   completes, red once the date has gone by. */
-.wp-at{font-family:var(--sans);font-size:11.5px;font-weight:600;cursor:pointer;
-  padding:3px 11px;border-radius:var(--radius-pill);
-  border:1px dashed var(--line-strong);background:none;color:var(--muted);
+/* Both buttons share one shape and one width, so the column reads as a column.
+   They were dashed while empty, and three dashed outlines stacked up looked
+   like a page that had not finished loading — quiet and solid says the same
+   thing without the alarm. The width is set to the longest label each can
+   ever hold ("To order", "Rehearsal"), so nothing reflows as states change. */
+.wp-at,.wp-reh{font-family:var(--sans);font-size:11.5px;font-weight:600;cursor:pointer;
+  display:inline-flex;align-items:center;justify-content:center;gap:4px;
+  min-height:30px;padding:4px 12px;border-radius:var(--radius-pill);
+  border:1px solid var(--line);background:var(--card);color:var(--muted);
+  white-space:nowrap;
   transition:border-color .14s var(--ease),background-color .14s var(--ease),color .14s var(--ease)}
-.wp-at:hover{border-color:var(--gold);color:var(--gold-deep)}
-.wp-at:focus-visible{outline:none;box-shadow:var(--ring)}
-.wp-at.set{border-style:solid;background:var(--pink-100);border-color:var(--line);color:var(--ink-soft)}
+.wp-at{flex:0 0 92px}
+.wp-reh{flex:0 0 106px}
+.wp-at:hover,.wp-reh:hover{border-color:var(--gold);color:var(--gold-deep)}
+.wp-at:focus-visible,.wp-reh:focus-visible{outline:none;box-shadow:var(--ring)}
+.wp-at.set{background:var(--pink-100);border-color:var(--line);color:var(--ink-soft)}
 .wp-at.set.s3{background:var(--gold-soft);border-color:var(--gold-line);color:var(--gold-deep)}
 .wp-at.set.s4{background:#E8EDE6;border-color:#D3DED0;color:#4E6B4A}
 .wp-at.late{background:#F9E5E5;border-color:#EDD1D1;color:#A75252}
-.wp-reh{font-family:var(--sans);font-size:11.5px;font-weight:600;cursor:pointer;
-  padding:3px 11px;border-radius:var(--radius-pill);
-  border:1px dashed var(--line-strong);background:none;color:var(--muted);
-  transition:border-color .14s var(--ease),background-color .14s var(--ease),color .14s var(--ease)}
-.wp-reh:hover{border-color:var(--gold);color:var(--gold-deep)}
-.wp-reh:focus-visible{outline:none;box-shadow:var(--ring)}
-.wp-reh.on{border-style:solid;background:var(--gold-soft);border-color:var(--gold-line);color:var(--gold-deep)}
+.wp-reh.on{background:var(--gold-soft);border-color:var(--gold-line);color:var(--gold-deep)}
+/* The tick keeps its space whether or not it is showing, so ticking somebody
+   off does not shunt the word "Rehearsal" sideways. */
+.wp-tick{display:inline-block;width:9px;text-align:center}
 @media (pointer:coarse),(max-width:560px){
-  .wp-at,.wp-reh{min-height:32px;padding:5px 12px}
+  .wp-at,.wp-reh{min-height:34px}
+}
+/* On a phone the two buttons stack into one narrow column rather than fight
+   the name for the width. Every row is then exactly as tall as the stack, so
+   the card is even down its whole length. */
+@media (max-width:700px){
+  .wp-acts{flex-direction:column;align-items:stretch;width:106px}
+  .wp-at,.wp-reh{flex:0 0 auto;width:100%}
 }
 .g-role{display:inline-block;font-size:11.5px;font-weight:600;white-space:nowrap;
   padding:2px 10px;border-radius:var(--radius-pill);
   background:var(--gold-soft);border:1px solid var(--gold-line);color:var(--gold-deep)}
 @media (max-width:700px){
-  .wp-grp{flex-direction:column;gap:8px;padding:13px 16px}
+  .wp-grp{flex-direction:column;gap:6px;padding:13px 16px}
   .wp-role{flex:0 0 auto;padding-top:0}
   .wp-foot{padding:12px 16px 14px}
   .g-tbl td.g-rolecell{order:6;flex:0 0 auto}
@@ -2045,7 +2063,11 @@ td.inv-col{text-align:center;width:1%}
 .gs-acts .r-acts{opacity:1;margin:0}
 .gs-name{font-family:var(--serif);font-size:23px;font-weight:600;line-height:1.15;padding-right:74px}
 .gs-party{font-size:12.5px;color:var(--muted);margin-top:3px}
-.gs-fields{display:flex;flex-wrap:wrap;gap:12px 20px;margin-top:16px;align-items:flex-start}
+/* A grid, not a wrapped row: the labels then line up in columns down the
+   card whatever each value happens to be, instead of every row starting at a
+   different place. */
+.gs-fields{display:grid;grid-template-columns:repeat(auto-fill,minmax(136px,1fr));
+  gap:13px 16px;margin-top:16px;align-items:start}
 .gc-f{display:flex;flex-direction:column;gap:3px;align-items:flex-start;min-width:0;font-size:13.5px}
 .gc-k{font-size:10.5px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);font-weight:600}
 .gc-none{color:var(--muted)}
@@ -2081,7 +2103,17 @@ td.inv-col{text-align:center;width:1%}
    sub-event the newest information sits furthest right. Two problems: nothing
    said the table scrolled, and once you scrolled you could no longer see whose
    row you were reading. */
-td.inv-brk{display:none}
+/* The line breaks exist only for the phone card. Left as table cells on a
+   desktop they became empty columns the header knew nothing about, which
+   pulled every column heading one place away from the values under it. */
+td.inv-brk,td.g-brk{display:none}
+/* The row actions are two 28px buttons; left to the table's own maths the
+   column took a fifth of the width and the names wrapped three lines deep
+   beside it. width:1% with nowrap is the shrink-to-fit column. */
+@media (min-width:701px){
+  .g-tbl td.g-acts{width:1%;white-space:nowrap}
+  .g-tbl td.g-name{min-width:160px}
+}
 .g-tbl-wrap{
   /* Scroll shadow on the right edge only — background-attachment:local pins it
      to the content, so it fades out exactly when you reach the end and there
@@ -2175,46 +2207,59 @@ td.inv-brk{display:none}
      belong to, the one control you came to change, and some facts about them —
      so the card is laid out in that order, and the facts become chips, which
      say what they are without a caption above each one. */
-  .g-tbl tr{display:flex;flex-wrap:wrap;align-items:center;gap:7px 10px;
-    padding:15px 16px 14px;margin-bottom:10px;border-radius:var(--radius);
+  .g-tbl tr{display:flex;flex-wrap:wrap;align-items:center;gap:6px 8px;
+    padding:13px 15px 12px;margin-bottom:10px;border-radius:var(--radius);
     box-shadow:var(--shadow-sm)}
   .g-tbl td::before{display:none}
   .g-tbl td{display:block;font-size:13px;padding:0}
-  /* Line one: who, and the one thing you change about them. */
-  .g-tbl td.g-name{order:1;flex:1 1 auto;min-width:0;padding:0;min-height:0;
+  /* Line one: who, and the two things you do to the record itself. */
+  /* Basis zero, not auto: a long name grew the cell to the full width and
+     pushed the two buttons onto a line of their own, so where the pencil sat
+     depended on how long somebody's surname was. */
+  .g-tbl td.g-name{order:1;flex:1 1 0;min-width:0;padding:0;min-height:0;
     font-family:var(--serif);font-size:19px;font-weight:600;line-height:1.2;
     letter-spacing:-.008em;overflow-wrap:anywhere}
   .g-tbl td.g-name b{font-weight:600}
-  .g-tbl td.g-rsvp{order:2;flex:0 0 auto;margin-left:auto}
-  .g-tbl td.g-rsvp select.mini{max-width:none;min-width:118px}
-  /* Line two: the group, quietly. */
-  .g-tbl td.g-party{order:3;flex:1 1 auto;min-width:0;margin-top:-3px;
+  .g-tbl td.g-acts{order:2;flex:0 0 auto;margin-left:auto;align-self:flex-start;
+    margin-top:1px}
+  .g-tbl .r-acts{margin:0;opacity:1;position:static}
+  .g-tbl td.g-brk{display:block;flex:1 0 100%;height:0;padding:0;margin:0}
+  .g-tbl td.g-brk.b1{order:3}
+  .g-tbl td.g-brk.b2{order:6}
+  /* Line two: where they belong, and where they sit — the two facts that are
+     about placement rather than about the person, one at each end. */
+  .g-tbl td.g-party{order:4;flex:1 1 auto;min-width:0;
     font-size:12.5px;color:var(--muted);line-height:1.35}
-  .g-tbl td.g-brk{display:block;order:5;flex:1 0 100%;height:0;padding:0;margin:0}
-  /* Line three: the facts, as chips. A chip does not need a caption — nobody
-     reads "Beef" and wonders which column it came from. */
-  .g-tbl td.g-meal,.g-tbl td.g-diet,.g-tbl td.g-seat,.g-tbl td.g-sidecell{
-    order:6;flex:0 0 auto}
-  .g-tbl td.g-meal{font-size:12.5px;font-weight:600;color:var(--ink-soft);
-    background:var(--sunk);border:1px solid var(--sunk-line);
-    border-radius:var(--radius-pill);padding:4px 12px}
-  .g-tbl td.g-seat{font-size:12.5px}
+  .g-tbl td.g-seat{order:5;flex:0 0 auto;margin-left:auto;font-size:12.5px}
   .g-tbl td.g-seat .pill{font-size:12px}
   /* Unseated is an absence, and an absence does not get a chip. */
   .g-tbl td.g-seat .g-unseat{color:var(--muted);font-size:12.5px}
-  /* On the party's line, not the chips' — a chip row that happens to fill the
-     width pushed them onto a line of their own with nothing else on it. */
-  .g-tbl td.g-acts{order:4;flex:0 0 auto;margin-left:auto;align-self:center}
-  .g-tbl .r-acts{margin:0;opacity:1;position:static}
+  /* Line three: the facts, as chips. A chip does not need a caption — nobody
+     reads "Beef" and wonders which column it came from. */
+  .g-tbl td.g-rolecell,.g-tbl td.g-sidecell,.g-tbl td.g-meal,.g-tbl td.g-diet{
+    order:7;flex:0 0 auto}
+  .g-tbl td.g-meal{font-size:12.5px;font-weight:600;color:var(--ink-soft);
+    background:var(--sunk);border:1px solid var(--sunk-line);
+    border-radius:var(--radius-pill);padding:4px 12px}
   .g-tbl td.is-none{display:none}
-  /* Invite ticks close the card, on their own line. */
-  .g-tbl td.inv-brk{display:block;flex:1 0 100%;height:0;padding:0;margin:0;order:7}
-  .g-tbl td.inv-col{order:8;flex:0 0 auto;display:inline-flex;flex-direction:row;
-    align-items:center;gap:7px;margin-top:4px;
-    padding:3px 9px 3px 5px;border:1px solid var(--line);border-radius:var(--radius-pill)}
-  .g-tbl td.inv-col::before{display:inline;content:attr(data-l);font-size:10px;
-    letter-spacing:.07em;text-transform:uppercase;color:var(--muted);font-weight:600}
-  .g-tbl td.inv-col .inv-box{width:28px;height:28px}
+  /* Line four: the controls, under a hairline — everything above it is the
+     record, everything below it changes it. The rule is drawn by the break
+     itself, which is already a full-width nothing. */
+  .g-tbl td.g-brk.b3{order:8;border-top:1px solid var(--line);
+    margin:5px 0 1px;height:0}
+  .g-tbl td.g-rsvp{order:9;flex:0 0 auto}
+  .g-tbl td.g-rsvp select.mini{max-width:none;min-width:110px}
+  /* Invite ticks sit on the same line as the RSVP — the whole line is "what
+     are they asked to, and are they coming" — and drop to a line of their own
+     together, never one at a time, when the phone is too narrow for all
+     three. Trimmed to make that fit on a 390px screen. */
+  .g-tbl td.inv-brk{display:none}
+  .g-tbl td.inv-col{order:10;flex:0 0 auto;display:inline-flex;flex-direction:row;
+    align-items:center;gap:5px;
+    padding:2px 8px 2px 4px;border:1px solid var(--line);border-radius:var(--radius-pill)}
+  .g-tbl td.inv-col::before{display:inline;content:attr(data-l);font-size:9.5px;
+    letter-spacing:.06em;text-transform:uppercase;color:var(--muted);font-weight:600}
+  .g-tbl td.inv-col .inv-box{width:26px;height:26px}
 }
 /* --- the weekend, as the couple sees it in the portal --- */
 .ph-block{display:flex;flex-wrap:wrap;justify-content:center;gap:10px;margin-top:20px}
@@ -2393,6 +2438,13 @@ select.mini{
 }
 select.mini:hover{border-color:var(--gold-line)}
 select.mini:focus-visible{outline:none;box-shadow:var(--ring)}
+/* The one control on a guest card carries its own answer. On a list of two
+   hundred names the colour is what you sweep for — who has replied, who has
+   pulled out — and it saves the card a separate status chip saying the same
+   word twice. Awaiting a reply stays neutral: it is the absence of an answer,
+   not an answer. */
+select.rsvp-sel[data-r="yes"]{background-color:#F3F7F2;border-color:#D3DED0;color:#4E6B4A}
+select.rsvp-sel[data-r="no"]{background-color:#FBF4F4;border-color:#EDD1D1;color:#A75252}
 
 /* ============ SEATING CHART ============ */
 .seat-wrap{display:grid;grid-template-columns:260px 1fr;gap:20px;align-items:start}
@@ -6659,11 +6711,14 @@ function guestCard(e,x,subs,sub,depth){
     '<div class="gs-name">'+esc(x.name)+'</div>'+
     (x.party?'<div class="gs-party">'+esc(x.party)+'</div>':'')+
     '<div class="gs-fields">'+
-      f('RSVP','<select class="mini rsvp-sel" data-gid="'+esc(x.id)+'"'+(top?'':' tabindex="-1"')+
+      f('RSVP','<select class="mini rsvp-sel" data-r="'+esc(cur)+'" data-gid="'+esc(x.id)+'"'+(top?'':' tabindex="-1"')+
         ' aria-label="RSVP for '+esc(x.name)+'">'+
         Object.keys(RSVP).map(function(k){
           return '<option value="'+k+'"'+(cur===k?' selected':'')+'>'+RSVP[k].lbl+'</option>';
         }).join('')+'</select>')+
+      /* Standing up is the first thing you say about somebody at a door, and
+         the deck was the one place that did not say it. */
+      (x.role?f('Role','<span class="g-role">'+esc(x.role)+'</span>'):'')+
       (evHasSides(e)&&x.side?f('Whose','<span class="g-side s-'+x.side+'">'+esc(sideLabel(e,x.side))+'</span>'):'')+
       (gMeal(x,e)?f('Meal','<b>'+esc(gMeal(x,e))+'</b>'):'')+
       (x.diet?f('Dietary','<span class="status s-due">'+esc(x.diet)+'</span>'):'')+
@@ -6798,28 +6853,43 @@ function viewGuests(){
         '</div>'+
         '<div class="wp-people">'+grp.people.map(function(g){
           var r=gRsvp(g,e), a=attireOf(g), on=r1?!!inviteOf(g.id,r1.id):false;
+          /* Everything true *about* the person goes under their name as one
+             quiet caption; the two things you *do* to them stay in a fixed
+             column on the right. Mixing the two — an allergy chip sitting in
+             the same block as the attire button — is what left every row a
+             different height with the buttons at a different place on each
+             one. */
+          var cap=[];
+          if(sides&&!groupSide&&g.side)cap.push('<span class="g-side s-'+g.side+'">'+esc(sideLabel(e,g.side))+'</span>');
+          if(g.diet)cap.push('<span class="status s-due">'+esc(g.diet)+'</span>');
+          /* Somebody standing up is coming — that is what standing up means,
+             and printing "Attending" beside all eight of them says nothing
+             eight times. What is worth a line is the one who has not replied,
+             or the one who has pulled out. */
+          if(r!=='yes')cap.push('<span class="wp-r r-'+esc(r)+'">'+((RSVP[r]||{}).lbl||'')+'</span>');
+          /* What they are actually wearing, in words, rather than crammed into
+             a button that then has to be a different width for everyone. */
+          var gm=[a.item||'',a.size||''].filter(function(t){return !!t;}).join(' · ');
+          if(gm)cap.push('<span class="wp-gm">'+esc(gm)+'</span>');
           return '<div class="wp-p">'+
-            '<span class="wp-nm">'+esc(g.name)+'</span>'+
-            /* The chips are one block, right-aligned, so a row with an allergy
-               and a row without still line up down the card. */
-            '<span class="wp-tags">'+
-              ((sides&&!groupSide&&g.side)?'<span class="g-side s-'+g.side+'">'+esc(sideLabel(e,g.side))+'</span>':'')+
-              (g.diet?'<span class="status s-due">'+esc(g.diet)+'</span>':'')+
+            '<span class="wp-who">'+
+              '<span class="wp-nm">'+esc(g.name)+'</span>'+
+              (cap.length?'<span class="wp-sub">'+cap.join('')+'</span>':'')+
+            '</span>'+
+            /* Two slots, always in the same order, always the same width — so
+               the eye runs straight down the column instead of hunting for
+               each button. */
+            '<span class="wp-acts">'+
               /* The attire chip is the editor. Eight people is eight modals if
                  the only way in is the row's pencil. */
               '<button type="button" class="wp-at'+(a.status?' set s'+attireStep(g):'')+
                 (attireLate(g)?' late':'')+'" data-attire="'+esc(g.id)+'" '+
-                'title="'+esc(a.item||'Attire')+'">'+
-                esc(a.status||'Attire')+(a.size?' · '+esc(a.size):'')+'</button>'+
+                'title="'+esc(gm||'Attire — nothing recorded yet')+'">'+
+                esc(a.status||'Attire')+'</button>'+
               (r1?'<button type="button" class="wp-reh'+(on?' on':'')+'" data-reh="'+esc(g.id)+'" '+
                 'data-rehev="'+esc(r1.id)+'" aria-pressed="'+on+'" '+
                 'title="'+(on?'Coming to the ':'Not at the ')+esc(roleLabel(r1,true).toLowerCase())+'">'+
-                (on?'✓':'')+' Rehearsal</button>':'')+
-              /* Somebody standing up is coming — that is what standing up
-                 means, and printing "Attending" beside all eight of them says
-                 nothing eight times. What is worth a line is the one who has
-                 not replied, or the one who has pulled out. */
-              (r==='yes'?'':'<span class="wp-r r-'+esc(r)+'">'+((RSVP[r]||{}).lbl||'')+'</span>')+
+                '<span class="wp-tick" aria-hidden="true">'+(on?'✓':'')+'</span>Rehearsal</button>':'')+
             '</span>'+
           '</div>';
         }).join('')+'</div></div>';
@@ -6873,9 +6943,12 @@ function viewGuests(){
          second render — the selects and ticks keep the handlers they had. */
       return '<tr><td class="g-name"><b>'+esc(x.name)+'</b></td>'+
         '<td data-l="Party" class="g-party'+(x.party?'':' is-none')+'">'+esc(x.party)+'</td>'+
-        (roles?'<td data-l="Role" class="g-rolecell'+(x.role?'':' is-none')+'"><span class="g-role">'+esc(x.role||'')+'</span></td>':'')+
+        /* An empty chip is not an empty cell — a guest with no role was getting a
+   gold pill with nothing in it. */
+        (roles?'<td data-l="Role" class="g-rolecell'+(x.role?'':' is-none')+'">'+
+          (x.role?'<span class="g-role">'+esc(x.role)+'</span>':'<span style="color:var(--muted)">—</span>')+'</td>':'')+
         (sides?'<td data-l="Side" class="g-sidecell'+(x.side?'':' is-none')+'"><span class="g-side s-'+(x.side||'x')+'">'+esc(sideLabel(e,x.side))+'</span></td>':'')+
-        '<td data-l="RSVP" class="g-rsvp"><select class="mini rsvp-sel" data-gid="'+esc(x.id)+'" aria-label="RSVP for '+esc(x.name)+'">'+
+        '<td data-l="RSVP" class="g-rsvp"><select class="mini rsvp-sel" data-r="'+esc(cur)+'" data-gid="'+esc(x.id)+'" aria-label="RSVP for '+esc(x.name)+'">'+
           Object.keys(RSVP).map(function(k){return '<option value="'+k+'"'+(cur===k?' selected':'')+'>'+RSVP[k].lbl+'</option>';}).join('')+
         '</select></td>'+
         '<td data-l="Meal" class="g-meal'+(gMeal(x,e)?'':' is-none')+'">'+(gMeal(x,e)?esc(gMeal(x,e)):'<span style="color:var(--muted)">—</span>')+'</td>'+
@@ -6886,9 +6959,15 @@ function viewGuests(){
            they belong and being wedged against the word "Unseated". */
         '<td class="g-acts">'+rowActions('guest',x.id)+'</td>'+
         /* Zero-height, full-width, invisible anywhere but the phone card —
-           where it ends the line the actions sit on, so the chips below start
-           against the left edge instead of flowing round them. */
-        '<td class="g-brk" aria-hidden="true"></td>'+
+           where each one ends a line. Without them the cells wrap wherever
+           they happen to run out of room, so the RSVP box sat beside a short
+           name and below a long one, and the family name landed in whatever
+           gap was left over. Three breaks, four lines, every card the same:
+           who they are · where they belong · what is true of them · what you
+           came here to change. */
+        '<td class="g-brk b1" aria-hidden="true"></td>'+
+        '<td class="g-brk b2" aria-hidden="true"></td>'+
+        '<td class="g-brk b3" aria-hidden="true"></td>'+
         /* A zero-height full-width cell, invisible everywhere except a phone
            card, where it breaks the line so the invite chips group together
            instead of trailing off the end of Table. */

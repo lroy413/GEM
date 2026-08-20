@@ -644,6 +644,51 @@ never pulled, which is what stops a fresh install overwriting the studio.
     button in the portal, and a balance with no link shows the terms instead.
     A real in-app card payment needs a payment processor and a server to hold
     its secret — neither exists here yet.
+- **A person's card is two things, and they must not share a line.** Both the
+  wedding-party row and the phone guest card were laid out as one wrapped
+  flex row — name, chips and buttons all competing for the same width. The
+  result was that an allergy pushed the buttons onto a second line, so rows
+  came out 32px and 71px tall alternately with the attire button at a
+  different x on every one of them (measured: 303, 103, 263, 166, 175, 264).
+  The rule that fixed it: **what is true of a person goes under their name;
+  what you do to them lives in a fixed column that nothing else may enter.**
+  - **Wedding party row** — `.wp-who` (name + one `.wp-sub` caption carrying
+    side, dietary, RSVP-if-not-yes and the garment in words) and `.wp-acts`
+    (attire + rehearsal, fixed widths, stacked into a 106px column below
+    700px). Rows are then the same height by construction.
+  - **The attire button shows the status word only.** "Ordered · UK 10" made
+    every button a different width, so the column could not line up. The size
+    moved into the caption, where it is more readable anyway, and stays in the
+    button's `title`.
+  - **Nothing is dashed any more.** Three dashed outline chips stacked up read
+    as a page that had not finished loading. Quiet and solid says "nobody has
+    said anything yet" without the alarm.
+  - **Guest card: four lines, forced.** Zero-height full-width `.g-brk` cells
+    (`b1`,`b2`,`b3`) end each line, and every cell has an explicit `order`.
+    Without them the cells wrapped wherever they ran out of room — the RSVP
+    box sat beside a short name and below a long one, and the family name
+    landed in whatever gap was left. The four are: who they are (+ the row
+    actions) · where they belong and where they sit · what is true of them, as
+    chips · what you came to change, under a hairline.
+  - **`flex:1 1 0` on the name, not `1 1 auto`.** With `auto` a long surname
+    grew the cell to the full width and pushed the pencil onto its own line,
+    so where the buttons sat depended on how long somebody's name was.
+  - **Those break cells must be `display:none` by default.** They are only for
+    the phone card; left as table cells on a desktop they became empty columns
+    the header knew nothing about, walking every heading one place away from
+    the values beneath it. (`td.inv-brk,td.g-brk{display:none}`, switched back
+    on inside the ≤700px block.)
+  - **`.g-acts` is `width:1%;white-space:nowrap` on desktop.** Two 28px buttons
+    were being given a fifth of the table's width by the auto layout, which is
+    what had the names wrapping three lines deep beside all that space.
+  - **The RSVP select carries its own answer** (`data-r`, tinted green for
+    attending, red for declined, neutral while awaiting). On two hundred names
+    the colour is what you sweep for, and it saves the card a status chip
+    repeating the word already in the select.
+  - **`scratchpad/card-layout-test.mjs` guards all of this** at 320/360/390 and
+    1400px: same x for every button, one width per state, buttons level with
+    the name, caption under the name, and the four-line order on the card —
+    plus, on desktop, one column heading per cell.
 - **A sub-event asks six questions, not nineteen.** A rehearsal dinner needs a
   name, which occasion it is, a date and a start time; its client comes from
   the block (`leadId` is hidden when `parentId` is set) and its type is
