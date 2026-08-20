@@ -644,6 +644,119 @@ never pulled, which is what stops a fresh install overwriting the studio.
     button in the portal, and a balance with no link shows the terms instead.
     A real in-app card payment needs a payment processor and a server to hold
     its secret — neither exists here yet.
+- **A 200-name guest list needs to be askable.** `party` was the only grouping
+  and it holds one value, so it could not also say "out of town", "kids'
+  table", "bus from the hotel". Two things were added together, because
+  neither is useful alone:
+  - **Labels** (`guest.tags`, an array, migration 25) — as many per guest as
+    the studio wants, invented by them. Stored only when non-empty: an empty
+    array on every guest is two hundred empty arrays in local storage, which
+    is the same reasoning `attire` uses. `setTags()` is case-insensitively
+    unique with the first spelling winning, so "Out of town" typed twice in
+    two cases is one label rather than two that filter differently.
+  - **A filter bar** — side, RSVP, group, label, seating, meal, invited-to,
+    plus dietary-needs-only and wedding-party-only. `state.gFilter`, in memory
+    and deliberately **not** saved: a filter that survives a reload is a guest
+    list with half the names missing and nothing on screen saying why.
+  - **`guestsShown(e)` is the single definition of who is on screen** — search
+    first, then filter. The stat row, the meal counts, the bulk invite, the
+    deck and "Label these N" all read it, so none of them can drift from what
+    the list is showing.
+  - **Tapping a set value clears it**, so no control needs an "off" of its
+    own — which is what keeps the panel to one row per question. The active
+    filters also appear as chips above the list whether or not the panel is
+    open, each removing itself.
+  - **"Label these N" is the point of the whole thing.** Filter to the twelve
+    you mean, name them in one action. Labelling two hundred people one row
+    editor at a time is how a field ends up never being used.
+  - **A `tags` field type in `openEditor`**: a datalist is no good for several
+    values in one field (picking one replaces what is typed), so the
+    suggestions are buttons that append — and tapping one again removes it.
+  - **The Labels column only exists once a label does** (`tagsUsed`), like the
+    Role column. A column of em dashes is not a feature.
+  - **Migration 25** adds `guests.tags jsonb not null default '[]'` with an
+    is-array check and a partial `gin (tags jsonb_path_ops)` index, and
+    `sbTagCol()` probes for it exactly as `sbAttireCol()` does. Verified
+    against local Postgres: default, containment query, and the check refusing
+    an object.
+- **A studio's logo is a wordmark, not an avatar.** It was drawn into a 38px
+  rounded square with `object-fit:cover`, so "CONCRETE" arrived as "ONCRE" —
+  in a 240px-wide row that was otherwise empty apart from a single serif
+  letter beside it.
+  - **With a logo set, the logo IS the masthead.** `.brand:not(.no-logo)`
+    turns the row into a column: the mark becomes a plate across the whole
+    sidebar (58px tall, 44 on the phone drawer), the picture is `contain`, and
+    `.name` — the short mark — stands down, because printing a wordmark beside
+    a wordmark says the same thing twice. Collapsed to the rail it goes back
+    to a 38px tile, still contained.
+  - **Every other place the logo appears is `contain` too**, and the document
+    and portal marks are `height:Npx;width:auto;max-width:…` rather than
+    squares — a 3.75:1 wordmark inside a 44px square is a 12px-tall smudge.
+  - **The panel's close button lives in that corner.** The plate starts below
+    it (46px desktop, 48px phone where the button is a 42px touch target), or
+    a logo with no margin of its own runs straight under the ✕.
+  - **`openPhotoCrop` grew two options for this**: `aspect:'auto'` takes the
+    shape of the file that arrived (clamped to 1–4.5, and generous at the wide
+    end because a frame narrower than the file pads the export with white),
+    and `contain:true` starts the picture whole instead of filling the frame —
+    so pressing Use photo without touching anything keeps what was uploaded.
+    `clamp()` centres rather than corner-pins when the picture is smaller than
+    the frame, and the export fills white first (JPEG has no alpha, so a
+    letterbox would come out black).
+  - **`height:100%` does not resolve inside a centred grid item.** Both the
+    settings plate and the branding preview had the picture take its height
+    from its width and spill out of the box (610×163 inside a 54px plate).
+    Fixed pixel `max-height` is what works there.
+  - **`scratchpad/logo-test.mjs`** uploads a real 3.75:1 file at 1400 and
+    390px and checks the frame shape, the whole-picture start, the stored
+    result, `background-size:contain`, the plate width, the retired short mark
+    and the ✕ clearance. `crop-cover-test.mjs` proves the 16:9 cover crop
+    still fills its frame, since both share `openPhotoCrop`.
+- **A person's card is two things, and they must not share a line.** Both the
+  wedding-party row and the phone guest card were laid out as one wrapped
+  flex row — name, chips and buttons all competing for the same width. The
+  result was that an allergy pushed the buttons onto a second line, so rows
+  came out 32px and 71px tall alternately with the attire button at a
+  different x on every one of them (measured: 303, 103, 263, 166, 175, 264).
+  The rule that fixed it: **what is true of a person goes under their name;
+  what you do to them lives in a fixed column that nothing else may enter.**
+  - **Wedding party row** — `.wp-who` (name + one `.wp-sub` caption carrying
+    side, dietary, RSVP-if-not-yes and the garment in words) and `.wp-acts`
+    (attire + rehearsal, fixed widths, stacked into a 106px column below
+    700px). Rows are then the same height by construction.
+  - **The attire button shows the status word only.** "Ordered · UK 10" made
+    every button a different width, so the column could not line up. The size
+    moved into the caption, where it is more readable anyway, and stays in the
+    button's `title`.
+  - **Nothing is dashed any more.** Three dashed outline chips stacked up read
+    as a page that had not finished loading. Quiet and solid says "nobody has
+    said anything yet" without the alarm.
+  - **Guest card: four lines, forced.** Zero-height full-width `.g-brk` cells
+    (`b1`,`b2`,`b3`) end each line, and every cell has an explicit `order`.
+    Without them the cells wrapped wherever they ran out of room — the RSVP
+    box sat beside a short name and below a long one, and the family name
+    landed in whatever gap was left. The four are: who they are (+ the row
+    actions) · where they belong and where they sit · what is true of them, as
+    chips · what you came to change, under a hairline.
+  - **`flex:1 1 0` on the name, not `1 1 auto`.** With `auto` a long surname
+    grew the cell to the full width and pushed the pencil onto its own line,
+    so where the buttons sat depended on how long somebody's name was.
+  - **Those break cells must be `display:none` by default.** They are only for
+    the phone card; left as table cells on a desktop they became empty columns
+    the header knew nothing about, walking every heading one place away from
+    the values beneath it. (`td.inv-brk,td.g-brk{display:none}`, switched back
+    on inside the ≤700px block.)
+  - **`.g-acts` is `width:1%;white-space:nowrap` on desktop.** Two 28px buttons
+    were being given a fifth of the table's width by the auto layout, which is
+    what had the names wrapping three lines deep beside all that space.
+  - **The RSVP select carries its own answer** (`data-r`, tinted green for
+    attending, red for declined, neutral while awaiting). On two hundred names
+    the colour is what you sweep for, and it saves the card a status chip
+    repeating the word already in the select.
+  - **`scratchpad/card-layout-test.mjs` guards all of this** at 320/360/390 and
+    1400px: same x for every button, one width per state, buttons level with
+    the name, caption under the name, and the four-line order on the card —
+    plus, on desktop, one column heading per cell.
 - **A sub-event asks six questions, not nineteen.** A rehearsal dinner needs a
   name, which occasion it is, a date and a start time; its client comes from
   the block (`leadId` is hidden when `parentId` is set) and its type is

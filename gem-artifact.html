@@ -160,6 +160,23 @@ html.no-motion body::before{opacity:.3}
   flex:0 0 auto;
 }
 .brand.no-logo .mark{display:none}
+/* ---- and when there IS one, the logo is the masthead ----
+   A studio's logo is usually a wordmark, and a wordmark forced through a 38px
+   rounded square arrives as four of its letters. Meanwhile the row it sat in
+   was 240px wide and mostly empty, with a single serif letter next to it. So
+   with a logo set the mark becomes a plate across the whole width, the picture
+   is contained rather than cropped, and the short mark stands down — the logo
+   is already the wordmark, and printing both said the same thing twice. */
+/* The panel's own close button lives in this corner, so the plate starts
+   below it rather than under it — a logo with no margin of its own would
+   otherwise run straight beneath the ✕. */
+.brand:not(.no-logo){flex-direction:column;align-items:stretch;gap:9px;padding:46px 10px 18px}
+.brand:not(.no-logo) .mark{width:100%;height:58px;border-radius:12px;
+  border:1px solid var(--line);background-color:#fff;
+  box-shadow:0 1px 3px rgba(59,46,51,.06)}
+.brand:not(.no-logo) .name{display:none}
+.brand:not(.no-logo) .brand-tx{flex:0 0 auto;text-align:center}
+.brand:not(.no-logo) .sub{margin-top:0}
 /* The event you are working on, at the top of the rail. The sidebar had no
    sense of place at all — four collapsed group headers and nothing saying
    which job you were in the middle of. */
@@ -314,6 +331,10 @@ html.no-motion body::before{opacity:.3}
 .app.rail .rail-btn{right:0;left:0;margin:0 auto;top:10px;font-size:15px}
 
 .app.rail .brand{justify-content:center;padding:34px 0 18px;gap:0}
+/* Collapsed there is no width to be a masthead in, so the plate goes back to
+   being a tile — still containing the picture rather than cropping it. */
+.app.rail .brand:not(.no-logo){padding:46px 0 18px}
+.app.rail .brand:not(.no-logo) .mark{width:38px;height:38px;margin:0 auto;box-shadow:none}
 @media (max-width:860px){ .brand{padding-top:34px} }
 .app.rail .brand-tx,
 .app.rail .srch-open span:nth-child(2),
@@ -450,7 +471,19 @@ html.no-motion body::before{opacity:.3}
 .bp-mark{width:38px;height:38px;flex:0 0 38px;border-radius:11px;background:var(--gold-grad);
   color:var(--on-accent,#fff);display:grid;place-items:center;font-family:var(--serif);font-size:19px;
   font-weight:600;overflow:hidden;border:1px solid var(--gold-deep)}
-.bp-mark img{width:100%;height:100%;object-fit:cover}
+.bp-mark img{width:100%;height:100%;object-fit:contain}
+/* With a logo the preview shows what the sidebar shows: the mark across the
+   width, the studio's name under it, and no short mark repeating what the
+   picture already says. */
+.bp-bar.has-logo{flex-direction:column;align-items:stretch;gap:9px;padding:16px 18px}
+/* Held to roughly the sidebar's width, because that is what this is a preview
+   of — stretched across the whole settings column it read as a black band. */
+.bp-bar.has-logo .bp-mark{width:100%;max-width:260px;margin:0 auto;height:54px;flex:0 0 54px;
+  border-radius:12px;background:#fff;border-color:var(--line);padding:5px}
+/* height:100% cannot resolve inside a centred grid item, so the picture took
+   its own height from its width and overflowed the plate. */
+.bp-bar.has-logo .bp-mark img{width:auto;height:auto;max-width:100%;max-height:44px}
+.bp-bar.has-logo .bp-tx{text-align:center}
 .bp-tx b{display:block;font-family:var(--serif);font-size:19px;letter-spacing:.05em}
 .bp-tx em{font-style:normal;display:block;font-size:10px;letter-spacing:2px;text-transform:uppercase;color:var(--muted)}
 .bp-body{display:flex;align-items:center;gap:10px;flex-wrap:wrap;padding:16px 18px;background:var(--bg-1)}
@@ -461,8 +494,21 @@ html.no-motion body::before{opacity:.3}
   box-shadow:inset 0 1px 0 rgba(255,255,255,.4)}
 .bp-note{font-size:11.5px;color:var(--muted);flex:1;min-width:160px}
 
-.logo-row{display:flex;align-items:center;gap:9px;flex-wrap:wrap}
-.logo-thumb{width:40px;height:40px;border-radius:11px;object-fit:cover;border:1px solid var(--line);
+.logo-row{display:flex;align-items:center;gap:12px;flex-wrap:wrap}
+.logo-acts{display:flex;gap:8px;flex-wrap:wrap}
+/* The same plate the sidebar draws, at the same proportions, so this row is a
+   preview and not a thumbnail. */
+.logo-plate{flex:1 1 200px;min-width:150px;max-width:260px;height:56px;
+  border:1px solid var(--line);border-radius:12px;background:#fff;padding:5px;
+  display:grid;place-items:center;overflow:hidden}
+/* max-height:100% is indefinite inside a centred grid item — the picture took
+   its height from its width and spilled past the plate. Fixed pixels resolve. */
+.logo-plate img{width:auto;height:auto;max-width:100%;max-height:46px;object-fit:contain}
+@media (max-width:560px){
+  .logo-plate{flex:1 1 100%;max-width:none}
+  .logo-acts{flex:1 1 100%}
+}
+.logo-thumb{width:40px;height:40px;border-radius:11px;object-fit:contain;background:#fff;border:1px solid var(--line);
   display:grid;place-items:center}
 .logo-thumb.empty{background:var(--gold-grad);color:var(--on-accent,#fff);
   font-family:var(--serif);font-size:19px;font-weight:600;border-color:var(--gold-deep)}
@@ -1209,7 +1255,7 @@ tbody tr:hover{background:var(--pink-50)}
 .iv-sheet{padding:34px 36px 26px;max-width:720px;margin:0 auto}
 .iv-top{display:flex;justify-content:space-between;gap:26px;align-items:flex-start;
   padding-bottom:20px;border-bottom:2px solid var(--gold)}
-.iv-logo{width:44px;height:44px;object-fit:cover;border-radius:9px;margin-bottom:9px;display:block}
+.iv-logo{height:44px;width:auto;max-width:170px;object-fit:contain;border-radius:9px;margin-bottom:9px;display:block}
 .iv-biz{font-family:var(--serif);font-size:20px;font-weight:600;line-height:1.2}
 .iv-fine{font-size:12px;color:var(--muted);line-height:1.5}
 .iv-id{text-align:right;flex:0 0 auto}
@@ -1934,6 +1980,69 @@ td.inv-col{text-align:center;width:1%}
 /* The per-chip dropdown was the touch fallback; tap-to-seat replaces it and
    is both faster and less cluttered, so it goes back to being desktop-only. */
 @media (pointer:coarse),(max-width:860px){ .seat-wrap .move-sel{display:none} }
+/* ---- the guest filter bar ----
+   A 200-name list is only a list if you can ask it questions. Two parts, and
+   only the first is ever in the way: the chips naming what is being filtered
+   by right now, and a panel of everything you could filter by, shut until
+   asked for. Every control is one tap, and tapping it again clears it. */
+.gf-btn{display:inline-flex;align-items:center;gap:6px}
+.gf-btn.on{border-color:var(--gold-line);background:var(--gold-soft);color:var(--gold-deep)}
+.gf-n{min-width:17px;height:17px;border-radius:9px;background:var(--gold-deep);color:#fff;
+  font-size:10px;font-weight:700;display:inline-grid;place-items:center;padding:0 5px}
+.gf-wrap{border-bottom:1px solid var(--line);background:var(--sunk)}
+.gf-active{display:flex;flex-wrap:wrap;align-items:center;gap:7px;padding:10px 22px}
+.gf-act{display:inline-flex;align-items:center;gap:7px;font-family:var(--sans);font-size:11.5px;
+  font-weight:600;padding:4px 10px;border-radius:var(--radius-pill);cursor:pointer;
+  background:var(--gold-soft);border:1px solid var(--gold-line);color:var(--gold-deep)}
+.gf-act span{font-size:10px;opacity:.65}
+.gf-act:hover{border-color:var(--gold)}
+.gf-act:focus-visible{outline:none;box-shadow:var(--ring)}
+.gf-clear{font-size:11.5px;margin-left:auto}
+.gf-panel{padding:6px 22px 14px;display:flex;flex-direction:column;gap:10px;
+  border-top:1px solid var(--line)}
+.gf-row{display:flex;align-items:flex-start;gap:12px}
+.gf-k{flex:0 0 92px;font-size:10.5px;letter-spacing:.09em;text-transform:uppercase;
+  color:var(--muted);font-weight:600;padding-top:8px}
+.gf-vs{flex:1 1 auto;display:flex;flex-wrap:wrap;gap:6px;min-width:0}
+.gf-c{font-family:var(--sans);font-size:12px;font-weight:600;padding:5px 12px;min-height:30px;
+  border-radius:var(--radius-pill);border:1px solid var(--line);background:var(--card);
+  color:var(--ink-soft);cursor:pointer;
+  transition:border-color .14s var(--ease),background-color .14s var(--ease),color .14s var(--ease)}
+.gf-c:hover{border-color:var(--gold-line)}
+.gf-c.on{background:var(--gold-soft);border-color:var(--gold-line);color:var(--gold-deep)}
+.gf-c:focus-visible{outline:none;box-shadow:var(--ring)}
+.gf-foot{display:flex;align-items:center;gap:12px;flex-wrap:wrap;padding-top:2px}
+/* Eight questions stacked one per row is a panel taller than the list it is
+   filtering. Two columns where there is room for them. */
+@media (min-width:1000px){
+  .gf-panel{display:grid;grid-template-columns:1fr 1fr;gap:10px 30px;align-items:start}
+  .gf-foot{grid-column:1/-1}
+}
+.gf-hint{font-size:11.5px;color:var(--muted);flex:1 1 200px;min-width:0}
+/* A label on a guest, wherever guests are shown. */
+.g-tagcell{display:flex;flex-wrap:wrap;gap:5px}
+/* "Sea bass" broken across two lines to save eleven pixels reads as a fault.
+   The wrapper scrolls; a short value does not need to wrap. */
+@media (min-width:701px){ .g-tbl td.g-meal,.g-tbl td.g-seat,.g-tbl td.g-party{white-space:nowrap} }
+.g-tag{display:inline-block;font-size:11.5px;font-weight:600;white-space:nowrap;
+  padding:2px 10px;border-radius:var(--radius-pill);
+  background:var(--sunk);border:1px solid var(--sunk-line);color:var(--ink-soft)}
+.tag-sug{display:flex;flex-wrap:wrap;gap:6px;margin-top:7px}
+.tag-sb{font-family:var(--sans);font-size:11.5px;font-weight:600;padding:4px 10px;min-height:28px;
+  border-radius:var(--radius-pill);border:1px dashed var(--line-strong);background:none;
+  color:var(--muted);cursor:pointer}
+.tag-sb:hover{border-style:solid;border-color:var(--gold-line);color:var(--gold-deep)}
+.tag-sb.on{border-style:solid;background:var(--gold-soft);border-color:var(--gold-line);color:var(--gold-deep)}
+.tag-sb:focus-visible{outline:none;box-shadow:var(--ring)}
+@media (max-width:700px){
+  .gf-active{padding:10px 15px}
+  .gf-panel{padding:6px 15px 14px;gap:13px}
+  /* The label above its own row of chips, rather than a 92px column pushing
+     every chip into a 200px gutter. */
+  .gf-row{flex-direction:column;gap:7px}
+  .gf-k{flex:0 0 auto;padding-top:0}
+  .gf-c{min-height:34px;font-size:12.5px}
+}
 /* ---- the wedding party ---- */
 .wp-list{padding:4px 0}
 .wp-grp{display:flex;gap:18px;padding:13px 22px;border-bottom:1px solid var(--line)}
@@ -1942,18 +2051,26 @@ td.inv-col{text-align:center;width:1%}
    so the column reads straight down instead of wrapping under Groomsman and
    not under Bridesmaid. */
 .wp-role{flex:0 0 230px;font-size:10.5px;letter-spacing:.1em;text-transform:uppercase;
-  color:var(--muted);font-weight:600;padding-top:3px;display:flex;align-items:center;gap:6px;
-  flex-wrap:wrap}
+  color:var(--muted);font-weight:600;display:flex;align-items:center;gap:6px;
+  flex-wrap:wrap;align-self:flex-start;padding-top:12px}
 .wp-n{font-size:11px;letter-spacing:0;color:var(--ink-soft);background:var(--sunk);
   border-radius:var(--radius-pill);padding:1px 7px;font-weight:600}
-.wp-people{flex:1 1 auto;min-width:0;display:flex;flex-direction:column;gap:7px}
-/* Name left, chips right, and the chips wrap as a block rather than one at a
-   time — which is what had "Attending" alone on a second line under the people
-   who happened to have an allergy, and left every row a different height. */
-.wp-p{display:flex;align-items:center;gap:10px;min-height:30px}
-.wp-nm{flex:1 1 auto;min-width:0;font-size:14px;font-weight:600;overflow-wrap:anywhere}
-.wp-tags{flex:0 1 auto;display:flex;align-items:center;justify-content:flex-end;
-  flex-wrap:wrap;gap:7px}
+.wp-people{flex:1 1 auto;min-width:0;display:flex;flex-direction:column}
+/* Two columns, and only two: everything known about the person on the left,
+   the two buttons on the right at a fixed width. The old row let the chips
+   and the name compete for the same space, so an allergy pushed the buttons
+   onto a second line and every row landed at a different height with the
+   buttons at a different place on each one. */
+.wp-p{display:flex;align-items:flex-start;gap:14px;padding:9px 0;
+  border-top:1px solid var(--line)}
+.wp-p:first-child{border-top:none}
+.wp-who{flex:1 1 auto;min-width:0;display:flex;flex-direction:column;gap:4px;padding-top:3px}
+.wp-nm{font-size:14.5px;font-weight:600;line-height:1.25;overflow-wrap:anywhere}
+/* One caption line, chips first and the garment in words after them, so a
+   person with three things to say about them still reads as one block. */
+.wp-sub{display:flex;flex-wrap:wrap;align-items:center;gap:6px;line-height:1.3}
+.wp-gm{font-size:11.5px;color:var(--muted)}
+.wp-acts{flex:0 0 auto;display:flex;align-items:flex-start;gap:8px}
 /* Shown only when it is not a yes, so it reads as an exception rather than a
    column. Declined is the one that needs to catch an eye. */
 .wp-r{font-size:11.5px;font-weight:600;white-space:nowrap;
@@ -1970,34 +2087,44 @@ td.inv-col{text-align:center;width:1%}
 .wp-warn b{color:var(--gold-deep)}
 .wp-late b{color:var(--danger,#A75252)}
 .wp-bar .link-btn{font-size:12px}
-/* The attire chip is a button, and it looks like the state it is in: outlined
-   and quiet before anyone has said anything, filling with gold as the chain
-   completes, red once the date has gone by. */
-.wp-at{font-family:var(--sans);font-size:11.5px;font-weight:600;cursor:pointer;
-  padding:3px 11px;border-radius:var(--radius-pill);
-  border:1px dashed var(--line-strong);background:none;color:var(--muted);
+/* Both buttons share one shape and one width, so the column reads as a column.
+   They were dashed while empty, and three dashed outlines stacked up looked
+   like a page that had not finished loading — quiet and solid says the same
+   thing without the alarm. The width is set to the longest label each can
+   ever hold ("To order", "Rehearsal"), so nothing reflows as states change. */
+.wp-at,.wp-reh{font-family:var(--sans);font-size:11.5px;font-weight:600;cursor:pointer;
+  display:inline-flex;align-items:center;justify-content:center;gap:4px;
+  min-height:30px;padding:4px 12px;border-radius:var(--radius-pill);
+  border:1px solid var(--line);background:var(--card);color:var(--muted);
+  white-space:nowrap;
   transition:border-color .14s var(--ease),background-color .14s var(--ease),color .14s var(--ease)}
-.wp-at:hover{border-color:var(--gold);color:var(--gold-deep)}
-.wp-at:focus-visible{outline:none;box-shadow:var(--ring)}
-.wp-at.set{border-style:solid;background:var(--pink-100);border-color:var(--line);color:var(--ink-soft)}
+.wp-at{flex:0 0 92px}
+.wp-reh{flex:0 0 106px}
+.wp-at:hover,.wp-reh:hover{border-color:var(--gold);color:var(--gold-deep)}
+.wp-at:focus-visible,.wp-reh:focus-visible{outline:none;box-shadow:var(--ring)}
+.wp-at.set{background:var(--pink-100);border-color:var(--line);color:var(--ink-soft)}
 .wp-at.set.s3{background:var(--gold-soft);border-color:var(--gold-line);color:var(--gold-deep)}
 .wp-at.set.s4{background:#E8EDE6;border-color:#D3DED0;color:#4E6B4A}
 .wp-at.late{background:#F9E5E5;border-color:#EDD1D1;color:#A75252}
-.wp-reh{font-family:var(--sans);font-size:11.5px;font-weight:600;cursor:pointer;
-  padding:3px 11px;border-radius:var(--radius-pill);
-  border:1px dashed var(--line-strong);background:none;color:var(--muted);
-  transition:border-color .14s var(--ease),background-color .14s var(--ease),color .14s var(--ease)}
-.wp-reh:hover{border-color:var(--gold);color:var(--gold-deep)}
-.wp-reh:focus-visible{outline:none;box-shadow:var(--ring)}
-.wp-reh.on{border-style:solid;background:var(--gold-soft);border-color:var(--gold-line);color:var(--gold-deep)}
+.wp-reh.on{background:var(--gold-soft);border-color:var(--gold-line);color:var(--gold-deep)}
+/* The tick keeps its space whether or not it is showing, so ticking somebody
+   off does not shunt the word "Rehearsal" sideways. */
+.wp-tick{display:inline-block;width:9px;text-align:center}
 @media (pointer:coarse),(max-width:560px){
-  .wp-at,.wp-reh{min-height:32px;padding:5px 12px}
+  .wp-at,.wp-reh{min-height:34px}
+}
+/* On a phone the two buttons stack into one narrow column rather than fight
+   the name for the width. Every row is then exactly as tall as the stack, so
+   the card is even down its whole length. */
+@media (max-width:700px){
+  .wp-acts{flex-direction:column;align-items:stretch;width:106px}
+  .wp-at,.wp-reh{flex:0 0 auto;width:100%}
 }
 .g-role{display:inline-block;font-size:11.5px;font-weight:600;white-space:nowrap;
   padding:2px 10px;border-radius:var(--radius-pill);
   background:var(--gold-soft);border:1px solid var(--gold-line);color:var(--gold-deep)}
 @media (max-width:700px){
-  .wp-grp{flex-direction:column;gap:8px;padding:13px 16px}
+  .wp-grp{flex-direction:column;gap:6px;padding:13px 16px}
   .wp-role{flex:0 0 auto;padding-top:0}
   .wp-foot{padding:12px 16px 14px}
   .g-tbl td.g-rolecell{order:6;flex:0 0 auto}
@@ -2045,7 +2172,11 @@ td.inv-col{text-align:center;width:1%}
 .gs-acts .r-acts{opacity:1;margin:0}
 .gs-name{font-family:var(--serif);font-size:23px;font-weight:600;line-height:1.15;padding-right:74px}
 .gs-party{font-size:12.5px;color:var(--muted);margin-top:3px}
-.gs-fields{display:flex;flex-wrap:wrap;gap:12px 20px;margin-top:16px;align-items:flex-start}
+/* A grid, not a wrapped row: the labels then line up in columns down the
+   card whatever each value happens to be, instead of every row starting at a
+   different place. */
+.gs-fields{display:grid;grid-template-columns:repeat(auto-fill,minmax(136px,1fr));
+  gap:13px 16px;margin-top:16px;align-items:start}
 .gc-f{display:flex;flex-direction:column;gap:3px;align-items:flex-start;min-width:0;font-size:13.5px}
 .gc-k{font-size:10.5px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);font-weight:600}
 .gc-none{color:var(--muted)}
@@ -2081,7 +2212,17 @@ td.inv-col{text-align:center;width:1%}
    sub-event the newest information sits furthest right. Two problems: nothing
    said the table scrolled, and once you scrolled you could no longer see whose
    row you were reading. */
-td.inv-brk{display:none}
+/* The line breaks exist only for the phone card. Left as table cells on a
+   desktop they became empty columns the header knew nothing about, which
+   pulled every column heading one place away from the values under it. */
+td.inv-brk,td.g-brk{display:none}
+/* The row actions are two 28px buttons; left to the table's own maths the
+   column took a fifth of the width and the names wrapped three lines deep
+   beside it. width:1% with nowrap is the shrink-to-fit column. */
+@media (min-width:701px){
+  .g-tbl td.g-acts{width:1%;white-space:nowrap}
+  .g-tbl td.g-name{min-width:160px}
+}
 .g-tbl-wrap{
   /* Scroll shadow on the right edge only — background-attachment:local pins it
      to the content, so it fades out exactly when you reach the end and there
@@ -2175,46 +2316,60 @@ td.inv-brk{display:none}
      belong to, the one control you came to change, and some facts about them —
      so the card is laid out in that order, and the facts become chips, which
      say what they are without a caption above each one. */
-  .g-tbl tr{display:flex;flex-wrap:wrap;align-items:center;gap:7px 10px;
-    padding:15px 16px 14px;margin-bottom:10px;border-radius:var(--radius);
+  .g-tbl tr{display:flex;flex-wrap:wrap;align-items:center;gap:6px 8px;
+    padding:13px 15px 12px;margin-bottom:10px;border-radius:var(--radius);
     box-shadow:var(--shadow-sm)}
   .g-tbl td::before{display:none}
   .g-tbl td{display:block;font-size:13px;padding:0}
-  /* Line one: who, and the one thing you change about them. */
-  .g-tbl td.g-name{order:1;flex:1 1 auto;min-width:0;padding:0;min-height:0;
+  /* Line one: who, and the two things you do to the record itself. */
+  /* Basis zero, not auto: a long name grew the cell to the full width and
+     pushed the two buttons onto a line of their own, so where the pencil sat
+     depended on how long somebody's surname was. */
+  .g-tbl td.g-name{order:1;flex:1 1 0;min-width:0;padding:0;min-height:0;
     font-family:var(--serif);font-size:19px;font-weight:600;line-height:1.2;
     letter-spacing:-.008em;overflow-wrap:anywhere}
   .g-tbl td.g-name b{font-weight:600}
-  .g-tbl td.g-rsvp{order:2;flex:0 0 auto;margin-left:auto}
-  .g-tbl td.g-rsvp select.mini{max-width:none;min-width:118px}
-  /* Line two: the group, quietly. */
-  .g-tbl td.g-party{order:3;flex:1 1 auto;min-width:0;margin-top:-3px;
+  .g-tbl td.g-acts{order:2;flex:0 0 auto;margin-left:auto;align-self:flex-start;
+    margin-top:1px}
+  .g-tbl .r-acts{margin:0;opacity:1;position:static}
+  .g-tbl td.g-brk{display:block;flex:1 0 100%;height:0;padding:0;margin:0}
+  .g-tbl td.g-brk.b1{order:3}
+  .g-tbl td.g-brk.b2{order:6}
+  /* Line two: where they belong, and where they sit — the two facts that are
+     about placement rather than about the person, one at each end. */
+  .g-tbl td.g-party{order:4;flex:1 1 auto;min-width:0;
     font-size:12.5px;color:var(--muted);line-height:1.35}
-  .g-tbl td.g-brk{display:block;order:5;flex:1 0 100%;height:0;padding:0;margin:0}
-  /* Line three: the facts, as chips. A chip does not need a caption — nobody
-     reads "Beef" and wonders which column it came from. */
-  .g-tbl td.g-meal,.g-tbl td.g-diet,.g-tbl td.g-seat,.g-tbl td.g-sidecell{
-    order:6;flex:0 0 auto}
-  .g-tbl td.g-meal{font-size:12.5px;font-weight:600;color:var(--ink-soft);
-    background:var(--sunk);border:1px solid var(--sunk-line);
-    border-radius:var(--radius-pill);padding:4px 12px}
-  .g-tbl td.g-seat{font-size:12.5px}
+  .g-tbl td.g-seat{order:5;flex:0 0 auto;margin-left:auto;font-size:12.5px}
   .g-tbl td.g-seat .pill{font-size:12px}
   /* Unseated is an absence, and an absence does not get a chip. */
   .g-tbl td.g-seat .g-unseat{color:var(--muted);font-size:12.5px}
-  /* On the party's line, not the chips' — a chip row that happens to fill the
-     width pushed them onto a line of their own with nothing else on it. */
-  .g-tbl td.g-acts{order:4;flex:0 0 auto;margin-left:auto;align-self:center}
-  .g-tbl .r-acts{margin:0;opacity:1;position:static}
+  /* Line three: the facts, as chips. A chip does not need a caption — nobody
+     reads "Beef" and wonders which column it came from. */
+  .g-tbl td.g-rolecell,.g-tbl td.g-sidecell,.g-tbl td.g-meal,.g-tbl td.g-diet,
+  .g-tbl td.g-tagcell{order:7;flex:0 0 auto}
+  .g-tbl td.g-tagcell{display:flex;flex-wrap:wrap;gap:6px}
+  .g-tbl td.g-meal{font-size:12.5px;font-weight:600;color:var(--ink-soft);
+    background:var(--sunk);border:1px solid var(--sunk-line);
+    border-radius:var(--radius-pill);padding:4px 12px}
   .g-tbl td.is-none{display:none}
-  /* Invite ticks close the card, on their own line. */
-  .g-tbl td.inv-brk{display:block;flex:1 0 100%;height:0;padding:0;margin:0;order:7}
-  .g-tbl td.inv-col{order:8;flex:0 0 auto;display:inline-flex;flex-direction:row;
-    align-items:center;gap:7px;margin-top:4px;
-    padding:3px 9px 3px 5px;border:1px solid var(--line);border-radius:var(--radius-pill)}
-  .g-tbl td.inv-col::before{display:inline;content:attr(data-l);font-size:10px;
-    letter-spacing:.07em;text-transform:uppercase;color:var(--muted);font-weight:600}
-  .g-tbl td.inv-col .inv-box{width:28px;height:28px}
+  /* Line four: the controls, under a hairline — everything above it is the
+     record, everything below it changes it. The rule is drawn by the break
+     itself, which is already a full-width nothing. */
+  .g-tbl td.g-brk.b3{order:8;border-top:1px solid var(--line);
+    margin:5px 0 1px;height:0}
+  .g-tbl td.g-rsvp{order:9;flex:0 0 auto}
+  .g-tbl td.g-rsvp select.mini{max-width:none;min-width:110px}
+  /* Invite ticks sit on the same line as the RSVP — the whole line is "what
+     are they asked to, and are they coming" — and drop to a line of their own
+     together, never one at a time, when the phone is too narrow for all
+     three. Trimmed to make that fit on a 390px screen. */
+  .g-tbl td.inv-brk{display:none}
+  .g-tbl td.inv-col{order:10;flex:0 0 auto;display:inline-flex;flex-direction:row;
+    align-items:center;gap:5px;
+    padding:2px 8px 2px 4px;border:1px solid var(--line);border-radius:var(--radius-pill)}
+  .g-tbl td.inv-col::before{display:inline;content:attr(data-l);font-size:9.5px;
+    letter-spacing:.06em;text-transform:uppercase;color:var(--muted);font-weight:600}
+  .g-tbl td.inv-col .inv-box{width:26px;height:26px}
 }
 /* --- the weekend, as the couple sees it in the portal --- */
 .ph-block{display:flex;flex-wrap:wrap;justify-content:center;gap:10px;margin-top:20px}
@@ -2353,6 +2508,13 @@ td.inv-brk{display:none}
   .sidebar .brand .name{font-size:16px;letter-spacing:.1em;flex:0 0 auto}
   .sidebar .brand .sub{font-size:9px;margin-top:0;min-width:0;
     overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  /* Same masthead on the phone drawer, a little shorter — the drawer is the
+     one place the studio's own logo is worth the room. */
+  /* The drawer's close button is a 42px touch target here, not the 28px one
+     the desktop draws, so the plate starts lower than it does there. */
+  .sidebar .brand:not(.no-logo){display:block;padding:48px 10px 10px}
+  .sidebar .brand:not(.no-logo) .mark{width:100%;height:44px}
+  .sidebar .brand:not(.no-logo) .brand-tx{display:block;text-align:center;margin-top:6px}
   .sidebar .srch-open{margin-bottom:2px}
 
   /* On a phone the drawer is a full-height panel you scroll anyway, so the
@@ -2393,6 +2555,13 @@ select.mini{
 }
 select.mini:hover{border-color:var(--gold-line)}
 select.mini:focus-visible{outline:none;box-shadow:var(--ring)}
+/* The one control on a guest card carries its own answer. On a list of two
+   hundred names the colour is what you sweep for — who has replied, who has
+   pulled out — and it saves the card a separate status chip saying the same
+   word twice. Awaiting a reply stays neutral: it is the absence of an answer,
+   not an answer. */
+select.rsvp-sel[data-r="yes"]{background-color:#F3F7F2;border-color:#D3DED0;color:#4E6B4A}
+select.rsvp-sel[data-r="no"]{background-color:#FBF4F4;border-color:#EDD1D1;color:#A75252}
 
 /* ============ SEATING CHART ============ */
 .seat-wrap{display:grid;grid-template-columns:260px 1fr;gap:20px;align-items:start}
@@ -2592,7 +2761,7 @@ select.mini:focus-visible{outline:none;box-shadow:var(--ring)}
   radial-gradient(300px 120px at 20% 0%, rgba(231,200,107,.30), transparent 70%),
   radial-gradient(320px 140px at 85% 100%, rgba(228,170,179,.32), transparent 70%);pointer-events:none}
 .portal-hero > *{position:relative;z-index:1}
-.ph-logo{width:56px;height:56px;border-radius:16px;object-fit:cover;margin:0 auto 12px;display:block;
+.ph-logo{height:56px;width:auto;max-width:220px;border-radius:16px;object-fit:contain;margin:0 auto 12px;display:block;
   border:1px solid var(--gold-line);box-shadow:var(--shadow-sm)}
 .ph-mark{width:56px;height:56px;border-radius:16px;margin:0 auto 12px;background:var(--gold-grad);
   color:var(--on-accent,#fff);display:grid;place-items:center;font-family:var(--serif);font-size:27px;
@@ -2812,6 +2981,9 @@ tr:hover .r-acts,.ev-card:hover .r-acts,.table-card:hover .r-acts,
 .star{color:var(--pink-300)}
 .star.on{color:var(--gold)}
 @media (max-width:560px){ .v-search{width:120px} }
+/* …except where it shares a row with a view switcher and a filter button, and
+   a 120px box is not a search box. */
+@media (max-width:700px){ .ev-h-r:has(.gv-seg) .v-search{width:auto} }
 
 /* ============ TASK TEMPLATES ============ */
 .tpl-preview{max-height:210px;overflow-y:auto;border:1px solid var(--line);border-radius:var(--radius-sm);
@@ -3064,6 +3236,12 @@ tr:hover .r-acts,.ev-card:hover .r-acts,.table-card:hover .r-acts,
   .ev-h-r:has(input),.ev-h-r:has(select){flex:1 1 100%;min-width:0}
   .ev-h-r .v-search{flex:1 1 auto;min-width:0}
   .ev-h-r select.mini{flex:0 1 auto;min-width:0;max-width:48%}
+  /* The guest header carries four things — search, the two views, the filter
+     button and the count — and at 390px they were all fighting for one line,
+     which left "Search gu…" in a 120px box. The search takes its own row and
+     the rest share the next. */
+  .ev-h-r{flex-wrap:wrap;row-gap:8px}
+  .ev-h-r:has(.gv-seg) .v-search{flex:1 1 100%;width:auto}
 }
 .ev-chev{width:7px;height:7px;opacity:.4}
 .ev-h:hover .ev-chev{opacity:.8}
@@ -4355,6 +4533,115 @@ function mealOptions(e){
   });
   out.sort(function(a,b){ return a.localeCompare(b); });
   return out;
+}
+/* ============================================================
+ * Labels, and how a 200-name list stays a list
+ *
+ * `party` answers one question — which family or table group somebody arrives
+ * with — and it is a single value, so it cannot also say "out of town", "plus
+ * one confirmed", "kids' table", "college". Labels are that second axis: any
+ * number of them, made up by the studio, and the thing the filter bar is
+ * really for. Stored only when there are some, so a guest who has none costs
+ * nothing in a list of two hundred.
+ * ============================================================ */
+function gTags(x){ return (x&&x.tags&&x.tags.length)?x.tags:[]; }
+function parseTags(str){
+  return String(str||'').split(',').map(function(t){ return t.trim(); })
+    .filter(function(t){ return !!t; });
+}
+/* Case-insensitively unique, first spelling wins — "Out of town" typed twice
+   in two cases is one label, not two that filter differently. */
+function setTags(x,list){
+  var seen={}, out=[];
+  (list||[]).forEach(function(t){
+    t=String(t||'').trim(); if(!t)return;
+    var k=t.toLowerCase(); if(seen[k])return; seen[k]=1; out.push(t);
+  });
+  if(out.length)x.tags=out; else delete x.tags;
+  return out;
+}
+function hasTag(x,t){
+  var k=String(t||'').toLowerCase();
+  return gTags(x).some(function(v){ return String(v).toLowerCase()===k; });
+}
+/* Every label anybody on this weekend carries, so the next guest picks from a
+   list rather than retyping — and so the filter bar knows what to offer. */
+function allTags(e){
+  var seen={}, out=[];
+  rosterFor(e).forEach(function(x){
+    gTags(x).forEach(function(t){
+      var k=String(t).toLowerCase(); if(seen[k])return; seen[k]=1; out.push(t);
+    });
+  });
+  out.sort(function(a,b){ return a.localeCompare(b); });
+  return out;
+}
+function allGroups(e){
+  var seen={}, out=[];
+  rosterFor(e).forEach(function(x){
+    var v=String(x.party||'').trim(); if(!v)return;
+    var k=v.toLowerCase(); if(seen[k])return; seen[k]=1; out.push(v);
+  });
+  out.sort(function(a,b){ return a.localeCompare(b); });
+  return out;
+}
+/* ---- the filter, which is one object and lives in memory ----
+   Deliberately not saved: a filter that survives a reload is a guest list with
+   half the names missing and nothing on screen to say why. */
+function gFilter(){
+  if(!state.gFilter)state.gFilter={side:'',rsvp:'',group:'',tag:'',seat:'',meal:'',inv:'',diet:false,party:false};
+  return state.gFilter;
+}
+var GF_KEYS=['side','rsvp','group','tag','seat','meal','inv'];
+function gFilterN(){
+  var f=gFilter(), n=0;
+  GF_KEYS.forEach(function(k){ if(f[k])n++; });
+  if(f.diet)n++; if(f.party)n++;
+  return n;
+}
+function guestPasses(x,e,f){
+  if(f.side){
+    var sd=x.side||'';
+    if(f.side==='none'?!!sd:sd!==f.side)return false;
+  }
+  if(f.rsvp){
+    var r=gRsvp(x,e);
+    if(f.rsvp==='wait'){ if(r!=='pending'&&r!=='invited')return false; }
+    else if(r!==f.rsvp)return false;
+  }
+  if(f.group&&String(x.party||'')!==f.group)return false;
+  if(f.tag&&!hasTag(x,f.tag))return false;
+  if(f.seat==='yes'&&!gTable(x,e))return false;
+  if(f.seat==='no'&&gTable(x,e))return false;
+  if(f.meal&&gMeal(x,e)!==f.meal)return false;
+  if(f.diet&&!x.diet)return false;
+  if(f.party&&!x.role)return false;
+  if(f.inv&&!inviteOf(x.id,f.inv))return false;
+  return true;
+}
+/* What the active filters read as in English, one chip each — shown whether or
+   not the panel is open, because a filtered list that does not say it is
+   filtered is a bug report waiting to happen. */
+function gFilterChips(e,subs){
+  var f=gFilter(), out=[];
+  var chip=function(k,txt){
+    return '<button type="button" class="gf-act" data-gfoff="'+k+'" '+
+      'aria-label="'+esc(txt)+' — remove this filter" title="Remove this filter">'+
+      esc(txt)+'<span aria-hidden="true">✕</span></button>';
+  };
+  if(f.side)out.push(chip('side',f.side==='none'?'Both / neither':sideLabel(e,f.side)));
+  if(f.rsvp)out.push(chip('rsvp',f.rsvp==='wait'?'Awaiting reply':((RSVP[f.rsvp]||{}).lbl||f.rsvp)));
+  if(f.group)out.push(chip('group',f.group));
+  if(f.tag)out.push(chip('tag',f.tag));
+  if(f.seat)out.push(chip('seat',f.seat==='yes'?'Seated':'Unseated'));
+  if(f.meal)out.push(chip('meal',f.meal));
+  if(f.diet)out.push(chip('diet','Dietary needs'));
+  if(f.party)out.push(chip('party','Wedding party'));
+  if(f.inv){
+    var sv=evById(f.inv);
+    out.push(chip('inv','Invited to '+(sv?roleLabel(sv,true):'that night')));
+  }
+  return out.join('');
 }
 function invoiceClientName(x){
   var l=x.leadId?leadById(x.leadId):null;
@@ -6659,14 +6946,19 @@ function guestCard(e,x,subs,sub,depth){
     '<div class="gs-name">'+esc(x.name)+'</div>'+
     (x.party?'<div class="gs-party">'+esc(x.party)+'</div>':'')+
     '<div class="gs-fields">'+
-      f('RSVP','<select class="mini rsvp-sel" data-gid="'+esc(x.id)+'"'+(top?'':' tabindex="-1"')+
+      f('RSVP','<select class="mini rsvp-sel" data-r="'+esc(cur)+'" data-gid="'+esc(x.id)+'"'+(top?'':' tabindex="-1"')+
         ' aria-label="RSVP for '+esc(x.name)+'">'+
         Object.keys(RSVP).map(function(k){
           return '<option value="'+k+'"'+(cur===k?' selected':'')+'>'+RSVP[k].lbl+'</option>';
         }).join('')+'</select>')+
+      /* Standing up is the first thing you say about somebody at a door, and
+         the deck was the one place that did not say it. */
+      (x.role?f('Role','<span class="g-role">'+esc(x.role)+'</span>'):'')+
       (evHasSides(e)&&x.side?f('Whose','<span class="g-side s-'+x.side+'">'+esc(sideLabel(e,x.side))+'</span>'):'')+
       (gMeal(x,e)?f('Meal','<b>'+esc(gMeal(x,e))+'</b>'):'')+
       (x.diet?f('Dietary','<span class="status s-due">'+esc(x.diet)+'</span>'):'')+
+      (gTags(x).length?f('Labels','<span class="g-tagcell">'+gTags(x).map(function(t){
+        return '<span class="g-tag">'+esc(t)+'</span>';}).join('')+'</span>'):'')+
       f('Table',tb?'<span class="pill">'+esc(tb.name)+'</span>':'<span class="gc-none">Unseated</span>')+
     '</div>'+
     /* Only on the primary, and only on the card you are actually working —
@@ -6708,6 +7000,132 @@ function guestShuffle(d){
   render();                       /* render() wires the view itself */
   var st=$('.gstack'); if(st)st.focus();
 }
+/* Who is on screen: the search first, then the filter, so the two compose —
+   "Vance" and "awaiting a reply" is the Vances who have not written back.
+   Everything downstream reads this: the stat row, the meal counts, the bulk
+   invite, the deck, and the bulk label. One definition, so none of them can
+   drift from what the list is actually showing. */
+function guestsShown(e){
+  var q=(state.guestQ||'').trim().toLowerCase();
+  var all=rosterFor(e);
+  var g=q?all.filter(function(x){
+    return [x.name,x.party,gMeal(x,e),x.diet,x.email,x.role||'',gTags(x).join(' '),
+            evHasSides(e)?sideLabel(e,x.side):''].join(' ').toLowerCase().indexOf(q)>-1;
+  }):all;
+  var f=gFilter();
+  if(gFilterN())g=g.filter(function(x){ return guestPasses(x,e,f); });
+  return g;
+}
+/* ---- labelling a filtered list in one go ----
+   Filter to the twelve you mean, then name them. Doing it one guest at a time
+   through the row editor is the difference between labels being used and
+   labels being a field nobody fills in. */
+function openBulkLabelModal(){
+  var e=activeEvent(); if(!e)return;
+  var list=guestsShown(e);
+  if(!list.length){ toast('Nobody is showing to label.'); return; }
+  var names=list.slice(0,3).map(function(x){return x.name;}).join(', ')+
+    (list.length>3?' and '+(list.length-3)+' more':'');
+  var tags=allTags(e);
+  md.className='modal';
+  md.innerHTML='<h3>Label these '+list.length+'</h3>'+
+    '<p class="sub">'+esc(names)+'.</p>'+
+    '<div class="field"><label for="f_bulktag">Label</label>'+
+      '<input id="f_bulktag" placeholder="e.g. Bride\u2019s family">'+
+      (tags.length?'<div class="tag-sug">'+tags.map(function(t){
+        return '<button type="button" class="tag-sb" data-tagpick="'+esc(t)+'">'+esc(t)+'</button>';
+      }).join('')+'</div>':'')+
+      '<div class="hint">Labels are yours to invent — family, table group, travel, whatever you sort by.</div>'+
+    '</div>'+
+    '<div class="modal-actions wrap"><button class="btn btn-ghost" id="mCancel">Cancel</button>'+
+      '<button class="btn btn-ghost" id="mRemove">Remove from these</button>'+
+      '<button class="btn btn-gold" id="mSave">Add to '+list.length+'</button></div>';
+  ov.classList.add('show');
+  setTimeout(function(){ var f=$('#f_bulktag'); if(f)f.focus(); },60);
+  md.querySelectorAll('[data-tagpick]').forEach(function(b){
+    b.onclick=function(){ $('#f_bulktag').value=b.dataset.tagpick; $('#f_bulktag').focus(); };
+  });
+  var apply=function(add){
+    var t=$('#f_bulktag').value.trim();
+    if(!t){ $('#f_bulktag').focus(); return; }
+    var n=0;
+    list.forEach(function(x){
+      var cur=gTags(x).slice(), has=hasTag(x,t);
+      if(add){ if(has)return; cur.push(t); }
+      else { if(!has)return;
+             cur=cur.filter(function(v){ return String(v).toLowerCase()!==t.toLowerCase(); }); }
+      setTags(x,cur); n++;
+    });
+    if(!n){ toast(add?'They all have that one already.':'None of them had that one.'); return; }
+    save(); closeModal(); render(); wireGuests();
+    toast(n+(add?' labelled ':' cleared ')+'\u2726');
+  };
+  $('#mCancel').onclick=closeModal;
+  $('#mSave').onclick=function(){ apply(true); };
+  $('#mRemove').onclick=function(){ apply(false); };
+  $('#f_bulktag').onkeydown=function(ev2){ if(ev2.key==='Enter'){ ev2.preventDefault(); apply(true); } };
+}
+/* ---- the filter bar ----
+   Two parts, and only the first is ever in the way: a row of chips naming
+   what is currently being filtered by, and a panel of everything you could
+   filter by, which stays shut until asked for. Every control is one tap —
+   tap again to clear it — because the job this exists for is done standing
+   up with a phone in one hand. */
+function guestFilterBar(e,all,g,subs,sub){
+  var f=gFilter(), n=gFilterN();
+  var open=!!state.gPanel;
+  var chips=gFilterChips(e,subs);
+  if(!open&&!n)return '';
+  var groups=allGroups(e), tags=allTags(e), meals=mealOptions(e);
+  var sides=evHasSides(e);
+  var row=function(label,key,opts){
+    return '<div class="gf-row"><span class="gf-k">'+esc(label)+'</span>'+
+      '<span class="gf-vs">'+opts.map(function(o){
+        var on=String(f[key])===String(o.v);
+        return '<button type="button" class="gf-c'+(on?' on':'')+'" data-gf="'+key+'" '+
+          'data-gfv="'+esc(o.v)+'" aria-pressed="'+on+'">'+esc(o.l)+'</button>';
+      }).join('')+'</span></div>';
+  };
+  /* A select once a list is long enough that chips would wrap three deep —
+     a studio with forty family groups is not choosing between forty chips. */
+  var sel=function(label,key,vals,any){
+    if(!vals.length)return '';
+    if(vals.length<=5)return row(label,key,[{v:'',l:any}].concat(vals.map(function(v){return {v:v,l:v};})));
+    return '<div class="gf-row"><span class="gf-k">'+esc(label)+'</span>'+
+      '<span class="gf-vs"><select class="mini gf-sel" data-gfsel="'+key+'" aria-label="'+esc(label)+'">'+
+        '<option value="">'+esc(any)+'</option>'+
+        vals.map(function(v){
+          return '<option value="'+esc(v)+'"'+(f[key]===v?' selected':'')+'>'+esc(v)+'</option>';
+        }).join('')+'</select></span></div>';
+  };
+  return '<div class="gf-wrap">'+
+    (chips?'<div class="gf-active">'+chips+
+      '<button type="button" class="link-btn gf-clear" id="gfClear">Clear all</button></div>':'')+
+    (open?'<div class="gf-panel">'+
+      (sides?row('Whose guest','side',[{v:'',l:'Anyone'},{v:'A',l:sideLabel(e,'A')},
+        {v:'B',l:sideLabel(e,'B')},{v:'none',l:'Both / neither'}]):'')+
+      row('RSVP','rsvp',[{v:'',l:'Any'},{v:'yes',l:'Attending'},{v:'wait',l:'Awaiting'},{v:'no',l:'Declined'}])+
+      sel('Group','group',groups,'Any group')+
+      (tags.length?row('Label','tag',[{v:'',l:'Any'}].concat(tags.map(function(t){return {v:t,l:t};}))):'')+
+      row('Seating','seat',[{v:'',l:'Any'},{v:'yes',l:'Seated'},{v:'no',l:'Unseated'}])+
+      sel('Meal','meal',meals,'Any meal')+
+      /* Only on the primary: on a sub-event the list is already the people
+         asked to that night. */
+      (!sub&&subs.length?row('Invited to','inv',[{v:'',l:'Any'}].concat(subs.map(function(x){
+        return {v:x.id,l:roleLabel(x,true)};}))):'')+
+      '<div class="gf-row"><span class="gf-k">Only</span><span class="gf-vs">'+
+        '<button type="button" class="gf-c'+(f.diet?' on':'')+'" data-gftog="diet" aria-pressed="'+(!!f.diet)+'">Dietary needs</button>'+
+        (partyMembers(e).length?'<button type="button" class="gf-c'+(f.party?' on':'')+'" data-gftog="party" aria-pressed="'+(!!f.party)+'">Wedding party</button>':'')+
+      '</span></div>'+
+      '<div class="gf-foot">'+
+        /* The one action that makes labelling two hundred people bearable:
+           filter to the twelve you mean, then name them in one go. */
+        '<button type="button" class="btn btn-ghost btn-sm" id="gfLabel">Label these '+g.length+' ›</button>'+
+        '<span class="gf-hint">Filters stack with the search, and are forgotten when you leave.</span>'+
+      '</div>'+
+    '</div>':'')+
+  '</div>';
+}
 function viewGuests(){
   var e=activeEvent(); if(!e)return '<div class="card" style="padding:40px;text-align:center;color:var(--muted)">No events yet.</div>';
   /* On the primary the grid is the master list, and gains a tick-box column
@@ -6720,11 +7138,11 @@ function viewGuests(){
      actually searches by. */
   var q=(state.guestQ||'').trim().toLowerCase();
   var all=rosterFor(e);
-  var g=q?all.filter(function(x){
-    return [x.name,x.party,gMeal(x,e),x.diet,x.email,x.role||'',
-            evHasSides(e)?sideLabel(e,x.side):''].join(' ').toLowerCase().indexOf(q)>-1;
-  }):all;
+  var gfn=gFilterN();
+  var g=guestsShown(e);
+  var shown=(q||gfn);
   var sides=evHasSides(e), sn=sideNames(e);
+  var tagsUsed=allTags(e).length>0;
   var party=partyByRole(e), roles=party.length;
   var sideA=g.filter(function(x){return x.side==='A';}).length;
   var sideB=g.filter(function(x){return x.side==='B';}).length;
@@ -6798,28 +7216,43 @@ function viewGuests(){
         '</div>'+
         '<div class="wp-people">'+grp.people.map(function(g){
           var r=gRsvp(g,e), a=attireOf(g), on=r1?!!inviteOf(g.id,r1.id):false;
+          /* Everything true *about* the person goes under their name as one
+             quiet caption; the two things you *do* to them stay in a fixed
+             column on the right. Mixing the two — an allergy chip sitting in
+             the same block as the attire button — is what left every row a
+             different height with the buttons at a different place on each
+             one. */
+          var cap=[];
+          if(sides&&!groupSide&&g.side)cap.push('<span class="g-side s-'+g.side+'">'+esc(sideLabel(e,g.side))+'</span>');
+          if(g.diet)cap.push('<span class="status s-due">'+esc(g.diet)+'</span>');
+          /* Somebody standing up is coming — that is what standing up means,
+             and printing "Attending" beside all eight of them says nothing
+             eight times. What is worth a line is the one who has not replied,
+             or the one who has pulled out. */
+          if(r!=='yes')cap.push('<span class="wp-r r-'+esc(r)+'">'+((RSVP[r]||{}).lbl||'')+'</span>');
+          /* What they are actually wearing, in words, rather than crammed into
+             a button that then has to be a different width for everyone. */
+          var gm=[a.item||'',a.size||''].filter(function(t){return !!t;}).join(' · ');
+          if(gm)cap.push('<span class="wp-gm">'+esc(gm)+'</span>');
           return '<div class="wp-p">'+
-            '<span class="wp-nm">'+esc(g.name)+'</span>'+
-            /* The chips are one block, right-aligned, so a row with an allergy
-               and a row without still line up down the card. */
-            '<span class="wp-tags">'+
-              ((sides&&!groupSide&&g.side)?'<span class="g-side s-'+g.side+'">'+esc(sideLabel(e,g.side))+'</span>':'')+
-              (g.diet?'<span class="status s-due">'+esc(g.diet)+'</span>':'')+
+            '<span class="wp-who">'+
+              '<span class="wp-nm">'+esc(g.name)+'</span>'+
+              (cap.length?'<span class="wp-sub">'+cap.join('')+'</span>':'')+
+            '</span>'+
+            /* Two slots, always in the same order, always the same width — so
+               the eye runs straight down the column instead of hunting for
+               each button. */
+            '<span class="wp-acts">'+
               /* The attire chip is the editor. Eight people is eight modals if
                  the only way in is the row's pencil. */
               '<button type="button" class="wp-at'+(a.status?' set s'+attireStep(g):'')+
                 (attireLate(g)?' late':'')+'" data-attire="'+esc(g.id)+'" '+
-                'title="'+esc(a.item||'Attire')+'">'+
-                esc(a.status||'Attire')+(a.size?' · '+esc(a.size):'')+'</button>'+
+                'title="'+esc(gm||'Attire — nothing recorded yet')+'">'+
+                esc(a.status||'Attire')+'</button>'+
               (r1?'<button type="button" class="wp-reh'+(on?' on':'')+'" data-reh="'+esc(g.id)+'" '+
                 'data-rehev="'+esc(r1.id)+'" aria-pressed="'+on+'" '+
                 'title="'+(on?'Coming to the ':'Not at the ')+esc(roleLabel(r1,true).toLowerCase())+'">'+
-                (on?'✓':'')+' Rehearsal</button>':'')+
-              /* Somebody standing up is coming — that is what standing up
-                 means, and printing "Attending" beside all eight of them says
-                 nothing eight times. What is worth a line is the one who has
-                 not replied, or the one who has pulled out. */
-              (r==='yes'?'':'<span class="wp-r r-'+esc(r)+'">'+((RSVP[r]||{}).lbl||'')+'</span>')+
+                '<span class="wp-tick" aria-hidden="true">'+(on?'✓':'')+'</span>Rehearsal</button>':'')+
             '</span>'+
           '</div>';
         }).join('')+'</div></div>';
@@ -6845,11 +7278,18 @@ function viewGuests(){
             'role="tab" aria-selected="'+(guestViewMode()===m[0])+'">'+m[1]+'</button>';
         }).join('')+
       '</span>'+
-      '<span class="pill">'+(q?g.length+' of '+all.length:String(g.length))+'</span>'+
+      '<button type="button" class="btn btn-ghost btn-sm gf-btn'+(gfn?' on':'')+'" id="gfToggle" '+
+        'aria-expanded="'+(state.gPanel?'true':'false')+'">Filters'+
+        (gfn?'<span class="gf-n">'+gfn+'</span>':'')+'</button>'+
+      '<span class="pill">'+(shown?g.length+' of '+all.length:String(g.length))+'</span>'+
     '</span></div>'+
+    guestFilterBar(e,all,g,subs,sub)+
     (guestViewMode()==='stack'?guestStack(e,g,subs,sub):
     '<div class="tbl-wrap g-tbl-wrap"><table class="g-tbl"><thead><tr><th>Guest</th><th>Party</th>'+
-      (roles?'<th>Role</th>':'')+(sides?'<th>Side</th>':'')+'<th>RSVP</th><th>Meal</th><th>Dietary</th><th>Table</th><th></th>'+
+      (roles?'<th>Role</th>':'')+(sides?'<th>Side</th>':'')+'<th>RSVP</th><th>Meal</th><th>Dietary</th>'+
+      /* Only once the studio has invented one. A column of em dashes is not a
+         feature, it is a column. */
+      (tagsUsed?'<th>Labels</th>':'')+'<th>Table</th><th></th>'+
       /* One column per sub-event, only on the primary. This is the whole point
          of the feature: who is asked to what, readable in a single sweep. */
       /* The header doubles as a bulk control. Ticking 150 guests one at a time
@@ -6873,22 +7313,35 @@ function viewGuests(){
          second render — the selects and ticks keep the handlers they had. */
       return '<tr><td class="g-name"><b>'+esc(x.name)+'</b></td>'+
         '<td data-l="Party" class="g-party'+(x.party?'':' is-none')+'">'+esc(x.party)+'</td>'+
-        (roles?'<td data-l="Role" class="g-rolecell'+(x.role?'':' is-none')+'"><span class="g-role">'+esc(x.role||'')+'</span></td>':'')+
+        /* An empty chip is not an empty cell — a guest with no role was getting a
+   gold pill with nothing in it. */
+        (roles?'<td data-l="Role" class="g-rolecell'+(x.role?'':' is-none')+'">'+
+          (x.role?'<span class="g-role">'+esc(x.role)+'</span>':'<span style="color:var(--muted)">—</span>')+'</td>':'')+
         (sides?'<td data-l="Side" class="g-sidecell'+(x.side?'':' is-none')+'"><span class="g-side s-'+(x.side||'x')+'">'+esc(sideLabel(e,x.side))+'</span></td>':'')+
-        '<td data-l="RSVP" class="g-rsvp"><select class="mini rsvp-sel" data-gid="'+esc(x.id)+'" aria-label="RSVP for '+esc(x.name)+'">'+
+        '<td data-l="RSVP" class="g-rsvp"><select class="mini rsvp-sel" data-r="'+esc(cur)+'" data-gid="'+esc(x.id)+'" aria-label="RSVP for '+esc(x.name)+'">'+
           Object.keys(RSVP).map(function(k){return '<option value="'+k+'"'+(cur===k?' selected':'')+'>'+RSVP[k].lbl+'</option>';}).join('')+
         '</select></td>'+
         '<td data-l="Meal" class="g-meal'+(gMeal(x,e)?'':' is-none')+'">'+(gMeal(x,e)?esc(gMeal(x,e)):'<span style="color:var(--muted)">—</span>')+'</td>'+
         '<td data-l="Dietary" class="g-diet'+(x.diet?'':' is-none')+'">'+(x.diet?'<span class="status s-due">'+esc(x.diet)+'</span>':'<span style="color:var(--muted)">—</span>')+'</td>'+
+        (tagsUsed?'<td data-l="Labels" class="g-tagcell'+(gTags(x).length?'':' is-none')+'">'+
+          (gTags(x).length?gTags(x).map(function(t){
+            return '<span class="g-tag">'+esc(t)+'</span>';}).join('')
+                          :'<span style="color:var(--muted)">—</span>')+'</td>':'')+
         '<td data-l="Table" class="g-seat">'+(tb?'<span class="pill">'+esc(tb.name)+'</span>':'<span class="g-unseat">Unseated</span>')+'</td>'+
         /* Its own cell, not tacked onto the end of Table. On the card that is
            the difference between the actions sitting at the right edge where
            they belong and being wedged against the word "Unseated". */
         '<td class="g-acts">'+rowActions('guest',x.id)+'</td>'+
         /* Zero-height, full-width, invisible anywhere but the phone card —
-           where it ends the line the actions sit on, so the chips below start
-           against the left edge instead of flowing round them. */
-        '<td class="g-brk" aria-hidden="true"></td>'+
+           where each one ends a line. Without them the cells wrap wherever
+           they happen to run out of room, so the RSVP box sat beside a short
+           name and below a long one, and the family name landed in whatever
+           gap was left over. Three breaks, four lines, every card the same:
+           who they are · where they belong · what is true of them · what you
+           came here to change. */
+        '<td class="g-brk b1" aria-hidden="true"></td>'+
+        '<td class="g-brk b2" aria-hidden="true"></td>'+
+        '<td class="g-brk b3" aria-hidden="true"></td>'+
         /* A zero-height full-width cell, invisible everywhere except a phone
            card, where it breaks the line so the invite chips group together
            instead of trailing off the end of Table. */
@@ -6939,6 +7392,36 @@ function wireGuests(){
       save();render();wireGuests();
     };
   });
+  /* ---- the filter bar ----
+     Every control writes one key on one object and re-renders. Tapping the
+     value that is already set clears it, so nothing needs an "off" button of
+     its own — which is what keeps the whole panel to one row per question. */
+  var gft=$('#gfToggle');
+  if(gft)gft.onclick=function(){ state.gPanel=!state.gPanel; render(); wireGuests(); };
+  document.querySelectorAll('[data-gf]').forEach(function(b){
+    b.onclick=function(){
+      var f=gFilter(), k=b.dataset.gf, v=b.dataset.gfv;
+      f[k]=(String(f[k])===String(v))?'':v;
+      render(); wireGuests();
+    };
+  });
+  document.querySelectorAll('[data-gftog]').forEach(function(b){
+    b.onclick=function(){ var f=gFilter(); f[b.dataset.gftog]=!f[b.dataset.gftog]; render(); wireGuests(); };
+  });
+  document.querySelectorAll('[data-gfsel]').forEach(function(sel){
+    sel.onchange=function(){ gFilter()[sel.dataset.gfsel]=sel.value; render(); wireGuests(); };
+  });
+  document.querySelectorAll('[data-gfoff]').forEach(function(b){
+    b.onclick=function(){
+      var f=gFilter(), k=b.dataset.gfoff;
+      f[k]=(k==='diet'||k==='party')?false:'';
+      render(); wireGuests();
+    };
+  });
+  var gfc=$('#gfClear');
+  if(gfc)gfc.onclick=function(){ state.gFilter=null; render(); wireGuests(); };
+  var gfl=$('#gfLabel');
+  if(gfl)gfl.onclick=function(){ openBulkLabelModal(); };
   var pp=$('[data-printparty]');
   if(pp)pp.onclick=function(ev2){ ev2.stopPropagation(); printSheet('party',activeEvent()); };
   /* One tick per person, and one action for the whole party — which is how a
@@ -8230,9 +8713,15 @@ function openPhotoCrop(file,opts,done){
   /* 1 is a face — a circle to frame it by and a square to export, because the
      avatar, the card tile and the dashboard hero each mask that square their
      own way. A wider ratio is a cover: the same drag-and-zoom, a rectangular
-     frame, and an export shaped like the place it is going. */
-  var AR=opts.aspect||1;
-  var round=AR===1;
+     frame, and an export shaped like the place it is going.
+     'auto' is a logo: the frame takes the shape of the file that arrived, so a
+     wordmark stays a wordmark and an emblem stays square. Paired with
+     opts.contain the picture starts whole rather than filling the frame, so
+     pressing Use photo without touching anything keeps what was uploaded. */
+  var AUTO=opts.aspect==='auto';
+  var AR=AUTO?1:(opts.aspect||1);
+  var round=!AUTO&&AR===1;
+  var CONTAIN=!!opts.contain;
   /* Bound the working image before it is ever decoded into the page: a modern
      phone camera file is 4000px wide and there is no reason to hold that. */
   shrinkImage(file,1400,function(url){
@@ -8244,6 +8733,15 @@ function openPhotoCrop(file,opts,done){
   });
 
   function cropStage(img,url){
+    if(AUTO){
+      /* Between a square and a long banner. Anything outside that is framed to
+         the nearest of the two rather than given a stage the modal cannot
+         hold — and the wide end is generous, because a frame narrower than
+         the file pads the export with white and every place the logo appears
+         then shows it a size smaller. */
+      var nat=(img.naturalWidth||img.width)/(img.naturalHeight||img.height||1);
+      AR=Math.max(1,Math.min(4.5,nat||1));
+    }
     md.className='modal'+(round?'':' modal-wide-crop');
     md.innerHTML='<h3>'+esc(opts.title||'Frame the photo')+'</h3>'+
       '<p class="sub">'+esc(opts.sub||'Drag the picture to move it, and zoom to fill the circle.')+'</p>'+
@@ -8258,9 +8756,9 @@ function openPhotoCrop(file,opts,done){
         '<input type="range" id="cropZoom" min="1" max="3" step="0.01" value="1" aria-label="Zoom">'+
         '<span class="cz-i lg" aria-hidden="true">+</span>'+
       '</div>'+
-      '<div class="crop-hint">'+(round
+      '<div class="crop-hint">'+esc(opts.hint||(round
         ?'Everything inside the circle is what people will see.'
-        :'What sits inside the frame is what fills the card.')+'</div>'+
+        :'What sits inside the frame is what fills the card.'))+'</div>'+
       '<div class="modal-actions">'+
         '<button class="btn btn-ghost" id="cropCancel">Cancel</button>'+
         '<button class="btn btn-gold" id="cropSave">Use photo</button>'+
@@ -8277,12 +8775,16 @@ function openPhotoCrop(file,opts,done){
     var W=stage.clientWidth||320, H=stage.clientHeight||Math.round(W/AR);
     /* At zoom 1 the picture exactly covers the frame — whichever of its sides
        runs out first — so there is never a gap to drag into. */
-    var kFit=Math.max(W/nw,H/nh), k=kFit, ox=0, oy=0;
+    var kFit=CONTAIN?Math.min(W/nw,H/nh):Math.max(W/nw,H/nh), k=kFit, ox=0, oy=0;
 
     function clamp(){
       var dw=nw*k, dh=nh*k;
-      ox=Math.min(0,Math.max(W-dw,ox));
-      oy=Math.min(0,Math.max(H-dh,oy));
+      /* Cover: the frame is always full, so the picture may only be dragged as
+         far as its own edges. Contain: the picture can be smaller than the
+         frame, and then it sits in the middle of it rather than jammed into a
+         corner by a clamp written for the other case. */
+      if(dw<=W)ox=(W-dw)/2; else ox=Math.min(0,Math.max(W-dw,ox));
+      if(dh<=H)oy=(H-dh)/2; else oy=Math.min(0,Math.max(H-dh,oy));
     }
     function paint(){
       clamp();
@@ -8344,6 +8846,9 @@ function openPhotoCrop(file,opts,done){
       var cv=document.createElement('canvas');
       cv.width=OUT; cv.height=Math.round(OUT/AR);
       var ctx=cv.getContext('2d');
+      /* JPEG has no transparency, so anything the picture does not cover would
+         export black. White is what a logo expects to sit on. */
+      ctx.fillStyle='#FFFFFF'; ctx.fillRect(0,0,cv.width,cv.height);
       ctx.drawImage(img,(-ox)/k,(-oy)/k,W/k,H/k,0,0,cv.width,cv.height);
       var out=null;
       try{ out=cv.toDataURL('image/jpeg',0.86); }catch(err){ out=null; }
@@ -9152,8 +9657,11 @@ function applyBrand(){
   root.setProperty('--muted',    hsl(ink.h,Math.max(ink.s-8,3),Math.min(ink.l+32,68)));
 
   document.querySelectorAll('.brand .mark').forEach(function(m){
-    if(p.logo){ m.style.background='#fff'; m.style.backgroundImage='url('+p.logo+')';
-      m.style.backgroundSize='cover'; m.style.backgroundPosition='center'; m.textContent=''; }
+    /* contain, not cover: a logo is artwork with edges, and cropping it to
+       fill a box is how "CONCRETE" became "ONCRE". */
+    if(p.logo){ m.style.background=''; m.style.backgroundImage='url('+p.logo+')';
+      m.style.backgroundSize='contain'; m.style.backgroundRepeat='no-repeat';
+      m.style.backgroundPosition='center'; m.textContent=''; }
     else { m.style.background=''; m.style.backgroundImage=''; m.textContent=(p.bizName||'G').trim()[0].toUpperCase(); }
   });
   /* A real logo is a brand; an initial in a tile is a placeholder. The class
@@ -9455,21 +9963,30 @@ function settingsPage(k){
     return back+'<div class="set-page">'+
       '<p class="set-intro">Make GEM look like your studio. Everything here carries through to the interface, your client portal and every document you print.</p>'+
       '<div class="brand-preview" id="brandPreview">'+
-        '<div class="bp-bar"><span class="bp-mark">'+(p.logo?'<img src="'+p.logo+'" alt="">':esc((p.bizName||'G')[0].toUpperCase()))+'</span>'+
-          '<span class="bp-tx"><b>'+esc(p.brandMark||'GEM')+'</b><em>'+esc(p.bizName)+'</em></span></div>'+
+        '<div class="bp-bar'+(p.logo?' has-logo':'')+'">'+
+          (p.logo?'<span class="bp-mark"><img src="'+p.logo+'" alt=""></span>'
+                 :'<span class="bp-mark">'+esc((p.bizName||'G')[0].toUpperCase())+'</span>')+
+          '<span class="bp-tx">'+(p.logo?'':'<b>'+esc(p.brandMark||'GEM')+'</b>')+
+            '<em>'+esc(p.bizName)+'</em></span></div>'+
         '<div class="bp-body"><span class="bp-chip">Booked</span><span class="bp-btn">Primary action</span>'+
           '<span class="bp-note">This is how a card, a button and a label will read.</span></div>'+
       '</div>'+
       '<div class="set-gh" style="margin-top:20px">Identity</div>'+
       '<div class="set-card">'+
+        /* Shown at the size it is actually used, so what you approve here is
+           what appears in the sidebar rather than a 40px thumbnail of it. */
         setRow('Logo','<span class="logo-row">'+
-          (p.logo?'<img class="logo-thumb" src="'+p.logo+'" alt="Current logo">':'<span class="logo-thumb empty">'+esc((p.bizName||'G')[0].toUpperCase())+'</span>')+
-          '<button class="btn btn-ghost btn-sm" id="b_logoPick">'+(p.logo?'Replace':'Upload')+'</button>'+
-          (p.logo?'<button class="btn btn-ghost btn-sm" id="b_logoClear">Remove</button>':'')+
+          (p.logo?'<span class="logo-plate"><img src="'+p.logo+'" alt="Current logo"></span>'
+                 :'<span class="logo-thumb empty">'+esc((p.bizName||'G')[0].toUpperCase())+'</span>')+
+          '<span class="logo-acts">'+
+            '<button class="btn btn-ghost btn-sm" id="b_logoPick">'+(p.logo?'Replace':'Upload')+'</button>'+
+            (p.logo?'<button class="btn btn-ghost btn-sm" id="b_logoClear">Remove</button>':'')+
+          '</span>'+
           '<input type="file" id="b_logoFile" accept="image/*" hidden></span>',
-          'A square mark works best — it is cropped to a rounded square')+
+          'Any shape. A wordmark is shown across the top of the sidebar; you frame it on upload')+
         setRow('Short mark','<input class="set-in" id="b_brandMark" value="'+esc(p.brandMark||'GEM')+'" maxlength="12">',
-          'The word beside your logo')+
+          p.logo?'Stands in for the logo where there is no room for it — it is hidden while your logo is set'
+                :'The wordmark at the top of the sidebar until you upload a logo')+
         setRow('Studio name','<input class="set-in" id="b_bizName" value="'+esc(p.bizName)+'">')+
       '</div>'+
       '<div class="set-gh" style="margin-top:22px">Palette</div>'+
@@ -10061,12 +10578,19 @@ function wireSettings(){
       var f=lf.files&&lf.files[0]; lf.value='';
       if(!f)return;
       if(!/^image\//.test(f.type)){ toast('Choose an image file.'); return; }
-      shrinkImage(f,320,function(url){
-        if(!url){ toast('Could not read that image.'); return; }
-        var prev=p.logo; p.logo=url;
-        if(!savePrefsSafe()){ p.logo=prev; return; }
-        applyBrand(); render(); toast('Logo updated ✦');
-      });
+      /* The same framing step every other picture in GEM gets. 'auto' takes the
+         shape of the file, so a wordmark is framed as a wordmark, and contain
+         starts it whole — press Use photo without touching anything and you
+         keep what you uploaded. 320px was also too small for a mark that now
+         spans the sidebar on a 2× screen. */
+      openPhotoCrop(f,{aspect:'auto',contain:true,out:900,title:'Frame your logo',
+        sub:'Drag to move it, zoom to trim the edges. It is shown whole wherever it appears — never cropped to a square.',
+        hint:'Leave it as it is to keep the file exactly as you uploaded it.'},
+        function(url){
+          var prev=p.logo; p.logo=url;
+          if(!savePrefsSafe()){ p.logo=prev; return; }
+          closeModal(); applyBrand(); render(); toast('Logo updated ✦');
+        });
     };
   }
   var lc=$('#b_logoClear');
@@ -11323,6 +11847,15 @@ function openGuestModal(ev){
       '<datalist id="gmealList">'+mealOptions(prim).map(function(m){
         return '<option value="'+esc(m)+'"></option>';}).join('')+'</datalist></div>'+
     '<div class="field"><label>Dietary needs <span style="font-weight:400;color:var(--muted)">(optional)</span></label><input id="f_gdiet" placeholder="e.g. Nut allergy"></div>'+
+    /* Whatever this weekend already uses, one tap each — and a run of names
+       from the same family keeps the labels between saves, the way the side
+       does. */
+    '<div class="field"><label>Labels <span class="lbl-note">optional</span></label>'+
+      '<input id="f_gtags" placeholder="Out of town, Kids\u2019 table…">'+
+      (allTags(prim).length?'<div class="tag-sug" data-tagfor="f_gtags">'+allTags(prim).map(function(t){
+        return '<button type="button" class="tag-sb" data-tagadd="'+esc(t)+'">'+esc(t)+'</button>';
+      }).join('')+'</div>':'')+
+    '</div>'+
     '<div class="modal-actions wrap"><button class="link-btn ma-lead" id="gFull">Open the full guest list ›</button>'+
       '<button class="btn btn-ghost" id="mCancel">Cancel</button>'+
       '<button class="btn btn-ghost" id="mAnother">Save &amp; add another</button>'+
@@ -11339,6 +11872,25 @@ function openGuestModal(ev){
       });
     };
   });
+  md.querySelectorAll('.tag-sug').forEach(function(box){
+    var input=$('#'+box.dataset.tagfor); if(!input)return;
+    var paint=function(){
+      var have=parseTags(input.value).map(function(t){return t.toLowerCase();});
+      box.querySelectorAll('[data-tagadd]').forEach(function(b){
+        b.classList.toggle('on',have.indexOf(b.dataset.tagadd.toLowerCase())>-1);
+      });
+    };
+    box.querySelectorAll('[data-tagadd]').forEach(function(b){
+      b.onclick=function(){
+        var cur=parseTags(input.value), t=b.dataset.tagadd, at=-1;
+        cur.forEach(function(v,i){ if(v.toLowerCase()===t.toLowerCase())at=i; });
+        if(at>-1)cur.splice(at,1); else cur.push(t);
+        input.value=cur.join(', '); paint();
+      };
+    });
+    input.addEventListener('input',paint);
+    paint();
+  });
 
   function add(){
     var n=$('#f_gname').value.trim();
@@ -11350,6 +11902,7 @@ function openGuestModal(ev){
       side:sideBtn?sideBtn.dataset.side:'',
       role:($('#f_grole')?$('#f_grole').value.trim():''),
       rsvp:$('#f_grsvp').value,meal:$('#f_gmeal').value.trim(),diet:$('#f_gdiet').value.trim(),tableId:null};
+    setTags(g,parseTags($('#f_gtags')?$('#f_gtags').value:''));
     prim.guests.push(g);
     /* On a sub-event the RSVP and meal just chosen describe THAT night, so
        they go on the invitation rather than the guest row. */
@@ -11840,6 +12393,17 @@ function openEditor(o){
             return '<option value="'+esc((typeof op==='object')?op.value:op)+'"></option>';
           }).join('')+'</datalist>';
       }
+      /* Several values in one field, so a datalist is no good — picking from
+         one replaces what is already typed. The suggestions are buttons that
+         append instead, and the field itself takes anything. */
+      else if(f.type==='tags'){
+        ctl='<input id="'+id+'" value="'+esc(v)+'"'+
+          (f.placeholder?' placeholder="'+esc(f.placeholder)+'"':'')+'>'+
+          ((f.options||[]).length?'<div class="tag-sug" data-tagfor="'+id+'">'+(f.options||[]).map(function(t){
+            return '<button type="button" class="tag-sb" data-tagadd="'+esc(t)+'">'+esc(t)+'</button>';
+          }).join('')+'</div>':'')+
+          '<div class="hint">Separate with commas.</div>';
+      }
       else ctl='<input id="'+id+'" type="'+(f.type||'text')+'" value="'+esc(v)+'"'+
         (f.placeholder?' placeholder="'+esc(f.placeholder)+'"':'')+'>';
       return '<div class="field" data-fid="'+f.id+'"'+(f.full?' style="grid-column:1/-1"':'')+'><label for="'+id+'">'+esc(f.label)+
@@ -11851,6 +12415,29 @@ function openEditor(o){
       '<button class="btn btn-gold" id="mSave">'+esc(o.saveLabel||'Save changes')+'</button></div>';
   ov.classList.add('show');
   $('#mCancel').onclick=closeModal;
+  /* A suggestion adds itself to what is there rather than replacing it, and
+     tapping it again takes it back off — the chip is the state of that label
+     on this record. */
+  md.querySelectorAll('.tag-sug').forEach(function(box){
+    var input=$('#'+box.dataset.tagfor); if(!input)return;
+    var paint=function(){
+      var have=parseTags(input.value).map(function(t){return t.toLowerCase();});
+      box.querySelectorAll('[data-tagadd]').forEach(function(b){
+        b.classList.toggle('on',have.indexOf(b.dataset.tagadd.toLowerCase())>-1);
+      });
+    };
+    box.querySelectorAll('[data-tagadd]').forEach(function(b){
+      b.onclick=function(){
+        var cur=parseTags(input.value), t=b.dataset.tagadd;
+        var at=-1;
+        cur.forEach(function(v,i){ if(v.toLowerCase()===t.toLowerCase())at=i; });
+        if(at>-1)cur.splice(at,1); else cur.push(t);
+        input.value=cur.join(', '); paint();
+      };
+    });
+    input.addEventListener('input',paint);
+    paint();
+  });
   var del=$('#mDelete');
   if(del)del.onclick=function(){ confirmDelete(o.deleteLabel||o.title,function(){ o.onDelete(); }); };
   /* Conditional fields. A field with showIf(vals) is hidden while that returns
@@ -12608,7 +13195,7 @@ function printCss(){ return ''+
  '*{box-sizing:border-box}'+
  'body{font:13px/1.55 -apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;color:#2b2226;margin:32px 30px}'+
  '.pr-head{border-bottom:2px solid '+accentHex()+';padding-bottom:14px;margin-bottom:20px;position:relative}'+
- '.pr-logo{width:38px;height:38px;object-fit:cover;border-radius:8px;float:right;margin-left:14px}'+
+ '.pr-logo{height:38px;width:auto;max-width:150px;object-fit:contain;border-radius:8px;float:right;margin-left:14px}'+
  '.pr-brand{font-size:9px;letter-spacing:2.4px;text-transform:uppercase;color:'+accentHex()+';font-weight:700}'+
  '.pr-head h1{font-family:Georgia,serif;font-size:27px;margin:7px 0 5px;font-weight:600}'+
  '.pr-sub{font-size:12px;color:#5e4e54}'+
@@ -12642,7 +13229,7 @@ function invPrintCss(){ var a=accentHex(); return ''+
  '.pi-sheet{max-width:none}'+
  '.pi-top{display:flex;justify-content:space-between;gap:26px;align-items:flex-start;'+
    'padding-bottom:16px;border-bottom:2px solid '+a+'}'+
- '.pi-logo{width:42px;height:42px;object-fit:cover;border-radius:7px;margin-bottom:8px;display:block}'+
+ '.pi-logo{height:42px;width:auto;max-width:160px;object-fit:contain;border-radius:7px;margin-bottom:8px;display:block}'+
  '.pi-biz{font-family:Georgia,serif;font-size:18px;font-weight:600;line-height:1.2}'+
  '.pi-fine{font-size:10.5px;color:#7b6a70;line-height:1.5}'+
  '.pi-id{text-align:right}'+
@@ -13161,7 +13748,7 @@ function bibleEmail(ev,opts){
 }
 function bibleCss(){ return ''+
  '.bib-cover{text-align:center;padding:26px 0 30px;border-bottom:2px solid '+accentHex()+';margin-bottom:26px}'+
- '.bib-logo{width:54px;height:54px;object-fit:cover;border-radius:11px;margin:0 auto 12px;display:block}'+
+ '.bib-logo{height:54px;width:auto;max-width:200px;object-fit:contain;border-radius:11px;margin:0 auto 12px;display:block}'+
  '.bib-cover h1{font-family:Georgia,serif;font-size:34px;margin:8px 0 6px;font-weight:600;letter-spacing:-.01em}'+
  '.bib-sub2{font-size:13px;color:#5e4e54}'+
  '.bib-stamp{font-size:10px;letter-spacing:1.6px;text-transform:uppercase;color:#8b7b80;margin-top:10px}'+
@@ -13981,12 +14568,18 @@ function editRecord(kind,id){
               {id:'meal',label:evIsSub(ev)?'Meal · '+roleLabel(ev,true):'Meal',type:'combo',value:gMeal(it,ev),
                options:mealOptions(ev),placeholder:'e.g. Beef'},
               {id:'diet',label:'Dietary needs',value:it.diet,full:true},
-              {id:'email',label:'Email',type:'email',value:it.email,full:true}]),
+              {id:'email',label:'Email',type:'email',value:it.email,full:true},
+              /* party is one answer — which family they arrive with. Labels are
+                 the other axis: as many as the studio wants, invented by them,
+                 and what the filter bar is really for. */
+              {id:'tags',label:'Labels',type:'tags',value:gTags(it).join(', '),
+               options:allTags(ev),placeholder:'Out of town, Kids\u2019 table…',full:true}]),
       /* rsvp and meal belong to whichever event is open — the guest row for a
          primary, the invitation for a sub-event. Name, party and dietary needs
          are the person, so they always write to the guest. */
       onSave:function(v){
         it.name=v.name; it.party=v.party; it.diet=v.diet; it.email=v.email;
+        setTags(it,parseTags(v.tags));
         /* Only on a wedding — on anything else the field was not shown and
            v.side is undefined, which must not wipe what is there. */
         if(v.side!==undefined)it.side=v.side;
@@ -15324,6 +15917,18 @@ function sbAttireCol(){
   }
   return SB_ATTIRE_COL;
 }
+/* Migration 25. Same shape again: ask once, default to no, and leave the
+   column out of the payload until the answer comes back yes. */
+var SB_TAG_COL=null;
+function sbTagCol(){
+  if(SB_TAG_COL===null){
+    SB_TAG_COL=false;
+    sbRest('guests?select=tags&limit=1')
+      .then(function(){ SB_TAG_COL=true; })
+      .catch(function(){ SB_TAG_COL=false; });
+  }
+  return SB_TAG_COL;
+}
 var SB_ROLE_COL=null;
 function sbRoleCol(){
   if(SB_ROLE_COL===null){
@@ -15430,6 +16035,7 @@ function sbPush(opts){
         side:s(g.side),rsvp:g.rsvp||'pending',meal:nn(g.meal),dietary:nn(g.diet),table_id:nn(g.tableId)};
       if(sbRoleCol())row.role=nn(g.role);
       if(sbAttireCol())row.attire=g.attire||{};
+      if(sbTagCol())row.tags=gTags(g);
       guests.push(row); });
     if(e.floor&&e.floor.items)e.floor.items.forEach(function(f,i){ fitems.push({id:f.id,org_id:org,event_id:e.id,
       kind:s(f.kind||f.type)||'fixture',label:s(f.label),x:num(f.x),y:num(f.y),w:num(f.w),h:num(f.h),rotation:num(f.rot||f.rotation),sort_order:i}); });
@@ -15855,6 +16461,10 @@ function sbPull(opts){
             /* An empty object is no attire — carrying {} on every guest would
                put a row of blanks in local storage for a 200-name list. */
             attire:(x.attire&&Object.keys(x.attire).length)?x.attire:undefined,
+            /* Same reasoning as attire: an empty array on every guest is two
+               hundred empty arrays in local storage. Absent until 25, so it
+               must survive the column not being there at all. */
+            tags:(x.tags&&x.tags.length)?x.tags:undefined,
             meal:x.meal||'',diet:x.dietary||'',tableId:x.table_id};}),
           floor:Object.assign({items:of(R.floor_items,e.id).map(function(x){return {id:x.id,kind:x.kind,label:x.label,
             x:Number(x.x),y:Number(x.y),w:Number(x.w),h:Number(x.h),rot:Number(x.rotation)};})},e.floor||{}),
