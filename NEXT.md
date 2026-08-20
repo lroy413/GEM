@@ -679,6 +679,26 @@ never pulled, which is what stops a fresh install overwriting the studio.
     `sbTagCol()` probes for it exactly as `sbAttireCol()` does. Verified
     against local Postgres: default, containment query, and the check refusing
     an object.
+- **The phone bar floated up the screen while scrolling, and it was three
+  things at once.** A fixed element the browser declines to composite gets
+  repainted with the page instead of pinned to the viewport — so scrolling down
+  carried the tab bar into the middle of the screen with content above and
+  below it. iOS gives up when the page is expensive, and this one was asking
+  three ways: a full-viewport `mix-blend-mode:multiply` layer (the paper
+  grain), a `background-attachment:fixed` ground, and a backdrop-filtered bar
+  reading through both of them every frame. Each is free on a desktop.
+  - The bar now asks for its own layer everywhere (`transform:translateZ(0)`).
+  - A **Safari-only** block — `@supports (-webkit-touch-callout:none)`, which
+    is WebKit and nothing else (verified: Chromium answers false) — releases
+    the fixed ground, takes the grain out of its blending group, and drops the
+    bar's backdrop blur. The look survives; only the way it is drawn changes.
+  - **There is no WebKit in this container** (`/opt/pw-browsers` has Chromium
+    only), so the fix cannot be reproduced here. `scratchpad/tabbar-test.mjs`
+    guards what can be checked — fixed, promoted, still on the bottom edge
+    after a scroll — plus the presence of the Safari block in the built file.
+    The confirmation has to come from an actual phone.
+  - If it ever comes back, the heavier fix is app-shell scrolling: the document
+    stops scrolling and an inner element does, so nothing is fixed at all.
 - **The board is arranged by dragging, and the arrangement is one order.**
   Three arrays make three kinds of tile, but a board is one composition — a
   colour belongs between two photographs if that is where it was dragged. Every

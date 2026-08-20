@@ -10,7 +10,7 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
 <meta name="apple-mobile-web-app-title" content="GEM">
 <meta name="format-detection" content="telephone=no">
-<meta name="gem-build" content="db74a580a1b1">
+<meta name="gem-build" content="1b861080abdc">
 <link rel="manifest" href="/manifest.webmanifest">
 <link rel="icon" href="/icons/icon-192.png" sizes="192x192" type="image/png">
 <link rel="apple-touch-icon" href="/icons/icon-180.png">
@@ -2515,11 +2515,37 @@ td.inv-brk,td.g-brk{display:none}
   background:rgba(255,253,251,.84);
   -webkit-backdrop-filter:blur(22px) saturate(1.6);backdrop-filter:blur(22px) saturate(1.6);
   border-top:1px solid var(--line);
-  box-shadow:0 -8px 28px rgba(120,70,80,.10)}
+  box-shadow:0 -8px 28px rgba(120,70,80,.10);
+  /* Its own compositing layer. A fixed element that the browser decides not to
+     composite is repainted with the page instead of being pinned to the
+     viewport, which is a bar that floats up the screen as you scroll. */
+  transform:translateZ(0);-webkit-transform:translateZ(0);
+  backface-visibility:hidden;-webkit-backface-visibility:hidden}
 /* No backdrop-filter (older Android, Firefox): fall back to a solid surface
    rather than leaving the page legible through a 72%-opaque bar. */
 @supports not ((backdrop-filter:blur(1px)) or (-webkit-backdrop-filter:blur(1px))){
   .tabbar{background:var(--ivory)}
+}
+/* ---- Safari, and iOS Safari in particular ----
+   The bar was floating up the screen during a scroll: it stayed with the page
+   instead of staying with the viewport, so scrolling down carried it into the
+   middle of the screen with content above and below it.
+   That is what iOS does when it gives up compositing fixed elements, and this
+   page was asking it to give up three ways at once — a full-viewport layer in
+   mix-blend-mode:multiply (the paper grain), a background-attachment:fixed
+   ground, and a backdrop-filtered bar reading through both of them every
+   frame. Each is cheap on a desktop and expensive on a phone.
+   `-webkit-touch-callout` is a WebKit-only property, so this block reaches
+   Safari and nothing else. The grain and the ground stay, they just stop being
+   drawn in a way that costs the bar its layer.  */
+@supports (-webkit-touch-callout:none){
+  body{background-attachment:scroll}
+  /* Same grain, no blending group. */
+  body::before{mix-blend-mode:normal;opacity:.2}
+  .tabbar{-webkit-backdrop-filter:none;backdrop-filter:none;background:var(--ivory)}
+  /* The drawer is fixed too, and slides over a page that is still scrollable
+     behind it. */
+  .sidebar{-webkit-backdrop-filter:none;backdrop-filter:none}
 }
 /* 44px, and the content fills it exactly — 5 + 22 + 3 + 9.5 + 4. Taking the
    height out of the icon was the wrong place to take it from: at 19px the icon
