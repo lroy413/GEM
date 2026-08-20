@@ -15,3 +15,7 @@ node_modules/
 # gem-artifact.html by build.py, but it is also the exact artefact that gets
 # deployed — committing it means the deployed build is always recoverable, and
 # a future push-to-deploy needs no build step in CI.
+
+# Test screenshots. They belong in the session scratchpad, not the repo.
+*.png
+!deploy/icons/*.png
