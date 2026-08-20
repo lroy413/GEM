@@ -48,11 +48,11 @@
   --danger:#B85C5C;
 
   /* Layered shadows: a tight contact shadow plus a wide ambient one. */
-  --shadow-xs:0 1px 2px rgba(59,46,51,.05);
-  --shadow-sm:0 1px 2px rgba(59,46,51,.05), 0 4px 12px rgba(120,70,80,.055);
-  --shadow:0 2px 6px rgba(59,46,51,.05), 0 14px 34px rgba(120,70,80,.09);
-  --shadow-lg:0 4px 12px rgba(59,46,51,.07), 0 28px 60px rgba(120,70,80,.13);
-  --ring:0 0 0 3px rgba(176,141,62,.22);
+  --shadow-xs:0 1px 2px rgba(var(--shade-1),.05);
+  --shadow-sm:0 1px 2px rgba(var(--shade-1),.05), 0 4px 12px rgba(var(--shade-2),.055);
+  --shadow:0 2px 6px rgba(var(--shade-1),.05), 0 14px 34px rgba(var(--shade-2),.09);
+  --shadow-lg:0 4px 12px rgba(var(--shade-1),.07), 0 28px 60px rgba(var(--shade-2),.13);
+  --ring:0 0 0 3px rgba(var(--accent-rgb),.22);
 
   /* Three surface tiers, and they mean something. Everything used to be one
      surface — white fill, 1px line, same radius, same shadow — so nothing on
@@ -67,6 +67,23 @@
                lists and empty states — things that support a card rather
                than compete with one. */
   --sunk:#F5ECEE;
+  /* ---- the two washes ----
+     Every pale surface in the app is one of these: a breath of the accent
+     (hovers, "today", anything the app is drawing your eye to) or a breath of
+     the tint (quiet grounds). They were two dozen hand-picked creams and pinks
+     spread through the stylesheet, which is why a green studio still had a
+     pink calendar and a pink sidebar. */
+  --accent-wash:#FFFBF2;
+  --accent-wash-2:#F7EBD5;
+  --tint-wash:#FBEDEF;
+  --tint-wash-2:#FDF6F2;
+  /* The sidebar's own ground. */
+  --panel:linear-gradient(180deg,#FFFDFB 0%,#FEFAF7 55%,#FCF5F3 100%);
+  /* Colours used inside rgba() have to arrive as bare channels. */
+  --accent-rgb:176,141,62;
+  --accent-deep-rgb:143,113,48;
+  --shade-1:59,46,51;
+  --shade-2:120,70,80;
   --sunk-line:inset 0 0 0 1px rgba(59,46,51,.06);
   --radius-plate:22px;
   --radius-lg:20px;
@@ -122,7 +139,7 @@ body::after{
   content:"";position:fixed;inset:0;pointer-events:none;z-index:0;
   background:
     radial-gradient(120% 90% at 50% 0%, transparent 58%, rgba(122,86,74,.055) 100%),
-    radial-gradient(90% 70% at 8% 100%, rgba(176,141,62,.05), transparent 62%);
+    radial-gradient(90% 70% at 8% 100%, rgba(var(--accent-rgb),.05), transparent 62%);
 }
 html.no-motion body::before{opacity:.3}
 #sparkles{position:fixed;inset:0;pointer-events:none;z-index:1;opacity:.38}
@@ -137,7 +154,7 @@ html.no-motion body::before{opacity:.3}
   padding:28px 16px 14px;
   display:flex;flex-direction:column;gap:2px;
   border-right:1px solid var(--line);
-  background:linear-gradient(180deg,#FFFDFB 0%,#FEFAF7 55%,#FCF5F3 100%);
+  background:var(--panel);
   backdrop-filter:blur(14px) saturate(1.1);
   position:fixed;left:0;top:0;height:100vh;overflow:hidden;z-index:30;
   transition:width .24s var(--ease);
@@ -174,7 +191,7 @@ html.no-motion body::before{opacity:.3}
   display:grid;place-items:center;
   font-family:var(--serif);font-size:21px;font-weight:600;color:#fff;
   border:1px solid var(--gold-deep);
-  box-shadow:inset 0 1px 0 rgba(255,255,255,.45), 0 2px 8px rgba(143,113,48,.18);
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.45), 0 2px 8px rgba(var(--accent-deep-rgb),.18);
   flex:0 0 auto;
 }
 .brand.no-logo .mark{display:none}
@@ -445,13 +462,13 @@ html.no-motion body::before{opacity:.3}
   background:var(--gold-grad);color:var(--on-accent,#fff);
   border-color:var(--gold-deep);
   box-shadow:inset 0 1px 0 rgba(255,255,255,.42), inset 0 -1px 0 rgba(0,0,0,.10),
-             0 1px 2px rgba(143,113,48,.28), 0 6px 18px rgba(143,113,48,.22);
+             0 1px 2px rgba(var(--accent-deep-rgb),.28), 0 6px 18px rgba(var(--accent-deep-rgb),.22);
   text-shadow:0 1px 1px rgba(105,82,32,.28);
 }
 .btn-gold:hover{transform:translateY(-1px);
   box-shadow:inset 0 1px 0 rgba(255,255,255,.5), inset 0 -1px 0 rgba(0,0,0,.10),
-             0 2px 4px rgba(143,113,48,.26), 0 10px 26px rgba(143,113,48,.28)}
-.btn-gold:focus-visible{box-shadow:var(--ring), 0 6px 18px rgba(143,113,48,.22)}
+             0 2px 4px rgba(var(--accent-deep-rgb),.26), 0 10px 26px rgba(var(--accent-deep-rgb),.28)}
+.btn-gold:focus-visible{box-shadow:var(--ring), 0 6px 18px rgba(var(--accent-deep-rgb),.22)}
 
 /* For the corner of a screen whose subject is a photograph: still a button,
    still reachable, but not competing with the thing the page is about. */
@@ -553,6 +570,9 @@ html.no-motion body::before{opacity:.3}
 .clr input[type=color]{width:44px;height:34px;padding:2px;border:1px solid var(--line-strong);
   border-radius:9px;background:var(--card);cursor:pointer}
 .clr code{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:11px;color:var(--muted)}
+.pal-sub{font-size:10.5px;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);
+  font-weight:600;margin:12px 2px 7px}
+.pal-sub:first-of-type{margin-top:2px}
 .preset-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(178px,1fr));gap:10px}
 .preset{display:flex;align-items:center;gap:10px;padding:11px 13px;border-radius:var(--radius-sm);
   border:1px solid var(--line);background:var(--card);cursor:pointer;text-align:left;font-family:var(--sans);
@@ -572,8 +592,8 @@ html.no-motion body::before{opacity:.3}
 .cs-dot{width:9px;height:9px;border-radius:50%;flex:0 0 9px;margin-top:5px;background:var(--pink-300)}
 .conn-state.ok{border-color:#D3E6D8;background:#F6FBF7}
 .conn-state.ok .cs-dot{background:var(--ok);box-shadow:0 0 0 3px rgba(79,143,98,.16)}
-.conn-state.pending{border-color:var(--gold-line);background:#FFFCF4}
-.conn-state.pending .cs-dot{background:var(--gold);box-shadow:0 0 0 3px rgba(176,141,62,.16)}
+.conn-state.pending{border-color:var(--gold-line);background:var(--accent-wash)}
+.conn-state.pending .cs-dot{background:var(--gold);box-shadow:0 0 0 3px rgba(var(--accent-rgb),.16)}
 /* Signed in with no studio behind it. Not a caution — nothing is being kept. */
 .conn-state.bad{border-color:rgba(142,47,57,.45);background:rgba(142,47,57,.07)}
 .conn-state.bad b{color:#8E2F39}
@@ -651,14 +671,14 @@ html.no-motion body::before{opacity:.3}
 .tgl{width:46px;height:27px;border-radius:20px;border:none;padding:0;cursor:pointer;position:relative;
   background:var(--pink-200);transition:background-color .2s var(--ease)}
 .tgl i{position:absolute;top:3px;left:3px;width:21px;height:21px;border-radius:50%;background:#fff;
-  box-shadow:0 1px 3px rgba(59,46,51,.25);transition:transform .2s var(--ease)}
+  box-shadow:0 1px 3px rgba(var(--shade-1),.25);transition:transform .2s var(--ease)}
 .tgl.on{background:var(--gold-grad)}
 .tgl.on i{transform:translateX(19px)}
 .tgl:focus-visible{outline:none;box-shadow:var(--ring)}
 
 .about-mark{width:64px;height:64px;border-radius:18px;background:var(--gold-grad);display:grid;
   place-items:center;font-family:var(--serif);font-size:34px;font-weight:600;color:#fff;margin-top:6px;
-  border:1px solid var(--gold-deep);box-shadow:inset 0 1px 0 rgba(255,255,255,.5),0 6px 18px rgba(143,113,48,.3)}
+  border:1px solid var(--gold-deep);box-shadow:inset 0 1px 0 rgba(255,255,255,.5),0 6px 18px rgba(var(--accent-deep-rgb),.3)}
 .about-name{font-family:var(--serif);font-size:22px;font-weight:600;margin-top:14px}
 .about-v{font-size:12px;color:var(--muted);margin-top:3px}
 
@@ -669,7 +689,7 @@ html.no-motion body::before{opacity:.3}
   box-shadow:var(--shadow-xs);transition:border-color .16s var(--ease),transform .16s var(--ease),box-shadow .16s var(--ease)}
 .tour-tile:hover{border-color:var(--gold-line);transform:translateY(-2px);box-shadow:var(--shadow-sm)}
 .tour-tile:focus-visible{outline:none;box-shadow:var(--ring)}
-.tour-tile.done{background:linear-gradient(180deg,#FFFDF8,var(--card))}
+.tour-tile.done{background:linear-gradient(180deg,var(--accent-wash),var(--card))}
 .tt-top{display:flex;align-items:center;justify-content:space-between;gap:8px}
 .tt-n{font-family:var(--serif);font-size:17px;font-weight:600}
 .tt-done{width:20px;height:20px;border-radius:50%;background:var(--gold-grad);color:#fff;
@@ -790,7 +810,7 @@ body.portal-only .main{margin-left:0!important}
 .tc-actions{display:flex;align-items:center;gap:8px;margin-top:16px;padding-top:14px;border-top:1px solid var(--line)}
 
 /* ============ GETTING STARTED CHECKLIST ============ */
-.setup-card{background:linear-gradient(135deg,#FFFDF9,#FDF5F2 60%,#FBEDEF);
+.setup-card{background:linear-gradient(135deg,var(--accent-wash),var(--tint-wash-2) 60%,var(--tint-wash));
   border:1px solid var(--gold-line);border-radius:var(--radius-lg);padding:18px 20px;margin-bottom:20px;
   box-shadow:var(--shadow-sm)}
 .setup-h{display:flex;align-items:flex-start;justify-content:space-between;gap:14px}
@@ -829,7 +849,7 @@ body.portal-only .main{margin-left:0!important}
 /* ============ DASHBOARD: WHAT'S NEXT ============ */
 .next-band{
   display:flex;align-items:center;justify-content:space-between;gap:24px;
-  background:linear-gradient(135deg,#FFFDF9 0%,#FDF4F1 48%,#FBEDEF 100%);
+  background:linear-gradient(135deg,var(--accent-wash) 0%,var(--tint-wash-2) 48%,var(--tint-wash) 100%);
   border:1px solid var(--line);border-left:3px solid var(--gold);
   border-radius:var(--radius);padding:20px 26px;margin-bottom:20px;
   box-shadow:var(--shadow-sm);cursor:pointer;
@@ -910,18 +930,18 @@ body.portal-only .main{margin-left:0!important}
 }
 .task.is-today::after{
   content:"";position:absolute;inset:0;pointer-events:none;border-radius:2px;
-  box-shadow:inset 0 0 0 1px rgba(176,141,62,0);
+  box-shadow:inset 0 0 0 1px rgba(var(--accent-rgb),0);
   animation:todayBreath 3.2s ease-in-out infinite;
 }
 @keyframes todayBreath{
-  0%,100%{box-shadow:inset 0 0 0 1px rgba(176,141,62,.10), inset 0 0 14px -6px rgba(176,141,62,.18)}
-  50%    {box-shadow:inset 0 0 0 1px rgba(176,141,62,.46), inset 0 0 18px -4px rgba(176,141,62,.42)}
+  0%,100%{box-shadow:inset 0 0 0 1px rgba(var(--accent-rgb),.10), inset 0 0 14px -6px rgba(var(--accent-rgb),.18)}
+  50%    {box-shadow:inset 0 0 0 1px rgba(var(--accent-rgb),.46), inset 0 0 18px -4px rgba(var(--accent-rgb),.42)}
 }
 .task.is-today .t-l{font-weight:600}
 .task.is-today .tbox{border-color:var(--gold)}
 @media (prefers-reduced-motion:reduce){
   .task.is-today::after{animation:none;
-    box-shadow:inset 0 0 0 1px rgba(176,141,62,.34), inset 0 0 16px -5px rgba(176,141,62,.3)}
+    box-shadow:inset 0 0 0 1px rgba(var(--accent-rgb),.34), inset 0 0 16px -5px rgba(var(--accent-rgb),.3)}
   .tg-items{transition:none}
 }
 .tbox{
@@ -1248,7 +1268,7 @@ tbody tr:hover{background:var(--pink-50)}
 .bud-row .amt b{color:var(--ink)}
 
 /* modal */
-.overlay{position:fixed;inset:0;background:rgba(59,46,51,.34);backdrop-filter:blur(6px) saturate(.9);
+.overlay{position:fixed;inset:0;background:rgba(var(--shade-1),.34);backdrop-filter:blur(6px) saturate(.9);
   z-index:50;display:none;align-items:center;justify-content:center;padding:20px;animation:fade .18s var(--ease)}
 .overlay.show{display:flex}
 @keyframes fade{from{opacity:0}to{opacity:1}}
@@ -1399,7 +1419,7 @@ tbody tr:hover{background:var(--pink-50)}
 .modal-q{max-width:600px;padding:0;overflow:hidden;
   display:flex;flex-direction:column;max-height:88vh}
 .qm-head{flex:0 0 auto;padding:34px 34px 26px;text-align:center;
-  background:linear-gradient(180deg,#FFFDF9,#FDF6F2);border-bottom:1px solid var(--line)}
+  background:linear-gradient(180deg,var(--accent-wash),var(--tint-wash-2));border-bottom:1px solid var(--line)}
 .qm-title{font-family:var(--serif);font-size:31px;font-weight:600;line-height:1.12;
   margin:10px 0 0;letter-spacing:-.014em;text-wrap:balance}
 .qm-intro{font-size:13px;color:var(--ink-soft);line-height:1.65;margin:10px auto 0;max-width:42ch}
@@ -1573,7 +1593,7 @@ tbody tr:hover{background:var(--pink-50)}
 .cl-mono i{width:47%;aspect-ratio:1;border-radius:50%;display:flex;align-items:center;justify-content:center;
   font-family:var(--serif);font-style:normal;font-size:clamp(19px,4.6vw,28px);font-weight:600;
   letter-spacing:.03em;color:#fff;
-  box-shadow:0 8px 20px rgba(59,46,51,.16),inset 0 1px 0 rgba(255,255,255,.22)}
+  box-shadow:0 8px 20px rgba(var(--shade-1),.16),inset 0 1px 0 rgba(255,255,255,.22)}
 /* A scrim only under the chip, so a pale photograph cannot swallow the date. */
 /* Only over a photograph: a scrim on the pale wash would be a grey smudge. */
 .cl-face.has-photo::after{content:"";position:absolute;left:0;right:0;bottom:0;height:52%;pointer-events:none;
@@ -1784,7 +1804,7 @@ td.inv-col{text-align:center;width:1%}
 .diag-t td:first-child{color:var(--muted);white-space:nowrap;width:1%}
 .diag-t td:last-child{word-break:break-word}
 .samp-banner{display:flex;align-items:center;flex-wrap:wrap;gap:12px;margin:0 0 18px;padding:13px 16px;
-  background:linear-gradient(135deg,#FFFDF9,#FBF3E8);border:1px solid var(--gold-line);
+  background:linear-gradient(135deg,var(--accent-wash),var(--accent-wash-2));border:1px solid var(--gold-line);
   border-left:3px solid var(--gold);border-radius:var(--radius)}
 .samp-banner .samp-b{flex:1 1 260px;font-size:13px;color:var(--ink-soft);line-height:1.5}
 .samp-banner .samp-a{display:flex;gap:8px;flex-wrap:wrap}
@@ -1929,7 +1949,7 @@ td.inv-col{text-align:center;width:1%}
 .wk-d:focus-visible{outline:none;box-shadow:var(--ring)}
 /* Today is the one that should look picked up off the page. */
 .wk-d.today{border-color:var(--gold);
-  box-shadow:0 0 0 3px rgba(176,141,62,.13), inset 0 1px 0 rgba(255,255,255,.8), var(--shadow)}
+  box-shadow:0 0 0 3px rgba(var(--accent-rgb),.13), inset 0 1px 0 rgba(255,255,255,.8), var(--shadow)}
 /* A clear day is information too, so it settles back rather than competing
    with the days that actually hold something. Flat, no lift, paler date. */
 /* A clear day is a slot with nothing in it, not a gap in the strip — the
@@ -1939,7 +1959,7 @@ td.inv-col{text-align:center;width:1%}
 .wk-d.quiet:hover{transform:none;border-color:transparent;box-shadow:var(--sunk-line)}
 .wk-d.quiet .wk-n{color:var(--muted);font-weight:400}
 .wk-d.quiet.today{background:var(--card);border-color:var(--gold);
-  box-shadow:0 0 0 3px rgba(176,141,62,.13), inset 0 1px 0 rgba(255,255,255,.8), var(--shadow-sm)}
+  box-shadow:0 0 0 3px rgba(var(--accent-rgb),.13), inset 0 1px 0 rgba(255,255,255,.8), var(--shadow-sm)}
 .wk-d.quiet.today .wk-n{color:var(--gold);font-weight:600}
 .wk-top{display:flex;align-items:baseline;gap:6px}
 .wk-dow{font-size:9.5px;letter-spacing:1.3px;text-transform:uppercase;color:var(--muted);font-weight:600}
@@ -2011,7 +2031,7 @@ td.inv-col{text-align:center;width:1%}
 /* Only the drop targets stay fully lit while a guest is in hand, so where they
    can go is obvious without reading anything. */
 .picking .table-card,.picking .unseated-col{border-color:var(--gold-line);cursor:pointer}
-.picking .table-card:hover,.picking .unseated-col:hover{border-color:var(--gold);background:#FFFBF2}
+.picking .table-card:hover,.picking .unseated-col:hover{border-color:var(--gold);background:var(--accent-wash)}
 .picking .table-card.full{opacity:.5}
 .picking .gchip{cursor:pointer}
 /* The per-chip dropdown was the touch fallback; tap-to-seat replaces it and
@@ -2266,7 +2286,7 @@ td.inv-brk,td.g-brk{display:none}
      is nothing left to discover. */
   background:
     linear-gradient(to left, var(--card), rgba(255,255,255,0)) right center,
-    radial-gradient(farthest-side at 100% 50%, rgba(59,46,51,.13), rgba(59,46,51,0)) right center;
+    radial-gradient(farthest-side at 100% 50%, rgba(var(--shade-1),.13), rgba(var(--shade-1),0)) right center;
   background-repeat:no-repeat;
   background-size:34px 100%, 13px 100%;
   background-attachment:local, scroll;
@@ -2461,7 +2481,7 @@ td.inv-brk,td.g-brk{display:none}
   .app.rail .sidebar{width:274px;flex-basis:274px;padding:28px 16px 18px}
   .rail-btn{top:14px;right:12px;width:42px;height:42px;font-size:17px}
   .sidebar{position:fixed;left:-280px;width:274px;transition:left .2s;z-index:40;box-shadow:none}
-  .sidebar.open{left:0;box-shadow:14px 0 40px rgba(120,70,80,.18)}
+  .sidebar.open{left:0;box-shadow:14px 0 40px rgba(var(--shade-2),.18)}
   .main{padding:20px 18px 60px}
   /* 4-up folds to a balanced 2×2; 3-up stays 3 across so it never
      leaves a lone card stranded on its own row. */
@@ -2497,11 +2517,37 @@ td.inv-brk,td.g-brk{display:none}
   background:rgba(255,253,251,.84);
   -webkit-backdrop-filter:blur(22px) saturate(1.6);backdrop-filter:blur(22px) saturate(1.6);
   border-top:1px solid var(--line);
-  box-shadow:0 -8px 28px rgba(120,70,80,.10)}
+  box-shadow:0 -8px 28px rgba(var(--shade-2),.10);
+  /* Its own compositing layer. A fixed element that the browser decides not to
+     composite is repainted with the page instead of being pinned to the
+     viewport, which is a bar that floats up the screen as you scroll. */
+  transform:translateZ(0);-webkit-transform:translateZ(0);
+  backface-visibility:hidden;-webkit-backface-visibility:hidden}
 /* No backdrop-filter (older Android, Firefox): fall back to a solid surface
    rather than leaving the page legible through a 72%-opaque bar. */
 @supports not ((backdrop-filter:blur(1px)) or (-webkit-backdrop-filter:blur(1px))){
   .tabbar{background:var(--ivory)}
+}
+/* ---- Safari, and iOS Safari in particular ----
+   The bar was floating up the screen during a scroll: it stayed with the page
+   instead of staying with the viewport, so scrolling down carried it into the
+   middle of the screen with content above and below it.
+   That is what iOS does when it gives up compositing fixed elements, and this
+   page was asking it to give up three ways at once — a full-viewport layer in
+   mix-blend-mode:multiply (the paper grain), a background-attachment:fixed
+   ground, and a backdrop-filtered bar reading through both of them every
+   frame. Each is cheap on a desktop and expensive on a phone.
+   `-webkit-touch-callout` is a WebKit-only property, so this block reaches
+   Safari and nothing else. The grain and the ground stay, they just stop being
+   drawn in a way that costs the bar its layer.  */
+@supports (-webkit-touch-callout:none){
+  body{background-attachment:scroll}
+  /* Same grain, no blending group. */
+  body::before{mix-blend-mode:normal;opacity:.2}
+  .tabbar{-webkit-backdrop-filter:none;backdrop-filter:none;background:var(--ivory)}
+  /* The drawer is fixed too, and slides over a page that is still scrollable
+     behind it. */
+  .sidebar{-webkit-backdrop-filter:none;backdrop-filter:none}
 }
 /* 44px, and the content fills it exactly — 5 + 22 + 3 + 9.5 + 4. Taking the
    height out of the icon was the wrong place to take it from: at 19px the icon
@@ -2614,7 +2660,7 @@ select.rsvp-sel[data-r="no"]{background-color:#FBF4F4;border-color:#EDD1D1;color
   padding:14px;box-shadow:var(--shadow-sm);min-height:150px;transition:border-color .15s,box-shadow .15s;
 }
 .table-card.drag-over{border-color:var(--gold);background:var(--pink-50);box-shadow:inset 0 0 0 2px var(--gold-soft)}
-.table-card.full{border-color:var(--gold-soft);background:linear-gradient(180deg,#FFFDF8,var(--card))}
+.table-card.full{border-color:var(--gold-soft);background:linear-gradient(180deg,var(--accent-wash),var(--card))}
 .table-h{display:flex;align-items:center;justify-content:space-between;padding-bottom:10px;margin-bottom:10px;border-bottom:1px solid var(--line)}
 .table-h .tname{font-family:var(--serif);font-size:18px;font-weight:600}
 .seat-list{display:flex;flex-direction:column;gap:7px}
@@ -2683,7 +2729,7 @@ select.rsvp-sel[data-r="no"]{background-color:#FBF4F4;border-color:#EDD1D1;color
   padding:26px 18px;cursor:pointer;text-align:center;background:var(--pink-50);
   transition:border-color .15s,background .15s;
 }
-.dropzone:hover,.dropzone.over{border-color:var(--gold);background:#FFFBF2}
+.dropzone:hover,.dropzone.over{border-color:var(--gold);background:var(--accent-wash)}
 .dropzone:focus-visible{outline:2px solid var(--gold);outline-offset:2px}
 .dz-ic{font-size:20px;color:var(--gold)}
 .dz-t{font-size:14px;font-weight:600}
@@ -2737,7 +2783,7 @@ select.rsvp-sel[data-r="no"]{background-color:#FBF4F4;border-color:#EDD1D1;color
 .mb-a{width:26px;height:26px;border-radius:8px;border:1px solid var(--line);
   background:rgba(255,255,255,.92);color:var(--ink-soft);font-size:12px;line-height:1;
   cursor:pointer;display:grid;place-items:center;padding:0;
-  box-shadow:0 1px 4px rgba(59,46,51,.14)}
+  box-shadow:0 1px 4px rgba(var(--shade-1),.14)}
 .mb-a:hover{border-color:var(--gold);color:var(--gold-deep)}
 .mb-a:focus-visible{outline:none;box-shadow:var(--ring)}
 .mb-hint{font-size:11.5px;color:var(--muted);margin-top:10px}
@@ -2757,7 +2803,7 @@ select.rsvp-sel[data-r="no"]{background-color:#FBF4F4;border-color:#EDD1D1;color
 /* The copy under the hand. */
 .mb-fly{position:fixed;z-index:90;margin:0;pointer-events:none;
   border-radius:var(--radius-sm);overflow:hidden;
-  box-shadow:0 18px 40px rgba(59,46,51,.28);transform:rotate(-1deg) scale(1.02);
+  box-shadow:0 18px 40px rgba(var(--shade-1),.28);transform:rotate(-1deg) scale(1.02);
   opacity:.96;background:var(--card);border:1px solid var(--line)}
 .mb-fly .mb-acts{display:none}
 .mb-fly img{display:block;width:100%;height:auto}
@@ -2825,7 +2871,7 @@ select.rsvp-sel[data-r="no"]{background-color:#FBF4F4;border-color:#EDD1D1;color
 .cal-cell{min-width:0;min-height:104px;border-right:1px solid var(--line);border-bottom:1px solid var(--line);padding:8px 9px;display:flex;flex-direction:column;gap:3px;overflow:hidden}
 .cal-cell:nth-child(7n){border-right:none}
 .cal-cell.muted{background:var(--pink-50)}
-.cal-cell.today{background:linear-gradient(180deg,#FFFBF2,var(--card));box-shadow:inset 0 0 0 2px var(--gold-soft)}
+.cal-cell.today{background:linear-gradient(180deg,var(--accent-wash),var(--card));box-shadow:inset 0 0 0 2px var(--gold-soft)}
 .cal-d{font-size:12px;font-weight:600;color:var(--ink-soft);font-variant-numeric:tabular-nums}
 .cal-cell.today .cal-d{color:var(--gold)}
 .cal-ev{font-size:10.5px;display:flex;align-items:center;gap:5px;background:var(--pink-50);border-radius:6px;padding:3px 6px;
@@ -2840,7 +2886,7 @@ select.rsvp-sel[data-r="no"]{background-color:#FBF4F4;border-color:#EDD1D1;color
 .cal-agenda{display:none;border-top:1px solid var(--line)}
 .cag-day{display:flex;gap:14px;padding:11px 20px;border-bottom:1px solid var(--line)}
 .cag-day:last-child{border-bottom:none}
-.cag-day.today{background:linear-gradient(180deg,#FFFBF2,var(--card))}
+.cag-day.today{background:linear-gradient(180deg,var(--accent-wash),var(--card))}
 .cag-d{flex:0 0 34px;display:flex;flex-direction:column;align-items:center;line-height:1}
 .cag-dow{font-size:9px;letter-spacing:1.1px;text-transform:uppercase;color:var(--muted);font-weight:600}
 .cag-n{font-family:var(--serif);font-size:20px;font-weight:600;margin-top:3px;
@@ -2865,12 +2911,12 @@ select.rsvp-sel[data-r="no"]{background-color:#FBF4F4;border-color:#EDD1D1;color
 
 /* ============ CLIENT PORTAL ============ */
 .portal-note{
-  background:linear-gradient(135deg,#FFF9E9,#FDF6F7);border:1px solid var(--gold-soft);
+  background:linear-gradient(135deg,var(--accent-wash),var(--tint-wash-2));border:1px solid var(--gold-soft);
   border-radius:var(--radius);padding:13px 18px;font-size:12.5px;color:var(--ink-soft);
   margin-bottom:20px;line-height:1.5;
 }
 .portal-hero{
-  background:linear-gradient(135deg,#FBEDEF 0%,#FFF9EC 55%,#F7E6DE 100%);
+  background:linear-gradient(135deg,var(--tint-wash) 0%,var(--accent-wash) 55%,var(--tint-wash) 100%);
   border:1px solid var(--line);border-radius:var(--radius);
   padding:34px 30px;margin-bottom:20px;text-align:center;position:relative;overflow:hidden;
 }
@@ -2952,21 +2998,21 @@ tr:hover .r-acts,.ev-card:hover .r-acts,.table-card:hover .r-acts,
 
 .fp-stage{
   position:relative;width:100%;margin:0;overflow:hidden;
-  background:linear-gradient(180deg,#FFFDFB,#FBF4F3);
+  background:linear-gradient(180deg,#FFFDFB,var(--tint-wash-2));
   touch-action:none;                 /* pointer drag must not scroll the page */
   user-select:none;-webkit-user-select:none;
 }
 .fp-stage.grid{
-  background-image:linear-gradient(rgba(176,141,62,.09) 1px,transparent 1px),
-                   linear-gradient(90deg,rgba(176,141,62,.09) 1px,transparent 1px);
+  background-image:linear-gradient(rgba(var(--accent-rgb),.09) 1px,transparent 1px),
+                   linear-gradient(90deg,rgba(var(--accent-rgb),.09) 1px,transparent 1px);
   background-size:5% 7.5%;
 }
 .fp-empty{position:absolute;inset:0;display:grid;place-items:center;color:var(--muted);font-size:13px;text-align:center;padding:20px}
 
 .fp-item{position:absolute;display:grid;place-items:center;cursor:grab;
   transition:box-shadow .16s var(--ease),border-color .16s var(--ease)}
-.fp-item.dragging{cursor:grabbing;z-index:20;filter:drop-shadow(0 8px 18px rgba(120,70,80,.28))}
-.fp-item:focus-visible{outline:none;box-shadow:0 0 0 3px rgba(176,141,62,.45)}
+.fp-item.dragging{cursor:grabbing;z-index:20;filter:drop-shadow(0 8px 18px rgba(var(--shade-2),.28))}
+.fp-item:focus-visible{outline:none;box-shadow:0 0 0 3px rgba(var(--accent-rgb),.45)}
 /* Chairs sit outside the top, so the item box must not clip. */
 .fp-table{overflow:visible;background:none;border:none;box-shadow:none;padding:0}
 /* Container queries let the label scale with the table's real size, so a
@@ -2977,7 +3023,7 @@ tr:hover .r-acts,.ev-card:hover .r-acts,.table-card:hover .r-acts,
   background:linear-gradient(160deg,#fff,#FCF6F4);
   border:2px solid var(--pink-300);box-shadow:var(--shadow-sm);
   transition:border-color .16s var(--ease),background .16s var(--ease)}
-.fp-table.full .fp-top{border-color:var(--gold);background:linear-gradient(160deg,#FFFCF4,#F7EBD5)}
+.fp-table.full .fp-top{border-color:var(--gold);background:linear-gradient(160deg,var(--accent-wash),var(--accent-wash-2))}
 .fp-table.empty .fp-top{border-style:dashed;border-color:var(--pink-300)}
 .fp-table.sel .fp-top{border-color:var(--gold);box-shadow:0 0 0 3px var(--gold-soft),var(--shadow)}
 .fp-name{font-size:clamp(6px,13cqmin,11px);font-weight:600;line-height:1.1;max-width:96%;
@@ -3039,10 +3085,10 @@ tr:hover .r-acts,.ev-card:hover .r-acts,.table-card:hover .r-acts,
 .fp-backdrop{border-style:solid;border-color:var(--gold-line);
   background:linear-gradient(180deg,#F7E9EC,#F2DFE1);overflow:visible}
 .fp-backdrop::before{content:"";position:absolute;left:0;right:0;top:0;height:100%;
-  background:repeating-linear-gradient(90deg,rgba(176,141,62,.22) 0 1px,transparent 1px 6px);
+  background:repeating-linear-gradient(90deg,rgba(var(--accent-rgb),.22) 0 1px,transparent 1px 6px);
   border-radius:inherit;pointer-events:none}
 .fp-backdrop::after{content:"";position:absolute;left:6%;right:6%;bottom:-3px;height:3px;
-  background:radial-gradient(ellipse at center,rgba(59,46,51,.16),transparent 70%);pointer-events:none}
+  background:radial-gradient(ellipse at center,rgba(var(--shade-1),.16),transparent 70%);pointer-events:none}
 .fp-backdrop .fp-fname{position:relative;z-index:1;color:var(--gold-deep)}
 .fp-stage_ .fp-item{}
 .fp-hint{padding:9px 14px;font-size:11px;color:var(--muted);border-top:1px solid var(--line);
@@ -3148,7 +3194,7 @@ tr:hover .r-acts,.ev-card:hover .r-acts,.table-card:hover .r-acts,
 .print-opt{display:flex;flex-direction:column;gap:3px;padding:13px 15px;border-radius:var(--radius-sm);
   border:1px solid var(--line);background:var(--pink-50);cursor:pointer;text-align:left;font-family:var(--sans);
   transition:border-color .16s var(--ease),background-color .16s var(--ease),transform .16s var(--ease)}
-.print-opt:hover{border-color:var(--gold);background:#FFFBF2;transform:translateY(-1px)}
+.print-opt:hover{border-color:var(--gold);background:var(--accent-wash);transform:translateY(-1px)}
 .print-opt:focus-visible{outline:none;box-shadow:var(--ring)}
 .po-t{font-size:14px;font-weight:600}
 .po-d{font-size:11.5px;color:var(--muted)}
@@ -3156,7 +3202,7 @@ tr:hover .r-acts,.ev-card:hover .r-acts,.table-card:hover .r-acts,
 /* ============ EVENT WORKSPACE ============ */
 .venue-band{
   display:grid;grid-template-columns:1.5fr 1fr;gap:26px;
-  background:linear-gradient(135deg,#FFFDF9 0%,#FDF5F1 52%,#FBEDEF 100%);
+  background:linear-gradient(135deg,var(--accent-wash) 0%,#FDF5F1 52%,var(--tint-wash) 100%);
   border:1px solid var(--line);border-radius:var(--radius-lg);
   padding:24px 26px;margin-bottom:20px;box-shadow:var(--shadow-sm);position:relative;overflow:hidden;
 }
@@ -3428,8 +3474,8 @@ tr:hover .r-acts,.ev-card:hover .r-acts,.table-card:hover .r-acts,
   background:
     linear-gradient(to right,var(--card) 40%,rgba(255,255,255,0)) left center/26px 100% no-repeat local,
     linear-gradient(to left, var(--card) 40%,rgba(255,255,255,0)) right center/26px 100% no-repeat local,
-    radial-gradient(farthest-side at 0 50%, rgba(59,46,51,.16),rgba(59,46,51,0)) left center/13px 100% no-repeat scroll,
-    radial-gradient(farthest-side at 100% 50%,rgba(59,46,51,.16),rgba(59,46,51,0)) right center/13px 100% no-repeat scroll}
+    radial-gradient(farthest-side at 0 50%, rgba(var(--shade-1),.16),rgba(var(--shade-1),0)) left center/13px 100% no-repeat scroll,
+    radial-gradient(farthest-side at 100% 50%,rgba(var(--shade-1),.16),rgba(var(--shade-1),0)) right center/13px 100% no-repeat scroll}
 
 /* touch-only move controls (drag-and-drop has no touch equivalent) */
 .move-sel:focus-visible{outline:none;box-shadow:var(--ring)}
@@ -3599,7 +3645,7 @@ tr:hover .r-acts,.ev-card:hover .r-acts,.table-card:hover .r-acts,
 /* ============ QUESTIONNAIRES ============ */
 .q-head{
   display:flex;align-items:flex-start;justify-content:space-between;gap:30px;flex-wrap:wrap;
-  background:linear-gradient(135deg,#FFFDF9 0%,#FDF6F2 55%,#FAEFF0 100%);
+  background:linear-gradient(135deg,var(--accent-wash) 0%,var(--tint-wash-2) 55%,var(--tint-wash) 100%);
   border:1px solid var(--line);border-radius:var(--radius-lg);
   padding:30px 32px;margin-bottom:20px;box-shadow:var(--shadow-sm);position:relative;overflow:hidden;
 }
@@ -3740,7 +3786,7 @@ tr:hover .r-acts,.ev-card:hover .r-acts,.table-card:hover .r-acts,
 .stackbar i{display:block;height:100%}
 
 /* ============ TAX ============ */
-.tax-note{background:linear-gradient(135deg,#FFF9E9,#FDF6F7);border:1px solid var(--gold-soft);
+.tax-note{background:linear-gradient(135deg,var(--accent-wash),var(--tint-wash-2));border:1px solid var(--gold-soft);
   border-radius:var(--radius);padding:13px 18px;font-size:12.5px;color:var(--ink-soft);
   margin-bottom:20px;line-height:1.5}
 .range{width:100%;accent-color:var(--gold);height:26px}
@@ -10006,6 +10052,15 @@ function hexToHsl(hex){
   return {h:H,s:S*100,l:L*100};
 }
 function hsl(h,s,l){ return 'hsl('+Math.round(h)+' '+Math.max(0,Math.min(100,s)).toFixed(1)+'% '+Math.max(0,Math.min(100,l)).toFixed(1)+'%)'; }
+/* Bare channels, for the colours that have to live inside rgba() — shadows and
+   focus rings, which need an alpha the token itself does not carry. */
+function hslRgb(h,s,l){
+  h=((h%360)+360)%360; s=Math.max(0,Math.min(100,s))/100; l=Math.max(0,Math.min(100,l))/100;
+  var c=(1-Math.abs(2*l-1))*s, x=c*(1-Math.abs((h/60)%2-1)), m=l-c/2, r=0,g=0,b=0;
+  if(h<60){r=c;g=x;} else if(h<120){r=x;g=c;} else if(h<180){g=c;b=x;}
+  else if(h<240){g=x;b=c;} else if(h<300){r=x;b=c;} else {r=c;b=x;}
+  return [Math.round((r+m)*255),Math.round((g+m)*255),Math.round((b+m)*255)].join(',');
+}
 function hslA(h,s,l,a){ return 'hsl('+Math.round(h)+' '+s.toFixed(1)+'% '+l.toFixed(1)+'% / '+a+')'; }
 /* Readable text on a filled accent button, whatever the studio picks. */
 function onAccent(hslObj){ return hslObj.l>62?'#2C2328':'#FFFFFF'; }
@@ -10038,11 +10093,35 @@ function applyBrand(){
   root.setProperty('--bg-2',     hsl(t.h,Math.max(t.s-16,4),Math.min(t.l+12,98.8)));
   root.setProperty('--line',     hsl(t.h,Math.max(t.s-12,6),Math.max(t.l-2,88)));
   root.setProperty('--line-strong', hsl(t.h,Math.max(t.s-6,8),Math.max(t.l-7,82)));
+  /* ---- everything that used to be a hand-picked cream or pink ----
+     Two dozen literals through the stylesheet meant a studio on sage still had
+     a pink sidebar, a pink calendar and pink shadows. They are two tokens now,
+     and both are derived: a wash of the accent for anything the app is drawing
+     the eye to, a wash of the tint for the quiet grounds. Numbers are anchored
+     on the originals, so the default palette lands where it always did. */
+  root.setProperty('--accent-wash',   hsl(a.h,Math.max(20,Math.min(a.s+45,100)),97.1));
+  root.setProperty('--accent-wash-2', hsl(a.h,Math.max(18,Math.min(a.s+12,70)),90));
+  root.setProperty('--tint-wash',     hsl(t.h,Math.min(t.s+15,60),Math.min(t.l+4.3,96)));
+  root.setProperty('--tint-wash-2',   hsl(t.h+8,Math.min(t.s+20,64),Math.min(t.l+6,97.5)));
+  root.setProperty('--sunk',          hsl(t.h,Math.max(t.s-16,8),Math.min(t.l+3,95)));
+  /* Shadows carry a hue too — a pink-brown shadow under a forest-green studio
+     is the sort of thing you cannot name but can see. */
+  root.setProperty('--accent-rgb',      hslRgb(a.h,a.s,a.l));
+  root.setProperty('--accent-deep-rgb', hslRgb(a.h,Math.min(a.s+4,95),Math.max(a.l-13,16)));
+  root.setProperty('--shade-2',         hslRgb(t.h,Math.min(t.s,30),37));
 
   /* Page wash. Hue offsets and lightness targets were read off the original
      hand-picked gradient, so a default tint reproduces it and any other tint
      is carried through at the same weight rather than staying pink. */
   var H=function(d){ return (t.h+d+360)%360; };
+  /* The sidebar's own ground. Warmer than the tint by the same offsets the page
+     wash uses — the three creams it replaces were a warm cast on a pink app,
+     and a studio on sage should get that same warmth in its own hue rather
+     than somebody else's. */
+  root.setProperty('--panel','linear-gradient(180deg,'+
+    hsl(H(36),Math.min(t.s+40,100),99.2)+' 0%,'+
+    hsl(H(31),Math.min(t.s+22,80), 98.6)+' 55%,'+
+    hsl(H(19),Math.min(t.s+11,70), 97.1)+' 100%)');
   root.setProperty('--wash-1',  hsl(H(-4),Math.min(t.s+5,60), Math.min(t.l+2,94)));
   root.setProperty('--wash-1t', hslA(H(-4),Math.min(t.s+5,60), Math.min(t.l+2,94),0));
   root.setProperty('--wash-2',  hsl(H(33),Math.min(t.s+28,72), Math.min(t.l+2,94)));
@@ -10056,6 +10135,7 @@ function applyBrand(){
   // ink follows the tint's hue a touch so nothing looks pasted on
   var ink=hexToHsl(p.ink||'#3B2E33');
   root.setProperty('--ink',      hsl(ink.h,ink.s,ink.l));
+  root.setProperty('--shade-1',  hslRgb(ink.h,ink.s,ink.l));
   root.setProperty('--ink-soft', hsl(ink.h,Math.max(ink.s-3,4),Math.min(ink.l+16,52)));
   root.setProperty('--muted',    hsl(ink.h,Math.max(ink.s-8,3),Math.min(ink.l+32,68)));
 
@@ -10078,13 +10158,24 @@ function applyBrand(){
   var nm=document.querySelector('.brand .name');
   if(nm)nm.textContent=p.brandMark||'GEM';
 }
+/* Six of these were soft and pink-adjacent, which is one house style rather
+   than a choice — the studios who do not work that way had nothing to pick.
+   `group` splits them into two rows so both are obviously on offer, and the
+   second row is deliberately cooler, darker and more neutral. Any of them is
+   only a starting point: the three pickers underneath take anything. */
 var BRAND_PRESETS=[
-  {id:'champagne',name:'Champagne & Blush',accent:'#B08D3E',tint:'#F2DFE1',ink:'#3B2E33'},
-  {id:'sage',     name:'Sage & Ivory',      accent:'#7C8C6A',tint:'#E6E9DF',ink:'#2F352C'},
-  {id:'midnight', name:'Midnight & Gold',   accent:'#C2A052',tint:'#DDDFE6',ink:'#23262E'},
-  {id:'terracotta',name:'Terracotta & Cream',accent:'#B4643F',tint:'#F0E2D6',ink:'#38271F'},
-  {id:'slate',    name:'Slate & Rose',      accent:'#8A7183',tint:'#EBE2E6',ink:'#2E2830'},
-  {id:'ink',      name:'Ink & Pearl',       accent:'#4A5568',tint:'#E7E9EC',ink:'#22262D'}
+  {id:'champagne',name:'Champagne & Blush',accent:'#B08D3E',tint:'#F2DFE1',ink:'#3B2E33',group:'soft'},
+  {id:'sage',     name:'Sage & Ivory',      accent:'#7C8C6A',tint:'#E6E9DF',ink:'#2F352C',group:'soft'},
+  {id:'midnight', name:'Midnight & Gold',   accent:'#C2A052',tint:'#DDDFE6',ink:'#23262E',group:'soft'},
+  {id:'terracotta',name:'Terracotta & Cream',accent:'#B4643F',tint:'#F0E2D6',ink:'#38271F',group:'soft'},
+  {id:'slate',    name:'Slate & Rose',      accent:'#8A7183',tint:'#EBE2E6',ink:'#2E2830',group:'soft'},
+  {id:'ink',      name:'Ink & Pearl',       accent:'#4A5568',tint:'#E7E9EC',ink:'#22262D',group:'soft'},
+  {id:'forest',   name:'Forest & Brass',    accent:'#A8813C',tint:'#DAE0D8',ink:'#1E2A22',group:'deep'},
+  {id:'navy',     name:'Navy & Camel',      accent:'#C08A4A',tint:'#DBE1EA',ink:'#1B2430',group:'deep'},
+  {id:'graphite', name:'Graphite & Copper', accent:'#B0703F',tint:'#E1E0DC',ink:'#24262A',group:'deep'},
+  {id:'oxblood',  name:'Oxblood & Stone',   accent:'#8E4A45',tint:'#E5E0DA',ink:'#2A2320',group:'deep'},
+  {id:'basalt',   name:'Basalt & Steel',    accent:'#5E7285',tint:'#DFE2E4',ink:'#1F2328',group:'deep'},
+  {id:'tobacco',  name:'Tobacco & Linen',   accent:'#9A6B3A',tint:'#E8E2D6',ink:'#2E2620',group:'deep'}
 ];
 
 /* ============================================================
@@ -10398,18 +10489,28 @@ function settingsPage(k){
         setRow('Studio name','<input class="set-in" id="b_bizName" value="'+esc(p.bizName)+'">')+
       '</div>'+
       '<div class="set-gh" style="margin-top:22px">Palette</div>'+
-      '<div class="preset-grid">'+BRAND_PRESETS.map(function(pr){
-        var on=(p.accent||'').toLowerCase()===pr.accent.toLowerCase()&&(p.tint||'').toLowerCase()===pr.tint.toLowerCase();
-        return '<button class="preset'+(on?' on':'')+'" data-preset="'+pr.id+'">'+
-          '<span class="pv"><i style="background:'+pr.accent+'"></i><i style="background:'+pr.tint+'"></i><i style="background:'+pr.ink+'"></i></span>'+
-          '<span class="pn">'+esc(pr.name)+'</span></button>';
-      }).join('')+'</div>'+
+      (function(){
+        var tile=function(pr){
+          var on=(p.accent||'').toLowerCase()===pr.accent.toLowerCase()&&(p.tint||'').toLowerCase()===pr.tint.toLowerCase();
+          return '<button class="preset'+(on?' on':'')+'" data-preset="'+pr.id+'">'+
+            '<span class="pv"><i style="background:'+pr.accent+'"></i><i style="background:'+pr.tint+'"></i><i style="background:'+pr.ink+'"></i></span>'+
+            '<span class="pn">'+esc(pr.name)+'</span></button>';
+        };
+        var of=function(g){ return BRAND_PRESETS.filter(function(pr){ return (pr.group||'soft')===g; }); };
+        return '<div class="pal-sub">Soft</div>'+
+          '<div class="preset-grid">'+of('soft').map(tile).join('')+'</div>'+
+          '<div class="pal-sub">Deep</div>'+
+          '<div class="preset-grid">'+of('deep').map(tile).join('')+'</div>';
+      })()+
       '<div class="set-card" style="margin-top:12px">'+
         swatch('b_accent',p.accent,'Accent')+
         swatch('b_tint',p.tint,'Surface tint')+
         swatch('b_ink',p.ink,'Text')+
         setRow('Restore defaults','<button class="btn btn-ghost btn-sm" id="b_reset">Reset palette</button>')+
       '</div>'+
+      '<div class="set-note" style="margin-top:10px">Start from a set and change it, or set all three by hand — '+
+        'the accent carries buttons and highlights, the surface tint carries every ground, panel and hairline, '+
+        'and the text colour tints the shadows so nothing looks pasted on.</div>'+
       '<div class="set-gh" style="margin-top:22px">Client portal</div>'+
       '<div class="set-card">'+
         setRow('Portal domain','<input class="set-in" id="b_portalHost" value="'+esc(p.portalHost||'')+'" placeholder="portal.gemevents.app">',
