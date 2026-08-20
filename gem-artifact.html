@@ -1948,6 +1948,37 @@ td.inv-col{text-align:center;width:1%}
 .wp-r{margin-left:auto;font-size:11.5px;color:var(--muted);white-space:nowrap}
 .wp-r.ok{color:var(--ok,#4E7A55)}
 .wp-foot{padding:12px 22px 14px;font-size:11.5px;color:var(--muted);border-top:1px solid var(--line)}
+.wp-bar{display:flex;align-items:center;flex-wrap:wrap;gap:8px 16px;
+  padding:12px 22px;border-bottom:1px solid var(--line);background:var(--sunk)}
+.wp-stat{font-size:12.5px;color:var(--ink-soft)}
+.wp-stat b{font-weight:600;color:var(--ink)}
+.wp-quiet{color:var(--muted)}
+.wp-warn b{color:var(--gold-deep)}
+.wp-late b{color:var(--danger,#A75252)}
+.wp-bar .link-btn{font-size:12px}
+/* The attire chip is a button, and it looks like the state it is in: outlined
+   and quiet before anyone has said anything, filling with gold as the chain
+   completes, red once the date has gone by. */
+.wp-at{font-family:var(--sans);font-size:11.5px;font-weight:600;cursor:pointer;
+  padding:3px 11px;border-radius:var(--radius-pill);
+  border:1px dashed var(--line-strong);background:none;color:var(--muted);
+  transition:border-color .14s var(--ease),background-color .14s var(--ease),color .14s var(--ease)}
+.wp-at:hover{border-color:var(--gold);color:var(--gold-deep)}
+.wp-at:focus-visible{outline:none;box-shadow:var(--ring)}
+.wp-at.set{border-style:solid;background:var(--pink-100);border-color:var(--line);color:var(--ink-soft)}
+.wp-at.set.s3{background:var(--gold-soft);border-color:var(--gold-line);color:var(--gold-deep)}
+.wp-at.set.s4{background:#E8EDE6;border-color:#D3DED0;color:#4E6B4A}
+.wp-at.late{background:#F9E5E5;border-color:#EDD1D1;color:#A75252}
+.wp-reh{font-family:var(--sans);font-size:11.5px;font-weight:600;cursor:pointer;
+  padding:3px 11px;border-radius:var(--radius-pill);
+  border:1px dashed var(--line-strong);background:none;color:var(--muted);
+  transition:border-color .14s var(--ease),background-color .14s var(--ease),color .14s var(--ease)}
+.wp-reh:hover{border-color:var(--gold);color:var(--gold-deep)}
+.wp-reh:focus-visible{outline:none;box-shadow:var(--ring)}
+.wp-reh.on{border-style:solid;background:var(--gold-soft);border-color:var(--gold-line);color:var(--gold-deep)}
+@media (pointer:coarse),(max-width:560px){
+  .wp-at,.wp-reh{min-height:32px;padding:5px 12px}
+}
 .g-role{display:inline-block;font-size:11.5px;font-weight:600;white-space:nowrap;
   padding:2px 10px;border-radius:var(--radius-pill);
   background:var(--gold-soft);border:1px solid var(--gold-line);color:var(--gold-deep)}
@@ -4186,7 +4217,10 @@ var PARTY_ROLES=[
   ['Groomsman',45],['Groomswoman',45],['Bridesmaid',50],['Bridesman',50],
   ['Best Man',60],['Best Woman',60],['Best Person',60],
   ['Maid of Honour',65],['Matron of Honour',65],['Man of Honour',65],['Honour Attendant',65],
-  ['Flower Girl',70],['Page Boy',72],['Ring Bearer',75]
+  ['Flower Girl',70],['Page Boy',72],['Ring Bearer',75],
+  /* The couple walk last, and a planner tracks their attire like everyone
+     else's — so they belong on this list rather than outside it. */
+  ['Bride',85],['Groom',85],['Partner',85]
 ];
 function roleNames(){ return PARTY_ROLES.map(function(r){return r[0];}); }
 /* A role nobody thought of walks last rather than first — the alternative is
@@ -4218,6 +4252,44 @@ function partyByRole(e){
     out[idx[k]].people.push(g);
   });
   return out;
+}
+/* ---- what everyone is wearing ----
+ * The single biggest wedding-party headache, and the most common reason a
+ * planner leaves the app for a spreadsheet: eight dresses ordered from three
+ * shops in four sizes, one of which has not arrived and nobody can remember
+ * whose. It is a chain of states rather than a tick — ordered is not arrived,
+ * arrived is not altered — and knowing which link is stuck is the whole job.
+ */
+var ATTIRE_STEPS=['To order','Ordered','Arrived','Fitted','Ready'];
+function attireOf(g){
+  var a=(g&&g.attire)||{};
+  return {item:a.item||'',size:a.size||'',status:a.status||'',due:a.due||'',note:a.note||''};
+}
+function attireSet(g){ var a=attireOf(g); return !!(a.item||a.size||a.status||a.due||a.note); }
+/* Where a step sits in the chain, for sorting and for "the earliest thing that
+   is still outstanding". An unrecognised status sorts as not started. */
+function attireStep(g){
+  var i=ATTIRE_STEPS.indexOf(attireOf(g).status);
+  return i<0?0:i;
+}
+function attireLate(g){
+  var a=attireOf(g);
+  return !!(a.due&&a.due<todayLocal()&&attireStep(g)<ATTIRE_STEPS.length-1);
+}
+/* A count per step, in step order, for the summary line. */
+function attireTally(e){
+  var t=[],i;
+  for(i=0;i<ATTIRE_STEPS.length;i++)t.push(0);
+  partyMembers(e).forEach(function(g){ if(attireSet(g))t[attireStep(g)]++; });
+  return t;
+}
+/* ---- the rehearsal ----
+ * The wedding party is exactly the list of people who come to the rehearsal,
+ * which the app could already express — a rehearsal is a sub-event and an
+ * invitation is a row — and had no way to say in one action.
+ */
+function rehearsals(e){
+  return evChildren((evPrimary(e)||e).id).filter(function(x){ return evRole(x)==='rehearsal'; });
 }
 /* ---- what is on the menu ----
  * The meal picker offered Beef, Fish, Vegetarian and Kids to every studio in
@@ -6607,24 +6679,55 @@ function viewGuests(){
   /* Only once somebody is in it. An empty Wedding Party card on a corporate
      gala — or on a wedding before anyone has been asked — is a heading with a
      shrug under it. */
-  (roles?'<div class="card" style="margin-bottom:20px"><div class="card-h"><h3>Wedding Party</h3>'+
-    '<span class="ev-h-r"><span class="sec-badge">'+partyMembers(e).length+' standing up</span>'+
+  (roles?(function(){
+    var reh=rehearsals(e), r1=reh[0]||null;
+    var tally=attireTally(e), tracked=tally.reduce(function(a,b){return a+b;},0);
+    var ready=tally[ATTIRE_STEPS.length-1];
+    var late=partyMembers(e).filter(attireLate).length;
+    var atRehearsal=r1?partyMembers(e).filter(function(g){return !!inviteOf(g.id,r1.id);}).length:0;
+    var total=partyMembers(e).length;
+    return '<div class="card" style="margin-bottom:20px"><div class="card-h"><h3>Wedding Party</h3>'+
+    '<span class="ev-h-r"><span class="sec-badge">'+total+' standing up</span>'+
       '<button class="btn btn-ghost btn-sm" data-printparty>Print</button></span></div>'+
+    /* One line that answers the three questions a planner has about this list:
+       is everyone coming to the rehearsal, is the attire moving, and is
+       anything late. Each half only appears once it has something to say. */
+    '<div class="wp-bar">'+
+      (r1?'<span class="wp-stat'+(atRehearsal<total?' wp-warn':'')+'">'+
+        '<b>'+atRehearsal+' of '+total+'</b> at the '+esc(roleLabel(r1,true).toLowerCase())+
+        (r1.date?' · '+fmtDate(r1.date):'')+'</span>'+
+        (atRehearsal<total?'<button type="button" class="link-btn" data-rehall="'+esc(r1.id)+'">Invite them all ›</button>':'')
+       :'<span class="wp-stat wp-quiet">No rehearsal on the weekend yet</span>'+
+        '<button type="button" class="link-btn" id="wpAddReh">Add one ›</button>')+
+      (tracked?'<span class="wp-stat'+(late?' wp-late':'')+'">'+
+        '<b>'+ready+' of '+tracked+'</b> ready to wear'+(late?' · '+late+' overdue':'')+'</span>':'')+
+    '</div>'+
     '<div class="wp-list">'+party.map(function(grp){
       return '<div class="wp-grp">'+
         '<div class="wp-role">'+esc(grp.role)+'<span class="wp-n">'+grp.people.length+'</span></div>'+
         '<div class="wp-people">'+grp.people.map(function(g){
-          var r=gRsvp(g,e);
+          var r=gRsvp(g,e), a=attireOf(g), on=r1?!!inviteOf(g.id,r1.id):false;
           return '<div class="wp-p">'+
             '<span class="wp-nm">'+esc(g.name)+'</span>'+
             (sides&&g.side?'<span class="g-side s-'+g.side+'">'+esc(sideLabel(e,g.side))+'</span>':'')+
             (g.diet?'<span class="status s-due">'+esc(g.diet)+'</span>':'')+
+            /* The attire chip is the editor. Eight people is eight modals if
+               the only way in is the row's pencil. */
+            '<button type="button" class="wp-at'+(a.status?' set s'+attireStep(g):'')+
+              (attireLate(g)?' late':'')+'" data-attire="'+esc(g.id)+'" '+
+              'title="'+esc(a.item||'Attire')+'">'+
+              esc(a.status||'Attire')+(a.size?' · '+esc(a.size):'')+'</button>'+
+            (r1?'<button type="button" class="wp-reh'+(on?' on':'')+'" data-reh="'+esc(g.id)+'" '+
+              'data-rehev="'+esc(r1.id)+'" aria-pressed="'+on+'" '+
+              'title="'+(on?'Coming to the ':'Not at the ')+esc(roleLabel(r1,true).toLowerCase())+'">'+
+              (on?'✓':'')+' Rehearsal</button>':'')+
             '<span class="wp-r'+(r==='yes'?' ok':'')+'">'+((RSVP[r]||{}).lbl||'')+'</span>'+
           '</div>';
         }).join('')+'</div></div>';
     }).join('')+'</div>'+
     '<div class="wp-foot">In processional order. The count beside each role is what the florist and the '+
-      'venue both ask for.</div></div>':'')+
+      'venue both ask for.</div></div>';
+  })():'')+
   (sub?'<div class="inv-note">Showing <b>'+esc(roleLabel(e))+'</b> · '+esc(e.title)+
       '. These RSVPs, meals and seats belong to this event alone — the master guest list lives on '+
       '<button type="button" class="link-btn" data-gotoev="'+esc(prim.id)+'">'+esc(prim.title)+'</button>.</div>':'')+
@@ -6726,6 +6829,38 @@ function wireGuests(){
   });
   var pp=$('[data-printparty]');
   if(pp)pp.onclick=function(ev2){ ev2.stopPropagation(); printSheet('party',activeEvent()); };
+  /* One tick per person, and one action for the whole party — which is how a
+     rehearsal invitation actually gets sent. */
+  document.querySelectorAll('[data-reh]').forEach(function(b){
+    b.onclick=function(ev2){
+      ev2.stopPropagation();
+      var prim=evPrimary(activeEvent());
+      var g=(prim.guests||[]).find(function(x){return x.id===b.dataset.reh;});
+      var sub=evById(b.dataset.rehev);
+      if(!g||!sub)return;
+      setInvited(g,sub,!inviteOf(g.id,sub.id));
+      save(); render();
+    };
+  });
+  var ra=$('[data-rehall]');
+  if(ra)ra.onclick=function(ev2){
+    ev2.stopPropagation();
+    var sub=evById(ra.dataset.rehall); if(!sub)return;
+    var n=0;
+    partyMembers(activeEvent()).forEach(function(g){
+      if(!inviteOf(g.id,sub.id)){ setInvited(g,sub,true); n++; }
+    });
+    save(); render();
+    toast(n?(n+' added to the '+roleLabel(sub,true).toLowerCase()+' ✦'):'They were all invited already.');
+  };
+  var ar=$('#wpAddReh');
+  if(ar)ar.onclick=function(ev2){
+    ev2.stopPropagation();
+    openEventModal(null,evPrimary(activeEvent()).id);
+  };
+  document.querySelectorAll('[data-attire]').forEach(function(b){
+    b.onclick=function(ev2){ ev2.stopPropagation(); openAttireModal(b.dataset.attire); };
+  });
   document.querySelectorAll('[data-gotoev]').forEach(function(b){
     b.onclick=function(){ state.activeEventId=b.dataset.gotoev; render(); wireGuests(); };
   });
@@ -10720,6 +10855,37 @@ function wireFinance(){
     });
   };
 }
+/* Small on purpose. Attire is edited eight times in a row, from a chip on the
+   list, not once from the bottom of a long guest form. */
+function openAttireModal(gid){
+  var e=activeEvent(), prim=evPrimary(e)||e;
+  var g=(prim.guests||[]).find(function(x){return x.id===gid;});
+  if(!g)return;
+  var a=attireOf(g);
+  openEditor({
+    title:'Attire',
+    sub:g.name+(g.role?' · '+g.role:''),
+    twoCol:true,
+    saveLabel:'Save',
+    fields:[
+      {id:'item',label:'What they are wearing',value:a.item,full:true,
+       placeholder:'Dusty blue chiffon, style 4820'},
+      {id:'size',label:'Size',value:a.size,placeholder:'UK 12'},
+      {id:'status',label:'Where it has got to',type:'select',value:a.status,
+       options:[{value:'',label:'—'}].concat(ATTIRE_STEPS.map(function(x){return {value:x,label:x};}))},
+      {id:'due',label:'Needed by',type:'date',value:a.due},
+      {id:'note',label:'Alterations & notes',type:'textarea',value:a.note,full:true}
+    ],
+    onSave:function(v){
+      g.attire={item:(v.item||'').trim(),size:(v.size||'').trim(),status:v.status||'',
+                due:v.due||'',note:(v.note||'').trim()};
+      /* An empty record is no record — it should not push a row of blanks to
+         every other device. */
+      if(!attireSet(g))delete g.attire;
+      save(); closeModal(); render();
+    }
+  });
+}
 function openPaymentModal(x){
   if(!x)return;
   var bal=invBalance(x);
@@ -12177,14 +12343,20 @@ function printSheet(kind,ev){
     /* The sheet the coordinator carries and the florist is sent: who is
        standing up, in the order they walk, with the count per role. */
     title='Wedding Party';
-    var grps=partyByRole(ev);
+    var grps=partyByRole(ev), reh1=rehearsals(ev)[0]||null;
     body=grps.length?grps.map(function(grp){
       return '<div class="pr-tbl"><h3>'+esc(grp.role)+' <span>'+grp.people.length+
         (grp.people.length===1?' person':' people')+'</span></h3>'+
-        '<table class="pr-t"><tbody>'+grp.people.map(function(g){
+        '<table class="pr-t"><thead><tr><th>Name</th><th>Side</th><th>Attire</th>'+
+          (reh1?'<th>'+esc(roleLabel(reh1,true))+'</th>':'<th></th>')+
+          '<th>Dietary</th><th>RSVP</th></tr></thead><tbody>'+grp.people.map(function(g){
+          var at=attireOf(g);
           return '<tr><td><b>'+esc(g.name)+'</b></td>'+
             '<td>'+(evHasSides(ev)?esc(sideLabel(ev,g.side)):'')+'</td>'+
-            '<td>'+esc(gMeal(g,ev)||'')+'</td>'+
+            /* The sheet the bridal shop and the coordinator both get. */
+            '<td>'+esc([at.item,at.size].filter(Boolean).join(' · '))+
+              (at.status?'<br><em>'+esc(at.status)+(at.due?' · needed by '+fmtDate(at.due):'')+'</em>':'')+'</td>'+
+            '<td>'+(reh1&&inviteOf(g.id,reh1.id)?'☑':(reh1?'☐':''))+'</td>'+
             '<td>'+esc(g.diet||'')+'</td>'+
             '<td>'+esc((RSVP[gRsvp(g,ev)]||{}).lbl||'')+'</td></tr>';
         }).join('')+'</tbody></table></div>';
@@ -14934,6 +15106,16 @@ function sbCoverCol(){
    and the file it was filed with. A studio that has not run it yet still has
    to be able to push, and naming a column the database lacks fails the whole
    table, so the payload asks first. Same shape as sbCoverCol above. */
+var SB_ATTIRE_COL=null;
+function sbAttireCol(){
+  if(SB_ATTIRE_COL===null){
+    SB_ATTIRE_COL=false;
+    sbRest('guests?select=attire&limit=1')
+      .then(function(){ SB_ATTIRE_COL=true; })
+      .catch(function(){ SB_ATTIRE_COL=false; });
+  }
+  return SB_ATTIRE_COL;
+}
 var SB_ROLE_COL=null;
 function sbRoleCol(){
   if(SB_ROLE_COL===null){
@@ -15039,6 +15221,7 @@ function sbPush(opts){
            the way up, which is the same untruth the form used to tell. */
         side:s(g.side),rsvp:g.rsvp||'pending',meal:nn(g.meal),dietary:nn(g.diet),table_id:nn(g.tableId)};
       if(sbRoleCol())row.role=nn(g.role);
+      if(sbAttireCol())row.attire=g.attire||{};
       guests.push(row); });
     if(e.floor&&e.floor.items)e.floor.items.forEach(function(f,i){ fitems.push({id:f.id,org_id:org,event_id:e.id,
       kind:s(f.kind||f.type)||'fixture',label:s(f.label),x:num(f.x),y:num(f.y),w:num(f.w),h:num(f.h),rotation:num(f.rot||f.rotation),sort_order:i}); });
@@ -15461,6 +15644,9 @@ function sbPull(opts){
             /* Absent until migration 23, so it must survive the column not
                being there at all. */
             role:x.role||'',
+            /* An empty object is no attire — carrying {} on every guest would
+               put a row of blanks in local storage for a 200-name list. */
+            attire:(x.attire&&Object.keys(x.attire).length)?x.attire:undefined,
             meal:x.meal||'',diet:x.dietary||'',tableId:x.table_id};}),
           floor:Object.assign({items:of(R.floor_items,e.id).map(function(x){return {id:x.id,kind:x.kind,label:x.label,
             x:Number(x.x),y:Number(x.y),w:Number(x.w),h:Number(x.h),rot:Number(x.rotation)};})},e.floor||{}),
