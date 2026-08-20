@@ -679,6 +679,39 @@ never pulled, which is what stops a fresh install overwriting the studio.
     `sbTagCol()` probes for it exactly as `sbAttireCol()` does. Verified
     against local Postgres: default, containment query, and the check refusing
     an object.
+- **The sidebar is three bands, not one long scroll.** The whole panel scrolled
+  and the user chip was pinned to the bottom of it with `position:sticky`,
+  which meant it floated OVER the tools as they passed underneath — a nav item
+  reading through the middle of somebody's name — and on a short list sat
+  wherever the list happened to end, with a field of nothing below it. Now
+  `.sidebar` is `overflow:hidden` with `.brand` fixed at the top, `.side-scroll`
+  (`flex:1 1 auto; min-height:0; overflow-y:auto`) in the middle and
+  `.side-foot` fixed at the bottom.
+  - **`min-height:0` is what makes it scroll**, not the overflow property: a
+    flex item's default `min-height:auto` refuses to shrink below its content.
+  - **`.brand{flex:0 0 auto}` or the masthead gets squeezed** — a 104px logo
+    came out 72px tall the moment the list below it was long enough to
+    compete.
+  - **The 104px bottom padding on `.sidebar` went with it.** It only ever
+    existed to hold the list clear of the floating chip.
+  - **Anything that scrolls the nav must target `.side-scroll` now**, not
+    `#sidebar` — `navreach.mjs` was scrolling the wrong element and reported
+    eleven tools unreachable.
+- **A centred image cannot clear a corner button with `max-width`.** Half the
+  clearance is spent on the left, so a wide logo still ran under the drawer's
+  ✕. The clearance belongs on the container as `padding-right`, and the
+  picture then centres in what is left.
+- **A percentage `max-width` inside a shrink-to-fit parent walks itself
+  down.** `.mark` had `margin:0 auto` (which turns off `align-items:stretch`
+  and makes the box shrink to its content), and the image inside had
+  `max-width:calc(100% - 32px)` — each pass trimmed the other until a 104px
+  square settled at 72. Keep the container full-width and centre the image
+  instead.
+- **The click delegate is bound to `#content`, and the sidebar is not inside
+  it.** `[data-openevent]` on the nav's "working on" card had looked like a
+  button and done nothing since the day it was added. Anything interactive
+  outside `#content` must be wired directly — and with property assignment,
+  since `paintNavEvent()` runs on every render.
 - **A studio's logo is a wordmark, not an avatar.** It was drawn into a 38px
   rounded square with `object-fit:cover`, so "CONCRETE" arrived as "ONCRE" —
   in a 240px-wide row that was otherwise empty apart from a single serif
