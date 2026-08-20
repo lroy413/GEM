@@ -679,6 +679,28 @@ never pulled, which is what stops a fresh install overwriting the studio.
     `sbTagCol()` probes for it exactly as `sbAttireCol()` does. Verified
     against local Postgres: default, containment query, and the check refusing
     an object.
+- **The mood board is one wall now, not three cards about one.** It used to be
+  a form: reference photos in a uniform grid with every one cropped to the same
+  118px band, the palette in a sidebar card and the notes in another. Nobody
+  pins a board that way, and it is the screen a studio actually shows a client.
+  - **Photos keep their own proportions** — `img{width:100%;height:auto}` in a
+    CSS-grid masonry, with `grid-auto-rows:8px` and a row span per tile
+    measured by `layoutWall()`.
+  - **`align-self:start` is what makes the measurement honest.** Without it the
+    grid stretches each tile to its span and every re-measure grows by a row.
+  - **Re-measure on every image load** — pictures arrive at their own pace and
+    each one changes the height of the column it lands in — and once on resize
+    (a single listener guarded by `window.__gemWallResize`, not one per
+    render).
+  - **The first photo is the feature** and spans two columns. That is the whole
+    of it: "make this the feature" moves it to the front, and the array order
+    is already what syncs as `sort_order`. No flag, no column, no migration.
+  - **Colours and notes are tiles on the same wall**, and a colour tile carries
+    its hex as a button that copies it — the number is what gets read out to a
+    florist or a printer.
+  - **The hero banner went.** It was the feature photograph again, dimmed,
+    under a title the page header already carries — 260px saying nothing the
+    board says better. Its CSS went with it.
 - **There were two ideas of "which event", and only one of them moved.**
   `state.eventId` is the workspace you have open; `state.activeEventId` is what
   `activeEvent()` returns — and that is what the guest list, the seating chart,

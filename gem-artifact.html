@@ -2673,16 +2673,9 @@ select.rsvp-sel[data-r="no"]{background-color:#FBF4F4;border-color:#EDD1D1;color
   background:var(--sunk);border-radius:var(--radius-sm);box-shadow:var(--sunk-line)}
 .btn-sm{padding:7px 13px;font-size:12.5px}
 
-/* ---- board detail ---- */
-.board-hero{
-  border-radius:var(--radius);border:1px solid var(--line);
-  min-height:170px;display:flex;align-items:flex-end;padding:24px 26px;margin-bottom:20px;
-  box-shadow:var(--shadow-sm);
-}
-.bh-title{font-family:var(--serif);font-size:32px;font-weight:600;line-height:1.05}
-.bh-note{font-size:13px;color:var(--ink-soft);margin-top:5px;max-width:60ch}
-.bh-in.on-photo .bh-title{color:#fff;text-shadow:0 1px 12px rgba(0,0,0,.35)}
-.bh-in.on-photo .bh-note{color:rgba(255,255,255,.92);text-shadow:0 1px 8px rgba(0,0,0,.35)}
+/* ---- board detail ----
+   The dimmed hero that used to sit here is gone with its CSS: it repeated the
+   feature photograph under a title the page header already carries. */
 
 .dropzone{
   display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;
@@ -2696,6 +2689,70 @@ select.rsvp-sel[data-r="no"]{background-color:#FBF4F4;border-color:#EDD1D1;color
 .dz-t{font-size:14px;font-weight:600}
 .dz-s{font-size:12px;color:var(--muted)}
 
+/* ---- the wall ----
+   One composition rather than three cards: pictures at their own proportions,
+   the palette among them carrying its hex numbers, notes stuck on beside them.
+   grid-auto-rows is the measuring unit; layoutWall() gives each tile a span
+   equal to its own height. align-self:start keeps that measurement honest —
+   stretched tiles would grow by a row on every re-measure. */
+.mb-card .card-h{flex-wrap:wrap;row-gap:8px}
+/* Three actions and a count: they wrap onto a second line on a phone rather
+   than running off the right-hand edge of the card. */
+.mb-card .ev-h-r{flex-wrap:wrap;row-gap:8px;justify-content:flex-end}
+@media (max-width:700px){
+  .mb-card .ev-h-r{width:100%;justify-content:flex-start}
+  .mb-card .ev-h-r .sec-badge{order:3}
+}
+.mb-body{padding:16px 18px 18px}
+.mb-note-line{font-size:13px;color:var(--ink-soft);line-height:1.5;max-width:68ch;margin:-2px 0 14px}
+.mb-wall{display:grid;grid-template-columns:repeat(auto-fill,minmax(158px,1fr));
+  grid-auto-rows:8px;gap:12px;margin-bottom:14px}
+.mb-t{position:relative;align-self:start;border-radius:var(--radius-sm);overflow:hidden;
+  background:var(--card);border:1px solid var(--line);box-shadow:var(--shadow-xs)}
+/* Two columns and a little more height — the picture a board is *about*. */
+.mb-t.feat{grid-column:span 2}
+.mb-img img{display:block;width:100%;height:auto}
+.mb-img figcaption{font-size:11px;color:var(--muted);padding:7px 9px;
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+/* A colour tile is the block and its number, because the number is what gets
+   read out to a florist or a printer. */
+.mb-sw{display:flex;flex-direction:column}
+.mb-c{display:block;height:104px;border-bottom:1px solid rgba(0,0,0,.06)}
+.mb-cm{display:flex;flex-direction:column;gap:2px;padding:8px 10px 9px}
+.mb-cn{font-size:12.5px;font-weight:600;line-height:1.2}
+.mb-hex{align-self:flex-start;font-family:var(--sans);font-size:11px;font-weight:600;
+  letter-spacing:.4px;font-variant-numeric:tabular-nums;color:var(--muted);
+  background:none;border:none;padding:0;cursor:pointer}
+.mb-hex:hover{color:var(--gold-deep)}
+.mb-hex:focus-visible{outline:none;box-shadow:var(--ring);border-radius:5px}
+/* A note is a note: paper, not a table row. */
+.mb-note{background:var(--gold-soft);border-color:var(--gold-line)}
+.mb-nt{display:block;padding:14px 13px;font-size:13px;line-height:1.45;color:var(--ink-soft)}
+/* The actions live on the tile and stay out of the way until wanted — and are
+   always there on touch, where there is no hover to reveal them. */
+.mb-acts{position:absolute;top:6px;right:6px;display:flex;gap:4px;
+  opacity:0;transition:opacity .14s var(--ease)}
+.mb-t:hover .mb-acts,.mb-t:focus-within .mb-acts{opacity:1}
+@media (pointer:coarse){ .mb-acts{opacity:1} }
+.mb-a{width:26px;height:26px;border-radius:8px;border:1px solid var(--line);
+  background:rgba(255,255,255,.92);color:var(--ink-soft);font-size:12px;line-height:1;
+  cursor:pointer;display:grid;place-items:center;padding:0;
+  box-shadow:0 1px 4px rgba(59,46,51,.14)}
+.mb-a:hover{border-color:var(--gold);color:var(--gold-deep)}
+.mb-a:focus-visible{outline:none;box-shadow:var(--ring)}
+.mb-hint{font-size:11.5px;color:var(--muted);margin-top:10px}
+/* Once there is a board to look at, the drop target is a strip under it rather
+   than the first thing on the page. */
+.dropzone.slim{padding:14px;flex-direction:row;gap:10px;text-align:left}
+.dropzone.slim .dz-ic{font-size:15px}
+.dropzone.slim .dz-t{font-size:12.5px}
+.dropzone.slim .dz-s{font-size:11px}
+@media (max-width:700px){
+  .mb-body{padding:14px 15px 16px}
+  .mb-wall{grid-template-columns:repeat(auto-fill,minmax(136px,1fr));gap:10px}
+  .mb-c{height:88px}
+  .dropzone.slim{flex-direction:column;text-align:center}
+}
 .ref-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:12px;margin-top:16px}
 .ref{position:relative;border-radius:var(--radius-sm);overflow:hidden;border:1px solid var(--line);background:var(--card)}
 .ref img{width:100%;height:118px;object-fit:cover;display:block}
@@ -8677,56 +8734,118 @@ function findBoard(id){
   var e=activeEvent(); if(!e)return null;
   return e.design.boards.find(function(b){return b.id===id;})||null;
 }
+/* ============================================================
+ * The board is the board
+ *
+ * This was a form about a mood board rather than a mood board: reference
+ * photos in a uniform grid, every one cropped to the same 118px band, with the
+ * colours in a sidebar card and the notes in another. Nobody pins a mood board
+ * that way. The thing a studio shows a client — and what Milanote, InVision and
+ * a foam board on a table all do — is ONE composition: pictures at their own
+ * proportions and sizes, the palette living among them with its hex numbers,
+ * and the notes stuck on beside the pictures they are about.
+ *
+ * So there is one wall. Photos keep their aspect ratio, the first one is the
+ * feature and runs double width, colours are tiles with their hex on them, and
+ * notes are tiles too. The masonry is CSS grid with row spans measured in JS —
+ * see layoutWall() — which is what lets a tall picture be tall and a wide one
+ * wide without either being cropped.
+ * ============================================================ */
+function boardWall(b){
+  var imgs=b.images||[], sws=b.swatches||[], ideas=b.ideas||[];
+  var tiles=[];
+  imgs.forEach(function(im,i){
+    /* The first picture is the feature — no flag to store and no migration:
+       "make this the feature" is just moving it to the front, which is the
+       order that already syncs. */
+    tiles.push('<figure class="mb-t mb-img'+(i===0?' feat':'')+'">'+
+      '<img src="'+(im.src||'')+'" alt="'+esc(im.caption||'Reference')+'" loading="lazy">'+
+      (im.caption?'<figcaption>'+esc(im.caption)+'</figcaption>':'')+
+      '<span class="mb-acts">'+
+        (i?'<button type="button" class="mb-a" data-feat="'+esc(im.id)+'" title="Make this the feature" aria-label="Make this the feature">★</button>':'')+
+        (i>0?'<button type="button" class="mb-a" data-imgmv="'+esc(im.id)+'" data-dir="-1" title="Move earlier" aria-label="Move earlier">‹</button>':'')+
+        (i<imgs.length-1?'<button type="button" class="mb-a" data-imgmv="'+esc(im.id)+'" data-dir="1" title="Move later" aria-label="Move later">›</button>':'')+
+        '<button type="button" class="mb-a" data-delimg="'+esc(im.id)+'" title="Remove" aria-label="Remove photo">✕</button>'+
+      '</span>'+
+    '</figure>');
+  });
+  sws.forEach(function(c,i){
+    var hex=String(c.hex||'').toUpperCase();
+    tiles.push('<div class="mb-t mb-sw">'+
+      '<span class="mb-c" style="background:'+esc(c.hex)+'"></span>'+
+      '<span class="mb-cm">'+
+        '<span class="mb-cn">'+esc(c.name||'Colour')+'</span>'+
+        /* The number is the point of a swatch on a board — it is what gets read
+           out to a florist, a printer or a linen hire. Tap to copy it. */
+        '<button type="button" class="mb-hex" data-copyhex="'+esc(hex)+'" title="Copy '+esc(hex)+'">'+esc(hex)+'</button>'+
+      '</span>'+
+      '<span class="mb-acts"><button type="button" class="mb-a" data-delsw="'+i+'" title="Remove" aria-label="Remove colour">✕</button></span>'+
+    '</div>');
+  });
+  ideas.forEach(function(x){
+    tiles.push('<div class="mb-t mb-note">'+
+      '<span class="mb-nt">'+esc(x.text||x.body||'')+'</span>'+
+      '<span class="mb-acts"><button type="button" class="mb-a" data-delidea="'+esc(x.id)+'" title="Remove" aria-label="Remove note">✕</button></span>'+
+    '</div>');
+  });
+  if(!tiles.length)return '';
+  return '<div class="mb-wall" id="mbWall">'+tiles.join('')+'</div>';
+}
 function viewBoardDetail(id){
   var b=findBoard(id); if(!b)return viewDesign();
+  var n=(b.images||[]).length, c=(b.swatches||[]).length, k=(b.ideas||[]).length;
+  var bits=[];
+  if(n)bits.push(n+(n===1?' photo':' photos'));
+  if(c)bits.push(c+(c===1?' colour':' colours'));
+  if(k)bits.push(k+(k===1?' note':' notes'));
+  /* The banner is gone. It was the feature photograph again, dimmed, under a
+     title the page header already carries — 260px of the screen saying nothing
+     the board below does not say better. What was worth keeping from it is the
+     line of description, which now sits with the board it describes. */
   return '<button class="back-link" data-backdesign="1">‹ All boards</button>'+
-  '<div class="board-hero" style="'+(b.images.length?'background-image:linear-gradient(rgba(74,59,63,.42),rgba(74,59,63,.42)),url('+b.images[0].src+');background-size:cover;background-position:center':'background:'+esc(b.tone))+'">'+
-    '<div class="bh-in'+(b.images.length?' on-photo':'')+'">'+
-      '<div class="bh-title">'+esc(b.title)+'</div>'+
-      '<div class="bh-note">'+esc(b.note||'No description yet.')+'</div>'+
+  '<div class="card mb-card">'+
+    '<div class="card-h"><h3>The Board</h3>'+
+      '<span class="ev-h-r">'+
+        (bits.length?'<span class="sec-badge">'+esc(bits.join(' · '))+'</span>':'')+
+        '<button class="btn btn-ghost btn-sm" id="addBoardSwatch">＋ Colour</button>'+
+        '<button class="btn btn-ghost btn-sm" id="addBoardNote">＋ Note</button>'+
+        '<button class="btn btn-ghost btn-sm" id="addBoardPhoto">＋ Photos</button>'+
+      '</span>'+
     '</div>'+
-  '</div>'+
-  '<div class="grid-2" style="align-items:start">'+
-    '<div>'+
-      '<div class="card" style="margin-bottom:20px"><div class="card-h"><h3>Reference Photos</h3>'+
-        '<span class="sec-badge">'+b.images.length+' saved</span></div>'+
-        '<div style="padding:18px">'+
-          '<label class="dropzone" id="dropzone" tabindex="0">'+
-            '<input type="file" id="imgInput" accept="image/*" multiple hidden>'+
-            '<span class="dz-ic">✦</span>'+
-            '<span class="dz-t">Add reference photos</span>'+
-            '<span class="dz-s">Drag images here, or tap to choose</span>'+
-          '</label>'+
-          (b.images.length?'<div class="ref-grid">'+b.images.map(function(im){
-            return '<figure class="ref"><img src="'+im.src+'" alt="'+esc(im.caption||'Reference')+'" loading="lazy">'+
-              '<button class="ref-x" data-delimg="'+esc(im.id)+'" aria-label="Remove photo">✕</button>'+
-              '<figcaption>'+esc(im.caption||'Untitled')+'</figcaption></figure>';
-          }).join('')+'</div>':'')+
-        '</div></div>'+
-    '</div>'+
-    '<div>'+
-      '<div class="card" style="margin-bottom:20px"><div class="card-h"><h3>Swatches</h3>'+
-        '<button class="btn btn-ghost btn-sm" id="addBoardSwatch">＋ Colour</button></div>'+
-        '<div style="padding:18px">'+
-          (b.swatches.length?'<div class="palette" style="padding:0">'+b.swatches.map(function(c,i){
-            return '<div class="swatch"><div class="chip" style="background:'+esc(c.hex)+'">'+
-              '<button class="sw-x" data-delsw="'+i+'" aria-label="Remove colour">✕</button></div>'+
-              '<div class="sw-name">'+esc(c.name)+'</div><div class="sw-hex">'+esc(c.hex.toUpperCase())+'</div></div>';
-          }).join('')+'</div>':'<div class="empty-hint" style="padding:6px 0">No colours pinned to this board yet.</div>')+
-        '</div></div>'+
-      '<div class="card"><div class="card-h"><h3>Ideas &amp; Notes</h3><span class="pill">'+b.ideas.length+'</span></div>'+
-        '<div style="padding:16px 18px">'+
-          '<div class="idea-add"><input id="ideaInput" placeholder="Add an idea…" aria-label="New idea">'+
-            '<button class="btn btn-gold btn-sm" id="addIdea">Add</button></div>'+
-          (b.ideas.length?'<div class="ideas">'+b.ideas.map(function(it){
-            return '<div class="idea"><span>'+esc(it.text)+'</span>'+
-              '<button class="idea-x" data-delidea="'+esc(it.id)+'" aria-label="Remove idea">✕</button></div>';
-          }).join('')+'</div>':'')+
-        '</div></div>'+
+    '<div class="mb-body">'+
+      (b.note?'<div class="mb-note-line">'+esc(b.note)+'</div>':'')+
+      boardWall(b)+
+      /* Kept as a drop target the whole time — dragging a folder of pictures
+         straight onto the board is how one actually gets built — but it is a
+         thin strip under the wall rather than the first thing on the page once
+         there is anything to look at. */
+      '<label class="dropzone'+(b.images.length?' slim':'')+'" id="dropzone" tabindex="0">'+
+        '<input type="file" id="imgInput" accept="image/*" multiple hidden>'+
+        '<span class="dz-ic">✦</span>'+
+        '<span class="dz-t">'+(b.images.length?'Add more photos':'Add reference photos')+'</span>'+
+        '<span class="dz-s">Drag images here, or tap to choose</span>'+
+      '</label>'+
+      (b.images.length?'<div class="mb-hint">The first picture is the feature — hover a photo to move it, or ★ to promote it.</div>':'')+
     '</div>'+
   '</div>';
 }
-
+/* ---- masonry, measured ----
+   grid-auto-rows is a small unit and every tile is given a row span equal to
+   its own height, which is how a picture keeps its proportions instead of
+   being cropped to a band. align-self:start is what makes the measurement
+   honest: without it the grid stretches each tile to its span and every
+   re-measure grows by a row. */
+function layoutWall(){
+  var w=document.getElementById('mbWall'); if(!w)return;
+  var cs=window.getComputedStyle(w);
+  var row=parseFloat(cs.gridAutoRows)||8;
+  var gap=parseFloat(cs.rowGap||cs.gridRowGap)||12;
+  [].forEach.call(w.children,function(t){
+    var h=t.getBoundingClientRect().height;
+    if(!h)return;
+    t.style.gridRowEnd='span '+Math.max(1,Math.ceil((h+gap)/(row+gap)));
+  });
+}
 /* Downscale before storing: raw camera images blow the localStorage quota. */
 function shrinkImage(file,maxDim,cb){
   var fr=new FileReader();
@@ -8959,14 +9078,76 @@ function wireBoardDetail(){
   document.querySelectorAll('[data-delidea]').forEach(function(x){
     x.onclick=function(){ b.ideas=b.ideas.filter(function(i){return i.id!==x.dataset.delidea;}); save(); render(); };
   });
-  var ii=$('#ideaInput'), ai=$('#addIdea');
-  function addIdea(){
-    var v=ii.value.trim(); if(!v)return;
-    b.ideas.push({id:uid('idea'),text:v}); save(); render();
-  }
-  if(ai) ai.onclick=addIdea;
-  if(ii) ii.onkeydown=function(e){ if(e.key==='Enter'){e.preventDefault();addIdea();} };
   var abs=$('#addBoardSwatch'); if(abs) abs.onclick=function(){ openSwatchModal(b); };
+  var abp=$('#addBoardPhoto'); if(abp) abp.onclick=function(){ if(input)input.click(); };
+  var abn=$('#addBoardNote'); if(abn) abn.onclick=function(){ openNoteModal(b); };
+  /* ---- composing the wall ----
+     The first photo is the feature, so promoting one is moving it to the
+     front and nudging one is a swap. Both are just the array order, which is
+     what already syncs as sort_order. */
+  document.querySelectorAll('[data-feat]').forEach(function(x){
+    x.onclick=function(e){
+      e.preventDefault(); e.stopPropagation();
+      var i=idxOfImg(b,x.dataset.feat); if(i<1)return;
+      b.images.unshift(b.images.splice(i,1)[0]);
+      save(); render();
+    };
+  });
+  document.querySelectorAll('[data-imgmv]').forEach(function(x){
+    x.onclick=function(e){
+      e.preventDefault(); e.stopPropagation();
+      var i=idxOfImg(b,x.dataset.imgmv), d=Number(x.dataset.dir)||1, j=i+d;
+      if(i<0||j<0||j>=b.images.length)return;
+      var t=b.images[i]; b.images[i]=b.images[j]; b.images[j]=t;
+      save(); render();
+    };
+  });
+  document.querySelectorAll('[data-copyhex]').forEach(function(x){
+    x.onclick=function(e){
+      e.preventDefault(); e.stopPropagation();
+      var h=x.dataset.copyhex;
+      if(navigator.clipboard&&navigator.clipboard.writeText)navigator.clipboard.writeText(h);
+      toast(h+' copied ✦');
+    };
+  });
+  /* Pictures arrive at their own pace, and each one changes the height of the
+     column it lands in. */
+  var wall=$('#mbWall');
+  if(wall){
+    layoutWall();
+    wall.querySelectorAll('img').forEach(function(im){
+      if(im.complete){ layoutWall(); return; }
+      im.onload=layoutWall; im.onerror=layoutWall;
+    });
+    /* One listener for the life of the page, not one per render. */
+    if(!window.__gemWallResize){
+      window.__gemWallResize=true;
+      window.addEventListener('resize',function(){ layoutWall(); });
+    }
+  }
+}
+function idxOfImg(b,id){
+  var at=-1;
+  (b.images||[]).forEach(function(im,i){ if(im.id===id)at=i; });
+  return at;
+}
+/* A note is a sentence, and a sentence deserves more than an input squeezed
+   into a sidebar — it is the thing a planner writes at 11pm about the aisle. */
+function openNoteModal(b){
+  md.className='modal';
+  md.innerHTML='<h3>Add a note</h3><p class="sub">Pinned to '+esc(b.title)+'.</p>'+
+    '<div class="field"><label for="f_note">Note</label>'+
+      '<textarea id="f_note" rows="3" class="notes-box" placeholder="Candles low enough to see across the table"></textarea></div>'+
+    '<div class="modal-actions"><button class="btn btn-ghost" id="mCancel">Cancel</button>'+
+      '<button class="btn btn-gold" id="mSave">Pin it</button></div>';
+  ov.classList.add('show');
+  setTimeout(function(){ var f=$('#f_note'); if(f)f.focus(); },60);
+  $('#mCancel').onclick=closeModal;
+  $('#mSave').onclick=function(){
+    var v=$('#f_note').value.trim(); if(!v){ $('#f_note').focus(); return; }
+    b.ideas.push({id:uid('idea'),text:v});
+    save(); closeModal(); render();
+  };
 }
 
 /* --- Calendar --- */
@@ -15055,7 +15236,7 @@ $('#content').addEventListener('click',function(e){
     return;
   }
   // Controls inside a drillable card act on the card, not navigation.
-  if(e.target.closest('select,input,textarea,label,.dropzone,button.link-btn:not([data-client]),.r-act,[data-delimg],[data-delsw],[data-delidea],[data-delq],[data-delexp],[data-convert],[data-archive],[data-sign],[data-answer],#addIdea,#addBoardSwatch,#newBoard,#addQuestion,#addExpense,#tryForm,#editClient,#editContact,#sendQ,#sendMsg,#pSendMsg')
+  if(e.target.closest('select,input,textarea,label,.dropzone,button.link-btn:not([data-client]),.r-act,[data-delimg],[data-delsw],[data-delidea],.mb-a,[data-copyhex],[data-delq],[data-delexp],[data-convert],[data-archive],[data-sign],[data-answer],#addIdea,#addBoardSwatch,#newBoard,#addQuestion,#addExpense,#tryForm,#editClient,#editContact,#sendQ,#sendMsg,#pSendMsg')
      &&!e.target.closest('[data-back],[data-backdesign],[data-openevent]'))return;
   drillFrom(e.target);
 });
