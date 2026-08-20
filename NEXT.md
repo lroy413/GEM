@@ -525,6 +525,19 @@ never pulled, which is what stops a fresh install overwriting the studio.
   counts that disagree the week of the wedding — a bridesmaid RSVPs, eats and
   sits like everyone else. Migration 23 adds the column; `sbRoleCol()` probes
   for it the way `sbCoverCol()` does.
+- **Silence is the good case.** The Wedding Party card printed "Attending"
+  beside every name — which says nothing eight times, since standing up
+  already implies coming. The RSVP now appears only when it is NOT a yes, and
+  declined carries the warning colour. Same reasoning moved the side chip up
+  to the role heading when a whole group shares one, instead of repeating it
+  down the card.
+- **Chips go in one right-aligned block, not loose in the row.** `.wp-tags`
+  wraps them as a unit, so a person with an allergy and a person without still
+  line up down the card — before it, `margin-left:auto` on the last chip put
+  "Attending" alone on a second line and left rows 32px and 63px tall
+  alternately. `.wp-role` is 230px because that is what the longest
+  conventional role plus its count plus a side chip needs; narrower and
+  "Honour Attendant" wraps while "Bridesmaid" does not.
 - **The event switcher is context, not an action.** It sits in `#pgActions`
   with the buttons, which on the guest screen made four controls of equal
   weight wrap onto two ragged lines. Below 700px it takes its own full-width

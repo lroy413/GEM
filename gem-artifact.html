@@ -1938,15 +1938,29 @@ td.inv-col{text-align:center;width:1%}
 .wp-list{padding:4px 0}
 .wp-grp{display:flex;gap:18px;padding:13px 22px;border-bottom:1px solid var(--line)}
 .wp-grp:last-child{border-bottom:none}
-.wp-role{flex:0 0 148px;font-size:10.5px;letter-spacing:.1em;text-transform:uppercase;
-  color:var(--muted);font-weight:600;padding-top:4px;display:flex;align-items:baseline;gap:7px}
+/* Wide enough for the longest conventional role plus its count and its side,
+   so the column reads straight down instead of wrapping under Groomsman and
+   not under Bridesmaid. */
+.wp-role{flex:0 0 230px;font-size:10.5px;letter-spacing:.1em;text-transform:uppercase;
+  color:var(--muted);font-weight:600;padding-top:3px;display:flex;align-items:center;gap:6px;
+  flex-wrap:wrap}
 .wp-n{font-size:11px;letter-spacing:0;color:var(--ink-soft);background:var(--sunk);
   border-radius:var(--radius-pill);padding:1px 7px;font-weight:600}
 .wp-people{flex:1 1 auto;min-width:0;display:flex;flex-direction:column;gap:7px}
-.wp-p{display:flex;align-items:center;flex-wrap:wrap;gap:8px}
-.wp-nm{font-size:14px;font-weight:600}
-.wp-r{margin-left:auto;font-size:11.5px;color:var(--muted);white-space:nowrap}
-.wp-r.ok{color:var(--ok,#4E7A55)}
+/* Name left, chips right, and the chips wrap as a block rather than one at a
+   time — which is what had "Attending" alone on a second line under the people
+   who happened to have an allergy, and left every row a different height. */
+.wp-p{display:flex;align-items:center;gap:10px;min-height:30px}
+.wp-nm{flex:1 1 auto;min-width:0;font-size:14px;font-weight:600;overflow-wrap:anywhere}
+.wp-tags{flex:0 1 auto;display:flex;align-items:center;justify-content:flex-end;
+  flex-wrap:wrap;gap:7px}
+/* Shown only when it is not a yes, so it reads as an exception rather than a
+   column. Declined is the one that needs to catch an eye. */
+.wp-r{font-size:11.5px;font-weight:600;white-space:nowrap;
+  padding:2px 10px;border-radius:var(--radius-pill);
+  background:var(--pink-100);border:1px solid var(--line);color:var(--ink-soft)}
+.wp-r.r-no{background:#F9E5E5;border-color:#EDD1D1;color:#A75252}
+.wp-role .g-side{letter-spacing:0;text-transform:none;font-weight:600;font-size:11px;padding:1px 8px}
 .wp-foot{padding:12px 22px 14px;font-size:11.5px;color:var(--muted);border-top:1px solid var(--line)}
 .wp-bar{display:flex;align-items:center;flex-wrap:wrap;gap:8px 16px;
   padding:12px 22px;border-bottom:1px solid var(--line);background:var(--sunk)}
@@ -3030,7 +3044,11 @@ tr:hover .r-acts,.ev-card:hover .r-acts,.table-card:hover .r-acts,
    takes the width it has and wraps under the title if that is not enough. */
 @media (max-width:700px){
   .card-h{flex-wrap:wrap;row-gap:8px}
-  .ev-h-r{flex:1 1 100%;min-width:0}
+  /* Only the groups that actually need the width: a search box or a picker
+     cannot shrink to nothing, so they take their own line. A header whose
+     right-hand side is one small button does not, and giving it a whole row
+     was costing every such card 40px to hold a single Print. */
+  .ev-h-r:has(input),.ev-h-r:has(select){flex:1 1 100%;min-width:0}
   .ev-h-r .v-search{flex:1 1 auto;min-width:0}
   .ev-h-r select.mini{flex:0 1 auto;min-width:0;max-width:48%}
 }
@@ -6714,9 +6732,11 @@ function viewGuests(){
     var late=partyMembers(e).filter(attireLate).length;
     var atRehearsal=r1?partyMembers(e).filter(function(g){return !!inviteOf(g.id,r1.id);}).length:0;
     var total=partyMembers(e).length;
+    /* The badge said what the per-role counts and the line below already say,
+       and cost the header a second row to say it. The total moved into the
+       footer sentence, where it reads as English. */
     return '<div class="card" style="margin-bottom:20px"><div class="card-h"><h3>Wedding Party</h3>'+
-    '<span class="ev-h-r"><span class="sec-badge">'+total+' standing up</span>'+
-      '<button class="btn btn-ghost btn-sm" data-printparty>Print</button></span></div>'+
+    '<span class="ev-h-r"><button class="btn btn-ghost btn-sm" data-printparty>Print</button></span></div>'+
     /* One line that answers the three questions a planner has about this list:
        is everyone coming to the rehearsal, is the attire moving, and is
        anything late. Each half only appears once it has something to say. */
@@ -6731,30 +6751,49 @@ function viewGuests(){
         '<b>'+ready+' of '+tracked+'</b> ready to wear'+(late?' · '+late+' overdue':'')+'</span>':'')+
     '</div>'+
     '<div class="wp-list">'+party.map(function(grp){
+      /* A whole role usually belongs to one side, and saying so on every row
+         was the same chip four times down the card. It moves up to the
+         heading when the group agrees and stays per-person when it does
+         not. */
+      var gs=null, mixed=false;
+      grp.people.forEach(function(g){
+        if(gs===null)gs=g.side||''; else if((g.side||'')!==gs)mixed=true;
+      });
+      var groupSide=(sides&&!mixed&&gs)?gs:null;
       return '<div class="wp-grp">'+
-        '<div class="wp-role">'+esc(grp.role)+'<span class="wp-n">'+grp.people.length+'</span></div>'+
+        '<div class="wp-role">'+esc(grp.role)+'<span class="wp-n">'+grp.people.length+'</span>'+
+          (groupSide?'<span class="g-side s-'+groupSide+'">'+esc(sideLabel(e,groupSide))+'</span>':'')+
+        '</div>'+
         '<div class="wp-people">'+grp.people.map(function(g){
           var r=gRsvp(g,e), a=attireOf(g), on=r1?!!inviteOf(g.id,r1.id):false;
           return '<div class="wp-p">'+
             '<span class="wp-nm">'+esc(g.name)+'</span>'+
-            (sides&&g.side?'<span class="g-side s-'+g.side+'">'+esc(sideLabel(e,g.side))+'</span>':'')+
-            (g.diet?'<span class="status s-due">'+esc(g.diet)+'</span>':'')+
-            /* The attire chip is the editor. Eight people is eight modals if
-               the only way in is the row's pencil. */
-            '<button type="button" class="wp-at'+(a.status?' set s'+attireStep(g):'')+
-              (attireLate(g)?' late':'')+'" data-attire="'+esc(g.id)+'" '+
-              'title="'+esc(a.item||'Attire')+'">'+
-              esc(a.status||'Attire')+(a.size?' · '+esc(a.size):'')+'</button>'+
-            (r1?'<button type="button" class="wp-reh'+(on?' on':'')+'" data-reh="'+esc(g.id)+'" '+
-              'data-rehev="'+esc(r1.id)+'" aria-pressed="'+on+'" '+
-              'title="'+(on?'Coming to the ':'Not at the ')+esc(roleLabel(r1,true).toLowerCase())+'">'+
-              (on?'✓':'')+' Rehearsal</button>':'')+
-            '<span class="wp-r'+(r==='yes'?' ok':'')+'">'+((RSVP[r]||{}).lbl||'')+'</span>'+
+            /* The chips are one block, right-aligned, so a row with an allergy
+               and a row without still line up down the card. */
+            '<span class="wp-tags">'+
+              ((sides&&!groupSide&&g.side)?'<span class="g-side s-'+g.side+'">'+esc(sideLabel(e,g.side))+'</span>':'')+
+              (g.diet?'<span class="status s-due">'+esc(g.diet)+'</span>':'')+
+              /* The attire chip is the editor. Eight people is eight modals if
+                 the only way in is the row's pencil. */
+              '<button type="button" class="wp-at'+(a.status?' set s'+attireStep(g):'')+
+                (attireLate(g)?' late':'')+'" data-attire="'+esc(g.id)+'" '+
+                'title="'+esc(a.item||'Attire')+'">'+
+                esc(a.status||'Attire')+(a.size?' · '+esc(a.size):'')+'</button>'+
+              (r1?'<button type="button" class="wp-reh'+(on?' on':'')+'" data-reh="'+esc(g.id)+'" '+
+                'data-rehev="'+esc(r1.id)+'" aria-pressed="'+on+'" '+
+                'title="'+(on?'Coming to the ':'Not at the ')+esc(roleLabel(r1,true).toLowerCase())+'">'+
+                (on?'✓':'')+' Rehearsal</button>':'')+
+              /* Somebody standing up is coming — that is what standing up
+                 means, and printing "Attending" beside all eight of them says
+                 nothing eight times. What is worth a line is the one who has
+                 not replied, or the one who has pulled out. */
+              (r==='yes'?'':'<span class="wp-r r-'+esc(r)+'">'+((RSVP[r]||{}).lbl||'')+'</span>')+
+            '</span>'+
           '</div>';
         }).join('')+'</div></div>';
     }).join('')+'</div>'+
-    '<div class="wp-foot">In processional order. The count beside each role is what the florist and the '+
-      'venue both ask for.</div></div>';
+    '<div class="wp-foot"><b>'+total+'</b> standing up, in processional order. '+
+      'The count beside each role is what the florist and the venue both ask for.</div></div>';
   })():'')+
   (sub?'<div class="inv-note">Showing <b>'+esc(roleLabel(e))+'</b> · '+esc(e.title)+
       '. These RSVPs, meals and seats belong to this event alone — the master guest list lives on '+
