@@ -10,7 +10,7 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
 <meta name="apple-mobile-web-app-title" content="GEM">
 <meta name="format-detection" content="telephone=no">
-<meta name="gem-build" content="f9fdcb9b0d75">
+<meta name="gem-build" content="c5ed95c30b24">
 <link rel="manifest" href="/manifest.webmanifest">
 <link rel="icon" href="/icons/icon-192.png" sizes="192x192" type="image/png">
 <link rel="apple-touch-icon" href="/icons/icon-180.png">
@@ -1952,6 +1952,30 @@ td.inv-col{text-align:center;width:1%}
 /* The per-chip dropdown was the touch fallback; tap-to-seat replaces it and
    is both faster and less cluttered, so it goes back to being desktop-only. */
 @media (pointer:coarse),(max-width:860px){ .seat-wrap .move-sel{display:none} }
+/* ---- the wedding party ---- */
+.wp-list{padding:4px 0}
+.wp-grp{display:flex;gap:18px;padding:13px 22px;border-bottom:1px solid var(--line)}
+.wp-grp:last-child{border-bottom:none}
+.wp-role{flex:0 0 148px;font-size:10.5px;letter-spacing:.1em;text-transform:uppercase;
+  color:var(--muted);font-weight:600;padding-top:4px;display:flex;align-items:baseline;gap:7px}
+.wp-n{font-size:11px;letter-spacing:0;color:var(--ink-soft);background:var(--sunk);
+  border-radius:var(--radius-pill);padding:1px 7px;font-weight:600}
+.wp-people{flex:1 1 auto;min-width:0;display:flex;flex-direction:column;gap:7px}
+.wp-p{display:flex;align-items:center;flex-wrap:wrap;gap:8px}
+.wp-nm{font-size:14px;font-weight:600}
+.wp-r{margin-left:auto;font-size:11.5px;color:var(--muted);white-space:nowrap}
+.wp-r.ok{color:var(--ok,#4E7A55)}
+.wp-foot{padding:12px 22px 14px;font-size:11.5px;color:var(--muted);border-top:1px solid var(--line)}
+.g-role{display:inline-block;font-size:11.5px;font-weight:600;white-space:nowrap;
+  padding:2px 10px;border-radius:var(--radius-pill);
+  background:var(--gold-soft);border:1px solid var(--gold-line);color:var(--gold-deep)}
+@media (max-width:700px){
+  .wp-grp{flex-direction:column;gap:8px;padding:13px 16px}
+  .wp-role{flex:0 0 auto;padding-top:0}
+  .wp-foot{padding:12px 16px 14px}
+  .g-tbl td.g-rolecell{order:6;flex:0 0 auto}
+}
+
 /* Whose guest. Two hues that are clearly a pair rather than a status — this
    is not good news or bad news, it is which half of the room. */
 .g-side{display:inline-block;padding:2px 9px;border-radius:var(--radius-pill);
@@ -2107,23 +2131,62 @@ td.inv-brk{display:none}
   .as-cards td.is-none,.as-cards td:empty{display:none}
   /* A cell whose header was blank is an action column: no label, and it goes
      to the card's top-right rather than taking a field slot. */
-  .as-cards td:not([data-l]):not(:first-child){position:absolute;top:9px;right:11px;padding:0}
+  /* The guest card places its own actions — see the block below — and this
+     rule outranks it on specificity, which parked the ✎ ✕ on top of the RSVP
+     picker. */
+  .as-cards:not(.g-tbl) td:not([data-l]):not(:first-child){position:absolute;top:9px;right:11px;padding:0}
   .as-cards .r-acts{position:absolute;top:10px;right:12px;margin:0;opacity:1}
   .as-cards td:not([data-l]) .r-acts{position:static}
   /* Money reads as money whichever column it was in. */
   .as-cards td[style*="right"]{text-align:left}
-  /* Only the RSVP picker gets a ceiling: its options are one word each, and
-     without it the widest ("Attending") sets a column the card does not have
-     to give. Everything else keeps its natural width — a status that reads
-     "Contract O…" is worse than a wide select. */
-  .g-tbl td.g-rsvp select.mini{max-width:118px}
-  /* Invite ticks read as a row of chips along the bottom of the card, which
-     is the one-sweep answer the wide grid gave and the scroller took away. */
-  .g-tbl td.inv-brk{display:block;flex:1 0 100%;height:0;padding:0;margin:0}
-  .g-tbl td.inv-col{flex-direction:row;align-items:center;gap:7px;
-    padding:3px 9px 3px 5px;border:1px solid var(--line);
-    border-radius:var(--radius-pill)}
-  .g-tbl td.inv-col::before{font-size:10px}
+  /* ---- the guest card ----
+     The generic table-card treatment gives every cell an uppercase label and
+     lets them wrap where they land: four or five label-over-value stacks in a
+     ragged row, with the 44px RSVP control sitting in the middle of them. It
+     reads as a form someone has half filled in.
+     A guest is not a row of equal fields. There is a person, the group they
+     belong to, the one control you came to change, and some facts about them —
+     so the card is laid out in that order, and the facts become chips, which
+     say what they are without a caption above each one. */
+  .g-tbl tr{display:flex;flex-wrap:wrap;align-items:center;gap:7px 10px;
+    padding:15px 16px 14px;margin-bottom:10px;border-radius:var(--radius);
+    box-shadow:var(--shadow-sm)}
+  .g-tbl td::before{display:none}
+  .g-tbl td{display:block;font-size:13px;padding:0}
+  /* Line one: who, and the one thing you change about them. */
+  .g-tbl td.g-name{order:1;flex:1 1 auto;min-width:0;padding:0;min-height:0;
+    font-family:var(--serif);font-size:19px;font-weight:600;line-height:1.2;
+    letter-spacing:-.008em;overflow-wrap:anywhere}
+  .g-tbl td.g-name b{font-weight:600}
+  .g-tbl td.g-rsvp{order:2;flex:0 0 auto;margin-left:auto}
+  .g-tbl td.g-rsvp select.mini{max-width:none;min-width:118px}
+  /* Line two: the group, quietly. */
+  .g-tbl td.g-party{order:3;flex:1 1 auto;min-width:0;margin-top:-3px;
+    font-size:12.5px;color:var(--muted);line-height:1.35}
+  .g-tbl td.g-brk{display:block;order:5;flex:1 0 100%;height:0;padding:0;margin:0}
+  /* Line three: the facts, as chips. A chip does not need a caption — nobody
+     reads "Beef" and wonders which column it came from. */
+  .g-tbl td.g-meal,.g-tbl td.g-diet,.g-tbl td.g-seat,.g-tbl td.g-sidecell{
+    order:6;flex:0 0 auto}
+  .g-tbl td.g-meal{font-size:12.5px;font-weight:600;color:var(--ink-soft);
+    background:var(--sunk);border:1px solid var(--sunk-line);
+    border-radius:var(--radius-pill);padding:4px 12px}
+  .g-tbl td.g-seat{font-size:12.5px}
+  .g-tbl td.g-seat .pill{font-size:12px}
+  /* Unseated is an absence, and an absence does not get a chip. */
+  .g-tbl td.g-seat .g-unseat{color:var(--muted);font-size:12.5px}
+  /* On the party's line, not the chips' — a chip row that happens to fill the
+     width pushed them onto a line of their own with nothing else on it. */
+  .g-tbl td.g-acts{order:4;flex:0 0 auto;margin-left:auto;align-self:center}
+  .g-tbl .r-acts{margin:0;opacity:1;position:static}
+  .g-tbl td.is-none{display:none}
+  /* Invite ticks close the card, on their own line. */
+  .g-tbl td.inv-brk{display:block;flex:1 0 100%;height:0;padding:0;margin:0;order:7}
+  .g-tbl td.inv-col{order:8;flex:0 0 auto;display:inline-flex;flex-direction:row;
+    align-items:center;gap:7px;margin-top:4px;
+    padding:3px 9px 3px 5px;border:1px solid var(--line);border-radius:var(--radius-pill)}
+  .g-tbl td.inv-col::before{display:inline;content:attr(data-l);font-size:10px;
+    letter-spacing:.07em;text-transform:uppercase;color:var(--muted);font-weight:600}
   .g-tbl td.inv-col .inv-box{width:28px;height:28px}
 }
 /* --- the weekend, as the couple sees it in the portal --- */
@@ -3700,13 +3763,13 @@ var DEFAULT={
         {id:'t3',name:'Table 2 · Friends',seats:8}
       ],
       guests:[
-        {id:'g1',name:'Priya Sharma',party:'Couple',side:'A',rsvp:'yes',meal:'Fish',diet:'',tableId:'t1'},
+        {id:'g1',name:'Priya Sharma',party:'Couple',side:'A',role:'',rsvp:'yes',meal:'Fish',diet:'',tableId:'t1'},
         {id:'g2',name:'Sam Ellis',party:'Couple',side:'B',rsvp:'yes',meal:'Beef',diet:'',tableId:'t1'},
-        {id:'g3',name:'Eleanor Vance',party:'Vance Family',side:'A',rsvp:'yes',meal:'Beef',diet:'',tableId:'t2'},
+        {id:'g3',name:'Eleanor Vance',party:'Vance Family',side:'A',role:'Maid of Honour',rsvp:'yes',meal:'Beef',diet:'',tableId:'t2'},
         {id:'g4',name:'Marcus Vance',party:'Vance Family',side:'A',rsvp:'yes',meal:'Fish',diet:'Gluten-free',tableId:'t2'},
-        {id:'g5',name:'Grace Kim',party:'Kim Household',side:'B',rsvp:'yes',meal:'Vegetarian',diet:'Vegan',tableId:'t3'},
-        {id:'g6',name:'Daniel Osei',party:'College Friends',side:'B',rsvp:'yes',meal:'Beef',diet:'',tableId:null},
-        {id:'g7',name:'Lucia Romano',party:'College Friends',side:'B',rsvp:'yes',meal:'Fish',diet:'Nut allergy',tableId:null},
+        {id:'g5',name:'Grace Kim',party:'Kim Household',side:'B',role:'Bridesmaid',rsvp:'yes',meal:'Vegetarian',diet:'Vegan',tableId:'t3'},
+        {id:'g6',name:'Daniel Osei',party:'College Friends',side:'B',role:'Best Man',rsvp:'yes',meal:'Beef',diet:'',tableId:null},
+        {id:'g7',name:'Lucia Romano',party:'College Friends',side:'B',role:'Bridesmaid',rsvp:'yes',meal:'Fish',diet:'Nut allergy',tableId:null},
         {id:'g8',name:'Noah Brand',party:'Work',side:'A',rsvp:'pending',meal:'',diet:'',tableId:null},
         {id:'g9',name:'Ivy Chen',party:'Work',side:'A',rsvp:'pending',meal:'',diet:'',tableId:null},
         {id:'g10',name:'Robert Vance',party:'Vance Family',side:'A',rsvp:'no',meal:'',diet:'',tableId:null},
@@ -4117,6 +4180,62 @@ function sideLabel(e,v){
 function sideOptions(e){
   var n=sideNames(e);
   return [{value:'A',label:n.A},{value:'B',label:n.B},{value:'',label:'Both / neither'}];
+}
+/* ---- the wedding party ----
+ * A planner tracks the wedding party from the first meeting: who is standing
+ * up, in what order they walk, whose side they are on, and what the florist,
+ * the venue and the hair-and-make-up team need to know about them. GEM had
+ * nowhere to put any of it.
+ *
+ * They are guests, not a second list. A bridesmaid RSVPs, eats a meal, sits at
+ * a table and has a nut allergy like everybody else — filing her twice is how
+ * a guest count and a wedding-party count start disagreeing the week of.
+ *
+ * The number beside each role is the processional order, so the running order
+ * writes itself and nobody has to drag anything. It is convention rather than
+ * law; a planner who walks them differently is not wrong, which is why the
+ * field takes anything typed as well.
+ */
+var PARTY_ROLES=[
+  ['Officiant',5],['Grandparent',10],['Parent',15],['Usher',20],
+  ['Reader',25],['Witness',30],['Attendant',40],
+  /* Both forms of each, because a wedding party is not a gendered list and a
+     planner should not have to file a groomswoman under "Groomsman". */
+  ['Groomsman',45],['Groomswoman',45],['Bridesmaid',50],['Bridesman',50],
+  ['Best Man',60],['Best Woman',60],['Best Person',60],
+  ['Maid of Honour',65],['Matron of Honour',65],['Man of Honour',65],['Honour Attendant',65],
+  ['Flower Girl',70],['Page Boy',72],['Ring Bearer',75]
+];
+function roleNames(){ return PARTY_ROLES.map(function(r){return r[0];}); }
+/* A role nobody thought of walks last rather than first — the alternative is
+   an unknown role silently jumping the officiant. */
+function roleOrder(r){
+  var k=String(r||'').trim().toLowerCase();
+  for(var i=0;i<PARTY_ROLES.length;i++)if(PARTY_ROLES[i][0].toLowerCase()===k)return PARTY_ROLES[i][1];
+  return 90;
+}
+/* Everyone standing up, in the order they walk. Reads the whole roster, so a
+   sub-event shows the same party as the wedding it belongs to. */
+function partyMembers(e){
+  var prim=evPrimary(e)||e;
+  return (prim.guests||[]).filter(function(g){ return String(g.role||'').trim(); })
+    .slice().sort(function(a,b){
+      var d=roleOrder(a.role)-roleOrder(b.role);
+      if(d)return d;
+      d=String(a.role).localeCompare(String(b.role));
+      return d||String(a.name).localeCompare(String(b.name));
+    });
+}
+/* Every role in use, in processional order — the shape the florist and the
+   coordinator both ask for. */
+function partyByRole(e){
+  var out=[], idx={};
+  partyMembers(e).forEach(function(g){
+    var r=String(g.role).trim(), k=r.toLowerCase();
+    if(idx[k]===undefined){ idx[k]=out.length; out.push({role:r,people:[]}); }
+    out[idx[k]].people.push(g);
+  });
+  return out;
 }
 /* ---- what is on the menu ----
  * The meal picker offered Beef, Fish, Vegetarian and Kids to every studio in
@@ -5060,6 +5179,8 @@ function labelCells(root){
         /* A cell holding nothing but an em-dash is a column keeping its shape.
            A card has no columns to keep, so it says nothing instead of
            saying "Signed —". */
+        /* A zero-height spacer is furniture, not a value. */
+        if(cells[k].getAttribute('aria-hidden')==='true')continue;
         var txt=(cells[k].textContent||'').replace(/\s+/g,'').trim();
         if(txt===''||txt==='\u2014'||txt==='\u2013'||txt==='-')cells[k].classList.add('is-none');
         if(cells[k].getAttribute('data-l')||!names[k]){
@@ -6468,10 +6589,11 @@ function viewGuests(){
   var q=(state.guestQ||'').trim().toLowerCase();
   var all=rosterFor(e);
   var g=q?all.filter(function(x){
-    return [x.name,x.party,gMeal(x,e),x.diet,x.email,
+    return [x.name,x.party,gMeal(x,e),x.diet,x.email,x.role||'',
             evHasSides(e)?sideLabel(e,x.side):''].join(' ').toLowerCase().indexOf(q)>-1;
   }):all;
   var sides=evHasSides(e), sn=sideNames(e);
+  var party=partyByRole(e), roles=party.length;
   var sideA=g.filter(function(x){return x.side==='A';}).length;
   var sideB=g.filter(function(x){return x.side==='B';}).length;
   var yes=g.filter(function(x){return gRsvp(x,e)==='yes';}).length;
@@ -6500,6 +6622,27 @@ function viewGuests(){
     '<div style="padding:16px 22px;display:flex;flex-wrap:wrap;gap:10px">'+diets.map(function(d){
       return '<span class="pill gold">'+esc(d.name)+' · '+esc(d.diet)+'</span>';
     }).join('')+'</div></div>':'')+
+  /* Only once somebody is in it. An empty Wedding Party card on a corporate
+     gala — or on a wedding before anyone has been asked — is a heading with a
+     shrug under it. */
+  (roles?'<div class="card" style="margin-bottom:20px"><div class="card-h"><h3>Wedding Party</h3>'+
+    '<span class="ev-h-r"><span class="sec-badge">'+partyMembers(e).length+' standing up</span>'+
+      '<button class="btn btn-ghost btn-sm" data-printparty>Print</button></span></div>'+
+    '<div class="wp-list">'+party.map(function(grp){
+      return '<div class="wp-grp">'+
+        '<div class="wp-role">'+esc(grp.role)+'<span class="wp-n">'+grp.people.length+'</span></div>'+
+        '<div class="wp-people">'+grp.people.map(function(g){
+          var r=gRsvp(g,e);
+          return '<div class="wp-p">'+
+            '<span class="wp-nm">'+esc(g.name)+'</span>'+
+            (sides&&g.side?'<span class="g-side s-'+g.side+'">'+esc(sideLabel(e,g.side))+'</span>':'')+
+            (g.diet?'<span class="status s-due">'+esc(g.diet)+'</span>':'')+
+            '<span class="wp-r'+(r==='yes'?' ok':'')+'">'+((RSVP[r]||{}).lbl||'')+'</span>'+
+          '</div>';
+        }).join('')+'</div></div>';
+    }).join('')+'</div>'+
+    '<div class="wp-foot">In processional order. The count beside each role is what the florist and the '+
+      'venue both ask for.</div></div>':'')+
   (sub?'<div class="inv-note">Showing <b>'+esc(roleLabel(e))+'</b> · '+esc(e.title)+
       '. These RSVPs, meals and seats belong to this event alone — the master guest list lives on '+
       '<button type="button" class="link-btn" data-gotoev="'+esc(prim.id)+'">'+esc(prim.title)+'</button>.</div>':'')+
@@ -6517,7 +6660,7 @@ function viewGuests(){
     '</span></div>'+
     (guestViewMode()==='stack'?guestStack(e,g,subs,sub):
     '<div class="tbl-wrap g-tbl-wrap"><table class="g-tbl"><thead><tr><th>Guest</th><th>Party</th>'+
-      (sides?'<th>Side</th>':'')+'<th>RSVP</th><th>Meal</th><th>Dietary</th><th>Table</th>'+
+      (roles?'<th>Role</th>':'')+(sides?'<th>Side</th>':'')+'<th>RSVP</th><th>Meal</th><th>Dietary</th><th>Table</th><th></th>'+
       /* One column per sub-event, only on the primary. This is the whole point
          of the feature: who is asked to what, readable in a single sweep. */
       /* The header doubles as a bulk control. Ticking 150 guests one at a time
@@ -6539,14 +6682,24 @@ function viewGuests(){
          header row says it once; below 700px the table lays out as cards and
          each value needs its own label, and reading it off data-l costs no
          second render — the selects and ticks keep the handlers they had. */
-      return '<tr><td class="g-name"><b>'+esc(x.name)+'</b></td><td data-l="Party"'+(x.party?'':' class="is-none"')+'>'+esc(x.party)+'</td>'+
-        (sides?'<td data-l="Side"><span class="g-side s-'+(x.side||'x')+'">'+esc(sideLabel(e,x.side))+'</span></td>':'')+
+      return '<tr><td class="g-name"><b>'+esc(x.name)+'</b></td>'+
+        '<td data-l="Party" class="g-party'+(x.party?'':' is-none')+'">'+esc(x.party)+'</td>'+
+        (roles?'<td data-l="Role" class="g-rolecell'+(x.role?'':' is-none')+'"><span class="g-role">'+esc(x.role||'')+'</span></td>':'')+
+        (sides?'<td data-l="Side" class="g-sidecell'+(x.side?'':' is-none')+'"><span class="g-side s-'+(x.side||'x')+'">'+esc(sideLabel(e,x.side))+'</span></td>':'')+
         '<td data-l="RSVP" class="g-rsvp"><select class="mini rsvp-sel" data-gid="'+esc(x.id)+'" aria-label="RSVP for '+esc(x.name)+'">'+
           Object.keys(RSVP).map(function(k){return '<option value="'+k+'"'+(cur===k?' selected':'')+'>'+RSVP[k].lbl+'</option>';}).join('')+
         '</select></td>'+
-        '<td data-l="Meal"'+(gMeal(x,e)?'':' class="is-none"')+'>'+(gMeal(x,e)?esc(gMeal(x,e)):'<span style="color:var(--muted)">—</span>')+'</td>'+
-        '<td data-l="Dietary"'+(x.diet?'':' class="is-none"')+'>'+(x.diet?'<span class="status s-due">'+esc(x.diet)+'</span>':'<span style="color:var(--muted)">—</span>')+'</td>'+
-        '<td data-l="Table" class="g-seat">'+(tb?'<span class="pill">'+esc(tb.name)+'</span>':'<span style="color:var(--muted)">Unseated</span>')+rowActions('guest',x.id)+'</td>'+
+        '<td data-l="Meal" class="g-meal'+(gMeal(x,e)?'':' is-none')+'">'+(gMeal(x,e)?esc(gMeal(x,e)):'<span style="color:var(--muted)">—</span>')+'</td>'+
+        '<td data-l="Dietary" class="g-diet'+(x.diet?'':' is-none')+'">'+(x.diet?'<span class="status s-due">'+esc(x.diet)+'</span>':'<span style="color:var(--muted)">—</span>')+'</td>'+
+        '<td data-l="Table" class="g-seat">'+(tb?'<span class="pill">'+esc(tb.name)+'</span>':'<span class="g-unseat">Unseated</span>')+'</td>'+
+        /* Its own cell, not tacked onto the end of Table. On the card that is
+           the difference between the actions sitting at the right edge where
+           they belong and being wedged against the word "Unseated". */
+        '<td class="g-acts">'+rowActions('guest',x.id)+'</td>'+
+        /* Zero-height, full-width, invisible anywhere but the phone card —
+           where it ends the line the actions sit on, so the chips below start
+           against the left edge instead of flowing round them. */
+        '<td class="g-brk" aria-hidden="true"></td>'+
         /* A zero-height full-width cell, invisible everywhere except a phone
            card, where it breaks the line so the invite chips group together
            instead of trailing off the end of Table. */
@@ -6589,6 +6742,8 @@ function wireGuests(){
       save();render();wireGuests();
     };
   });
+  var pp=$('[data-printparty]');
+  if(pp)pp.onclick=function(ev2){ ev2.stopPropagation(); printSheet('party',activeEvent()); };
   document.querySelectorAll('[data-gotoev]').forEach(function(b){
     b.onclick=function(){ state.activeEventId=b.dataset.gotoev; render(); wireGuests(); };
   });
@@ -10841,6 +10996,10 @@ function openGuestModal(ev){
             'role="radio" aria-checked="'+on+'">'+esc(o.label)+'</button>';
         }).join('')+
       '</div></div>':'')+
+    (evHasSides(prim)?'<div class="field"><label>Wedding party <span class="lbl-note">optional</span></label>'+
+      '<input id="f_grole" list="groleList" placeholder="Bridesmaid, Best Man, Officiant…">'+
+      '<datalist id="groleList">'+roleNames().map(function(r){
+        return '<option value="'+esc(r)+'"></option>';}).join('')+'</datalist></div>':'')+
     /* A list, not a menu. Whatever this weekend has already served is offered;
        anything else is typed and joins the list for the next guest. */
     '<div class="field"><label>Meal choice</label>'+
@@ -10874,6 +11033,7 @@ function openGuestModal(ev){
       /* Was hardcoded to 'A', so every guest anyone ever added belonged to
          partner 1 whether or not they did. */
       side:sideBtn?sideBtn.dataset.side:'',
+      role:($('#f_grole')?$('#f_grole').value.trim():''),
       rsvp:$('#f_grsvp').value,meal:$('#f_gmeal').value.trim(),diet:$('#f_gdiet').value.trim(),tableId:null};
     prim.guests.push(g);
     /* On a sub-event the RSVP and meal just chosen describe THAT night, so
@@ -12031,6 +12191,24 @@ function printSheet(kind,ev){
           :'<div class="pr-note">No running order yet.</div>')+
       '</div>';
     }).join('');
+  } else if(kind==='party'){
+    /* The sheet the coordinator carries and the florist is sent: who is
+       standing up, in the order they walk, with the count per role. */
+    title='Wedding Party';
+    var grps=partyByRole(ev);
+    body=grps.length?grps.map(function(grp){
+      return '<div class="pr-tbl"><h3>'+esc(grp.role)+' <span>'+grp.people.length+
+        (grp.people.length===1?' person':' people')+'</span></h3>'+
+        '<table class="pr-t"><tbody>'+grp.people.map(function(g){
+          return '<tr><td><b>'+esc(g.name)+'</b></td>'+
+            '<td>'+(evHasSides(ev)?esc(sideLabel(ev,g.side)):'')+'</td>'+
+            '<td>'+esc(gMeal(g,ev)||'')+'</td>'+
+            '<td>'+esc(g.diet||'')+'</td>'+
+            '<td>'+esc((RSVP[gRsvp(g,ev)]||{}).lbl||'')+'</td></tr>';
+        }).join('')+'</tbody></table></div>';
+    }).join('')+'<div class="pr-note">In processional order — convention, not law. '+
+      partyMembers(ev).length+' standing up in total.</div>'
+    :'<div class="pr-note">Nobody has been given a wedding-party role yet.</div>';
   } else if(kind==='guests'){
     title='Guest List';
     var pr=rosterFor(ev);
@@ -12184,12 +12362,16 @@ function openPrintMenu(ev){
     ' · opens your print dialog, where you can save as PDF.</p>'+
     '<div class="print-grid">'+
       ([['bible','The Bible','Everything you have, as one document — yours or theirs'],
-       ['timeline','Day-of Timeline','The running order for your vendor team'],
+       ['timeline','Day-of Timeline','The running order for your vendor team']]
+      .concat(partyMembers(ev).length?[['party','Wedding Party',
+        'Who is standing up, in the order they walk']]:[])
+      .concat([
+       ['guests','Guest List','Every guest with RSVP, meal and table'],
        ['guests','Guest List','Every guest with RSVP, meal and table'],
        ['seating','Seating Chart','Table by table, with dietary flags'],
        ['vendors','Vendor Contact Sheet','Numbers you need on the day'],
        ['floorplan','Floor Plan','Scaled room layout with table lists'],
-       ['checklist','Task Checklist','Tick-box list for the run-up']]
+       ['checklist','Task Checklist','Tick-box list for the run-up']])
       .concat(kids.length?[['weekend','Weekend Running Order',
         'Every event of the weekend on one sheet, in order']]:[]))
       .map(function(p){return '<button class="print-opt" data-print="'+p[0]+'">'+
@@ -13426,7 +13608,9 @@ function editRecord(kind,id){
       fields:[{id:'name',label:'Full name',value:it.name,required:true},
               {id:'party',label:'Party / group',value:it.party}].concat(
               evHasSides(ev)?[{id:'side',label:'Whose guest',type:'select',value:it.side||'',
-                               options:sideOptions(ev)}]:[]).concat([
+                               options:sideOptions(ev)},
+                              {id:'role',label:'Wedding party',type:'combo',value:it.role||'',
+                               options:roleNames(),placeholder:'Bridesmaid, Best Man…'}]:[]).concat([
 
               {id:'rsvp',label:evIsSub(ev)?'RSVP · '+roleLabel(ev,true):'RSVP',type:'select',value:gRsvp(it,ev),
                options:Object.keys(RSVP).map(function(k){return {value:k,label:RSVP[k].lbl};})},
@@ -13444,6 +13628,7 @@ function editRecord(kind,id){
         /* Only on a wedding — on anything else the field was not shown and
            v.side is undefined, which must not wipe what is there. */
         if(v.side!==undefined)it.side=v.side;
+        if(v.role!==undefined)it.role=(v.role||'').trim();
         gSet(it,ev,'rsvp',v.rsvp); gSet(it,ev,'meal',(v.meal||'').trim());
         if(v.rsvp==='no')gSet(it,ev,'tableId',null);
         closeModal(); afterChange(); }});},
@@ -13711,11 +13896,11 @@ function exportGuestsCsv(){
   /* The caterer and the venue both get sent this file, and on a wedding whose
      guest each one is is part of what it is for. */
   var sides=evHasSides(e);
-  var rows=[['Name','Party'].concat(sides?['Whose guest']:[])
+  var rows=[['Name','Party'].concat(sides?['Wedding party','Whose guest']:[])
             .concat(['RSVP','Meal','Dietary','Email','Table'])];
   roster.forEach(function(g){
     var t=e.tables.find(function(x){return x.id===gTable(g,e);});
-    rows.push([g.name,g.party||''].concat(sides?[sideLabel(e,g.side)]:[])
+    rows.push([g.name,g.party||''].concat(sides?[g.role||'',sideLabel(e,g.side)]:[])
       .concat([(RSVP[gRsvp(g,e)]||{}).lbl||'',gMeal(g,e),g.diet||'',g.email||'',t?t.name:'']));
   });
   downloadCsv('glimmer-guests-'+e.title.toLowerCase().replace(/[^a-z0-9]+/g,'-')+'.csv',rows);
@@ -14767,6 +14952,16 @@ function sbCoverCol(){
    and the file it was filed with. A studio that has not run it yet still has
    to be able to push, and naming a column the database lacks fails the whole
    table, so the payload asks first. Same shape as sbCoverCol above. */
+var SB_ROLE_COL=null;
+function sbRoleCol(){
+  if(SB_ROLE_COL===null){
+    SB_ROLE_COL=false;
+    sbRest('guests?select=role&limit=1')
+      .then(function(){ SB_ROLE_COL=true; })
+      .catch(function(){ SB_ROLE_COL=false; });
+  }
+  return SB_ROLE_COL;
+}
 var SB_INV_COLS=null;
 function sbInvCols(){
   if(SB_INV_COLS===null){
@@ -14856,8 +15051,13 @@ function sbPush(opts){
       estimated:num(b.est),actual:num(b.act),sort_order:i,tag_event_id:nn(b.tagEventId)}); });
     (e.tables||[]).forEach(function(t,i){ tables.push({id:t.id,org_id:org,event_id:e.id,name:s(t.name),seats:num(t.seats)||1,
       shape:t.shape||'round',w:num(t.w),h:num(t.h),x:num(t.x),y:num(t.y),rotation:num(t.rot||t.rotation),sort_order:i}); });
-    (e.guests||[]).forEach(function(g){ guests.push({id:g.id,org_id:org,event_id:e.id,name:s(g.name),party:s(g.party),
-      side:s(g.side)||'A',rsvp:g.rsvp||'pending',meal:nn(g.meal),dietary:nn(g.diet),table_id:nn(g.tableId)}); });
+    (e.guests||[]).forEach(function(g){
+      var row={id:g.id,org_id:org,event_id:e.id,name:s(g.name),party:s(g.party),
+        /* '' rather than 'A'. The column defaulted every guest to partner 1 on
+           the way up, which is the same untruth the form used to tell. */
+        side:s(g.side),rsvp:g.rsvp||'pending',meal:nn(g.meal),dietary:nn(g.diet),table_id:nn(g.tableId)};
+      if(sbRoleCol())row.role=nn(g.role);
+      guests.push(row); });
     if(e.floor&&e.floor.items)e.floor.items.forEach(function(f,i){ fitems.push({id:f.id,org_id:org,event_id:e.id,
       kind:s(f.kind||f.type)||'fixture',label:s(f.label),x:num(f.x),y:num(f.y),w:num(f.w),h:num(f.h),rotation:num(f.rot||f.rotation),sort_order:i}); });
     var d=e.design||{};
@@ -15275,7 +15475,10 @@ function sbPull(opts){
             act:Number(x.actual),tagEventId:x.tag_event_id||null};}),
           tables:of(R.seating_tables,e.id).map(function(x){return {id:x.id,name:x.name,seats:x.seats,shape:x.shape,
             w:Number(x.w),h:Number(x.h),x:Number(x.x),y:Number(x.y),rot:Number(x.rotation)};}),
-          guests:of(R.guests,e.id).map(function(x){return {id:x.id,name:x.name,party:x.party,side:x.side,rsvp:x.rsvp,
+          guests:of(R.guests,e.id).map(function(x){return {id:x.id,name:x.name,party:x.party,side:x.side||'',rsvp:x.rsvp,
+            /* Absent until migration 23, so it must survive the column not
+               being there at all. */
+            role:x.role||'',
             meal:x.meal||'',diet:x.dietary||'',tableId:x.table_id};}),
           floor:Object.assign({items:of(R.floor_items,e.id).map(function(x){return {id:x.id,kind:x.kind,label:x.label,
             x:Number(x.x),y:Number(x.y),w:Number(x.w),h:Number(x.h),rot:Number(x.rotation)};})},e.floor||{}),

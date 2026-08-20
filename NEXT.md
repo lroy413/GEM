@@ -501,6 +501,26 @@ never pulled, which is what stops a fresh install overwriting the studio.
   literal string "NaN" where the collision guard belongs. Guarded inside
   `uid()` now. Ids already stored keep their NaN; they are still unique
   strings and rewriting them would break every reference.
+- **The wedding party is guests with a role, not a second list.** `guest.role`
+  is free text; `PARTY_ROLES` supplies the conventional names — both forms of
+  each, because a wedding party is not a gendered list — and the number beside
+  each is the **processional order**, so the running order derives itself and
+  nothing has to be dragged. `roleOrder()` sends an unrecognised role to the
+  back rather than the front. `partyByRole()` groups for the card and the print
+  sheet. Filing them separately would mean two rows for one person and two
+  counts that disagree the week of the wedding — a bridesmaid RSVPs, eats and
+  sits like everyone else. Migration 23 adds the column; `sbRoleCol()` probes
+  for it the way `sbCoverCol()` does.
+- **The guest card is not the generic table card.** Below 700px `.g-tbl` gets
+  its own layout: name and the RSVP picker on line one, the party quietly on
+  line two with the row actions right-aligned beside it, and the facts as chips
+  on line three. A chip needs no caption — nobody reads "Beef" and wonders
+  which column it came from — so `.g-tbl td::before{display:none}` turns off
+  the generic labels. Two traps in here: the generic
+  `.as-cards td:not([data-l]):not(:first-child)` outranks `.g-tbl td.g-acts` on
+  specificity and parked the actions on top of the RSVP (hence the
+  `:not(.g-tbl)`), and the actions need their **own cell** rather than living
+  inside Table, or they wedge against the word "Unseated".
 - **Two dropdowns used to answer questions nobody had asked.** The meal picker
   offered Beef / Fish / Vegetarian / Kids to every studio in the world, and
   `guest.side` — a column that has existed since migration 01 and round-trips
