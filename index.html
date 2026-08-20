@@ -10,7 +10,7 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
 <meta name="apple-mobile-web-app-title" content="GEM">
 <meta name="format-detection" content="telephone=no">
-<meta name="gem-build" content="309f533b37de">
+<meta name="gem-build" content="fa766d73eeab">
 <link rel="manifest" href="/manifest.webmanifest">
 <link rel="icon" href="/icons/icon-192.png" sizes="192x192" type="image/png">
 <link rel="apple-touch-icon" href="/icons/icon-180.png">
@@ -913,6 +913,18 @@ body.portal-only .main{margin-left:0!important}
 .fig-d{font-size:11px;color:var(--muted);margin-top:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 
 @media (max-width:1100px){ .figs{grid-template-columns:repeat(3,1fr)} }
+/* Matches the 860px where .grid-2 drops to a single column — the moment the
+   two cards stop being side by side is the moment their order starts to
+   matter. */
+@media (max-width:860px){
+  /* Side by side on a desktop, the to-do list and Waiting On are read in one
+     glance and their order says nothing. Stacked on a phone it says a lot:
+     ten open tasks is 560px of scrolling before you reach the three things
+     that are sitting with somebody else. Waiting On is the shorter card and
+     the one you cannot act on from here, so on a phone it goes first and the
+     list you work down follows it. */
+  .grid-2>.todo-card{order:2}
+}
 @media (max-width:560px){
   .figs{grid-template-columns:repeat(2,1fr)}
   .next-band{padding:16px 18px;gap:14px}
@@ -1770,6 +1782,14 @@ td.inv-col{text-align:center;width:1%}
   .wk-days{grid-template-columns:repeat(4,minmax(0,1fr))}
   .wk-sum{white-space:normal;flex-basis:100%;order:3}
   .wk-h{flex-wrap:wrap;row-gap:4px}
+  /* 92px is the height a day needs to hold two lines of what is on it. A
+     clear day holds a weekday and a number, and on a phone seven of those
+     were 190px of empty tiles above the work. The minimum now belongs to the
+     days that have something in it; a row still levels up to its tallest
+     tile, so a week with one wedding in it keeps its shape and a week with
+     nothing in it stops charging for the space. */
+  .wk-d{min-height:0;padding:8px 10px}
+  .wk-d:not(.quiet){min-height:86px}
 }
 @media (max-width:900px){
   .wk-days{grid-template-columns:repeat(4,1fr)}
@@ -1778,7 +1798,10 @@ td.inv-col{text-align:center;width:1%}
     padding:12px 26px}
   .hero-days{font-size:38px}
   .hero-body{padding:20px 22px 8px}
-  .hero-t{font-size:27px}
+  /* The title is the way into the event, and a 27px line box is a 29px
+     target. The negative margin gives the padding back to the layout, so the
+     hit area grows and nothing moves. */
+  .hero-t{font-size:27px;padding:4px 0;margin:-4px 0}
 }
 /* Which job a task belongs to, at a glance. The weight does the separating as
    much as the hue, so it still reads if the colour does not register. */
@@ -1815,6 +1838,7 @@ td.inv-col{text-align:center;width:1%}
    sub-event the newest information sits furthest right. Two problems: nothing
    said the table scrolled, and once you scrolled you could no longer see whose
    row you were reading. */
+td.inv-brk{display:none}
 .g-tbl-wrap{
   /* Scroll shadow on the right edge only — background-attachment:local pins it
      to the content, so it fades out exactly when you reach the end and there
@@ -1828,11 +1852,87 @@ td.inv-col{text-align:center;width:1%}
 }
 /* Narrow screens only. At desktop widths the grid fits, and pinning the name
    column there just draws a divider that separates nothing. */
-@media (max-width:860px){
+@media (min-width:701px) and (max-width:860px){
   .g-tbl th:first-child,.g-tbl td:first-child{
     position:sticky;left:0;z-index:2;background:var(--card);
     box-shadow:1px 0 0 var(--line)}
   .g-tbl tr:hover td:first-child{background:var(--bg-2)}
+}
+/* Below 700px a pinned name column stops helping: six columns plus one per
+   sub-event is over 900px of table on a 390px screen, so answering "has she
+   replied" means scrolling sideways past everything else, and the sticky name
+   eats a third of what is left. Every headed table becomes one card per row
+   instead — the same DOM, so every select, tick and row action keeps the
+   handler it already had, and rotating the phone re-lays it out with no
+   re-render at all. See labelCells(), which puts the column names where
+   content:attr() can reach them. */
+@media (max-width:700px){
+  .cards-wrap,.g-tbl-wrap{background:none;overflow-x:visible}
+  .as-cards,.as-cards tbody,.as-cards tr,.as-cards td{display:block;width:auto}
+  .as-cards colgroup{display:none}
+  /* The header's only irreplaceable job on a phone is a bulk control, so the
+     labelled columns go and anything with a button in it stays. */
+  .as-cards thead{display:block}
+  .as-cards thead tr{display:flex;flex-wrap:wrap;gap:6px;padding:0 0 12px;
+    border:0;background:none;margin:0}
+  .as-cards thead th:not(.inv-col){display:none}
+  .as-cards thead th.inv-col{display:flex;align-items:center;gap:6px;padding:6px 10px;
+    border:1px solid var(--line);border-radius:var(--radius-pill);background:var(--card);
+    text-align:left;font-size:11px}
+  .as-cards thead th.inv-col .inv-n{display:inline;font-size:10.5px}
+  .as-cards thead th.inv-col .inv-all{display:inline-block;margin:0}
+  /* A card is a wrapping row of fields, not a stack of them. One value per
+     line reads as a form and makes the list twice as long to scroll as the
+     table it replaced; label-over-value fields pack two or three to a line. */
+  .as-cards tr{position:relative;display:flex;flex-wrap:wrap;gap:6px 13px;
+    border:1px solid var(--line);border-radius:var(--radius-sm);
+    background:var(--card);padding:11px 13px;margin-bottom:8px}
+  /* align-items:flex-start, or a column of stretched children turns every
+     inline badge into a full-width bar. */
+  /* align-items:flex-start, or a column of stretched children turns every
+     inline badge into a full-width bar. overflow-wrap, because an email
+     address is one unbreakable word and a card has no sideways scroll to
+     absorb it. */
+  .as-cards td{border:0;padding:0;display:flex;flex-direction:column;gap:2px;
+    align-items:flex-start;font-size:13px;text-align:left;
+    min-width:0;max-width:100%;overflow-wrap:anywhere}
+  .as-cards td a,.as-cards td b,.as-cards td span{max-width:100%}
+  .as-cards td::before{content:attr(data-l);
+    font-size:10px;letter-spacing:.08em;text-transform:uppercase;
+    color:var(--muted);font-weight:600;line-height:1.2}
+  /* The first column is the card's title — what the row is — not a labelled
+     value, and it keeps the whole first line clear of the row actions parked
+     in the corner. */
+  /* The title line is also what reserves room for the actions floated over the
+     corner: without a minimum it can be shorter than the buttons are tall, and
+     the first field underneath ends up sitting behind them. */
+  .as-cards td:first-child{flex:1 0 100%;font-size:15.5px;line-height:1.25}
+  .as-cards.has-acts td:first-child{padding-right:74px;min-height:34px;justify-content:center}
+  .as-cards td:first-child::before{content:none}
+  .as-cards td:first-child b{font-weight:600}
+  /* A field holding nothing but an em-dash is a row of furniture. The table
+     needs the empty cell to keep its columns; a card does not. */
+  .as-cards td.is-none,.as-cards td:empty{display:none}
+  /* A cell whose header was blank is an action column: no label, and it goes
+     to the card's top-right rather than taking a field slot. */
+  .as-cards td:not([data-l]):not(:first-child){position:absolute;top:9px;right:11px;padding:0}
+  .as-cards .r-acts{position:absolute;top:10px;right:12px;margin:0;opacity:1}
+  .as-cards td:not([data-l]) .r-acts{position:static}
+  /* Money reads as money whichever column it was in. */
+  .as-cards td[style*="right"]{text-align:left}
+  /* Only the RSVP picker gets a ceiling: its options are one word each, and
+     without it the widest ("Attending") sets a column the card does not have
+     to give. Everything else keeps its natural width — a status that reads
+     "Contract O…" is worse than a wide select. */
+  .g-tbl td.g-rsvp select.mini{max-width:118px}
+  /* Invite ticks read as a row of chips along the bottom of the card, which
+     is the one-sweep answer the wide grid gave and the scroller took away. */
+  .g-tbl td.inv-brk{display:block;flex:1 0 100%;height:0;padding:0;margin:0}
+  .g-tbl td.inv-col{flex-direction:row;align-items:center;gap:7px;
+    padding:3px 9px 3px 5px;border:1px solid var(--line);
+    border-radius:var(--radius-pill)}
+  .g-tbl td.inv-col::before{font-size:10px}
+  .g-tbl td.inv-col .inv-box{width:28px;height:28px}
 }
 /* --- the weekend, as the couple sees it in the portal --- */
 .ph-block{display:flex;flex-wrap:wrap;justify-content:center;gap:10px;margin-top:20px}
@@ -2585,6 +2685,10 @@ tr:hover .r-acts,.ev-card:hover .r-acts,.table-card:hover .r-acts,
 .vb-name{font-family:var(--serif);font-size:32px;font-weight:600;line-height:1.05;margin-top:6px;letter-spacing:-.012em}
 .vb-name.tbc{color:var(--muted);font-style:italic}
 .vb-addr{font-size:13px;color:var(--ink-soft);margin-top:9px;line-height:1.65}
+/* One line on a phone, the postal block on anything wider. Both are rendered;
+   only one is ever shown, so no JavaScript has to know the viewport. */
+.vb-addr-1{display:none}
+.vb-addr-n{display:inline}
 .vb-addr.muted{color:var(--muted)}
 .vb-map{display:inline-block;margin-top:10px;font-size:12px;font-weight:600;color:var(--gold);
   text-decoration:none;border-bottom:1px solid var(--gold-line);padding-bottom:1px}
@@ -2627,6 +2731,17 @@ tr:hover .r-acts,.ev-card:hover .r-acts,.table-card:hover .r-acts,
 .ev-h:hover{background:var(--pink-50)}
 .ev-h:focus-visible{outline:none;box-shadow:var(--ring)}
 .ev-h-r{display:flex;align-items:center;gap:9px;flex:0 0 auto}
+/* flex:0 0 auto is right on a desktop, where this group is a couple of pills
+   beside a title. On the vendor directory it is a search box and a category
+   picker whose widest option ("Hair & Make-up") set a width the header could
+   not give back — at 360px it hung 26px past the card. Below 700px the group
+   takes the width it has and wraps under the title if that is not enough. */
+@media (max-width:700px){
+  .card-h{flex-wrap:wrap;row-gap:8px}
+  .ev-h-r{flex:1 1 100%;min-width:0}
+  .ev-h-r .v-search{flex:1 1 auto;min-width:0}
+  .ev-h-r select.mini{flex:0 1 auto;min-width:0;max-width:48%}
+}
 .ev-chev{width:7px;height:7px;opacity:.4}
 .ev-h:hover .ev-chev{opacity:.8}
 .ev-sec.collapsed .ev-chev{transform:rotate(-45deg) translate(-1px,1px)}
@@ -2724,7 +2839,34 @@ tr:hover .r-acts,.ev-card:hover .r-acts,.table-card:hover .r-acts,
   .topbar{align-items:flex-start;gap:16px}
   /* Controls keep their natural width — stretching them to fill the row
      made a "+ Add Table" button read like a page-wide banner. */
+  /* ---- the venue card, condensed ----
+     It was the first thing between the planner and the event, and it ran to
+     about a thousand pixels: four address lines, a Maps link, cover controls,
+     the date block, the coordinator, then site notes. */
+  .vb-addr-n{display:none}
+  .vb-addr-1{display:inline}
+  /* The date, the start and the countdown are all repeated by the Countdown
+     figure a few hundred pixels below. Saying them twice costs about ninety
+     pixels of a phone screen for nothing. */
+  .venue-band:not(.has-cover) .vb-when{display:none}
+  /* The back link sat in its own band of air between the header and the card. */
+  .main .back-link{margin-bottom:8px}
+  /* Setting a cover is something you do once. It does not need a permanent
+     button between the address and the coordinator on a phone — the venue's
+     own screen and the edit modal both carry it. */
+  .venue-band .vb-setup{display:none}
+  .venue-band.has-cover .vb-setup{display:flex}
+  .vb-note{font-size:12.5px;line-height:1.55}
   #pgActions{width:100%;justify-content:flex-start;gap:9px}
+  /* Two 42px marks do not need a whole row under the title. Only tightens
+     where :has() is supported; everywhere else this is today's layout. */
+  #pgActions:has(.btn-icon){width:auto;justify-content:flex-end;margin-left:auto}
+  .topbar:has(#pgActions .btn-icon){flex-wrap:nowrap;align-items:flex-start}
+  /* A phone does not have room for a word beside every mark. The label goes,
+     the title and aria-label stay, and the button becomes a square big enough
+     to hit — 42px, not a 15px strip of text. */
+  .btn-icon .bl{display:none}
+  .btn-icon{width:42px;min-width:42px;padding:0;justify-content:center;font-size:16px}
   .ev-switch{flex:0 1 auto;min-width:0;max-width:none}
 }
 
@@ -2735,10 +2877,31 @@ tr:hover .r-acts,.ev-card:hover .r-acts,.table-card:hover .r-acts,
   /* Was 1fr — one figure per row, so four of them cost about 800px of scroll
      to say four numbers. A label, a figure and a caption fit in half a phone
      screen with room to spare. */
+  /* The task tick measures 24px, and it is the most-used control here. It
+     already carried a -9px ::after, so the real target was 39 — widened to 45,
+     which clears the 44 both platforms ask for. The box itself does not change
+     size; only what counts as hitting it. */
+  .tbox::after{inset:-12px}
+  /* A phone number on a vendor is a thing you tap standing in a loading bay,
+     and it was an 11.5px line with no padding: a 15px-tall target. */
+  .v-links a,.vc-l a{display:inline-flex;align-items:center;min-height:34px;
+    padding:2px 0;font-size:12.5px}
+  .v-links{gap:6px 16px}
   .stat-row,.stat-row.cols-3{grid-template-columns:repeat(2,1fr);gap:10px}
   .stat{padding:12px 13px 11px}
   .stat .v{font-size:25px;margin-top:5px}
-  .stat .k{font-size:9px;letter-spacing:1.4px}
+  /* 9px of letter-spaced capitals is a label you squint at. The stat row went
+     to two columns on a phone, which gave the width back — the label can
+     have a readable size again. */
+  .stat .k{font-size:10.5px;letter-spacing:1.1px}
+  /* The same floor for the other eyebrow labels, which were set for a desktop
+     where you are further from a larger screen. The two exceptions are the
+     month grid, where nine columns of 9px is the price of seeing the whole
+     month and the agenda under it carries the same days at full size, and the
+     floor plan, whose labels are drawn to the scale of the table they sit on
+     and would spill out of it at any fixed size. */
+  .setup-k,.hero-k,.ph-studio,.fig-head,.fig-k,.wk-dow,
+  .hero-dl,.tg-h,.cag-dow,.samp-tag.mini{font-size:10.5px;letter-spacing:1.2px}
   .stat .d{font-size:11px;margin-top:4px}
   .page-title{font-size:26px}
   .card-h{padding:14px 16px}
@@ -2973,6 +3136,10 @@ html,body{max-width:100%;overflow-x:hidden}
   .seg-b{min-height:40px;padding:0 16px}
   .fp-snap{min-height:40px;display:inline-flex;align-items:center;gap:7px}
   .fp-snap input{width:20px;height:20px}
+  /* A bare checkbox renders at 13px. Its label is the real target and is
+     already a full-width row, so this is about seeing whether it is ticked,
+     not about hitting it. */
+  .c-mk input,.field input[type=checkbox],#modal input[type=checkbox]{width:20px;height:20px}
   .rate{min-height:40px;font-size:17px;padding:4px 6px}
   /* Raise the shared control height so buttons, selects and inputs all
      grow together — bumping only .btn left it 2px taller than the
@@ -4078,6 +4245,15 @@ function stageOf(id){return STAGES.find(function(s){return s.id===id;});}
    millisecond — deleting one then matches both. Sequence + entropy. */
 var _uidSeq=0;
 function uid(prefix){
+  /* var hoisting, not a typo. normalize() mints ids at load — vendors lifted
+     out of bookings, venues lifted out of event locations — and it runs above
+     this line, so _uidSeq is still `undefined` then and `undefined++` is NaN.
+     Every id minted in that window carried the literal string "NaN" where the
+     counter belongs, which is ugly but worse than ugly: the counter is the
+     only thing separating two ids minted in the same millisecond, and NaN++
+     stays NaN, so it separated nothing. One comparison removes the ordering
+     dependency for good. */
+  if(!(_uidSeq>=0))_uidSeq=0;
   return (prefix||'x')+Date.now().toString(36)+(_uidSeq++).toString(36)+Math.random().toString(36).slice(2,6);
 }
 var _justDragged=false;   // set during HTML5 drag so drop doesn't also navigate
@@ -4234,9 +4410,13 @@ function setView(v,opts){
   if(typeof openActiveGroup==='function')openActiveGroup();
   if(typeof paintNavEvent==='function')paintNavEvent();
   var t=pageHead(v);
+  /* Both of these said "drag" on a phone. The floor plan does drag on touch —
+     it is built on pointer events — but the seating list does not: tap-to-seat
+     replaced the per-guest menu the copy still described. */
   if(v==='seating')t[2]=(state.seatMode||'plan')==='plan'
-    ? 'Arrange the room — drag tables and fixtures into place.'
-    : (isTouchMode()?'Use a guest’s menu to seat them at a table.'
+    ? (isTouchMode()?'Drag a table to move it, tap it to seat guests.'
+                    :'Arrange the room — drag tables and fixtures into place.')
+    : (isTouchMode()?'Tap a guest, then tap a table to seat them.'
                     :'Drag a guest to a table to seat them.');
   /* A detail screen is the clearest case of the same rule: what you are
      looking at is the headline, and what kind of thing it is is the label. */
@@ -4306,7 +4486,10 @@ function actionsFor(v){
   if(v==='clients')return state.clientId?'':'<button class="btn btn-gold" id="addClient">＋ New client</button>';
   if(v==='finance')return '<button class="btn btn-ghost" id="exportInv">Export CSV</button> <button class="btn btn-gold" id="addInv">＋ New invoice</button>';
   if(v==='events')return state.eventId
-    ?'<button class="btn btn-quiet" id="printEvent">⎙ Print</button> <button class="btn btn-quiet" id="editEvent">✎ Edit event</button>'
+    ?'<button class="btn btn-quiet btn-icon" id="printEvent" title="Print" aria-label="Print">'+
+       '⎙<span class="bl"> Print</span></button> '+
+     '<button class="btn btn-quiet btn-icon" id="editEvent" title="Edit event" aria-label="Edit event">'+
+       '✎<span class="bl"> Edit event</span></button>'
     :'<button class="btn btn-gold" id="addEvent">＋ New event</button>';
   if(v==='guests')return evSwitcher()+' <button class="btn btn-ghost" id="importGuests">⇪ Import CSV</button>'+
     ' <button class="btn btn-ghost" id="exportGuests">Export</button>'+
@@ -4395,6 +4578,72 @@ function render(){
   else if(state.view==='documents'){ el.innerHTML=viewDocuments(); wireDocuments(); }
   else if(state.view==='portal'){ el.innerHTML=viewPortal(); wirePortal(); }
   else if(state.view==='finance')el.innerHTML=viewFinance();
+  labelCells(el);
+}
+
+/* --- wide tables, on a phone ---
+ * Nine screens render a table of five or six columns. On a 390px phone every
+ * one of them is wider than the screen, so it scrolls sideways inside its
+ * wrapper: Amount sits off the right edge, the client's name wraps to three
+ * lines to make room, and by the time you have scrolled to the number you
+ * can no longer see whose it is.
+ *
+ * Below 700px each row lays out as a card instead. The stylesheet does the
+ * layout; the only thing it cannot do is know what to call each value, since
+ * the column name lives in a <th> in a different row. So this copies the
+ * header text onto each cell as data-l, once per render, and CSS reads it
+ * back with content:attr(). No view had to be rewritten, no second render
+ * exists to drift, and rotating the phone re-lays it out with no JS at all.
+ *
+ * Only tables with a header row qualify. The others are two-column lists that
+ * already read fine at any width, and labelling them would add a caption to
+ * every line for no gain.
+ */
+function labelCells(root){
+  var tables=(root||document).querySelectorAll('table');
+  for(var i=0;i<tables.length;i++){
+    var t=tables[i], head=t.tHead&&t.tHead.rows[0];
+    if(!head||!head.cells.length)continue;
+    var names=[],j;
+    for(j=0;j<head.cells.length;j++){
+      /* A header can hold a bulk control as well as a name — the guest grid's
+         invite columns carry an "all/none" button. Take the first text node,
+         which is the name, not the button's label. */
+      var c=head.cells[j], first=c.firstChild;
+      var txt=(first&&first.nodeType===3?first.nodeValue:c.textContent)||'';
+      names.push(txt.replace(/\s+/g,' ').trim());
+    }
+    t.classList.add('as-cards');
+    /* The wrapper is the horizontal scroller. It has to be told to stop being
+       one, and it is a parent, which CSS can only reach with :has() — a class
+       is the same answer without the browser floor. */
+    var wrap=t.parentNode;
+    if(wrap&&wrap.classList&&wrap.classList.contains('tbl-wrap'))wrap.classList.add('cards-wrap');
+    var rows=t.tBodies[0]?t.tBodies[0].rows:[], acts=false;
+    for(j=0;j<rows.length;j++){
+      var cells=rows[j].cells;
+      for(var k=0;k<cells.length;k++){
+        /* An action column has a blank header, and a cell that already knows
+           its own name keeps it. */
+        /* A cell holding nothing but an em-dash is a column keeping its shape.
+           A card has no columns to keep, so it says nothing instead of
+           saying "Signed —". */
+        var txt=(cells[k].textContent||'').replace(/\s+/g,'').trim();
+        if(txt===''||txt==='\u2014'||txt==='\u2013'||txt==='-')cells[k].classList.add('is-none');
+        if(cells[k].getAttribute('data-l')||!names[k]){
+          if(!names[k]&&k>0)acts=true;
+          continue;
+        }
+        cells[k].setAttribute('data-l',names[k]);
+      }
+      /* Row actions can also live inside a labelled cell — the guest grid puts
+         them in Table — and they float over the card's corner either way. */
+      if(rows[j].querySelector('.r-acts'))acts=true;
+    }
+    /* Only a table with something in that corner needs the title line to keep
+       clear of it. */
+    if(acts)t.classList.add('has-acts');
+  }
 }
 
 /* --- Dashboard: what needs doing first, money second --- */
@@ -5511,7 +5760,17 @@ function viewEventDetail(id){
     '<div class="vb-main">'+
       (cover?'':'<div class="vb-k">Venue</div>'+
         '<div class="vb-name'+(e.venue?'':' tbc')+'">'+esc(venueName(e.venue))+'</div>')+
-      (addr.length?'<div class="vb-addr">'+addr.map(esc).join(cover?' · ':'<br>')+'</div>'
+      /* Four stacked lines of address is four lines of a phone screen for one
+         fact. Joined with middots on a phone, kept stacked where there is room
+         for a proper postal block. */
+      /* Both forms are rendered and CSS picks one, so nothing has to know the
+         viewport — but they must be SEPARATE elements. Joining the stacked
+         lines with <br> and hiding the <br> leaves the text behind, which is
+         how this first shipped: the address printed twice, run together. */
+      (addr.length?'<div class="vb-addr">'+
+                     '<span class="vb-addr-n">'+addr.map(esc).join(cover?' · ':'<br>')+'</span>'+
+                     '<span class="vb-addr-1">'+esc(addr.join(', '))+'</span>'+
+                   '</div>'
                   :'<div class="vb-addr muted">No address on file</div>')+
       /* Sits with the map link because both answer the same question — what
          else is there, and where. */
@@ -5523,7 +5782,7 @@ function viewEventDetail(id){
          photograph behind it put the coordinator's phone number on top of a
          picture. The dashboard hero is the surface built to wear one; this is
          only where you set it, so it shows what you set. */
-      '<div class="vb-cover-row">'+
+      '<div class="vb-cover-row vb-setup">'+
         (cover?'<span class="vb-thumb" style="background-image:url('+cover+')" aria-hidden="true"></span>':'')+
         '<label class="vb-cover" id="evCover" tabindex="0">'+
           '<input type="file" id="evCoverInput" accept="image/*" hidden>'+
@@ -5744,17 +6003,25 @@ function viewGuests(){
     g.map(function(x){
       var tb=e.tables.find(function(t){return t.id===gTable(x,e);});
       var cur=gRsvp(x,e);
-      return '<tr><td><b>'+esc(x.name)+'</b></td><td>'+esc(x.party)+'</td>'+
-        '<td><select class="mini rsvp-sel" data-gid="'+esc(x.id)+'" aria-label="RSVP for '+esc(x.name)+'">'+
+      /* Every cell carries the column name it belongs to. On a desktop the
+         header row says it once; below 700px the table lays out as cards and
+         each value needs its own label, and reading it off data-l costs no
+         second render — the selects and ticks keep the handlers they had. */
+      return '<tr><td class="g-name"><b>'+esc(x.name)+'</b></td><td data-l="Party"'+(x.party?'':' class="is-none"')+'>'+esc(x.party)+'</td>'+
+        '<td data-l="RSVP" class="g-rsvp"><select class="mini rsvp-sel" data-gid="'+esc(x.id)+'" aria-label="RSVP for '+esc(x.name)+'">'+
           Object.keys(RSVP).map(function(k){return '<option value="'+k+'"'+(cur===k?' selected':'')+'>'+RSVP[k].lbl+'</option>';}).join('')+
         '</select></td>'+
-        '<td>'+(gMeal(x,e)?esc(gMeal(x,e)):'<span style="color:var(--muted)">—</span>')+'</td>'+
-        '<td>'+(x.diet?'<span class="status s-due">'+esc(x.diet)+'</span>':'<span style="color:var(--muted)">—</span>')+'</td>'+
-        '<td>'+(tb?'<span class="pill">'+esc(tb.name)+'</span>':'<span style="color:var(--muted)">Unseated</span>')+rowActions('guest',x.id)+'</td>'+
+        '<td data-l="Meal"'+(gMeal(x,e)?'':' class="is-none"')+'>'+(gMeal(x,e)?esc(gMeal(x,e)):'<span style="color:var(--muted)">—</span>')+'</td>'+
+        '<td data-l="Dietary"'+(x.diet?'':' class="is-none"')+'>'+(x.diet?'<span class="status s-due">'+esc(x.diet)+'</span>':'<span style="color:var(--muted)">—</span>')+'</td>'+
+        '<td data-l="Table" class="g-seat">'+(tb?'<span class="pill">'+esc(tb.name)+'</span>':'<span style="color:var(--muted)">Unseated</span>')+rowActions('guest',x.id)+'</td>'+
+        /* A zero-height full-width cell, invisible everywhere except a phone
+           card, where it breaks the line so the invite chips group together
+           instead of trailing off the end of Table. */
+        (!sub&&subs.length?'<td class="inv-brk" aria-hidden="true"></td>':'')+
         (!sub?subs.map(function(s){
           var on=!!inviteOf(x.id,s.id);
           var r=on?gRsvp(x,s):null;
-          return '<td class="inv-col"><label class="inv-box'+(on?' on':'')+'">'+
+          return '<td class="inv-col" data-l="'+esc(roleLabel(s,true))+'"><label class="inv-box'+(on?' on':'')+'">'+
             '<input type="checkbox" class="inv-chk" data-gid="'+esc(x.id)+'" data-eid="'+esc(s.id)+'"'+(on?' checked':'')+
             ' aria-label="'+esc(x.name)+' invited to '+esc(s.title)+'">'+
             '<span class="inv-tick">'+(on?(r==='yes'?'✓':r==='no'?'✕':'·'):'')+'</span></label></td>';
@@ -6756,13 +7023,18 @@ function vendorTeamMarkup(ev,editable){
     return '<div class="empty-hint" style="padding:26px 20px">No vendors booked yet.'+
       (editable?'<div class="sec-actions" style="justify-content:center"><button class="btn btn-ghost btn-sm" data-addbooking="'+esc(ev.id)+'">＋ Book a vendor</button></div>':'')+'</div>';
   }
-  return '<div class="tbl-wrap"><table><tbody>'+bk.map(function(b){
+  /* The one table in the app with no header row that still needs the phone
+     card layout: a vendor name, a status picker and the row actions come to
+     449px of columns on a 360px card, so it was the last thing left scrolling
+     sideways. It says what its own cells are called, since there is no header
+     for labelCells() to read them off. */
+  return '<div class="tbl-wrap cards-wrap"><table class="as-cards has-acts"><tbody>'+bk.map(function(b){
       var v=vendorById(b.vendorId)||{name:'(removed vendor)'};
       var st=VSTATUS[b.status]||VSTATUS.quote;
       return '<tr><td><b>'+esc(v.name)+'</b><div class="v-sub">'+esc(v.cat||'')+(v.contact?' · '+esc(v.contact):'')+'</div>'+
         '<div class="v-links">'+(v.phone?'<a href="tel:'+esc(String(v.phone).replace(/[^\d+]/g,''))+'">'+esc(v.phone)+'</a>':'')+
         (v.email?'<a href="mailto:'+esc(v.email)+'">'+esc(v.email)+'</a>':'')+'</div></td>'+
-        '<td style="text-align:right">'+
+        '<td style="text-align:right" data-l="Booking">'+
           (editable?'<select class="mini bstat-sel" data-bid="'+esc(b.id)+'" aria-label="Status for '+esc(v.name)+'">'+
             Object.keys(VSTATUS).map(function(k){return '<option value="'+k+'"'+(b.status===k?' selected':'')+'>'+VSTATUS[k].lbl+'</option>';}).join('')+
           '</select>':'<span class="status '+st.cls+'">'+st.lbl+'</span>')+

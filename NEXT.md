@@ -473,6 +473,40 @@ never pulled, which is what stops a fresh install overwriting the studio.
   replace matching the backup-restore handler instead of the boot sequence.
 - Check a class name is free before styling it — `.ev-switch` was already the
   active-event `<select>`.
+- **Every headed table becomes cards below 700px.** Nine screens render a
+  five- or six-column table; all of them were wider than a 390px phone, so
+  they scrolled sideways inside `.tbl-wrap` — Amount sat off the right edge and
+  the client's name wrapped to three lines to make room. `labelCells()` runs
+  once per `render()`, copies each `<th>`'s text onto the cells beneath it as
+  `data-l`, and tags the table `.as-cards` (plus `.has-acts` when a row has
+  actions, and `.cards-wrap` on the scroller so it can stop being one). CSS
+  reads the labels back with `content:attr(data-l)`. Consequences worth
+  knowing before you touch a table:
+  - There is **no phone-only render**, so nothing can drift and rotating the
+    phone re-lays out with no JavaScript at all.
+  - A cell holding only an em-dash gets `.is-none` and disappears on a card —
+    a table needs the empty cell to keep its column; a card does not.
+  - The **first cell is the card's title**, so put what the row *is* in
+    column one. A cell whose header is blank is treated as the action column
+    and floats to the card's top-right corner.
+  - A header `<th>` may carry a bulk control (the guest grid's invite
+    columns); those stay as chips above the cards. Everything else in `thead`
+    is hidden.
+  - Only tables **with a header row** qualify. The one exception is the vendor
+    team table, which has none and still overflowed; it declares
+    `class="as-cards has-acts"` and its own `data-l` in the markup.
+- **`uid()` is called before its own counter is initialised.** `normalize()`
+  mints ids at load and runs above `var _uidSeq=0`, so the counter was
+  `undefined` and `undefined++` is NaN — every id minted in that window had the
+  literal string "NaN" where the collision guard belongs. Guarded inside
+  `uid()` now. Ids already stored keep their NaN; they are still unique
+  strings and rewriting them would break every reference.
+- **Row actions are blocked on sample records by design.** `sampleBlock()` is a
+  capture-phase gate on `.main`: it calls `preventDefault()` and
+  `stopPropagation()` before any handler sees the click. A test that clicks
+  `[data-edit]` on the sample and finds nothing happened has found the gate,
+  not a bug — exercise create buttons instead, or adopt/remove the sample
+  first.
 
 ---
 
