@@ -518,12 +518,38 @@ never pulled, which is what stops a fresh install overwriting the studio.
   **assigned, not added** — `render()` re-wires the view and several callers
   still follow it with a `wireGuests()` of their own, so a stacking listener
   fires twice and one swipe dealt two cards.
-- **Invoices are a ledger line, not a document.** `{num, client, leadId,
-  amount, due, status}` and nothing else — no body, no template, no PDF, no
-  send. Documents are the paperwork: title, type, event, value, a body you
-  write in-app, an optional uploaded file, a signature flow, and templates
-  from Settings › Templates. The two are separate collections and neither
-  knows about the other; an invoice created in-app appears on Finance only.
+- **An invoice is a document now** — `viewInvoiceDetail()` and
+  `invDocMarkup()`. Things to know before you touch one:
+  - **The lines are the record; the total is derived.** `invSub` → `invTax` →
+    `invTotal`, and `invRecalc()` writes the answer back to `amount` on every
+    change. Everything else in the app reads `amount` — the dashboard alert,
+    the stat row, the CSV export, the Supabase column — so an invoice whose
+    stored total disagreed with its own lines would be wrong everywhere at
+    once. An invoice with no lines keeps `amount` as its own truth, which is
+    every invoice written before this existed.
+  - **Overdue is computed, not stored.** `invStatus()` compares the due date
+    with `todayLocal()`; nothing writes `'over'` to disk, so an invoice does
+    not become late because someone opened the app.
+  - **`invDocMarkup(x, forPrint)` builds one document two ways** — the class
+    prefix is the only difference (`iv-` on screen, `pi-` in the print frame).
+    A studio whose PDF did not match its portal would have two invoices.
+  - **A document labelled Invoice raises one**, via `invoiceForDoc()` — on
+    creation, on upload, and on relabelling. Created only, never overwritten:
+    once the invoice exists it may carry lines and payments the file knows
+    nothing about. Deleting either side unlinks; neither cascades.
+  - **The link goes one way on the wire.** `documents.invoice_id` only —
+    documents are upserted after invoices, so the row it names exists by then.
+    Both directions would be a circular foreign key that fails whichever table
+    goes first. The pull rebuilds `invoice.docId` from the document side.
+  - **Migration 22 carries the lines** (`items`, `payments`, `tax_rate`,
+    `issued_date`, `notes`, `pay_link` as jsonb/scalars). `sbInvCols()` probes
+    for it exactly as `sbCoverCol()` does, so a studio that has not run 22 can
+    still push — naming a column the database lacks fails the whole table.
+  - **Paying in the app means the studio's own checkout.** GEM never touches
+    the money: `prefs().payLink` (or the invoice's own) is opened by a Pay
+    button in the portal, and a balance with no link shows the terms instead.
+    A real in-app card payment needs a payment processor and a server to hold
+    its secret — neither exists here yet.
 - **Row actions are blocked on sample records by design.** `sampleBlock()` is a
   capture-phase gate on `.main`: it calls `preventDefault()` and
   `stopPropagation()` before any handler sees the click. A test that clicks

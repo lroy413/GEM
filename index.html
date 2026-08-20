@@ -10,7 +10,7 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
 <meta name="apple-mobile-web-app-title" content="GEM">
 <meta name="format-detection" content="telephone=no">
-<meta name="gem-build" content="c5a50a76163f">
+<meta name="gem-build" content="a7105494c8d1">
 <link rel="manifest" href="/manifest.webmanifest">
 <link rel="icon" href="/icons/icon-192.png" sizes="192x192" type="image/png">
 <link rel="apple-touch-icon" href="/icons/icon-180.png">
@@ -1192,7 +1192,126 @@ tbody tr:hover{background:var(--pink-50)}
   width:100%;max-width:470px;padding:28px;border:1px solid var(--line);
   display:flex;flex-direction:column;max-height:88vh;
   animation:rise .24s var(--ease)}
+/* The couple's side of an invoice: what is left to pay, and a way to pay it. */
+.pp-list{padding:6px 0}
+.pp-row{display:flex;align-items:center;gap:12px;flex-wrap:wrap;padding:13px 22px;
+  border-bottom:1px solid var(--line)}
+.pp-row:last-child{border-bottom:none}
+.pp-m{flex:1 1 150px;min-width:0}
+.pp-m b{font-size:14px}
+.pp-d{display:block;font-size:11.5px;color:var(--muted);margin-top:2px}
+.pp-a{font-weight:600;font-size:15px;font-variant-numeric:tabular-nums;margin-left:auto}
+.pp-of{font-weight:400;font-size:11.5px;color:var(--muted)}
+.pp-pay{text-decoration:none;flex:0 0 auto}
+.pp-terms{padding:0 22px 13px;font-size:11.5px;color:var(--muted)}
+@media (max-width:700px){
+  .pp-row{padding:12px 16px;gap:8px 10px}
+  .pp-a{margin-left:0}
+  .pp-pay{margin-left:auto}
+}
+
+/* ---- the invoice, on screen ----
+   The same markup the printer gets, at the same proportions, so what a studio
+   sees before it sends is what lands. */
+.iv-bar{display:flex;align-items:center;flex-wrap:wrap;gap:10px 14px;margin-bottom:14px}
+.iv-bal{font-size:13px;color:var(--ink-soft);font-weight:600}
+.iv-acts{margin-left:auto;display:flex;gap:8px;flex-wrap:wrap}
+.iv-link{font-size:12.5px;color:var(--ink-soft);background:var(--gold-soft);
+  border:1px solid var(--gold-line);border-radius:var(--radius-sm);
+  padding:11px 15px;margin-bottom:14px;overflow-wrap:anywhere}
+.iv-link a{color:var(--gold-deep)}
+.iv-link .iv-lnote{display:block;color:var(--muted);font-size:11.5px;margin-top:3px}
+.iv-link-none{background:var(--sunk);border-color:var(--sunk-line);color:var(--muted)}
+.iv-doc{font-size:12.5px;color:var(--ink-soft);margin-bottom:14px}
+.iv-card{padding:0;overflow:hidden}
+.iv-sheet{padding:34px 36px 26px;max-width:720px;margin:0 auto}
+.iv-top{display:flex;justify-content:space-between;gap:26px;align-items:flex-start;
+  padding-bottom:20px;border-bottom:2px solid var(--gold)}
+.iv-logo{width:44px;height:44px;object-fit:cover;border-radius:9px;margin-bottom:9px;display:block}
+.iv-biz{font-family:var(--serif);font-size:20px;font-weight:600;line-height:1.2}
+.iv-fine{font-size:12px;color:var(--muted);line-height:1.5}
+.iv-id{text-align:right;flex:0 0 auto}
+.iv-word{font-size:10.5px;letter-spacing:.22em;text-transform:uppercase;color:var(--gold);font-weight:700}
+.iv-num{font-family:var(--serif);font-size:25px;font-weight:600;margin:2px 0 8px;
+  font-variant-numeric:tabular-nums}
+.iv-dates{font-size:12px;color:var(--ink-soft);line-height:1.7}
+.iv-dates span{color:var(--muted)}
+.iv-parties{display:flex;gap:44px;flex-wrap:wrap;margin:22px 0 20px}
+.iv-ck{font-size:10px;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);
+  font-weight:600;margin-bottom:5px}
+.iv-cname{font-size:14.5px;font-weight:600}
+.iv-lines{width:100%;border-collapse:collapse}
+.iv-lines th{text-align:left;font-size:10px;letter-spacing:.1em;text-transform:uppercase;
+  color:var(--muted);font-weight:600;border-bottom:1px solid var(--line);padding:9px 10px;background:none}
+.iv-lines td{padding:11px 10px;border-bottom:1px solid var(--line);font-size:13.5px;vertical-align:top}
+.iv-r{text-align:right;font-variant-numeric:tabular-nums;white-space:nowrap}
+.iv-sums{margin-top:16px;margin-left:auto;max-width:300px}
+.iv-sline{display:flex;justify-content:space-between;gap:20px;padding:5px 10px;font-size:13.5px}
+.iv-sline span{color:var(--muted)}
+.iv-sline b{font-variant-numeric:tabular-nums}
+.iv-stot{border-top:1px solid var(--line);margin-top:5px;padding-top:10px;font-size:15px}
+.iv-stot b{font-size:19px;font-weight:600}
+.iv-sbal{border-top:1px solid var(--line);margin-top:5px;padding-top:10px}
+.iv-sbal b{color:var(--gold-deep);font-size:16px}
+.iv-pays{margin-top:22px;padding-top:14px;border-top:1px solid var(--line)}
+.iv-pay{display:flex;justify-content:space-between;gap:16px;font-size:12.5px;padding:3px 0;color:var(--ink-soft)}
+.iv-pay b{font-variant-numeric:tabular-nums}
+.iv-notes{margin-top:22px;padding:13px 16px;background:var(--sunk);border-radius:var(--radius-sm);
+  font-size:12.5px;color:var(--ink-soft);white-space:pre-wrap}
+.iv-foot{margin-top:24px;padding-top:13px;border-top:1px solid var(--line);
+  text-align:center;font-size:11px;color:var(--muted)}
+.inv-bal{font-size:11.5px;color:var(--gold-deep);margin-top:2px}
+@media (max-width:700px){
+  .iv-sheet{padding:22px 18px 18px}
+  .iv-top{flex-direction:column;gap:14px}
+  .iv-id{text-align:left}
+  .iv-parties{gap:20px}
+  .iv-parties>div{flex:1 1 46%}
+  .iv-sums{max-width:none}
+  /* Qty and Rate are arithmetic you can do from Amount; on a phone the
+     description and what it comes to are what you are checking. */
+  .iv-lines th:nth-child(2),.iv-lines td:nth-child(2),
+  .iv-lines th:nth-child(3),.iv-lines td:nth-child(3){display:none}
+}
+
+/* The invoice editor is a table of lines, not a column of fields. */
+.modal-wide{max-width:640px}
 .modal h3{font-family:var(--serif);font-size:26px;font-weight:600;margin-bottom:5px;letter-spacing:-.012em}
+.lbl-note{font-weight:400;text-transform:none;letter-spacing:0;color:var(--muted);font-size:11px}
+.il-head,.il-row{display:grid;grid-template-columns:1fr 62px 92px 92px 30px;gap:8px;align-items:center}
+.il-head{font-size:10px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);
+  font-weight:600;padding:0 2px 6px}
+.il-head span:nth-child(2),.il-head span:nth-child(3),.il-head span:nth-child(4){text-align:right}
+.il-row{margin-bottom:7px}
+.il-row input{width:100%;font-family:var(--sans);font-size:13px;padding:9px 10px;
+  border:1px solid var(--line);border-radius:9px;background:var(--card);color:var(--ink)}
+.il-row input:focus{outline:none;border-color:var(--gold-line);box-shadow:var(--ring)}
+.il-row .il-qty,.il-row .il-rate{text-align:right}
+.il-amt{text-align:right;font-size:13px;font-weight:600;font-variant-numeric:tabular-nums}
+.il-x{width:28px;height:28px;border-radius:8px;border:1px solid var(--line);background:var(--card);
+  color:var(--muted);cursor:pointer;font-size:11px;line-height:1;padding:0}
+.il-x:hover{background:#F9E5E5;color:#A75252;border-color:#EDD1D1}
+.il-sums{margin-top:16px;padding-top:12px;border-top:1px solid var(--line)}
+.il-sums .kv{display:flex;align-items:center;justify-content:space-between;padding:5px 2px;font-size:13px}
+.il-sums .kv span{color:var(--muted)}
+.il-sums .kv b{font-variant-numeric:tabular-nums}
+.il-sums .kv-tot{border-top:1px solid var(--line);margin-top:6px;padding-top:10px;font-size:15px}
+.il-sums .kv-tot b{font-size:18px;font-weight:600}
+.il-taxr{width:56px;padding:4px 6px;font-size:12px;text-align:right;
+  border:1px solid var(--line);border-radius:7px;background:var(--card);
+  font-family:var(--sans);color:var(--ink)}
+@media (max-width:600px){
+  .il-head{display:none}
+  /* Each line becomes its own little card: what it is on the first row, how
+     many and how much on the second, what that comes to on the third. */
+  .il-row{grid-template-columns:1fr 1fr 30px;gap:8px;padding:11px;margin-bottom:9px;
+    border:1px solid var(--line);border-radius:11px;background:var(--sunk)}
+  .il-row .il-desc{grid-column:1/3;grid-row:1}
+  .il-row .il-x{grid-column:3;grid-row:1}
+  .il-row .il-qty{grid-column:1;grid-row:2}
+  .il-row .il-rate{grid-column:2;grid-row:2}
+  .il-amt{grid-column:1/-1;grid-row:3;text-align:right;padding-top:2px}
+}
 .modal p.sub{color:var(--muted);font-size:12.5px;margin-bottom:22px;line-height:1.5}
 .field{margin-bottom:14px}
 .field label{display:block;font-size:11px;font-weight:600;color:var(--ink-soft);margin-bottom:6px;
@@ -3941,10 +4060,127 @@ function invoicesForLead(l){
 }
 /* The client's display name, always read through the lead so a rename shows
    everywhere at once rather than wherever a copy happened to be stored. */
+/* Local, not toISOString(). That is UTC, and it hands a planner in California
+   tomorrow's date from 4pm onwards — which on an invoice means a due date that
+   is already wrong the day it is written. */
+function todayLocal(){
+  var n=new Date();
+  return n.getFullYear()+'-'+String(n.getMonth()+1).padStart(2,'0')+'-'+String(n.getDate()).padStart(2,'0');
+}
 function invoiceClientName(x){
   var l=x.leadId?leadById(x.leadId):null;
   return l?l.names:(x.client||'');
 }
+/* ============================================================
+ * An invoice is a document, not a ledger line
+ *
+ * It used to be a number, a client, a total and a status — so "New invoice"
+ * produced a row in a list and nothing a couple could ever be shown. What a
+ * studio actually sends has lines on it, a tax figure, terms, and somewhere to
+ * pay. The lines are the record now and the total is derived from them.
+ *
+ * `amount` is still written on every change and stays authoritative when there
+ * are no lines. Everything that reads an invoice's value reads it — the
+ * dashboard alert, the stat row, the CSV export, the Supabase column — and an
+ * invoice whose total disagreed with its own lines would be worse than one
+ * with no lines at all.
+ * ============================================================ */
+function invItems(x){ return (x&&x.items)||[]; }
+function invLineTotal(l){ return (Number(l&&l.qty)||0)*(Number(l&&l.rate)||0); }
+function invSub(x){
+  var it=invItems(x);
+  if(!it.length)return Number(x&&x.amount)||0;
+  return Math.round(it.reduce(function(a,l){ return a+invLineTotal(l); },0)*100)/100;
+}
+function invTaxRate(x){ return Number((x&&x.taxRate)||0)||0; }
+function invTax(x){ return Math.round(invSub(x)*invTaxRate(x))/100; }
+function invTotal(x){ return Math.round((invSub(x)+invTax(x))*100)/100; }
+function invPayments(x){ return (x&&x.payments)||[]; }
+function invPaid(x){
+  var ps=invPayments(x);
+  /* An invoice marked paid by hand — every one of them, before payments could
+     be recorded at all — has no rows to add up, and its balance must still be
+     nil rather than the whole total outstanding. */
+  if(!ps.length)return (x&&x.status==='paid')?invTotal(x):0;
+  return Math.round(ps.reduce(function(a,y){ return a+(Number(y.amount)||0); },0)*100)/100;
+}
+function invBalance(x){ return Math.round((invTotal(x)-invPaid(x))*100)/100; }
+/* Call after anything that changes the lines, the tax or the payments. */
+function invRecalc(x){
+  if(!x)return x;
+  if(invItems(x).length)x.amount=invTotal(x);
+  if(x.status!=='draft'){
+    if(invBalance(x)<=0.004)x.status='paid';
+    else if(x.status==='paid')x.status='due';
+  }
+  return x;
+}
+/* Overdue is a fact about today, not a stored state — an invoice does not
+   become late because someone happened to open the app. */
+function invStatus(x){
+  if(!x)return 'draft';
+  if(x.status==='paid'||x.status==='draft')return x.status;
+  if(x.due&&x.due<todayLocal()&&invBalance(x)>0.004)return 'over';
+  return 'due';
+}
+var INV_LBL={draft:'Draft',due:'Due',over:'Overdue',paid:'Paid'};
+var INV_CLS={draft:'s-draft',due:'s-due',over:'s-over',paid:'s-paid'};
+/* Highest number seen plus one, so deleting the last invoice does not hand the
+   next one a number a client has already been sent. */
+function invNextNum(){
+  var pre=prefs().invPrefix||'GEM-', top=0;
+  (db.invoices||[]).forEach(function(x){
+    var m=String(x.num||'').match(/(\d+)\s*$/);
+    if(m&&Number(m[1])>top)top=Number(m[1]);
+  });
+  return pre+(top?top+1:1001);
+}
+function invById(id){ return (db.invoices||[]).find(function(x){return x.id===id;})||null; }
+/* ---- a document labelled Invoice IS an invoice ----
+ * Filing the PDF your accountant produced and then typing the same figures
+ * into a second screen is not filing, it is double entry. Label a document
+ * Invoice — whether you created it here or uploaded it — and the invoice
+ * appears, linked both ways: the sheet says which file it was filed with, the
+ * document knows which invoice it raised.
+ *
+ * Only ever created, never silently overwritten. Once the invoice exists the
+ * studio may have added lines, tax and payments to it that the document knows
+ * nothing about, and the file is the attachment, not the source of truth.
+ */
+function invoiceForDoc(d){
+  if(!d)return null;
+  if(d.type!=='invoice'){
+    /* Relabelled away — the invoice stays, because it may have payments on it,
+       but the two stop claiming each other. */
+    if(d.invoiceId){
+      var was=invById(d.invoiceId);
+      if(was&&was.docId===d.id)was.docId=null;
+      d.invoiceId=null;
+    }
+    return null;
+  }
+  if(d.invoiceId&&invById(d.invoiceId))return invById(d.invoiceId);
+  var ev=d.eventId?evById(d.eventId):null;
+  var lead=ev?leadForEvent(ev):null;
+  var x={
+    id:uid('i'), num:invNextNum(),
+    leadId:lead?lead.id:null, client:lead?lead.names:(ev?ev.title:''),
+    eventId:d.eventId||null,
+    issued:d.sent||todayLocal(), due:'',
+    /* The document's own state is the best guess at the invoice's: a signed
+       one has been settled, a sent one is owed, a draft is neither. */
+    status:d.status==='signed'?'paid':(d.status==='sent'?'due':'draft'),
+    items:[], taxRate:0, amount:Number(d.amount)||0,
+    notes:prefs().payTerms||'', payments:[], payLink:'', docId:d.id
+  };
+  invRecalc(x);
+  db.invoices.unshift(x);
+  d.invoiceId=x.id;
+  return x;
+}
+/* The invoice's own link if it has one, else whatever the studio uses for
+   everything. Empty means the portal shows the terms instead of a button. */
+function invPayLink(x){ return String((x&&x.payLink)||prefs().payLink||'').trim(); }
 /* Called after a lead is renamed. The cached copies exist because the database
    column is NOT NULL and the CSV export and search read them; they just have
    to be corrected rather than left to rot. */
@@ -4361,7 +4597,7 @@ function uid(prefix){
 }
 var _justDragged=false;   // set during HTML5 drag so drop doesn't also navigate
 var _now=new Date();
-var state={view:'dashboard',eventId:null,clientId:null,boardId:null,qId:null,venueId:null,settingsPage:null,helpOpen:null,seatMode:'plan',floorSel:null,chkTab:'planner',chkOpen:null,heroIdx:0,guestIdx:0,gsDir:null,activeEventId:(db.events[0]||{}).id,
+var state={view:'dashboard',eventId:null,clientId:null,boardId:null,qId:null,venueId:null,settingsPage:null,helpOpen:null,seatMode:'plan',floorSel:null,chkTab:'planner',chkOpen:null,heroIdx:0,guestIdx:0,gsDir:null,invoiceId:null,activeEventId:(db.events[0]||{}).id,
            calY:_now.getFullYear(),calM:_now.getMonth()};
 function activeEvent(){return db.events.find(function(e){return e.id===state.activeEventId;})||db.events[0];}
 
@@ -4463,8 +4699,15 @@ function pageHead(v){
   }
   if(v==='finance'){
     var inv=db.invoices||[];
-    var paid=inv.filter(function(x){return x.status==='paid';}).reduce(function(a,x){return a+x.amount;},0);
-    var owed=inv.filter(function(x){return x.status==='due'||x.status==='over';}).reduce(function(a,x){return a+x.amount;},0);
+    /* An open invoice is its own page — the studio's running total is not what
+       you came here to read. */
+    if(state.invoiceId){
+      var one=invById(state.invoiceId);
+      if(one)return ['Invoice',one.num||'Invoice',
+        [invoiceClientName(one),one.due?'due '+fmtDate(one.due):''].filter(Boolean).join(' · ')];
+    }
+    var paid=inv.reduce(function(a,x){return a+invPaid(x);},0);
+    var owed=inv.filter(function(x){return x.status!=='draft';}).reduce(function(a,x){return a+Math.max(0,invBalance(x));},0);
     return [lab,inv.length?(money(paid)+' collected · '+money(owed)+' out'):'No invoices yet',sub];
   }
   if(v==='documents'){
@@ -4504,7 +4747,9 @@ function setView(v,opts){
   if(opts&&opts.boardId!==undefined)state.boardId=opts.boardId;
   if(opts&&opts.qId!==undefined)state.qId=opts.qId;
   if(opts&&opts.venueId!==undefined)state.venueId=opts.venueId;
+  if(opts&&opts.invoiceId!==undefined)state.invoiceId=opts.invoiceId;
   if(opts&&opts.settingsPage!==undefined){state.settingsPage=opts.settingsPage;state.helpOpen=null;}
+  if(v!=='finance'&&(!opts||opts.invoiceId===undefined))state.invoiceId=null;
   document.querySelectorAll('.nav-item').forEach(function(n){n.classList.toggle('active',n.dataset.view===v);});
   document.querySelectorAll('.tab[data-view]').forEach(function(n){n.classList.toggle('active',n.dataset.view===v);});
   var sb=document.getElementById('settingsBtn');
@@ -4587,7 +4832,11 @@ function evSwitcher(){
 function actionsFor(v){
   if(v==='pipeline')return '<button class="btn btn-gold" id="addLead">＋ New lead</button>';
   if(v==='clients')return state.clientId?'':'<button class="btn btn-gold" id="addClient">＋ New client</button>';
-  if(v==='finance')return '<button class="btn btn-ghost" id="exportInv">Export CSV</button> <button class="btn btn-gold" id="addInv">＋ New invoice</button>';
+  /* The invoice's own actions live on the sheet; the list's belong to the
+     list, and offering "New invoice" while reading one is a way to lose the
+     one you were reading. */
+  if(v==='finance')return state.invoiceId?'':
+    '<button class="btn btn-ghost" id="exportInv">Export CSV</button> <button class="btn btn-gold" id="addInv">＋ New invoice</button>';
   if(v==='events')return state.eventId
     ?'<button class="btn btn-quiet btn-icon" id="printEvent" title="Print" aria-label="Print">'+
        '⎙<span class="bl"> Print</span></button> '+
@@ -4686,7 +4935,10 @@ function render(){
   else if(state.view==='venues'){ el.innerHTML=viewVenues(); wireVenues(); }
   else if(state.view==='documents'){ el.innerHTML=viewDocuments(); wireDocuments(); }
   else if(state.view==='portal'){ el.innerHTML=viewPortal(); wirePortal(); }
-  else if(state.view==='finance')el.innerHTML=viewFinance();
+  else if(state.view==='finance'){
+    el.innerHTML= state.invoiceId?viewInvoiceDetail(state.invoiceId):viewFinance();
+    wireFinance();
+  }
   labelCells(el);
 }
 
@@ -7831,10 +8083,11 @@ function uploadDocFor(eventId,after){
                amount:Number(v.amount)||0,eventId:v.eventId||eventId||null,
                body:'',file:null,sent:'',signed:''};
         db.documents.push(d);
+        var raised=invoiceForDoc(d);
         closeModal();
         /* docAttach saves and re-renders once the blob is in IndexedDB. */
         docAttach(d.id,f);
-        toast('Filed under '+docTypeLabel(v.type));
+        toast(raised?('Filed, and raised '+raised.num+' ✦'):('Filed under '+docTypeLabel(v.type)));
       }
     });
   };
@@ -8515,6 +8768,14 @@ function prefs(){
        the point of the list is what is due, and past about ten rows it stops
        being a list and starts being the page. */
     todoRows:[10,15,20].indexOf(Number(d.todoRows))>=0?Number(d.todoRows):10,
+    /* Invoicing. Whitelisted like everything else, or it saves, looks right,
+       and comes back as the default on the next reload. */
+    bizTaxId:d.bizTaxId||'',
+    invPrefix:d.invPrefix||'GEM-',
+    taxLabel:d.taxLabel||'Tax',
+    taxRate:Number(d.taxRate)||0,
+    payTerms:d.payTerms||'Payment due within 14 days of the date above.',
+    payLink:d.payLink||'',
     team:d.team||[
       {id:uid('tm'),name:'Glimmer M.',email:'hello@gemevents.app',role:'owner'},
       {id:uid('tm'),name:'Rosa Mendez',email:'rosa@gemevents.app',role:'planner'}
@@ -8601,7 +8862,24 @@ function settingsPage(k){
         setRow('Email','<input class="set-in" id="s_bizEmail" type="email" value="'+esc(p.bizEmail)+'">')+
         setRow('Phone','<input class="set-in" id="s_bizPhone" type="tel" value="'+esc(p.bizPhone)+'">')+
         setRow('Address','<input class="set-in" id="s_bizAddress" value="'+esc(p.bizAddress)+'">')+
-      '</div><div class="set-note">Changes appear immediately in the sidebar and on printed documents.</div></div>';
+        setRow('Tax / company number','<input class="set-in" id="s_bizTaxId" value="'+esc(p.bizTaxId)+'">',
+               'Printed under your address on every invoice')+
+      '</div>'+
+      '<div class="fig-head" style="margin:24px 0 8px">Invoicing</div>'+
+      '<div class="set-card">'+
+        setRow('Invoice numbers start','<input class="set-in" id="s_invPrefix" value="'+esc(p.invPrefix)+'">',
+               'The prefix; the number after it counts up from the highest you have used')+
+        setRow('Tax label','<input class="set-in" id="s_taxLabel" value="'+esc(p.taxLabel)+'">',
+               'VAT, Sales tax, GST — whatever your invoices say')+
+        setRow('Default tax rate','<input class="set-in" id="s_taxRate" type="number" step="any" value="'+esc(p.taxRate)+'">',
+               'Applied to a new invoice; every invoice can override it')+
+        setRow('Default terms','<input class="set-in" id="s_payTerms" value="'+esc(p.payTerms)+'">',
+               'Printed at the foot of the invoice')+
+        setRow('Payment link','<input class="set-in" id="s_payLink" value="'+esc(p.payLink)+'" placeholder="https://buy.stripe.com/…">',
+               'Your own checkout — Stripe, Square, PayPal, a bank page. A couple with a balance sees it as a Pay button in their portal.')+
+      '</div>'+
+      '<div class="set-note">GEM does not take card details itself, and does not touch the money — '+
+        'the Pay button opens whatever you paste above, so payment lands with your processor exactly as it does today.</div></div>';
   }
   if(k==='team'){
     return back+'<div class="set-page">'+
@@ -9134,11 +9412,16 @@ function wireSettings(){
   // text + select fields save on change
   [['s_bizName','bizName'],['s_plannerName','plannerName'],['s_plannerRole','plannerRole'],
    ['s_bizEmail','bizEmail'],['s_bizPhone','bizPhone'],['s_bizAddress','bizAddress'],
+   ['s_bizTaxId','bizTaxId'],['s_invPrefix','invPrefix'],['s_taxLabel','taxLabel'],
+   ['s_payTerms','payTerms'],['s_payLink','payLink'],
    ['s_density','density'],['s_landing','landing'],['s_defaultTable','defaultTable'],
    ['s_taskHorizon','taskHorizon']].forEach(function(pair){
     var el=$('#'+pair[0]); if(!el)return;
     el.onchange=function(){ p[pair[1]]=el.value; savePrefs(); applyPrefs(); if(pair[1].indexOf('biz')===0||pair[1].indexOf('planner')===0)paintIdentity(); };
   });
+  /* A rate is arithmetic, and '8.5' times a subtotal is NaN. */
+  var tr=$('#s_taxRate');
+  if(tr)tr.onchange=function(){ p.taxRate=Number(tr.value)||0; savePrefs(); };
   /* A number, not a string — the cap is compared with indexOf against
      [10,15,20], and '10' is not 10. */
   var tr=$('#s_todoRows');
@@ -9986,11 +10269,33 @@ function viewPortal(){
     }).join(''):'<div class="empty-hint">No messages yet.</div>')+'</div>'+
     '<div class="composer"><input id="pMsgInput" placeholder="Reply to your planner…" aria-label="Message">'+
       '<button class="btn btn-gold" id="pSendMsg">Send</button></div></div>'+
-  (inv.length?'<div class="card" style="margin-top:20px"><div class="card-h"><h3>Payment Schedule</h3></div>'+
-    '<div class="tbl-wrap"><table><thead><tr><th>Invoice</th><th>Due</th><th>Status</th><th style="text-align:right">Amount</th></tr></thead><tbody>'+
-    inv.map(function(x){var cls={paid:'s-paid',due:'s-due',over:'s-over',draft:'s-draft'}[x.status],lbl={paid:'Paid',due:'Due',over:'Overdue',draft:'Draft'}[x.status];
-      return '<tr><td><b>'+esc(x.num)+'</b></td><td>'+fmtDate(x.due)+'</td><td><span class="status '+cls+'">'+lbl+'</span></td><td style="text-align:right"><span class="val">'+money(x.amount)+'</span></td></tr>';
-    }).join('')+'</tbody></table></div></div>':'');
+  /* A couple never sees a draft — it is a figure the studio has not committed
+     to yet, and the portal is the one screen where a wrong number is a
+     conversation rather than an edit. */
+  (function(){
+    var shown=inv.filter(function(x){return x.status!=='draft';});
+    if(!shown.length)return '';
+    var owed=shown.reduce(function(a,x){return a+Math.max(0,invBalance(x));},0);
+    return '<div class="card" style="margin-top:20px"><div class="card-h"><h3>Payment Schedule</h3>'+
+      (owed?'<span class="sec-badge">'+money(owed)+' outstanding</span>':'<span class="sec-badge">Settled in full</span>')+
+      '</div><div class="pp-list">'+shown.map(function(x){
+        var st=invStatus(x), bal=invBalance(x), link=invPayLink(x);
+        return '<div class="pp-row">'+
+          '<div class="pp-m"><b>'+esc(x.num)+'</b>'+
+            '<span class="pp-d">'+(x.due?'Due '+fmtDate(x.due):'No due date')+
+              (invPaid(x)&&bal>0.004?' · '+money(invPaid(x))+' received':'')+'</span></div>'+
+          '<span class="status '+INV_CLS[st]+'">'+INV_LBL[st]+'</span>'+
+          '<span class="pp-a">'+money(bal>0.004?bal:invTotal(x))+
+            (bal>0.004&&invPaid(x)?'<span class="pp-of"> of '+money(invTotal(x))+'</span>':'')+'</span>'+
+          /* The one honest "pay in app" there is without a payment processor:
+             the studio's own checkout, opened from the invoice it belongs to.
+             With no link the terms are shown instead, because a Pay button
+             that does nothing is worse than no button. */
+          (bal>0.004&&link?'<a class="btn btn-gold btn-sm pp-pay" href="'+esc(link)+'" target="_blank" rel="noopener">Pay</a>':'')+
+        '</div>'+
+        (bal>0.004&&!link&&x.notes?'<div class="pp-terms">'+esc(x.notes)+'</div>':'');
+      }).join('')+'</div></div>';
+  })();
 }
 function wirePortal(){
   var e=activeEvent(); if(!e)return;
@@ -10076,24 +10381,196 @@ function openAnswerModal(qid){
 function emptyState(msg){return '<div class="card" style="padding:40px;text-align:center;color:var(--muted)">'+esc(msg)+'</div>';}
 
 /* --- Finance --- */
+/* ---------- the invoice, as the client will see it ----------
+ * Deliberately the same object on screen, on paper and in the portal: one
+ * markup builder, three frames around it. A studio that sends a PDF which
+ * does not match what the couple sees when they log in has two invoices. */
+function invDocMarkup(x,forPrint){
+  var pf=prefs();
+  var lead=x.leadId?leadById(x.leadId):null;
+  var ev=x.eventId?evById(x.eventId):null;
+  var a=(lead&&lead.address)||{};
+  var billTo=[invoiceClientName(x),a.line1,a.line2,
+              [a.city,a.region,a.postcode].filter(Boolean).join(' '),a.country,
+              lead&&lead.email].filter(Boolean);
+  var items=invItems(x);
+  var st=invStatus(x), bal=invBalance(x), paid=invPaid(x);
+  var C=forPrint?'':'iv-';                       /* print CSS is prefix-free */
+  var k=function(n){ return forPrint?('pi-'+n):('iv-'+n); };
+  return '<div class="'+k('sheet')+'">'+
+    '<div class="'+k('top')+'">'+
+      '<div class="'+k('from')+'">'+
+        (pf.logo?'<img class="'+k('logo')+'" src="'+esc(pf.logo)+'" alt="">':'')+
+        '<div class="'+k('biz')+'">'+esc(pf.bizName)+'</div>'+
+        (pf.bizAddress?'<div class="'+k('fine')+'">'+esc(pf.bizAddress)+'</div>':'')+
+        (pf.bizEmail?'<div class="'+k('fine')+'">'+esc(pf.bizEmail)+'</div>':'')+
+        (pf.bizPhone?'<div class="'+k('fine')+'">'+esc(pf.bizPhone)+'</div>':'')+
+        (pf.bizTaxId?'<div class="'+k('fine')+'">'+esc(pf.bizTaxId)+'</div>':'')+
+      '</div>'+
+      '<div class="'+k('id')+'">'+
+        '<div class="'+k('word')+'">Invoice</div>'+
+        '<div class="'+k('num')+'">'+esc(x.num||'')+'</div>'+
+        '<div class="'+k('dates')+'">'+
+          (x.issued?'<div><span>Issued</span> '+fmtDate(x.issued)+'</div>':'')+
+          (x.due?'<div><span>Due</span> '+fmtDate(x.due)+'</div>':'')+
+        '</div>'+
+      '</div>'+
+    '</div>'+
+    '<div class="'+k('parties')+'">'+
+      '<div><div class="'+k('ck')+'">Billed to</div>'+
+        billTo.map(function(l,i){return '<div class="'+(i?k('fine'):k('cname'))+'">'+esc(l)+'</div>';}).join('')+
+      '</div>'+
+      /* An event titled after the couple says nothing a second time — most
+         weddings are, so this is the common case, not the edge. */
+      (ev&&ev.title!==invoiceClientName(x)?'<div><div class="'+k('ck')+'">For</div><div class="'+k('cname')+'">'+esc(ev.title)+'</div>'+
+        (ev.date?'<div class="'+k('fine')+'">'+fmtDate(ev.date)+'</div>':'')+
+        (ev.venue?'<div class="'+k('fine')+'">'+esc(venueName(ev.venue))+'</div>':'')+'</div>'
+       :(ev?'<div><div class="'+k('ck')+'">For</div>'+
+          '<div class="'+k('cname')+'">'+fmtDate(ev.date)+'</div>'+
+          (ev.venue?'<div class="'+k('fine')+'">'+esc(venueName(ev.venue))+'</div>':'')+'</div>':''))+
+    '</div>'+
+    '<table class="'+k('lines')+'"><thead><tr>'+
+      '<th>Description</th><th class="'+k('r')+'">Qty</th><th class="'+k('r')+'">Rate</th><th class="'+k('r')+'">Amount</th>'+
+      '</tr></thead><tbody>'+
+      (items.length?items.map(function(l){
+        return '<tr><td>'+esc(l.desc||'—')+'</td><td class="'+k('r')+'">'+esc(l.qty)+'</td>'+
+          '<td class="'+k('r')+'">'+money(l.rate)+'</td><td class="'+k('r')+'">'+money(invLineTotal(l))+'</td></tr>';
+      }).join('')
+      /* An invoice written before there were lines still has to print. Its
+         total is the whole record, so it prints as the whole record. */
+      :'<tr><td>'+esc(ev?ev.title+' — planning services':'Services')+'</td><td class="'+k('r')+'">1</td>'+
+        '<td class="'+k('r')+'">'+money(x.amount)+'</td><td class="'+k('r')+'">'+money(x.amount)+'</td></tr>')+
+    '</tbody></table>'+
+    '<div class="'+k('sums')+'">'+
+      '<div class="'+k('sline')+'"><span>Subtotal</span><b>'+money(invSub(x))+'</b></div>'+
+      (invTaxRate(x)?'<div class="'+k('sline')+'"><span>'+esc(pf.taxLabel||'Tax')+' '+invTaxRate(x)+'%</span><b>'+money(invTax(x))+'</b></div>':'')+
+      '<div class="'+k('sline')+' '+k('stot')+'"><span>Total</span><b>'+money(invTotal(x))+'</b></div>'+
+      (paid?'<div class="'+k('sline')+'"><span>Paid</span><b>−'+money(paid)+'</b></div>':'')+
+      (paid?'<div class="'+k('sline')+' '+k('sbal')+'"><span>Balance due</span><b>'+money(bal)+'</b></div>':'')+
+    '</div>'+
+    (invPayments(x).length?'<div class="'+k('pays')+'"><div class="'+k('ck')+'">Payments received</div>'+
+      invPayments(x).map(function(pm){
+        return '<div class="'+k('pay')+'"><span>'+fmtDate(pm.at)+(pm.method?' · '+esc(pm.method):'')+
+          (pm.ref?' · '+esc(pm.ref):'')+'</span><b>'+money(pm.amount)+'</b></div>';
+      }).join('')+'</div>':'')+
+    (x.notes?'<div class="'+k('notes')+'">'+esc(x.notes)+'</div>':'')+
+    '<div class="'+k('foot')+'">'+esc(pf.bizName)+
+      (pf.bizEmail?' · '+esc(pf.bizEmail):'')+'</div>'+
+  '</div>';
+}
+function viewInvoiceDetail(id){
+  var x=invById(id);
+  if(!x)return '<button class="back-link" data-backinv>‹ Back to Finance</button>'+emptyState('That invoice has gone.');
+  var st=invStatus(x), doc=x.docId?(db.documents||[]).find(function(d){return d.id===x.docId;}):null;
+  var link=invPayLink(x);
+  return '<button class="back-link" data-backinv>‹ Back to Finance</button>'+
+  '<div class="iv-bar">'+
+    '<span class="status '+INV_CLS[st]+'">'+INV_LBL[st]+'</span>'+
+    '<span class="iv-bal">'+(invBalance(x)>0.004?money(invBalance(x))+' outstanding':'Settled in full')+'</span>'+
+    '<span class="iv-acts">'+
+      '<button class="btn btn-ghost btn-sm btn-icon" id="ivPrint" title="Print or save as PDF" aria-label="Print"><svg class="ic" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M6 8V3h8v5"/><path d="M6 14H4.2A1.2 1.2 0 0 1 3 12.8V9.2A1.2 1.2 0 0 1 4.2 8h11.6A1.2 1.2 0 0 1 17 9.2v3.6a1.2 1.2 0 0 1-1.2 1.2H14"/><path d="M6 12h8v5H6z"/></svg><span class="bl">Print</span></button>'+
+      '<button class="btn btn-ghost btn-sm btn-icon" id="ivEdit" title="Edit" aria-label="Edit"><svg class="ic" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M13.6 3.7a1.7 1.7 0 0 1 2.4 2.4L7.4 14.7 4 15.7l1-3.4Z"/></svg><span class="bl">Edit</span></button>'+
+      (x.status==='draft'?'<button class="btn btn-gold btn-sm" id="ivSend">Mark sent</button>':'')+
+      (invBalance(x)>0.004?'<button class="btn btn-gold btn-sm" id="ivPay">Record payment</button>':'')+
+    '</span>'+
+  '</div>'+
+  (link?'<div class="iv-link"><b>Payment link</b> <a href="'+esc(link)+'" target="_blank" rel="noopener">'+esc(link)+'</a>'+
+    '<span class="iv-lnote">your couple sees this as a Pay button in their portal</span></div>':
+    '<div class="iv-link iv-link-none">No payment link. Add one on this invoice, or a studio default in '+
+      '<button type="button" class="link-btn" data-setpay>Settings › Business</button>, and the portal shows a Pay button.</div>')+
+  (doc?'<div class="iv-doc">Filed with <b>'+esc(doc.title)+'</b>'+
+    (doc.file?' · <button type="button" class="link-btn" data-ivfile="'+esc(doc.id)+'">open the file</button>':'')+'</div>':'')+
+  '<div class="card iv-card">'+invDocMarkup(x,false)+'</div>';
+}
+function wireFinance(){
+  var b=$('[data-backinv]'); if(b)b.onclick=function(){ setView('finance',{invoiceId:null}); };
+  var x=state.invoiceId?invById(state.invoiceId):null;
+  var e=$('#ivEdit'); if(e)e.onclick=function(){ openInvoiceModal(x); };
+  var pr=$('#ivPrint'); if(pr)pr.onclick=function(){ printInvoice(x); };
+  var sd=$('#ivSend'); if(sd)sd.onclick=function(){
+    x.status='due'; if(!x.issued)x.issued=todayLocal();
+    invRecalc(x); save(); render();
+    toast(x.num+' marked sent ✦');
+  };
+  var pay=$('#ivPay'); if(pay)pay.onclick=function(){ openPaymentModal(x); };
+  var sp=$('[data-setpay]'); if(sp)sp.onclick=function(){ setView('settings',{settingsPage:'business'}); };
+  var fl=$('[data-ivfile]');
+  if(fl)fl.onclick=function(){
+    docOpen(fl.dataset.ivfile).then(function(ok){
+      if(!ok)toast('That file is not on this device yet — pull to fetch it.');
+    });
+  };
+}
+function openPaymentModal(x){
+  if(!x)return;
+  var bal=invBalance(x);
+  openEditor({
+    title:'Record a payment',
+    sub:x.num+' · '+money(bal)+' outstanding',
+    twoCol:true,
+    saveLabel:'Record',
+    fields:[
+      {id:'amount',label:'Amount',type:'number',value:bal,required:true},
+      {id:'at',label:'Date',type:'date',value:todayLocal()},
+      {id:'method',label:'Method',type:'select',value:'Bank transfer',
+       options:['Bank transfer','Card','Cash','Cheque','Other']},
+      {id:'ref',label:'Reference',value:''}
+    ],
+    onSave:function(v){
+      if(!x.payments)x.payments=[];
+      x.payments.push({id:uid('pm'),at:v.at||todayLocal(),amount:Number(v.amount)||0,
+                       method:v.method||'',ref:v.ref||''});
+      if(x.status==='draft')x.status='due';
+      invRecalc(x);
+      save(); closeModal(); render();
+      toast(money(Number(v.amount)||0)+' recorded'+(invBalance(x)<=0.004?' — settled in full ✦':' ✦'));
+    }
+  });
+}
+function printInvoice(x){
+  if(!x){toast('Open an invoice first ✦');return;}
+  var pf=prefs();
+  var w=document.getElementById('printFrame');
+  if(!w){ w=document.createElement('iframe'); w.id='printFrame';
+    w.style.cssText='position:fixed;right:0;bottom:0;width:0;height:0;border:0;visibility:hidden';
+    document.body.appendChild(w); }
+  var doc=w.contentDocument;
+  doc.open();
+  doc.write('<!doctype html><meta charset="utf-8"><title>'+esc(x.num||'Invoice')+'</title>'+
+    '<style>'+printCss()+invPrintCss()+'</style><body>'+invDocMarkup(x,true)+'</body>');
+  doc.close();
+  setTimeout(function(){ w.contentWindow.focus(); w.contentWindow.print(); },220);
+}
 function viewFinance(){
   /* Invoices stand on their own; the budget card needs an event, and there may
      not be one — a new studio, or the sample data removed. */
   var e=db.events[0];
   var estT=e?e.budget.reduce(function(a,b){return a+b.est;},0):0;
   var actT=e?e.budget.reduce(function(a,b){return a+b.act;},0):0;
-  var paid=db.invoices.filter(function(x){return x.status==='paid';}).reduce(function(a,x){return a+x.amount;},0);
-  var out=db.invoices.filter(function(x){return x.status==='due'||x.status==='over';}).reduce(function(a,x){return a+x.amount;},0);
+  /* What has actually come in, and what is still owed — a part-paid invoice
+     is neither wholly collected nor wholly outstanding, and reading .amount
+     for both put it in one column at full value. */
+  var paid=db.invoices.reduce(function(a,x){return a+invPaid(x);},0);
+  var out=db.invoices.filter(function(x){return x.status!=='draft';}).reduce(function(a,x){return a+Math.max(0,invBalance(x));},0);
+  var late=db.invoices.filter(function(x){return invStatus(x)==='over';}).length;
+  var dueN=db.invoices.filter(function(x){return invStatus(x)==='due';}).length;
   return ''+
   '<div class="stat-row cols-3">'+
     stat('Collected',money(paid),'this season','up')+
-    stat('Outstanding',money(out),db.invoices.filter(function(x){return x.status==='due';}).length+' due · '+db.invoices.filter(function(x){return x.status==='over';}).length+' overdue')+
-    stat('Drafts',money(db.invoices.filter(function(x){return x.status==='draft';}).reduce(function(a,x){return a+x.amount;},0)),'ready to send')+
+    stat('Outstanding',money(out),dueN+' due · '+late+' overdue')+
+    stat('Drafts',money(db.invoices.filter(function(x){return x.status==='draft';}).reduce(function(a,x){return a+invTotal(x);},0)),'ready to send')+
   '</div>'+
   '<div class="card" style="margin-bottom:20px"><div class="card-h"><h3>Invoices</h3><span class="pill">'+db.invoices.length+'</span></div>'+
     '<div class="tbl-wrap"><table><thead><tr><th>Invoice</th><th>Client</th><th>Due</th><th>Status</th><th style="text-align:right">Amount</th></tr></thead><tbody>'+
-    db.invoices.map(function(x){var cls={paid:'s-paid',due:'s-due',over:'s-over',draft:'s-draft'}[x.status],lbl={paid:'Paid',due:'Due',over:'Overdue',draft:'Draft'}[x.status];
-      return '<tr><td><b>'+esc(x.num)+'</b></td><td>'+esc(invoiceClientName(x))+'</td><td>'+fmtDate(x.due)+'</td><td><span class="status '+cls+'">'+lbl+'</span></td><td style="text-align:right"><span class="val">'+money(x.amount)+'</span>'+rowActions('invoice',x.id)+'</td></tr>';
+    db.invoices.map(function(x){
+      var st=invStatus(x), bal=invBalance(x);
+      return '<tr class="row-link" data-invoice="'+esc(x.id)+'" tabindex="0" role="link">'+
+        '<td><b>'+esc(x.num)+'</b></td><td>'+esc(invoiceClientName(x))+'</td>'+
+        '<td>'+(x.due?fmtDate(x.due):'—')+'</td>'+
+        '<td><span class="status '+INV_CLS[st]+'">'+INV_LBL[st]+'</span></td>'+
+        '<td style="text-align:right"><span class="val">'+money(invTotal(x))+'</span>'+
+        (bal>0.004&&invPaid(x)?'<div class="inv-bal">'+money(bal)+' left</div>':'')+
+        rowActions('invoice',x.id)+'</td></tr>';
     }).join('')+'</tbody></table></div></div>'+
   (e?
   '<div class="card"><div class="card-h"><h3>Budget · '+esc(e.title)+'</h3><span class="sec-badge">'+money(actT)+' of '+money(estT)+' committed</span></div>'+
@@ -10131,21 +10608,123 @@ function openLeadModal(){
     save();closeModal();setView('pipeline');
   };
 }
-function openInvoiceModal(){
-  var opts=db.leads.map(function(l){return '<option value="'+esc(l.id)+'">'+esc(l.names)+'</option>';}).join('');
-  md.className='modal';md.innerHTML='<h3>New Invoice</h3><p class="sub">Bill a client — sent securely from GEM.</p>'+
-    '<div class="field"><label>Client</label><select id="f_client">'+opts+'</select></div>'+
-    '<div class="field"><label>Amount</label><input id="f_amt" type="number" placeholder="29000"></div>'+
-    '<div class="field"><label>Due date</label><input id="f_due" type="date"></div>'+
-    '<div class="modal-actions"><button class="btn btn-ghost" id="mCancel">Cancel</button><button class="btn btn-gold" id="mSave">Create</button></div>';
+/* One row of the invoice. Kept as a function because the modal builds them at
+   render time and again every time you add a line. */
+function invLineRow(l){
+  l=l||{desc:'',qty:1,rate:0};
+  return '<div class="il-row" data-il>'+
+    '<input class="il-desc" data-k="desc" value="'+esc(l.desc||'')+'" placeholder="Planning fee, second photographer, travel…" aria-label="Description">'+
+    '<input class="il-qty" data-k="qty" type="number" step="any" value="'+esc(l.qty==null?1:l.qty)+'" aria-label="Quantity">'+
+    '<input class="il-rate" data-k="rate" type="number" step="any" value="'+esc(l.rate==null?'':l.rate)+'" placeholder="0" aria-label="Rate">'+
+    '<span class="il-amt">'+money(invLineTotal(l))+'</span>'+
+    '<button type="button" class="il-x" data-ilx aria-label="Remove line">✕</button>'+
+  '</div>';
+}
+function openInvoiceModal(existing){
+  /* A DOM event is not an invoice — see the note in wirePageActions. */
+  if(existing&&typeof existing.preventDefault==='function')existing=null;
+  var creating=!existing;
+  var x=existing||{num:invNextNum(),leadId:(db.leads[0]||{}).id||null,client:'',eventId:null,
+                   issued:todayLocal(),due:'',status:'draft',items:[],taxRate:Number(prefs().taxRate)||0,
+                   notes:prefs().payTerms||'',payments:[],payLink:''};
+  var lines=invItems(x).length?invItems(x).map(function(l){return {desc:l.desc,qty:l.qty,rate:l.rate};})
+                              :[{desc:'',qty:1,rate:Number(x.amount)||0}];
+  var pf=prefs();
+  md.className='modal modal-wide';
+  md.innerHTML='<h3>'+(creating?'New invoice':'Edit invoice')+'</h3>'+
+    '<p class="sub">'+(creating?'The lines are the invoice — the total comes from them.':esc(x.num))+'</p>'+
+    '<div class="modal-scroll">'+
+    '<div class="fgrid">'+
+      '<div class="field"><label>Client</label><select id="f_client">'+
+        '<option value="">—</option>'+
+        db.leads.map(function(l){return '<option value="'+esc(l.id)+'"'+(x.leadId===l.id?' selected':'')+'>'+esc(l.names)+'</option>';}).join('')+
+      '</select></div>'+
+      '<div class="field"><label>Event</label><select id="f_ievent">'+
+        '<option value="">Not tied to an event</option>'+
+        db.events.map(function(e){return '<option value="'+esc(e.id)+'"'+(x.eventId===e.id?' selected':'')+'>'+(evIsSub(e)?'└ ':'')+esc(e.title)+'</option>';}).join('')+
+      '</select></div>'+
+      '<div class="field"><label>Number</label><input id="f_inum" value="'+esc(x.num||'')+'"></div>'+
+      '<div class="field"><label>Status</label><select id="f_istatus">'+
+        ['draft','due','paid'].map(function(k){return '<option value="'+k+'"'+(x.status===k?' selected':'')+'>'+INV_LBL[k]+'</option>';}).join('')+
+      '</select></div>'+
+      '<div class="field"><label>Issued</label><input id="f_iissued" type="date" value="'+esc(x.issued||'')+'"></div>'+
+      '<div class="field"><label>Due</label><input id="f_due" type="date" value="'+esc(x.due||'')+'"></div>'+
+    '</div>'+
+    '<div class="fig-head" style="margin:18px 0 8px">Lines</div>'+
+    '<div class="il-head"><span>Description</span><span>Qty</span><span>Rate</span><span>Amount</span><span></span></div>'+
+    '<div id="ilBody">'+lines.map(invLineRow).join('')+'</div>'+
+    '<button type="button" class="btn btn-ghost btn-sm" id="ilAdd" style="margin-top:8px">＋ Add line</button>'+
+    '<div class="il-sums">'+
+      '<div class="kv"><span>Subtotal</span><b id="ilSub">—</b></div>'+
+      '<div class="kv"><span>'+esc(pf.taxLabel||'Tax')+
+        ' <input id="f_itax" type="number" step="any" class="il-taxr" value="'+esc(x.taxRate==null?0:x.taxRate)+'" aria-label="Tax rate percent">%</span>'+
+        '<b id="ilTax">—</b></div>'+
+      '<div class="kv kv-tot"><span>Total</span><b id="ilTot">—</b></div>'+
+    '</div>'+
+    '<div class="field" style="margin-top:14px"><label>Notes &amp; terms</label>'+
+      '<textarea id="f_inotes" rows="2" class="notes-box" placeholder="Payment due within 14 days.">'+esc(x.notes||'')+'</textarea></div>'+
+    '<div class="field"><label>Payment link <span class="lbl-note">optional — overrides the studio default</span></label>'+
+      '<input id="f_ipay" value="'+esc(x.payLink||'')+'" placeholder="'+esc(pf.payLink||'https://…')+'"></div>'+
+    '</div>'+
+    '<div class="modal-actions">'+
+      (creating?'':'<button class="btn btn-danger" id="mDel">Delete</button><span style="flex:1"></span>')+
+      '<button class="btn btn-ghost" id="mCancel">Cancel</button>'+
+      '<button class="btn btn-gold" id="mSave">'+(creating?'Create':'Save')+'</button></div>';
   ov.classList.add('show');
+  var body=$('#ilBody');
+  function read(){
+    return [].map.call(body.querySelectorAll('[data-il]'),function(r){
+      return {desc:r.querySelector('[data-k="desc"]').value,
+              qty:Number(r.querySelector('[data-k="qty"]').value)||0,
+              rate:Number(r.querySelector('[data-k="rate"]').value)||0};
+    });
+  }
+  function paint(){
+    var draft={items:read(),taxRate:Number($('#f_itax').value)||0};
+    [].forEach.call(body.querySelectorAll('[data-il]'),function(r,i){
+      r.querySelector('.il-amt').textContent=money(invLineTotal(draft.items[i]));
+    });
+    $('#ilSub').textContent=money(invSub(draft));
+    $('#ilTax').textContent=money(invTax(draft));
+    $('#ilTot').textContent=money(invTotal(draft));
+  }
+  /* Delegated, so a line added after this runs is wired too. */
+  body.oninput=paint;
+  body.onclick=function(ev){
+    var x2=ev.target.closest('[data-ilx]'); if(!x2)return;
+    var rows=body.querySelectorAll('[data-il]');
+    /* Never leave it with none — an invoice with no lines has no total and no
+       way to get one back. */
+    if(rows.length<2){ rows[0].querySelectorAll('input').forEach(function(i){i.value=i.dataset.k==='qty'?1:'';}); }
+    else x2.closest('[data-il]').remove();
+    paint();
+  };
+  $('#ilAdd').onclick=function(){ body.insertAdjacentHTML('beforeend',invLineRow(null)); paint(); };
+  $('#f_itax').oninput=paint;
+  paint();
   $('#mCancel').onclick=closeModal;
+  var del=$('#mDel');
+  if(del)del.onclick=function(){ closeModal(); deleteRecord('invoice',x.id); };
   $('#mSave').onclick=function(){
     var lead=leadById($('#f_client').value);
-    db.invoices.unshift({id:uid('i'),leadId:lead?lead.id:null,client:lead?lead.names:'',
-      num:'GEM-'+(1064+db.invoices.length),amount:Number($('#f_amt').value)||0,
-      due:$('#f_due').value||'2026-12-01',status:'draft'});
-    save();closeModal();setView('finance');
+    var items=read().filter(function(l){ return l.desc.trim()||l.rate; });
+    var rec=existing||{id:uid('i'),payments:[]};
+    rec.leadId=lead?lead.id:null;
+    rec.client=lead?lead.names:(rec.client||'');
+    rec.eventId=$('#f_ievent').value||null;
+    rec.num=$('#f_inum').value.trim()||invNextNum();
+    rec.issued=$('#f_iissued').value||todayLocal();
+    rec.due=$('#f_due').value||'';
+    rec.status=$('#f_istatus').value||'draft';
+    rec.items=items;
+    rec.taxRate=Number($('#f_itax').value)||0;
+    rec.notes=$('#f_inotes').value;
+    rec.payLink=$('#f_ipay').value.trim();
+    if(!items.length)rec.amount=Number(rec.amount)||0;
+    invRecalc(rec);
+    if(!existing)db.invoices.unshift(rec);
+    save(); closeModal();
+    setView('finance',{invoiceId:rec.id});
   };
 }
 /* Quick add: built for typing several in a row, because nobody adds one guest.
@@ -10402,10 +10981,14 @@ function openDocModal(){
   $('#mSave').onclick=function(){
     var t=$('#f_dtitle').value.trim(); if(!t){$('#f_dtitle').focus();return;}
     var chosen=tp?tpls.find(function(x){return x.id===tp.value;}):null;
-    db.documents.push({id:uid('doc'),eventId:$('#f_devent').value,title:t,type:$('#f_dtype').value,
+    var nd={id:uid('doc'),eventId:$('#f_devent').value,title:t,type:$('#f_dtype').value,
       status:'draft',sent:null,signed:null,amount:Number($('#f_damt').value)||0,
-      body:chosen?chosen.body:''});
-    save();closeModal();setView('documents');
+      body:chosen?chosen.body:''};
+    db.documents.push(nd);
+    var raised2=invoiceForDoc(nd);
+    save();closeModal();
+    if(raised2){ toast('Raised '+raised2.num+' ✦'); setView('finance',{invoiceId:raised2.id}); }
+    else setView('documents');
   };
 }
 function openClientModal(existing){
@@ -11432,6 +12015,42 @@ function printCss(){ return ''+
    'justify-content:center;font-size:7px;text-transform:uppercase;letter-spacing:.5px;color:#7b6a70;text-align:center}'+
  '@page{margin:14mm}'+
  'tr{break-inside:avoid}';
+}
+/* The printed invoice. Same builder as the screen — invDocMarkup() swaps the
+   class prefix — so the two cannot drift into being different documents. */
+function invPrintCss(){ var a=accentHex(); return ''+
+ '.pi-sheet{max-width:none}'+
+ '.pi-top{display:flex;justify-content:space-between;gap:26px;align-items:flex-start;'+
+   'padding-bottom:16px;border-bottom:2px solid '+a+'}'+
+ '.pi-logo{width:42px;height:42px;object-fit:cover;border-radius:7px;margin-bottom:8px;display:block}'+
+ '.pi-biz{font-family:Georgia,serif;font-size:18px;font-weight:600;line-height:1.2}'+
+ '.pi-fine{font-size:10.5px;color:#7b6a70;line-height:1.5}'+
+ '.pi-id{text-align:right}'+
+ '.pi-word{font-size:9px;letter-spacing:2.4px;text-transform:uppercase;color:'+a+';font-weight:700}'+
+ '.pi-num{font-family:Georgia,serif;font-size:22px;font-weight:600;margin:2px 0 7px}'+
+ '.pi-dates{font-size:10.5px;color:#5e4e54;line-height:1.7}'+
+ '.pi-dates span{color:#8b7b80}'+
+ '.pi-parties{display:flex;gap:40px;margin:20px 0 18px}'+
+ '.pi-ck{font-size:8.5px;letter-spacing:1.4px;text-transform:uppercase;color:#8b7b80;font-weight:700;margin-bottom:4px}'+
+ '.pi-cname{font-size:12.5px;font-weight:600}'+
+ '.pi-lines{width:100%;border-collapse:collapse}'+
+ '.pi-lines th{text-align:left;font-size:8.5px;letter-spacing:1.3px;text-transform:uppercase;color:#7b6a70;'+
+   'border-bottom:1px solid #d8c9cc;padding:7px 8px}'+
+ '.pi-lines td{padding:9px 8px;border-bottom:1px solid #eee3e5;font-size:11.5px;vertical-align:top}'+
+ '.pi-r{text-align:right;white-space:nowrap}'+
+ '.pi-sums{margin-top:14px;margin-left:auto;width:270px}'+
+ '.pi-sline{display:flex;justify-content:space-between;gap:18px;padding:4px 8px;font-size:11.5px}'+
+ '.pi-sline span{color:#7b6a70}'+
+ '.pi-stot{border-top:1px solid #d8c9cc;margin-top:4px;padding-top:8px;font-size:13px}'+
+ '.pi-stot b{font-size:16px}'+
+ '.pi-sbal{border-top:1px solid #d8c9cc;margin-top:4px;padding-top:8px}'+
+ '.pi-sbal b{color:'+a+'}'+
+ '.pi-pays{margin-top:18px;padding-top:11px;border-top:1px solid #eee3e5}'+
+ '.pi-pay{display:flex;justify-content:space-between;gap:14px;font-size:10.5px;padding:2px 0;color:#5e4e54}'+
+ '.pi-notes{margin-top:18px;padding:11px 13px;background:#faf5f2;border-left:2px solid '+a+';'+
+   'font-size:10.5px;color:#5e4e54;white-space:pre-wrap}'+
+ '.pi-foot{margin-top:22px;padding-top:11px;border-top:1px solid #eee3e5;text-align:center;'+
+   'font-size:9.5px;color:#8b7b80}';
 }
 function openPrintMenu(ev){
   if(!ev){toast('Open an event first ✦');return;}
@@ -12635,6 +13254,17 @@ function deleteRecord(kind,id){
       if(state.activeEventId===id)state.activeEventId=(db.events[0]||{}).id;
       if(state.eventId===id)state.eventId=null;
     }
+    /* A document and the invoice it raised are linked, not owned. Deleting
+       either leaves the other standing — the invoice may have payments on it,
+       and the file may be the only copy of what was signed — but neither is
+       left pointing at something that has gone. */
+    if(kind==='document'){
+      (db.invoices||[]).forEach(function(x){ if(x.docId===id)x.docId=null; });
+    }
+    if(kind==='invoice'){
+      (db.documents||[]).forEach(function(d){ if(d.invoiceId===id)d.invoiceId=null; });
+      if(state.invoiceId===id)state.invoiceId=null;
+    }
     /* A deleted table must not leave anyone seated at it — on the guest row
        for the primary, and on any invitation that used it. */
     if(kind==='table'&&c.ev){
@@ -12727,7 +13357,14 @@ function editRecord(kind,id){
               {id:'amount',label:'Value',type:'number',value:it.amount},
               {id:'eventId',label:'Event',type:'select',value:it.eventId,
                options:db.events.map(function(e){return {value:e.id,label:e.title};})}],
-      onSave:function(v){ Object.assign(it,v); closeModal(); afterChange(); }});},
+      onSave:function(v){
+        Object.assign(it,v);
+        /* Relabelling a filed document Invoice raises one, exactly as
+           creating it that way would have. */
+        var raised=invoiceForDoc(it);
+        closeModal(); afterChange();
+        if(raised)toast('Raised '+raised.num+' ✦');
+      }});},
     questionnaire:function(){ openEditor({title:'Edit questionnaire',onDelete:del,deleteLabel:it.title,
       fields:[{id:'title',label:'Title',value:it.title,required:true},
               {id:'intro',label:'Intro for the client',type:'textarea',value:it.intro},
@@ -12973,7 +13610,7 @@ function toast(msg){
    sample freely; only the writes are stopped. */
 var SAMPLE_SAFE=['[data-openevent]','[data-client]','[data-back]','[data-backdesign]','[data-backq]',
   '[data-ev]','[data-evtoggle]','[data-seatmode]','[data-setup]','[data-print]','[data-gotoev]',
-  '[data-clientview]','[data-guestview]','#gsNext','#gsPrev','.gstack','[data-bibaud]','[data-bibsec]','#bibPdf','#bibDoc','#bibMail','#bibAll','#clientBible',
+  '[data-clientview]','[data-guestview]','#gsNext','#gsPrev','.gstack','[data-invoice]','[data-backinv]','#ivPrint','[data-bibaud]','[data-bibsec]','#bibPdf','#bibDoc','#bibMail','#bibAll','#clientBible',
   '[data-board]','[data-q]','[data-adopt]','[data-sampleinfo]','.ev-card','.ev-sub','.ew-b','.wk-row',
   '#evSwitch','#printEvent','#exportGuests','#exportInv','#calPrev','#calNext','#calToday',
   '#seatPickCancel','#sampleAdopt','#sampleRemove','.back-link','.srch-row','.tour-x',
@@ -13048,7 +13685,7 @@ function markActiveGroup(){
    survives re-renders without needing to re-bind. */
 function drillFrom(el){
   if(_justDragged)return false;              // a completed drag must not navigate
-  var open=el.closest('[data-client],[data-openevent],[data-back],[data-board],[data-backdesign],[data-q],[data-backq]');
+  var open=el.closest('[data-client],[data-openevent],[data-back],[data-board],[data-backdesign],[data-q],[data-backq],[data-invoice]');
   if(!open)return false;
   if(open.dataset.backq!==undefined){ setView('questionnaires',{qId:null}); return true; }
   if(open.dataset.q){ setView('questionnaires',{qId:open.dataset.q}); return true; }
@@ -13057,6 +13694,7 @@ function drillFrom(el){
   if(open.dataset.back!==undefined){ setView(open.dataset.back,{clientId:null,eventId:null}); return true; }
   if(open.dataset.openevent){ setView('events',{eventId:open.dataset.openevent,clientId:null}); return true; }
   if(open.dataset.client){ setView('clients',{clientId:open.dataset.client,eventId:null}); return true; }
+  if(open.dataset.invoice){ setView('finance',{invoiceId:open.dataset.invoice}); return true; }
   return false;
 }
 $('#content').addEventListener('click',function(e){
@@ -13991,6 +14629,20 @@ function sbCoverCol(){
   }
   return SB_COVER_COL;
 }
+/* Migration 22 turned an invoice into a document — lines, tax, terms, payments
+   and the file it was filed with. A studio that has not run it yet still has
+   to be able to push, and naming a column the database lacks fails the whole
+   table, so the payload asks first. Same shape as sbCoverCol above. */
+var SB_INV_COLS=null;
+function sbInvCols(){
+  if(SB_INV_COLS===null){
+    SB_INV_COLS=false;
+    sbRest('invoices?select=items&limit=1')
+      .then(function(){ SB_INV_COLS=true; })
+      .catch(function(){ SB_INV_COLS=false; });
+  }
+  return SB_INV_COLS;
+}
 function sbPush(opts){
   var org=SB_STATE.org;
   if(!org)return Promise.reject(new Error('No studio yet.'));
@@ -14054,6 +14706,8 @@ function sbPush(opts){
      Lead ids need their own guard. */
   var leadIds=L.map(function(l){return l.id;});
   var hasLead=function(id){ return leadIds.indexOf(id)>=0; };
+  /* A document may name an invoice the sample filter has just held back. */
+  var invIds=IV.map(function(i){return i.id;});
 
   var timeline=[],checklist=[],budget=[],tables=[],guests=[],fitems=[],
       palette=[],boards=[],swatches=[],ideas=[],decor=[],images=[];
@@ -14156,15 +14810,34 @@ function sbPush(opts){
     ['board_swatches',swatches],['board_ideas',ideas],['board_images',images],['decor_items',decor],
     ['vendor_bookings',B.filter(function(b){return has(b.eventId);}).map(function(b){ return {id:b.id,org_id:org,
       vendor_id:b.vendorId,event_id:b.eventId,status:b.status||'quote',fee:num(b.fee),notes:s(b.notes)}; })],
-    ['invoices',IV.map(function(i){ return {id:i.id,org_id:org,event_id:has(i.eventId)?i.eventId:null,
-      number:s(i.num),client_name:s(invoiceClientName(i)),lead_id:hasLead(i.leadId)?i.leadId:null,amount:num(i.amount),due_date:nn(i.due),
-      status:INV_OUT[i.status]||i.status||'draft'}; })],
-    ['documents',DC.map(function(d){ return {id:d.id,org_id:org,event_id:has(d.eventId)?d.eventId:null,
+    ['invoices',IV.map(function(i){
+      var row={id:i.id,org_id:org,event_id:has(i.eventId)?i.eventId:null,
+        number:s(i.num),client_name:s(invoiceClientName(i)),lead_id:hasLead(i.leadId)?i.leadId:null,
+        /* Derived, not stored — an invoice whose column disagreed with its own
+           lines would be wrong in every report that reads the column. */
+        amount:num(invTotal(i)),due_date:nn(i.due),
+        status:INV_OUT[i.status]||i.status||'draft'};
+      if(sbInvCols()){
+        row.issued_date=nn(i.issued);
+        row.notes=s(i.notes);
+        row.tax_rate=num(i.taxRate);
+        row.items=invItems(i);
+        row.payments=invPayments(i);
+        row.pay_link=s(i.payLink);
+      }
+      return row;
+    })],
+    ['documents',DC.map(function(d){ var r={id:d.id,org_id:org,event_id:has(d.eventId)?d.eventId:null,
       title:s(d.title),type:d.type||'other',status:d.status||'draft',amount:num(d.amount),
       /* The attachment's metadata rides in the body column alongside any typed
          text, so no extra migration is needed for it. */
       body:JSON.stringify({text:s(d.body),file:d.file||null}),
-      sent_at:nn(d.sent),signed_at:nn(d.signed)}; })],
+      sent_at:nn(d.sent),signed_at:nn(d.signed)};
+      /* The link lives on this side only: documents are upserted after
+         invoices, so by the time this row lands the invoice it names exists.
+         The other direction would be a circular foreign key. */
+      if(sbInvCols())r.invoice_id=(d.invoiceId&&invIds.indexOf(d.invoiceId)>=0)?d.invoiceId:null;
+      return r; })],
     ['questionnaires',qs],['questions',qq],['answers',qa],
     /* messages.event_id is NOT NULL, so a message whose event has gone is
        dropped rather than sent with a null that the database will reject. */
@@ -14491,11 +15164,18 @@ function sbPull(opts){
       bookings:R.vendor_bookings.map(function(b){ return {id:b.id,vendorId:b.vendor_id,eventId:b.event_id,
         status:b.status,fee:Number(b.fee),notes:b.notes||''}; }),
       invoices:R.invoices.map(function(i){ return {id:i.id,client:i.client_name,num:i.number,amount:Number(i.amount),
-        due:i.due_date,status:INV_IN[i.status]||i.status,eventId:i.event_id,leadId:i.lead_id||null}; }),
+        due:i.due_date,status:INV_IN[i.status]||i.status,eventId:i.event_id,leadId:i.lead_id||null,
+        /* Absent until migration 22, so every one of these has to survive the
+           column not being there at all. */
+        issued:i.issued_date||'',notes:i.notes||'',taxRate:Number(i.tax_rate)||0,
+        items:Array.isArray(i.items)?i.items:[],
+        payments:Array.isArray(i.payments)?i.payments:[],
+        payLink:i.pay_link||'',docId:null}; }),
       documents:R.documents.map(function(d){ return {id:d.id,title:d.title,type:d.type,status:d.status,
         amount:Number(d.amount),eventId:d.event_id,
         body:(function(){ try{ var j=JSON.parse(d.body||'{}'); return typeof j.text==='string'?j.text:(d.body||''); }catch(e){ return d.body||''; } })(),
         file:(function(){ try{ return (JSON.parse(d.body||'{}')||{}).file||null; }catch(e){ return null; } })(),
+        invoiceId:d.invoice_id||null,
         sent:d.sent_at?String(d.sent_at).slice(0,10):'',signed:d.signed_at?String(d.signed_at).slice(0,10):''}; }),
       questionnaires:R.questionnaires.map(function(q){ return {id:q.id,title:q.title,intro:q.intro,status:q.status,
         eventId:q.event_id,
@@ -14509,6 +15189,13 @@ function sbPull(opts){
         role:m.sender_role,body:m.body,at:m.created_at}; }),
       submissions:R.form_submissions.map(function(x){ return Object.assign({},x.payload||{},{id:x.id,status:x.status}); })
     };
+    /* The wire carries the link one way — on the document — so the invoice's
+       side is rebuilt here rather than stored twice and allowed to disagree. */
+    next.documents.forEach(function(d){
+      if(!d.invoiceId)return;
+      var x=next.invoices.find(function(i){return i.id===d.invoiceId;});
+      if(x)x.docId=d.id; else d.invoiceId=null;
+    });
     if(R.lead_forms&&R.lead_forms[0]){
       var f=R.lead_forms[0];
       next.leadForm={id:f.id,slug:f.slug,title:f.title,intro:f.intro||'',
