@@ -501,6 +501,52 @@ never pulled, which is what stops a fresh install overwriting the studio.
   literal string "NaN" where the collision guard belongs. Guarded inside
   `uid()` now. Ids already stored keep their NaN; they are still unique
   strings and rewriting them would break every reference.
+- **The wedding party is guests with a role, not a second list.** `guest.role`
+  is free text; `PARTY_ROLES` supplies the conventional names — both forms of
+  each, because a wedding party is not a gendered list — and the number beside
+  each is the **processional order**, so the running order derives itself and
+  nothing has to be dragged. `roleOrder()` sends an unrecognised role to the
+  back rather than the front. `partyByRole()` groups for the card and the print
+  sheet. Filing them separately would mean two rows for one person and two
+  counts that disagree the week of the wedding — a bridesmaid RSVPs, eats and
+  sits like everyone else. Migration 23 adds the column; `sbRoleCol()` probes
+  for it the way `sbCoverCol()` does.
+- **The guest card is not the generic table card.** Below 700px `.g-tbl` gets
+  its own layout: name and the RSVP picker on line one, the party quietly on
+  line two with the row actions right-aligned beside it, and the facts as chips
+  on line three. A chip needs no caption — nobody reads "Beef" and wonders
+  which column it came from — so `.g-tbl td::before{display:none}` turns off
+  the generic labels. Two traps in here: the generic
+  `.as-cards td:not([data-l]):not(:first-child)` outranks `.g-tbl td.g-acts` on
+  specificity and parked the actions on top of the RSVP (hence the
+  `:not(.g-tbl)`), and the actions need their **own cell** rather than living
+  inside Table, or they wedge against the word "Unseated".
+- **Two dropdowns used to answer questions nobody had asked.** The meal picker
+  offered Beef / Fish / Vegetarian / Kids to every studio in the world, and
+  `guest.side` — a column that has existed since migration 01 and round-trips
+  through Supabase already — was hardcoded to `'A'` on every guest the app ever
+  added, so everyone belonged to partner 1. Both are real now:
+  - `mealOptions(e)` is derived, never declared: the meals already used across
+    this weekend's events and invitations. The field is a `combo`, so the first
+    guest's meal is typed and the eightieth is picked. There is no menu screen
+    to fill in first, and no option the studio did not put there.
+  - `evHasSides(e)` gates the side control to weddings — a corporate gala has
+    no sides and asking is a question with no right answer. `sideNames(e)` uses
+    the couple's own first names from the client file. The default is "Both /
+    neither", the only answer the app actually knows; it persists across "Save
+    & add another", so a family is one tap then a run of names.
+  - No migration: `guests.side` is already in the schema, the push already
+    sends it and the pull already reads it. It was only ever the UI that was
+    missing.
+- **The phone bar's height is the buttons' height.** `.tab` is `min-height:44px`
+  with the content filling it exactly; `.tabbar` carries no vertical padding of
+  its own, so there is no strip that looks like the bar but does not answer a
+  tap. Two things to know before shrinking it again: the icon size is NOT what
+  makes it tall — the min-height does the measuring, so taking 2px off the icon
+  costs legibility and saves nothing; and the safe-area inset is `max()`, never
+  `+`, because a 34px home indicator already is the clearance and adding to it
+  makes the bar 4px taller than the screen needs. 45px on a phone with no
+  indicator, 79px with one.
 - **`x.onclick = fn` hands the handler the click event.** Every function
   wired that way must therefore take no arguments, or refuse a DOM event.
   `openGuestModal(ev)` and `openSwatchModal(board)` both took one, so Add
