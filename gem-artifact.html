@@ -2116,6 +2116,17 @@ select.mini:focus-visible{outline:none;box-shadow:var(--ring)}
 
 /* ============ DESIGN STUDIO ============ */
 .palette{display:flex;flex-wrap:wrap;gap:18px;padding:20px 22px}
+/* The hex beside the picker in the Add colour modal. It is a button because
+   tapping it copies — a florist asks for the number, not the name. */
+.hex-copy{display:flex;align-items:center;gap:10px;width:100%;margin-top:8px;
+  padding:9px 13px;border:1px solid var(--line);border-radius:11px;background:var(--pink-50);
+  font-family:var(--sans);font-size:14px;font-weight:600;letter-spacing:.06em;
+  color:var(--ink);cursor:pointer;font-variant-numeric:tabular-nums;
+  transition:border-color .14s var(--ease),background-color .14s var(--ease)}
+.hex-copy:hover{border-color:var(--gold-line);background:var(--gold-soft)}
+.hex-copy:focus-visible{outline:none;box-shadow:var(--ring)}
+.hex-copy .hex-c{margin-left:auto;font-size:10.5px;font-weight:600;letter-spacing:.09em;
+  text-transform:uppercase;color:var(--muted)}
 .swatch{width:104px}
 .swatch .chip{height:78px;border-radius:12px;border:1px solid rgba(0,0,0,.06);box-shadow:var(--shadow-sm)}
 .sw-name{font-size:12.5px;font-weight:600;margin-top:8px}
@@ -3583,7 +3594,10 @@ function isSampleRecord(kind,id){
     var r=(db[coll]||[]).find(function(x){return x.id===id;});
     if(!r)return false;
     if(sampleHit(coll,r))return true;
-    if(r.eventId)return isSampleEvent(db.events.find(function(x){return x.id===r.eventId;}));
+    if(r.eventId&&isSampleEvent(db.events.find(function(x){return x.id===r.eventId;})))return true;
+    /* An invoice belongs to a client as often as to an event, and the sample's
+       two are attached to the lead, not the wedding. */
+    if(r.leadId&&isSampleLead(db.leads.find(function(x){return x.id===r.leadId;})))return true;
     return false;
   }
   /* guest, table, timeline, checklist, budget, decor — all live inside an
@@ -3689,14 +3703,37 @@ var SAMPLE_PRINTS={
     'lumen event rentals|orders@lumenrentals.com',
     'gilded cake studio|tomas@gildedcake.com'
   ],
-  leads:['priya & sam|priya.sharma@example.com']
+  leads:['priya & sam|priya.sharma@example.com'],
+  /* The paperwork needs prints for the same reason the vendors did, and for a
+     while it needed them more: until the push learned to hold it back, every
+     studio that ever synced a device carrying the sample put these rows in
+     their own database, and they came back down with a uuid and no flag. The
+     keys are deliberately narrow — a number and a client, a title and its
+     value — so a studio that has genuinely written a "Full Planning Agreement"
+     for £58,000 keeps it. */
+  invoices:['gem-1042|priya & sam|29000','gem-1051|priya & sam|29000'],
+  documents:['full planning agreement|contract|58000','floral design proposal|proposal|9600',
+             'rentals change order #1|proposal|1200','day-of vendor release|other|0'],
+  questionnaires:['wedding day details|a few details so we can build your timeline.'],
+  submissions:['elena & marcus|elena.r@example.com']
 };
+/* Each collection is fingerprinted on the fields that survive a round trip
+   through Supabase — which is the whole point of a print, so it must not read
+   anything the pull drops. */
+var SAMPLE_KEY={
+  vendors:function(r){ return lowKey(r.name)+'|'+lowKey(r.email); },
+  leads:function(r){ return lowKey(r.names)+'|'+lowKey(r.email); },
+  submissions:function(r){ return lowKey(r.names)+'|'+lowKey(r.email); },
+  invoices:function(r){ return lowKey(r.num)+'|'+lowKey(r.client)+'|'+(Number(r.amount)||0); },
+  documents:function(r){ return lowKey(r.title)+'|'+lowKey(r.type)+'|'+(Number(r.amount)||0); },
+  questionnaires:function(r){ return lowKey(r.title)+'|'+lowKey(r.intro); }
+};
+function lowKey(v){ return String(v==null?'':v).trim().toLowerCase(); }
 function samplePrint(k,r){
   if(!r||r.adopted||sampleAdopted())return false;
-  var list=SAMPLE_PRINTS[k];
-  if(!list)return false;
-  return list.indexOf(String(r.name||r.names||'').trim().toLowerCase()+'|'+
-                      String(r.email||'').trim().toLowerCase())>=0;
+  var list=SAMPLE_PRINTS[k], key=SAMPLE_KEY[k];
+  if(!list||!key)return false;
+  return list.indexOf(key(r))>=0;
 }
 
 /* Anything on this device that is NOT the seeded sample. This is what decides
@@ -3751,6 +3788,10 @@ function removeSampleData(){
      vendor no longer in the directory is a row the screen cannot draw. */
   var goneVendors={};
   (db.vendors||[]).forEach(function(v){ if(sampleHit('vendors',v))goneVendors[v.id]=true; });
+  /* Same for the client file: an invoice raised against the sample couple goes
+     with them, whether or not it names the wedding. */
+  var goneLeads={};
+  (db.leads||[]).forEach(function(l){ if(isSampleLead(l))goneLeads[l.id]=true; });
 
   Object.keys(SAMPLE_IDS).forEach(function(k){
     if(!db[k])return;
@@ -3758,8 +3799,8 @@ function removeSampleData(){
       var drop=sampleHit(k,r)||(k==='events'&&inGone(r.id));
       /* Paperwork attached to the sample wedding belongs to it even when the
          record itself was never flagged. */
-      if(!drop&&r.eventId&&inGone(r.eventId)&&
-         ['documents','invoices','questionnaires','messages'].indexOf(k)>=0)drop=true;
+      if(!drop&&['documents','invoices','questionnaires','messages'].indexOf(k)>=0&&
+         ((r.eventId&&inGone(r.eventId))||(r.leadId&&goneLeads[r.leadId])))drop=true;
       if(drop)n++;
       return !drop;
     });
@@ -4495,12 +4536,18 @@ function wireActions(){
   var e=$('#addEvent'); if(e)e.onclick=function(){openEventModal(null);};
   var pe=$('#printEvent'); if(pe)pe.onclick=function(){openPrintMenu(evById(state.eventId));};
   var ee=$('#editEvent'); if(ee)ee.onclick=function(){openEventModal(evById(state.eventId));};
-  var g=$('#addGuest'); if(g)g.onclick=openGuestModal;
+  /* Wrapped, not assigned bare. openGuestModal and openSwatchModal both take
+     an optional first argument, and `x.onclick=fn` hands the handler the
+     MouseEvent — so "Add guest" opened a modal built around a click event, and
+     "Add colour" said "Adding to ." and then threw on save, because a
+     MouseEvent has no .swatches to push onto. The ones below take no argument
+     and are safe bare; these two are not. */
+  var g=$('#addGuest'); if(g)g.onclick=function(){openGuestModal();};
   var ig=$('#importGuests'); if(ig)ig.onclick=function(){openImportModal(activeEvent());};
   var eg=$('#exportGuests'); if(eg)eg.onclick=exportGuestsCsv;
   var t=$('#addTable'); if(t)t.onclick=openTableModal;
   var v=$('#addVendor'); if(v)v.onclick=openVendorModal;
-  var sw=$('#addSwatch'); if(sw)sw.onclick=openSwatchModal;
+  var sw=$('#addSwatch'); if(sw)sw.onclick=function(){openSwatchModal();};
   var dc=$('#addDoc'); if(dc)dc.onclick=openDocModal;
   var du=$('#uploadDoc'); if(du)du.onclick=function(){ uploadDocFor((activeEvent()||{}).id); };
   var cp=$('#calPrev'); if(cp)cp.onclick=function(){shiftMonth(-1);};
@@ -9889,6 +9936,8 @@ function openInvoiceModal(){
    "Save & add another" keeps the sheet open and the cursor in the name field;
    the link out goes to the full list for anything more involved. */
 function openGuestModal(ev){
+  /* Belt and braces for the trap above: a DOM event is not an event record. */
+  if(ev&&typeof ev.preventDefault==='function')ev=null;
   var e=ev||activeEvent(); if(!e){toast('Create an event first ✦');return;}
   /* Guests belong to the primary. Adding one from a sub-event adds them to the
      weekend's list and invites them to that night, which is what "add a guest
@@ -9987,18 +10036,94 @@ function openVendorModal(){
     }
   });
 }
+/* --- naming a colour ---
+ * The picker is a grid of squares with no words on it, so every colour arrived
+ * called whatever the planner could think of at the time — and the field is
+ * required, which turned "pin this green" into a naming exercise. These are
+ * the names a planner and a florist already use with each other, so the nearest
+ * one is a real starting point rather than "darkseagreen".
+ */
+var SWATCH_NAMES=[
+  ['Ivory','#FFFFF0'],['White','#FFFFFF'],['Pearl','#EDE9E3'],['Cream','#F5F0E1'],
+  ['Champagne','#EFE0B8'],['Butter','#F2E394'],['Sand','#E3D5B8'],['Taupe','#A99A8C'],
+  ['Stone','#9A958C'],['Blush','#F5DDE0'],['Dusty Rose','#C9A0A6'],['Rose Gold','#E0BFB8'],
+  ['Peach','#FFCBA4'],['Coral','#F0806A'],['Terracotta','#C56B4E'],['Rust','#A6522C'],
+  ['Copper','#B87333'],['Gold','#C9A24B'],['Mustard','#D4A017'],['Marigold','#E8A33D'],
+  ['Apricot','#F4C89A'],['Oat','#EAE0CE'],['Sage','#A8B79A'],['Pistachio','#C9DDA4'],
+  ['Celadon','#B2C9AE'],['Mint','#CDE7DA'],['Seafoam','#A5D2C0'],['Moss','#7F8C4F'],
+  ['Eucalyptus','#7D9A88'],['Fern','#5A7A52'],['Olive','#6B7043'],['Forest','#2E4A34'],
+  ['Emerald','#2E7D5B'],['Teal','#2A7F7F'],['Powder Blue','#B8D3E3'],['Sky','#7FB3D5'],
+  ['Cornflower','#9BB4DA'],['Denim','#4E6E8E'],['Fog','#D6D8D6'],['Cherry','#B3222F'],
+  ['Berry','#8E2C4E'],
+  ['Slate','#6B7A8F'],['Navy','#1F3350'],['Ink','#23303D'],['Lavender','#C7BEDC'],
+  ['Lilac','#B5A0C9'],['Mauve','#8E7A85'],['Plum','#6B3F5B'],['Burgundy','#6E2338'],
+  ['Wine','#4A1F2B'],['Charcoal','#3B3E42'],['Espresso','#4A3728'],['Chocolate','#5C4033'],
+  ['Silver','#C4C6C8'],['Pewter','#8A8D8F'],['Black','#1A1A1A']
+];
+function hexRgb(h){
+  h=String(h||'').replace('#','');
+  if(h.length===3)h=h[0]+h[0]+h[1]+h[1]+h[2]+h[2];
+  var n=parseInt(h,16); if(isNaN(n)||h.length!==6)return null;
+  return [(n>>16)&255,(n>>8)&255,n&255];
+}
+/* Plain RGB distance calls #FF0000 and #00FF00 equally far apart as two
+   near-identical creams. The redmean weighting is the cheapest correction that
+   roughly matches what an eye does, and it is the difference between a pale
+   green being called "Sage" and being called "Stone". */
+function nearestSwatchName(hex){
+  var a=hexRgb(hex); if(!a)return '';
+  var best=null,bd=Infinity;
+  for(var i=0;i<SWATCH_NAMES.length;i++){
+    var b=hexRgb(SWATCH_NAMES[i][1]);
+    var rm=(a[0]+b[0])/2, dr=a[0]-b[0], dg=a[1]-b[1], db=a[2]-b[2];
+    var d=(2+rm/256)*dr*dr + 4*dg*dg + (2+(255-rm)/256)*db*db;
+    if(d<bd){bd=d;best=SWATCH_NAMES[i][0];}
+  }
+  return best;
+}
 /* Pass a board to pin the colour to that board; omit for the event palette. */
 function openSwatchModal(board){
+  /* A DOM event is not a board — see the note on the wiring in wirePageActions. */
+  if(board&&typeof board.preventDefault==='function')board=null;
   var e=activeEvent(); if(!e){toast('Create an event first ✦');return;}
-  md.className='modal';md.innerHTML='<h3>Add colour</h3><p class="sub">Adding to '+esc(board?board.title:e.title+'’s palette')+'.</p>'+
-    '<div class="field"><label>Name</label><input id="f_cname" placeholder="e.g. Powder Blush"></div>'+
-    '<div class="field"><label>Colour</label><input id="f_chex" type="color" value="#F5DDE0" style="height:46px;padding:4px"></div>'+
+  if(!e.design)e.design={palette:[],boards:[],decor:[]};
+  if(!e.design.palette)e.design.palette=[];
+  if(board&&!board.swatches)board.swatches=[];
+  var start='#F5DDE0';
+  md.className='modal';md.innerHTML='<h3>Add colour</h3><p class="sub">Adding to '+
+      esc(board?(board.title||'this board'):((e.title||'this event')+'’s palette'))+'.</p>'+
+    '<div class="field"><label>Name</label><input id="f_cname" placeholder="e.g. Powder Blush" value="'+esc(nearestSwatchName(start))+'"></div>'+
+    '<div class="field"><label>Colour</label>'+
+      '<input id="f_chex" type="color" value="'+start+'" style="height:46px;padding:4px">'+
+      /* The hex is what a florist, a printer and a linen supplier all ask for,
+         and the picker never shows it. Tap it to copy. */
+      '<button type="button" class="hex-copy" id="f_chexcopy" title="Copy hex">'+
+        '<span id="f_chexval">'+start.toUpperCase()+'</span><span class="hex-c">copy</span></button>'+
+    '</div>'+
     '<div class="modal-actions"><button class="btn btn-ghost" id="mCancel">Cancel</button><button class="btn btn-gold" id="mSave">Add colour</button></div>';
   ov.classList.add('show');
+  var nameEl=$('#f_cname'), hexEl=$('#f_chex'), valEl=$('#f_chexval');
+  /* The suggestion follows the picker until the planner writes their own name,
+     and then it stops — "Bridesmaid green" must not be overwritten by the next
+     nudge of the colour wheel. */
+  var named=false;
+  nameEl.oninput=function(){ named=true; };
+  hexEl.oninput=hexEl.onchange=function(){
+    var h=hexEl.value; valEl.textContent=h.toUpperCase();
+    if(!named||!nameEl.value.trim())nameEl.value=nearestSwatchName(h);
+  };
+  $('#f_chexcopy').onclick=function(){
+    var h=hexEl.value.toUpperCase();
+    if(navigator.clipboard&&navigator.clipboard.writeText)navigator.clipboard.writeText(h);
+    toast(h+' copied ✦');
+  };
   $('#mCancel').onclick=closeModal;
   $('#mSave').onclick=function(){
-    var n=$('#f_cname').value.trim(); if(!n){$('#f_cname').focus();return;}
-    (board?board.swatches:e.design.palette).push({hex:$('#f_chex').value,name:n});
+    /* The name is no longer a gate — the picker always has a colour and there
+       is always a name for it, so an empty field takes the suggestion rather
+       than refusing to save. */
+    var n=nameEl.value.trim()||nearestSwatchName(hexEl.value)||'Untitled';
+    (board?board.swatches:e.design.palette).push({hex:hexEl.value,name:n});
     save();closeModal();render();
     if(board)wireBoardDetail(); else wireDesign();
   };
@@ -13685,6 +13810,19 @@ function sbPush(opts){
   };
   var L=notSample(db.leads,'lead'), E=notSample(db.events,'event'),
       V=notSample(db.vendors,'vendor'), B=notSample(db.bookings,'booking');
+  /* The paperwork was never filtered, and that is how the demo wedding got
+     into a real studio's database and stayed there. Leads, events, vendors and
+     bookings were held back; invoices, documents, questionnaires and form
+     submissions went up with everything else. The event they belong to was
+     held back, so they arrived with a null event_id — orphaned, but present —
+     and every device the studio has pulled them back down ever since. Worse,
+     they come down without the flag and with a uuid in place of the fixed id,
+     so "Remove sample" could no longer see them: GEM-1042 and GEM-1051 for
+     Priya & Sam outlived the wedding they belonged to.
+     Leaving them out now also cleans up: the prune retires whatever this
+     device sent last time and is no longer sending. */
+  var IV=notSample(db.invoices,'invoice'), DC=notSample(db.documents,'document'),
+      QN=notSample(db.questionnaires,'questionnaire'), SU=notSample(db.submissions,'submission');
   /* A venue is never sample: the directory is lifted out of whatever events a
      device holds, and the sample's own venue goes when the sample does. */
   var VN=db.venues||[];
@@ -13735,7 +13873,7 @@ function sbPush(opts){
   });
 
   var qs=[],qq=[],qa=[];
-  (db.questionnaires||[]).forEach(function(q){
+  QN.forEach(function(q){
     qs.push({id:q.id,org_id:org,event_id:has(q.eventId)?q.eventId:null,title:s(q.title),intro:s(q.intro),status:q.status||'draft'});
     (q.questions||[]).forEach(function(x,i){
       qq.push({id:x.id,org_id:org,questionnaire_id:q.id,prompt:s(x.prompt),kind:x.kind||'short_text',
@@ -13802,10 +13940,10 @@ function sbPush(opts){
     ['board_swatches',swatches],['board_ideas',ideas],['board_images',images],['decor_items',decor],
     ['vendor_bookings',B.filter(function(b){return has(b.eventId);}).map(function(b){ return {id:b.id,org_id:org,
       vendor_id:b.vendorId,event_id:b.eventId,status:b.status||'quote',fee:num(b.fee),notes:s(b.notes)}; })],
-    ['invoices',(db.invoices||[]).map(function(i){ return {id:i.id,org_id:org,event_id:has(i.eventId)?i.eventId:null,
+    ['invoices',IV.map(function(i){ return {id:i.id,org_id:org,event_id:has(i.eventId)?i.eventId:null,
       number:s(i.num),client_name:s(invoiceClientName(i)),lead_id:hasLead(i.leadId)?i.leadId:null,amount:num(i.amount),due_date:nn(i.due),
       status:INV_OUT[i.status]||i.status||'draft'}; })],
-    ['documents',(db.documents||[]).map(function(d){ return {id:d.id,org_id:org,event_id:has(d.eventId)?d.eventId:null,
+    ['documents',DC.map(function(d){ return {id:d.id,org_id:org,event_id:has(d.eventId)?d.eventId:null,
       title:s(d.title),type:d.type||'other',status:d.status||'draft',amount:num(d.amount),
       /* The attachment's metadata rides in the body column alongside any typed
          text, so no extra migration is needed for it. */
@@ -13820,7 +13958,7 @@ function sbPush(opts){
       body:s(m.body),sender_id:me}; })],
     ['lead_forms',lf?[{id:lf.id,org_id:org,slug:s(lf.slug)||'inquire',title:s(lf.title)||'Enquiry',
       intro:s(lf.intro),fields:lf.fields||[],active:lf.active!==false}]:[]],
-    ['form_submissions',lf?(db.submissions||[]).map(function(x){ return {id:x.id,form_id:lf.id,org_id:org,
+    ['form_submissions',lf?SU.map(function(x){ return {id:x.id,form_id:lf.id,org_id:org,
       payload:x,names:s(x.names),email:s(x.email),phone:s(x.phone),
       event_date:nn(x.date),status:x.status||'new'}; }):[]]
   ];
