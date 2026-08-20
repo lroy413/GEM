@@ -131,17 +131,35 @@ html.no-motion body::before{opacity:.3}
 /* ============ SIDEBAR ============ */
 .sidebar{
   width:274px;flex:0 0 274px;
-  padding:28px 16px 104px;
+  /* No bottom well any more: the chip is a real footer rather than something
+     floating over the end of the list, so nothing needs to be held clear of
+     it. 104px of it was reserved for exactly that. */
+  padding:28px 16px 14px;
   display:flex;flex-direction:column;gap:2px;
   border-right:1px solid var(--line);
   background:linear-gradient(180deg,#FFFDFB 0%,#FEFAF7 55%,#FCF5F3 100%);
   backdrop-filter:blur(14px) saturate(1.1);
-  position:fixed;left:0;top:0;height:100vh;overflow-y:auto;z-index:30;
+  position:fixed;left:0;top:0;height:100vh;overflow:hidden;z-index:30;
   transition:width .24s var(--ease);
   scrollbar-width:thin;scrollbar-color:var(--pink-200) transparent;
 }
 .sidebar::-webkit-scrollbar{width:6px}
 .sidebar::-webkit-scrollbar-thumb{background:var(--pink-200);border-radius:20px}
+/* ---- three bands, not one long scroll ----
+   The whole sidebar used to scroll and the user chip was stuck to the bottom
+   of it with position:sticky, which meant it floated OVER the tools as they
+   passed underneath — Messages reading through the middle of somebody's name —
+   and, on a short list, sat wherever the list happened to end with a field of
+   nothing below it. Now the masthead and the chip are fixed bands and only the
+   middle scrolls, so the chip is always on the bottom edge, always clear of
+   the list, and there is never a gap under it. */
+.side-scroll{flex:1 1 auto;min-height:0;overflow-y:auto;display:flex;flex-direction:column;gap:2px;
+  scrollbar-width:thin;scrollbar-color:var(--pink-200) transparent}
+.side-scroll::-webkit-scrollbar{width:6px}
+.side-scroll::-webkit-scrollbar-thumb{background:var(--pink-200);border-radius:20px}
+/* A flex item shrinks by default, and this one was being squeezed: a 104px
+   logo came out 72px tall the moment the list below it was long. */
+.brand{flex:0 0 auto}
 .brand{display:flex;align-items:center;gap:14px;padding:26px 10px 20px;margin-bottom:14px;
   border-bottom:1px solid var(--line);position:relative}
 .brand::after{content:"";position:absolute;left:10px;right:10px;bottom:-1px;height:1px;
@@ -167,13 +185,27 @@ html.no-motion body::before{opacity:.3}
    with a logo set the mark becomes a plate across the whole width, the picture
    is contained rather than cropped, and the short mark stands down — the logo
    is already the wordmark, and printing both said the same thing twice. */
-/* The panel's own close button lives in this corner, so the plate starts
-   below it rather than under it — a logo with no margin of its own would
-   otherwise run straight beneath the ✕. */
-.brand:not(.no-logo){flex-direction:column;align-items:stretch;gap:9px;padding:46px 10px 18px}
-.brand:not(.no-logo) .mark{width:100%;height:58px;border-radius:12px;
-  border:1px solid var(--line);background-color:#fff;
-  box-shadow:0 1px 3px rgba(59,46,51,.06)}
+/* The panel's close button lives in this corner. Reserving a whole band above
+   the logo for it left the mark floating in an empty top third of the sidebar;
+   keeping the artwork clear of it SIDEWAYS costs nothing, so the block sits
+   where it should and the ✕ keeps its corner. */
+/* No box around it, and no fixed height: the block IS the picture, so a wide
+   wordmark runs the full width and a square mark is a big square. A fixed bar
+   suits one shape and strands the other in white space. */
+/* The close button owns the top-right corner, so the masthead's width stops
+   short of it and the picture centres in what is left. Clearing it with a
+   max-width on a CENTRED image does not work — half the clearance is spent on
+   the left, and a wide logo still runs under the ✕. */
+.brand:not(.no-logo){flex-direction:column;align-items:stretch;gap:9px;
+  padding:14px 44px 14px 10px;margin-bottom:10px}
+/* Full width, and the PICTURE is what centres inside it. An auto margin here
+   turned the block into shrink-to-fit, and then the image's percentage
+   max-width resolved against its own parent's content width — each pass
+   trimming the other until a 104px square settled at 72. */
+.brand:not(.no-logo) .mark{width:auto;height:auto;display:block;margin:0;
+  padding:0;border:none;background:none;box-shadow:none;border-radius:0;overflow:visible}
+.brand:not(.no-logo) .mark img{display:block;margin:0 auto;border-radius:12px;
+  width:auto;height:auto;max-width:100%;max-height:104px}
 .brand:not(.no-logo) .name{display:none}
 .brand:not(.no-logo) .brand-tx{flex:0 0 auto;text-align:center}
 .brand:not(.no-logo) .sub{margin-top:0}
@@ -196,6 +228,11 @@ html.no-motion body::before{opacity:.3}
 .ne-n{font-size:12.5px;font-weight:600;color:var(--ink);
   overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .ne-d{font-size:10.5px;color:var(--muted);white-space:nowrap}
+.ne-k{font-size:9.5px;letter-spacing:.16em;text-transform:uppercase;color:var(--muted);
+  font-weight:600;padding:6px 10px 0}
+.ne-go{margin-left:auto;flex:0 0 auto;color:var(--muted);font-size:15px;line-height:1}
+.nav-ev:hover .ne-go{color:var(--gold-deep)}
+.app.rail .ne-k,.app.rail .ne-go{display:none}
 /* Collapsed to a rail, the picture is the whole of it. */
 .app.rail .nav-ev{justify-content:center;padding:8px 0;background:none;border-color:transparent;
   box-shadow:none}
@@ -286,10 +323,8 @@ html.no-motion body::before{opacity:.3}
    about the footer's own height. (Padding on a scroll container adds
    scrollable space; it cannot move a sticky child, which is why the earlier
    attempt at this failed.) */
-.side-foot{margin-top:auto;padding:14px 0 2px;border-top:1px solid var(--line);
-  position:sticky;bottom:0;z-index:2;
-  background:linear-gradient(180deg,rgba(252,245,243,.82),#FCF5F3 34%);
-  backdrop-filter:blur(8px)}
+.side-foot{flex:0 0 auto;margin-top:0;padding:12px 0 0;border-top:1px solid var(--line);
+  position:relative;z-index:2;background:none}
 .side-foot::before{content:"";position:absolute;left:0;right:0;top:-1px;height:1px;
   background:linear-gradient(90deg,var(--gold-line),transparent 62%)}
 .user-chip{display:flex;align-items:center;gap:10px;padding:10px 8px 10px 11px;border-radius:14px;
@@ -334,7 +369,7 @@ html.no-motion body::before{opacity:.3}
 /* Collapsed there is no width to be a masthead in, so the plate goes back to
    being a tile — still containing the picture rather than cropping it. */
 .app.rail .brand:not(.no-logo){padding:46px 0 18px}
-.app.rail .brand:not(.no-logo) .mark{width:38px;height:38px;margin:0 auto;box-shadow:none}
+.app.rail .brand:not(.no-logo) .mark img{max-width:38px;max-height:38px;border-radius:11px}
 @media (max-width:860px){ .brand{padding-top:34px} }
 .app.rail .brand-tx,
 .app.rail .srch-open span:nth-child(2),
@@ -477,12 +512,13 @@ html.no-motion body::before{opacity:.3}
    picture already says. */
 .bp-bar.has-logo{flex-direction:column;align-items:stretch;gap:9px;padding:16px 18px}
 /* Held to roughly the sidebar's width, because that is what this is a preview
-   of — stretched across the whole settings column it read as a black band. */
-.bp-bar.has-logo .bp-mark{width:100%;max-width:260px;margin:0 auto;height:54px;flex:0 0 54px;
-  border-radius:12px;background:#fff;border-color:var(--line);padding:5px}
-/* height:100% cannot resolve inside a centred grid item, so the picture took
-   its own height from its width and overflowed the plate. */
-.bp-bar.has-logo .bp-mark img{width:auto;height:auto;max-width:100%;max-height:44px}
+   of — stretched across the whole settings column it read as a black band —
+   and shaped by the artwork rather than by a fixed bar, for the same reason
+   the sidebar is. */
+.bp-bar.has-logo .bp-mark{width:auto;max-width:230px;height:auto;flex:0 0 auto;margin:0 auto;
+  border:none;background:none;padding:0;border-radius:0;overflow:visible}
+.bp-bar.has-logo .bp-mark img{width:auto;height:auto;max-width:100%;max-height:104px;
+  border-radius:10px}
 .bp-bar.has-logo .bp-tx{text-align:center}
 .bp-tx b{display:block;font-family:var(--serif);font-size:19px;letter-spacing:.05em}
 .bp-tx em{font-style:normal;display:block;font-size:10px;letter-spacing:2px;text-transform:uppercase;color:var(--muted)}
@@ -498,12 +534,13 @@ html.no-motion body::before{opacity:.3}
 .logo-acts{display:flex;gap:8px;flex-wrap:wrap}
 /* The same plate the sidebar draws, at the same proportions, so this row is a
    preview and not a thumbnail. */
-.logo-plate{flex:1 1 200px;min-width:150px;max-width:260px;height:56px;
-  border:1px solid var(--line);border-radius:12px;background:#fff;padding:5px;
-  display:grid;place-items:center;overflow:hidden}
-/* max-height:100% is indefinite inside a centred grid item — the picture took
-   its height from its width and spilled past the plate. Fixed pixels resolve. */
-.logo-plate img{width:auto;height:auto;max-width:100%;max-height:46px;object-fit:contain}
+.logo-plate{flex:0 0 auto;max-width:min(100%,230px);
+  border:1px solid var(--line);border-radius:12px;background:#fff;padding:6px;
+  display:inline-grid;place-items:center}
+/* The box shrinks to the artwork, so a square logo is a square here rather
+   than a small square in the middle of a wide white bar. */
+.logo-plate img{display:block;width:auto;height:auto;max-width:100%;max-height:104px;
+  border-radius:7px}
 @media (max-width:560px){
   .logo-plate{flex:1 1 100%;max-width:none}
   .logo-acts{flex:1 1 100%}
@@ -2512,9 +2549,12 @@ td.inv-brk,td.g-brk{display:none}
      one place the studio's own logo is worth the room. */
   /* The drawer's close button is a 42px touch target here, not the 28px one
      the desktop draws, so the plate starts lower than it does there. */
-  .sidebar .brand:not(.no-logo){display:block;padding:48px 10px 10px}
-  .sidebar .brand:not(.no-logo) .mark{width:100%;height:44px}
-  .sidebar .brand:not(.no-logo) .brand-tx{display:block;text-align:center;margin-top:6px}
+  .sidebar .brand:not(.no-logo){display:block;padding:10px 54px 12px 10px;margin-bottom:6px}
+  .sidebar .brand:not(.no-logo) .mark{width:auto;height:auto}
+  /* A little shorter than the desktop's — the drawer has a list to get to
+     underneath it. */
+  .sidebar .brand:not(.no-logo) .mark img{max-height:92px;max-width:100%}
+  .sidebar .brand:not(.no-logo) .brand-tx{display:block;text-align:center;margin-top:8px}
   .sidebar .srch-open{margin-bottom:2px}
 
   /* On a phone the drawer is a full-height panel you scroll anyway, so the
@@ -2523,8 +2563,9 @@ td.inv-brk,td.g-brk{display:none}
      Tool became unreachable. margin-top:auto means nothing ever follows it in
      flow, so no amount of padding on the scroller could push them clear: the
      fix is to let it sit at the end and scroll like everything else. */
-  .side-foot{position:static;margin-top:22px}
-  #sidebar{padding-bottom:calc(94px + env(safe-area-inset-bottom,0px))}
+  /* The tab bar sits above the drawer, so the footer band stops short of it
+     rather than under it. */
+  #sidebar{padding-bottom:calc(78px + env(safe-area-inset-bottom,0px))}
 }
 /* Printing a page should not print its navigation. */
 @media print{ .tabbar{display:none!important} }
@@ -3702,6 +3743,7 @@ html,body{max-width:100%;overflow-x:hidden}
         <div class="sub">Glimmer Events</div>
       </div>
     </div>
+    <div class="side-scroll">
     <button class="srch-open" id="srchOpen" type="button"><span class="srch-ic">⌕</span><span>Search</span><kbd id="srchKbd">⌘K</kbd></button>
     <div id="navEvent"></div>
     <div class="nav-group" data-group="workspace">
@@ -3744,6 +3786,7 @@ html,body{max-width:100%;overflow-x:hidden}
       </div></div>
     </div>
     <div class="spacer"></div>
+    </div>
     <div class="side-foot">
       <div class="user-chip" id="userChip">
         <div class="avatar">GM</div>
@@ -9657,12 +9700,17 @@ function applyBrand(){
   root.setProperty('--muted',    hsl(ink.h,Math.max(ink.s-8,3),Math.min(ink.l+32,68)));
 
   document.querySelectorAll('.brand .mark').forEach(function(m){
-    /* contain, not cover: a logo is artwork with edges, and cropping it to
-       fill a box is how "CONCRETE" became "ONCRE". */
-    if(p.logo){ m.style.background=''; m.style.backgroundImage='url('+p.logo+')';
-      m.style.backgroundSize='contain'; m.style.backgroundRepeat='no-repeat';
-      m.style.backgroundPosition='center'; m.textContent=''; }
-    else { m.style.background=''; m.style.backgroundImage=''; m.textContent=(p.bizName||'G').trim()[0].toUpperCase(); }
+    /* An <img>, not a background. A background has to be given a box, and any
+       box you pick is wrong for somebody: a full-width bar left a square logo
+       as a small square marooned in a field of white. A picture brings its own
+       proportions, so the block ends up exactly the shape of the artwork. */
+    m.style.background=''; m.style.backgroundImage='';
+    if(p.logo){
+      var im=(m.firstChild&&m.firstChild.tagName==='IMG')?m.firstChild:null;
+      if(!im){ m.textContent=''; im=document.createElement('img'); im.alt=''; m.appendChild(im); }
+      if(im.getAttribute('src')!==p.logo)im.src=p.logo;
+    }
+    else { m.textContent=(p.bizName||'G').trim()[0].toUpperCase(); }
   });
   /* A real logo is a brand; an initial in a tile is a placeholder. The class
      is what hides the second one everywhere except the collapsed rail. */
@@ -10937,14 +10985,30 @@ function paintNavEvent(){
   if(!e){ host.innerHTML=''; return; }
   var cover=evPhoto(e), d=daysAway(e.date);
   var when=e.date?(d>=0?(d===0?'Today':d===1?'Tomorrow':d+' days away'):'Completed'):'No date yet';
-  host.innerHTML='<button class="nav-ev'+(state.view==='events'&&state.eventId===e.id?' on':'')+'" '+
-    'data-openevent="'+esc(e.id)+'" title="'+esc(e.title)+'">'+
+  /* Said nothing about what it was, so it read as decoration somebody had left
+     there. It is the event every screen in the app is currently about — the
+     one the guest list, the seating chart and the budget all belong to — and
+     saying so is two words. */
+  host.innerHTML='<div class="ne-k">Working on</div>'+
+    '<button class="nav-ev'+(state.view==='events'&&state.eventId===e.id?' on':'')+'" '+
+    'data-openevent="'+esc(e.id)+'" title="Open '+esc(e.title)+'">'+
     (cover?'<span class="ne-th" style="background-image:url('+cover+')"></span>'
           :'<span class="ne-th ne-mono" style="background:'+eventTint(e.id)+'">'+
              esc(String(e.title||'?').trim()[0]||'?').toUpperCase()+'</span>')+
     '<span class="ne-tx"><span class="ne-n">'+esc(e.title)+'</span>'+
       '<span class="ne-d">'+esc(when)+'</span></span>'+
+    '<span class="ne-go" aria-hidden="true">›</span>'+
   '</button>';
+  /* The click delegate that handles every other [data-openevent] is bound to
+     #content, and the sidebar is not inside #content — so this one had looked
+     like a button and done nothing since the day it was added. Wired here
+     directly, and property assignment because paintNavEvent runs on every
+     render. */
+  var btn=host.querySelector('.nav-ev');
+  if(btn)btn.onclick=function(){
+    setView('events',{eventId:e.id});
+    if(window.innerWidth<=860)setNav(false);
+  };
 }
 /* Open the group you are in. Groups start closed on purpose — a calm index
    rather than a wall of links — so this only opens the one holding the current
