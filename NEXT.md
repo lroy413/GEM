@@ -679,6 +679,39 @@ never pulled, which is what stops a fresh install overwriting the studio.
     `sbTagCol()` probes for it exactly as `sbAttireCol()` does. Verified
     against local Postgres: default, containment query, and the check refusing
     an object.
+- **The board is arranged by dragging, and the arrangement is one order.**
+  Three arrays make three kinds of tile, but a board is one composition — a
+  colour belongs between two photographs if that is where it was dragged. Every
+  item carries `pos` and the wall is `wallTiles(b)`, the merge of the three
+  sorted by it; `wallCommit(b,list)` writes 0..n-1 back and sorts each array to
+  match, so `b.images` in sequence always agrees with the screen.
+  - **Items from before this have no `pos`** and fall back to photos, then
+    colours, then notes — the order they were already shown in, so nothing
+    moves the first time an old board is opened.
+  - **Pointer events, not HTML5 drag-and-drop.** The native one cannot show the
+    board moving out of the way, drags a ghost of the whole tile including its
+    buttons, and differs in every browser.
+  - **A clone follows the pointer; the real tile is the placeholder.** It is
+    moved between its neighbours as the pointer passes their centres, so the
+    live preview IS the DOM and what you see is what you will get. Only the
+    release writes anything down.
+  - **Deliberately desktop-only** (`(pointer:coarse)` bails out). On a touch
+    screen a drag beginning on a tile is indistinguishable from a scroll until
+    it is too late to give the scroll back, and this is a tall page. Touch gets
+    the ‹ › arrows, which every tile carries and which do the same thing.
+  - **`tileSpan()` asks "has anybody set a size on this board", not "is
+    anything wide".** Asking the second question meant narrowing the only wide
+    picture handed the board back to the "first picture is the feature"
+    default, which promptly made it wide again.
+  - **Migration 26** gives notes the `sort_order` photos and colours already
+    had, and photos a `span` (1 or 2, checked). The push writes a position
+    unique across the whole board once anything has been arranged; the pull
+    uses that to tell an arranged board from an old one — **if every
+    `sort_order` on the board is distinct they are wall positions, and if any
+    collide they are the old per-list indexes**. Verified against local
+    Postgres, including the span check refusing 40.
+  - **`sbBoardCols()` probes once for both columns**, because one migration
+    adds both.
 - **The mood board is one wall now, not three cards about one.** It used to be
   a form: reference photos in a uniform grid with every one cropped to the same
   118px band, the palette in a sidebar card and the notes in another. Nobody

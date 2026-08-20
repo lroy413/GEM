@@ -2741,6 +2741,27 @@ select.rsvp-sel[data-r="no"]{background-color:#FBF4F4;border-color:#EDD1D1;color
 .mb-a:hover{border-color:var(--gold);color:var(--gold-deep)}
 .mb-a:focus-visible{outline:none;box-shadow:var(--ring)}
 .mb-hint{font-size:11.5px;color:var(--muted);margin-top:10px}
+/* ---- arranging ----
+   A grab cursor only where a drag is actually offered, which is a fine
+   pointer: on a touch screen the same gesture is a scroll, so the arrows do
+   the arranging there. */
+@media (pointer:fine){
+  .mb-t{cursor:grab}
+  .mb-t:active{cursor:grabbing}
+}
+.mb-arranging{cursor:grabbing}
+.mb-arranging .mb-t{transition:none}
+/* The placeholder: where the tile will land, held open while you decide. */
+.mb-ghost{opacity:.32;filter:saturate(.4)}
+.mb-ghost .mb-acts{display:none}
+/* The copy under the hand. */
+.mb-fly{position:fixed;z-index:90;margin:0;pointer-events:none;
+  border-radius:var(--radius-sm);overflow:hidden;
+  box-shadow:0 18px 40px rgba(59,46,51,.28);transform:rotate(-1deg) scale(1.02);
+  opacity:.96;background:var(--card);border:1px solid var(--line)}
+.mb-fly .mb-acts{display:none}
+.mb-fly img{display:block;width:100%;height:auto}
+.mb-t:focus-visible{outline:none;box-shadow:var(--ring)}
 /* Once there is a board to look at, the drop target is a strip under it rather
    than the first thing on the page. */
 .dropzone.slim{padding:14px;flex-direction:row;gap:10px;text-align:left}
@@ -8751,42 +8772,86 @@ function findBoard(id){
  * see layoutWall() — which is what lets a tall picture be tall and a wide one
  * wide without either being cropped.
  * ============================================================ */
+/* ---- one order for the whole wall ----
+   Three arrays make three kinds of tile, but a board is one composition: a
+   colour belongs between two photographs if that is where you put it. Each
+   item carries `pos`, a position on the wall, and the wall is the merge of the
+   three sorted by it. Items from before this existed have no pos and fall back
+   to photos, then colours, then notes — which is exactly the order they were
+   already shown in, so nothing moves the first time a board is opened. */
+function wallTiles(b){
+  var out=[];
+  var at=function(v,d){ return (typeof v==='number'&&isFinite(v))?v:d; };
+  (b.images||[]).forEach(function(im,i){ out.push({k:'img',id:im.id,ref:im,pos:at(im.pos,i)}); });
+  (b.swatches||[]).forEach(function(c,i){ out.push({k:'sw',id:c.id||('sw'+i),idx:i,ref:c,pos:at(c.pos,1000+i)}); });
+  (b.ideas||[]).forEach(function(x,i){ out.push({k:'note',id:x.id,ref:x,pos:at(x.pos,2000+i)}); });
+  out.sort(function(a,z){ return a.pos-z.pos; });
+  return out;
+}
+/* Writes 0..n-1 back onto the records, and puts each array in that order too —
+   so anything reading b.images in sequence agrees with what is on screen, and
+   the position is what goes up the wire as sort_order. */
+function wallCommit(b,list){
+  list.forEach(function(t,i){ t.ref.pos=i; });
+  var byPos=function(a,z){ return (a.pos||0)-(z.pos||0); };
+  if(b.images)b.images.sort(byPos);
+  if(b.swatches)b.swatches.sort(byPos);
+  if(b.ideas)b.ideas.sort(byPos);
+}
+/* A photograph is one column wide or two. Nothing else has a size — a colour
+   chip does not need to be enormous and a note is as tall as its sentence.
+   Until somebody sets one, the first picture on the board is the wide one,
+   which is the composition boards shipped with before sizes existed. */
+function tileSpan(b,t,first){
+  if(t.k!=='img')return 1;
+  /* "Has anybody set a size on this board", not "is anything wide" — asking
+     the second question meant that narrowing the only wide picture handed the
+     board straight back to the default, which promptly made it wide again. */
+  var set=(b.images||[]).some(function(im){ return typeof im.span==='number'; });
+  if(set)return t.ref.span===2?2:1;
+  return first?2:1;
+}
 function boardWall(b){
-  var imgs=b.images||[], sws=b.swatches||[], ideas=b.ideas||[];
-  var tiles=[];
-  imgs.forEach(function(im,i){
-    /* The first picture is the feature — no flag to store and no migration:
-       "make this the feature" is just moving it to the front, which is the
-       order that already syncs. */
-    tiles.push('<figure class="mb-t mb-img'+(i===0?' feat':'')+'">'+
-      '<img src="'+(im.src||'')+'" alt="'+esc(im.caption||'Reference')+'" loading="lazy">'+
-      (im.caption?'<figcaption>'+esc(im.caption)+'</figcaption>':'')+
-      '<span class="mb-acts">'+
-        (i?'<button type="button" class="mb-a" data-feat="'+esc(im.id)+'" title="Make this the feature" aria-label="Make this the feature">★</button>':'')+
-        (i>0?'<button type="button" class="mb-a" data-imgmv="'+esc(im.id)+'" data-dir="-1" title="Move earlier" aria-label="Move earlier">‹</button>':'')+
-        (i<imgs.length-1?'<button type="button" class="mb-a" data-imgmv="'+esc(im.id)+'" data-dir="1" title="Move later" aria-label="Move later">›</button>':'')+
-        '<button type="button" class="mb-a" data-delimg="'+esc(im.id)+'" title="Remove" aria-label="Remove photo">✕</button>'+
-      '</span>'+
-    '</figure>');
-  });
-  sws.forEach(function(c,i){
-    var hex=String(c.hex||'').toUpperCase();
-    tiles.push('<div class="mb-t mb-sw">'+
-      '<span class="mb-c" style="background:'+esc(c.hex)+'"></span>'+
-      '<span class="mb-cm">'+
-        '<span class="mb-cn">'+esc(c.name||'Colour')+'</span>'+
-        /* The number is the point of a swatch on a board — it is what gets read
-           out to a florist, a printer or a linen hire. Tap to copy it. */
-        '<button type="button" class="mb-hex" data-copyhex="'+esc(hex)+'" title="Copy '+esc(hex)+'">'+esc(hex)+'</button>'+
-      '</span>'+
-      '<span class="mb-acts"><button type="button" class="mb-a" data-delsw="'+i+'" title="Remove" aria-label="Remove colour">✕</button></span>'+
-    '</div>');
-  });
-  ideas.forEach(function(x){
-    tiles.push('<div class="mb-t mb-note">'+
-      '<span class="mb-nt">'+esc(x.text||x.body||'')+'</span>'+
-      '<span class="mb-acts"><button type="button" class="mb-a" data-delidea="'+esc(x.id)+'" title="Remove" aria-label="Remove note">✕</button></span>'+
-    '</div>');
+  var list=wallTiles(b), firstImg=null;
+  list.forEach(function(t){ if(t.k==='img'&&!firstImg)firstImg=t; });
+  var tiles=list.map(function(t,i){
+    var span=tileSpan(b,t,t===firstImg);
+    var head='data-tile="'+esc(t.k+':'+t.id)+'" data-i="'+i+'"';
+    /* Every tile can be nudged along the wall, whatever kind it is — that is
+       the arrangement control on a phone, where dragging fights the scroll. */
+    var nudge=(i>0?'<button type="button" class="mb-a" data-mv="'+esc(t.k+':'+t.id)+'" data-dir="-1" title="Move earlier" aria-label="Move earlier">‹</button>':'')+
+              (i<list.length-1?'<button type="button" class="mb-a" data-mv="'+esc(t.k+':'+t.id)+'" data-dir="1" title="Move later" aria-label="Move later">›</button>':'');
+    if(t.k==='img'){
+      var im=t.ref;
+      return '<figure class="mb-t mb-img'+(span===2?' feat':'')+'" '+head+' tabindex="0">'+
+        '<img src="'+(im.src||'')+'" alt="'+esc(im.caption||'Reference')+'" loading="lazy" draggable="false">'+
+        (im.caption?'<figcaption>'+esc(im.caption)+'</figcaption>':'')+
+        '<span class="mb-acts">'+
+          '<button type="button" class="mb-a" data-span="'+esc(im.id)+'" title="'+(span===2?'Make it one column':'Make it two columns wide')+'" aria-label="Change size">'+(span===2?'▭':'▬')+'</button>'+
+          nudge+
+          '<button type="button" class="mb-a" data-delimg="'+esc(im.id)+'" title="Remove" aria-label="Remove photo">✕</button>'+
+        '</span>'+
+      '</figure>';
+    }
+    if(t.k==='sw'){
+      var c=t.ref, hex=String(c.hex||'').toUpperCase();
+      return '<div class="mb-t mb-sw" '+head+' tabindex="0">'+
+        '<span class="mb-c" style="background:'+esc(c.hex)+'"></span>'+
+        '<span class="mb-cm">'+
+          '<span class="mb-cn">'+esc(c.name||'Colour')+'</span>'+
+          /* The number is the point of a swatch on a board — it is what gets
+             read out to a florist, a printer or a linen hire. Tap to copy. */
+          '<button type="button" class="mb-hex" data-copyhex="'+esc(hex)+'" title="Copy '+esc(hex)+'">'+esc(hex)+'</button>'+
+        '</span>'+
+        '<span class="mb-acts">'+nudge+
+          '<button type="button" class="mb-a" data-delsw="'+t.idx+'" title="Remove" aria-label="Remove colour">✕</button></span>'+
+      '</div>';
+    }
+    return '<div class="mb-t mb-note" '+head+' tabindex="0">'+
+      '<span class="mb-nt">'+esc(t.ref.text||t.ref.body||'')+'</span>'+
+      '<span class="mb-acts">'+nudge+
+        '<button type="button" class="mb-a" data-delidea="'+esc(t.id)+'" title="Remove" aria-label="Remove note">✕</button></span>'+
+    '</div>';
   });
   if(!tiles.length)return '';
   return '<div class="mb-wall" id="mbWall">'+tiles.join('')+'</div>';
@@ -8794,6 +8859,7 @@ function boardWall(b){
 function viewBoardDetail(id){
   var b=findBoard(id); if(!b)return viewDesign();
   var n=(b.images||[]).length, c=(b.swatches||[]).length, k=(b.ideas||[]).length;
+  var list=n+c+k;
   var bits=[];
   if(n)bits.push(n+(n===1?' photo':' photos'));
   if(c)bits.push(c+(c===1?' colour':' colours'));
@@ -8825,7 +8891,10 @@ function viewBoardDetail(id){
         '<span class="dz-t">'+(b.images.length?'Add more photos':'Add reference photos')+'</span>'+
         '<span class="dz-s">Drag images here, or tap to choose</span>'+
       '</label>'+
-      (b.images.length?'<div class="mb-hint">The first picture is the feature — hover a photo to move it, or ★ to promote it.</div>':'')+
+      /* Says what the gesture is, and says the other one for the screen that
+         cannot have it. */
+      (list?'<div class="mb-hint"><b>Drag a tile</b> to arrange the board. '+
+        'Hover one for its size and its arrows — the arrows are how you arrange it on a phone.</div>':'')+
     '</div>'+
   '</div>';
 }
@@ -9082,23 +9151,33 @@ function wireBoardDetail(){
   var abp=$('#addBoardPhoto'); if(abp) abp.onclick=function(){ if(input)input.click(); };
   var abn=$('#addBoardNote'); if(abn) abn.onclick=function(){ openNoteModal(b); };
   /* ---- composing the wall ----
-     The first photo is the feature, so promoting one is moving it to the
-     front and nudging one is a swap. Both are just the array order, which is
-     what already syncs as sort_order. */
-  document.querySelectorAll('[data-feat]').forEach(function(x){
+     Two ways in, and they write the same thing. The arrows swap a tile with
+     its neighbour — that is the arrangement control on a phone, where a drag
+     would fight the page scroll. The drag below is the desktop one. */
+  document.querySelectorAll('[data-mv]').forEach(function(x){
     x.onclick=function(e){
       e.preventDefault(); e.stopPropagation();
-      var i=idxOfImg(b,x.dataset.feat); if(i<1)return;
-      b.images.unshift(b.images.splice(i,1)[0]);
-      save(); render();
+      var list=wallTiles(b), key=x.dataset.mv, d=Number(x.dataset.dir)||1, at=-1;
+      list.forEach(function(t,i){ if(t.k+':'+t.id===key)at=i; });
+      var to=at+d;
+      if(at<0||to<0||to>=list.length)return;
+      var moved=list.splice(at,1)[0];
+      list.splice(to,0,moved);
+      wallCommit(b,list); save(); render();
     };
   });
-  document.querySelectorAll('[data-imgmv]').forEach(function(x){
+  /* One column or two. Setting any size at all retires the "first picture is
+     the wide one" default for this board — see tileSpan(). */
+  document.querySelectorAll('[data-span]').forEach(function(x){
     x.onclick=function(e){
       e.preventDefault(); e.stopPropagation();
-      var i=idxOfImg(b,x.dataset.imgmv), d=Number(x.dataset.dir)||1, j=i+d;
-      if(i<0||j<0||j>=b.images.length)return;
-      var t=b.images[i]; b.images[i]=b.images[j]; b.images[j]=t;
+      var id=x.dataset.span, list=wallTiles(b), firstImg=null;
+      list.forEach(function(t){ if(t.k==='img'&&!firstImg)firstImg=t; });
+      /* Write the implied sizes down before changing one, or the picture that
+         was wide only because it was first would quietly become narrow. */
+      if(!(b.images||[]).some(function(im){ return im.span===2; }))
+        (b.images||[]).forEach(function(im){ im.span=(firstImg&&firstImg.ref===im)?2:1; });
+      (b.images||[]).forEach(function(im){ if(im.id===id)im.span=(im.span===2)?1:2; });
       save(); render();
     };
   });
@@ -9124,30 +9203,120 @@ function wireBoardDetail(){
       window.__gemWallResize=true;
       window.addEventListener('resize',function(){ layoutWall(); });
     }
+    wireWallDrag(wall,b);
   }
 }
-function idxOfImg(b,id){
-  var at=-1;
-  (b.images||[]).forEach(function(im,i){ if(im.id===id)at=i; });
-  return at;
-}
-/* A note is a sentence, and a sentence deserves more than an input squeezed
-   into a sidebar — it is the thing a planner writes at 11pm about the aisle. */
-function openNoteModal(b){
-  md.className='modal';
-  md.innerHTML='<h3>Add a note</h3><p class="sub">Pinned to '+esc(b.title)+'.</p>'+
-    '<div class="field"><label for="f_note">Note</label>'+
-      '<textarea id="f_note" rows="3" class="notes-box" placeholder="Candles low enough to see across the table"></textarea></div>'+
-    '<div class="modal-actions"><button class="btn btn-ghost" id="mCancel">Cancel</button>'+
-      '<button class="btn btn-gold" id="mSave">Pin it</button></div>';
-  ov.classList.add('show');
-  setTimeout(function(){ var f=$('#f_note'); if(f)f.focus(); },60);
-  $('#mCancel').onclick=closeModal;
-  $('#mSave').onclick=function(){
-    var v=$('#f_note').value.trim(); if(!v){ $('#f_note').focus(); return; }
-    b.ideas.push({id:uid('idea'),text:v});
-    save(); closeModal(); render();
+/* ============================================================
+ * Dragging the board about
+ *
+ * Pointer events, not HTML5 drag-and-drop: the native one cannot show the rest
+ * of the board moving out of the way, drags a ghost of the whole tile including
+ * its buttons, and behaves differently in every browser.
+ *
+ * Deliberately a desktop gesture. On a touch screen a drag that begins on a
+ * tile is indistinguishable from a scroll until it is too late to give the
+ * scroll back, and a mood board is a tall page — so coarse pointers keep the
+ * ‹ › arrows, which do the same thing and cannot be started by accident.
+ *
+ * The live preview IS the DOM: the tile being dragged is moved between its
+ * neighbours as the pointer passes their centres, so what you see while
+ * dragging is the arrangement you will get. Only on release is anything
+ * written down.
+ * ============================================================ */
+function wireWallDrag(wall,b){
+  if(!window.PointerEvent)return;
+  if(window.matchMedia&&window.matchMedia('(pointer:coarse)').matches)return;
+  var drag=null, raf=0;
+  var tiles=function(){ return [].slice.call(wall.children).filter(function(t){ return t!==(drag&&drag.fly); }); };
+
+  wall.onpointerdown=function(e){
+    if(e.button!==0)return;
+    var tile=e.target.closest?e.target.closest('.mb-t'):null;
+    if(!tile||tile.parentNode!==wall)return;
+    /* The buttons and the hex keep their own clicks. */
+    if(e.target.closest('.mb-a,.mb-hex,button,a,input,select,textarea'))return;
+    drag={tile:tile,x0:e.clientX,y0:e.clientY,on:false,id:e.pointerId};
   };
+  wall.onpointermove=function(e){
+    if(!drag||e.pointerId!==drag.id)return;
+    var dx=e.clientX-drag.x0, dy=e.clientY-drag.y0;
+    if(!drag.on){
+      /* A few pixels of slop, so a click on a tile is still a click. */
+      if(dx*dx+dy*dy<36)return;
+      start(e);
+    }
+    e.preventDefault();
+    move(e);
+  };
+  function start(e){
+    drag.on=true;
+    var r=drag.tile.getBoundingClientRect();
+    drag.ox=drag.x0-r.left; drag.oy=drag.y0-r.top;
+    /* The picture that follows the pointer is a copy. The real tile stays in
+       the grid as the placeholder and is what gets shuffled between its
+       neighbours, so the layout under the hand is always the real one. */
+    var fly=drag.tile.cloneNode(true);
+    fly.className+=' mb-fly';
+    fly.style.width=r.width+'px'; fly.style.height=r.height+'px';
+    fly.removeAttribute('id');
+    document.body.appendChild(fly);
+    drag.fly=fly;
+    drag.tile.classList.add('mb-ghost');
+    wall.classList.add('mb-arranging');
+    document.body.style.userSelect='none';
+    try{ wall.setPointerCapture(drag.id); }catch(err){}
+  }
+  function move(e){
+    drag.fly.style.left=(e.clientX-drag.ox)+'px';
+    drag.fly.style.top=(e.clientY-drag.oy)+'px';
+    if(raf)return;
+    raf=requestAnimationFrame(function(){
+      raf=0; if(!drag||!drag.on)return;
+      var ref=dropRef(e.clientX,e.clientY);
+      if(ref===drag.tile||ref===drag.tile.nextSibling)return;
+      wall.insertBefore(drag.tile,ref);
+      layoutWall();
+    });
+  }
+  /* Where the placeholder goes: beside whichever tile the pointer is nearest,
+     on the side of that tile the pointer is on. Nearest-centre rather than
+     hit-testing, so the gaps between tiles are not dead ground. */
+  function dropRef(x,y){
+    var best=null, bestD=Infinity, before=true;
+    tiles().forEach(function(t){
+      if(t===drag.tile)return;
+      var r=t.getBoundingClientRect();
+      var cx=r.left+r.width/2, cy=r.top+r.height/2;
+      var d=(x-cx)*(x-cx)+(y-cy)*(y-cy);
+      if(d<bestD){ bestD=d; best=t; before=(y<cy-2)||(Math.abs(y-cy)<=r.height/2&&x<cx); }
+    });
+    if(!best)return null;
+    return before?best:best.nextSibling;
+  }
+  function finish(){
+    if(!drag)return;
+    var was=drag; drag=null;
+    document.body.style.userSelect='';
+    if(was.fly&&was.fly.parentNode)was.fly.parentNode.removeChild(was.fly);
+    was.tile.classList.remove('mb-ghost');
+    wall.classList.remove('mb-arranging');
+    try{ wall.releasePointerCapture(was.id); }catch(err){}
+    if(!was.on)return;
+    /* Read the arrangement back off the DOM — it is what the eye just agreed
+       to — and write it onto the records. */
+    var byKey={}, n=0;
+    wallTiles(b).forEach(function(t){ byKey[t.k+':'+t.id]=t; n++; });
+    var order=[];
+    [].slice.call(wall.children).forEach(function(el){
+      var t=byKey[el.getAttribute('data-tile')]; if(t)order.push(t);
+    });
+    /* If anything did not match, the safe thing is to change nothing. */
+    if(order.length!==n){ render(); return; }
+    wallCommit(b,order);
+    save(); render();
+  }
+  wall.onpointerup=finish;
+  wall.onpointercancel=finish;
 }
 
 /* --- Calendar --- */
@@ -16172,6 +16341,19 @@ function sbAttireCol(){
   }
   return SB_ATTIRE_COL;
 }
+/* Migration 26 — the board's arrangement: a position notes did not have, and
+   how wide a photograph is. One probe for both, because one migration adds
+   both, and asking twice would be two round trips for one answer. */
+var SB_BOARD_COLS=null;
+function sbBoardCols(){
+  if(SB_BOARD_COLS===null){
+    SB_BOARD_COLS=false;
+    sbRest('board_ideas?select=sort_order&limit=1')
+      .then(function(){ SB_BOARD_COLS=true; })
+      .catch(function(){ SB_BOARD_COLS=false; });
+  }
+  return SB_BOARD_COLS;
+}
 /* Migration 25. Same shape again: ask once, default to no, and leave the
    column out of the payload until the answer comes back yes. */
 var SB_TAG_COL=null;
@@ -16300,12 +16482,24 @@ function sbPush(opts){
       vendor_id:nn(x.vendorId),status:x.status||'sourcing',sort_order:i}); });
     (d.boards||[]).forEach(function(b,i){
       boards.push({id:b.id,org_id:org,event_id:e.id,title:s(b.title),tone:s(b.tone),note:s(b.note),sort_order:i});
-      (b.swatches||[]).forEach(function(c,j){ swatches.push({id:c.id,org_id:org,board_id:b.id,hex:s(c.hex),name:s(c.name),sort_order:j}); });
-      (b.ideas||[]).forEach(function(x){ ideas.push({id:x.id,org_id:org,board_id:b.id,body:s(x.body||x.text)}); });
+      /* One position for the whole board once it has been arranged, so a
+         colour between two photographs arrives between them. Falls back to the
+         per-list index for a board nobody has touched, which is what the pull
+         reads as "not arranged". */
+      var wpos=function(rec,j){ return (typeof rec.pos==='number'&&isFinite(rec.pos))?rec.pos:j; };
+      (b.swatches||[]).forEach(function(c,j){
+        swatches.push({id:c.id,org_id:org,board_id:b.id,hex:s(c.hex),name:s(c.name),sort_order:wpos(c,j)}); });
+      (b.ideas||[]).forEach(function(x,j){
+        var row={id:x.id,org_id:org,board_id:b.id,body:s(x.body||x.text)};
+        if(sbBoardCols())row.sort_order=wpos(x,j);
+        ideas.push(row); });
       /* Only images that made it into Storage — storage_path is NOT NULL. */
       (b.images||[]).forEach(function(im,j){
-        if(im.path)images.push({id:im.id,org_id:org,board_id:b.id,event_id:e.id,
-          storage_path:im.path,caption:s(im.caption),sort_order:j});
+        if(!im.path)return;
+        var row={id:im.id,org_id:org,board_id:b.id,event_id:e.id,
+          storage_path:im.path,caption:s(im.caption),sort_order:wpos(im,j)};
+        if(sbBoardCols())row.span=(im.span===2)?2:1;
+        images.push(row);
       });
     });
   });
@@ -16685,13 +16879,28 @@ function sbPull(opts){
         cover:null,coverPath:l.cover_path||null}; }),
       events:R.events.map(function(e){
         var boards=R.design_boards.filter(function(b){return b.event_id===e.id;}).map(function(b){
+          var sw=R.board_swatches.filter(function(x){return x.board_id===b.id;});
+          var id_=R.board_ideas.filter(function(x){return x.board_id===b.id;});
+          var im=R.board_images.filter(function(x){return x.board_id===b.id;})
+            .sort(function(a,c){return a.sort_order-c.sort_order;});
+          /* Are these wall positions or the old per-list indexes? Positions are
+             written across the whole board at once, so they are distinct; the
+             old ones counted from zero in each list and therefore collide. If
+             they collide, nothing carries a pos and the board lays out
+             photos-then-colours-then-notes exactly as it always did. */
+          var seen={}, arranged=true;
+          [im,sw,id_].forEach(function(g){ g.forEach(function(x){
+            var k=String(x.sort_order);
+            if(x.sort_order==null||seen[k])arranged=false; else seen[k]=1;
+          }); });
+          var pos=function(x){ return arranged?{pos:x.sort_order}:{}; };
           return {id:b.id,title:b.title,tone:b.tone,note:b.note,
-            swatches:R.board_swatches.filter(function(x){return x.board_id===b.id;}).map(function(x){return {id:x.id,hex:x.hex,name:x.name};}),
-            ideas:R.board_ideas.filter(function(x){return x.board_id===b.id;}).map(function(x){return {id:x.id,body:x.body};}),
+            swatches:sw.map(function(x){ return Object.assign({id:x.id,hex:x.hex,name:x.name},pos(x)); }),
+            ideas:id_.map(function(x){ return Object.assign({id:x.id,body:x.body},pos(x)); }),
             /* src stays empty; mediaDownload() fills it from Storage after. */
-            images:R.board_images.filter(function(x){return x.board_id===b.id;})
-              .sort(function(a,c){return a.sort_order-c.sort_order;})
-              .map(function(x){ return {id:x.id,path:x.storage_path,caption:x.caption||'',src:null}; })};
+            images:im.map(function(x){
+              return Object.assign({id:x.id,path:x.storage_path,caption:x.caption||'',src:null},
+                pos(x),(x.span===2)?{span:2}:(x.span===1?{span:1}:{})); })};
         });
         return {id:e.id,leadId:e.lead_id,title:e.title,date:e.event_date,venue:e.venue,loc:e.location,
           startTime:e.start_time,venueAddress:e.venue_address||{},venueContact:e.venue_contact||{},venueNotes:e.venue_notes,
