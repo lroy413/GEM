@@ -644,6 +644,41 @@ never pulled, which is what stops a fresh install overwriting the studio.
     button in the portal, and a balance with no link shows the terms instead.
     A real in-app card payment needs a payment processor and a server to hold
     its secret — neither exists here yet.
+- **A 200-name guest list needs to be askable.** `party` was the only grouping
+  and it holds one value, so it could not also say "out of town", "kids'
+  table", "bus from the hotel". Two things were added together, because
+  neither is useful alone:
+  - **Labels** (`guest.tags`, an array, migration 25) — as many per guest as
+    the studio wants, invented by them. Stored only when non-empty: an empty
+    array on every guest is two hundred empty arrays in local storage, which
+    is the same reasoning `attire` uses. `setTags()` is case-insensitively
+    unique with the first spelling winning, so "Out of town" typed twice in
+    two cases is one label rather than two that filter differently.
+  - **A filter bar** — side, RSVP, group, label, seating, meal, invited-to,
+    plus dietary-needs-only and wedding-party-only. `state.gFilter`, in memory
+    and deliberately **not** saved: a filter that survives a reload is a guest
+    list with half the names missing and nothing on screen saying why.
+  - **`guestsShown(e)` is the single definition of who is on screen** — search
+    first, then filter. The stat row, the meal counts, the bulk invite, the
+    deck and "Label these N" all read it, so none of them can drift from what
+    the list is showing.
+  - **Tapping a set value clears it**, so no control needs an "off" of its
+    own — which is what keeps the panel to one row per question. The active
+    filters also appear as chips above the list whether or not the panel is
+    open, each removing itself.
+  - **"Label these N" is the point of the whole thing.** Filter to the twelve
+    you mean, name them in one action. Labelling two hundred people one row
+    editor at a time is how a field ends up never being used.
+  - **A `tags` field type in `openEditor`**: a datalist is no good for several
+    values in one field (picking one replaces what is typed), so the
+    suggestions are buttons that append — and tapping one again removes it.
+  - **The Labels column only exists once a label does** (`tagsUsed`), like the
+    Role column. A column of em dashes is not a feature.
+  - **Migration 25** adds `guests.tags jsonb not null default '[]'` with an
+    is-array check and a partial `gin (tags jsonb_path_ops)` index, and
+    `sbTagCol()` probes for it exactly as `sbAttireCol()` does. Verified
+    against local Postgres: default, containment query, and the check refusing
+    an object.
 - **A studio's logo is a wordmark, not an avatar.** It was drawn into a 38px
   rounded square with `object-fit:cover`, so "CONCRETE" arrived as "ONCRE" —
   in a 240px-wide row that was otherwise empty apart from a single serif

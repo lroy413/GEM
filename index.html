@@ -10,7 +10,7 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
 <meta name="apple-mobile-web-app-title" content="GEM">
 <meta name="format-detection" content="telephone=no">
-<meta name="gem-build" content="9a73dfaf9956">
+<meta name="gem-build" content="4d290a03b799">
 <link rel="manifest" href="/manifest.webmanifest">
 <link rel="icon" href="/icons/icon-192.png" sizes="192x192" type="image/png">
 <link rel="apple-touch-icon" href="/icons/icon-180.png">
@@ -1998,6 +1998,69 @@ td.inv-col{text-align:center;width:1%}
 /* The per-chip dropdown was the touch fallback; tap-to-seat replaces it and
    is both faster and less cluttered, so it goes back to being desktop-only. */
 @media (pointer:coarse),(max-width:860px){ .seat-wrap .move-sel{display:none} }
+/* ---- the guest filter bar ----
+   A 200-name list is only a list if you can ask it questions. Two parts, and
+   only the first is ever in the way: the chips naming what is being filtered
+   by right now, and a panel of everything you could filter by, shut until
+   asked for. Every control is one tap, and tapping it again clears it. */
+.gf-btn{display:inline-flex;align-items:center;gap:6px}
+.gf-btn.on{border-color:var(--gold-line);background:var(--gold-soft);color:var(--gold-deep)}
+.gf-n{min-width:17px;height:17px;border-radius:9px;background:var(--gold-deep);color:#fff;
+  font-size:10px;font-weight:700;display:inline-grid;place-items:center;padding:0 5px}
+.gf-wrap{border-bottom:1px solid var(--line);background:var(--sunk)}
+.gf-active{display:flex;flex-wrap:wrap;align-items:center;gap:7px;padding:10px 22px}
+.gf-act{display:inline-flex;align-items:center;gap:7px;font-family:var(--sans);font-size:11.5px;
+  font-weight:600;padding:4px 10px;border-radius:var(--radius-pill);cursor:pointer;
+  background:var(--gold-soft);border:1px solid var(--gold-line);color:var(--gold-deep)}
+.gf-act span{font-size:10px;opacity:.65}
+.gf-act:hover{border-color:var(--gold)}
+.gf-act:focus-visible{outline:none;box-shadow:var(--ring)}
+.gf-clear{font-size:11.5px;margin-left:auto}
+.gf-panel{padding:6px 22px 14px;display:flex;flex-direction:column;gap:10px;
+  border-top:1px solid var(--line)}
+.gf-row{display:flex;align-items:flex-start;gap:12px}
+.gf-k{flex:0 0 92px;font-size:10.5px;letter-spacing:.09em;text-transform:uppercase;
+  color:var(--muted);font-weight:600;padding-top:8px}
+.gf-vs{flex:1 1 auto;display:flex;flex-wrap:wrap;gap:6px;min-width:0}
+.gf-c{font-family:var(--sans);font-size:12px;font-weight:600;padding:5px 12px;min-height:30px;
+  border-radius:var(--radius-pill);border:1px solid var(--line);background:var(--card);
+  color:var(--ink-soft);cursor:pointer;
+  transition:border-color .14s var(--ease),background-color .14s var(--ease),color .14s var(--ease)}
+.gf-c:hover{border-color:var(--gold-line)}
+.gf-c.on{background:var(--gold-soft);border-color:var(--gold-line);color:var(--gold-deep)}
+.gf-c:focus-visible{outline:none;box-shadow:var(--ring)}
+.gf-foot{display:flex;align-items:center;gap:12px;flex-wrap:wrap;padding-top:2px}
+/* Eight questions stacked one per row is a panel taller than the list it is
+   filtering. Two columns where there is room for them. */
+@media (min-width:1000px){
+  .gf-panel{display:grid;grid-template-columns:1fr 1fr;gap:10px 30px;align-items:start}
+  .gf-foot{grid-column:1/-1}
+}
+.gf-hint{font-size:11.5px;color:var(--muted);flex:1 1 200px;min-width:0}
+/* A label on a guest, wherever guests are shown. */
+.g-tagcell{display:flex;flex-wrap:wrap;gap:5px}
+/* "Sea bass" broken across two lines to save eleven pixels reads as a fault.
+   The wrapper scrolls; a short value does not need to wrap. */
+@media (min-width:701px){ .g-tbl td.g-meal,.g-tbl td.g-seat,.g-tbl td.g-party{white-space:nowrap} }
+.g-tag{display:inline-block;font-size:11.5px;font-weight:600;white-space:nowrap;
+  padding:2px 10px;border-radius:var(--radius-pill);
+  background:var(--sunk);border:1px solid var(--sunk-line);color:var(--ink-soft)}
+.tag-sug{display:flex;flex-wrap:wrap;gap:6px;margin-top:7px}
+.tag-sb{font-family:var(--sans);font-size:11.5px;font-weight:600;padding:4px 10px;min-height:28px;
+  border-radius:var(--radius-pill);border:1px dashed var(--line-strong);background:none;
+  color:var(--muted);cursor:pointer}
+.tag-sb:hover{border-style:solid;border-color:var(--gold-line);color:var(--gold-deep)}
+.tag-sb.on{border-style:solid;background:var(--gold-soft);border-color:var(--gold-line);color:var(--gold-deep)}
+.tag-sb:focus-visible{outline:none;box-shadow:var(--ring)}
+@media (max-width:700px){
+  .gf-active{padding:10px 15px}
+  .gf-panel{padding:6px 15px 14px;gap:13px}
+  /* The label above its own row of chips, rather than a 92px column pushing
+     every chip into a 200px gutter. */
+  .gf-row{flex-direction:column;gap:7px}
+  .gf-k{flex:0 0 auto;padding-top:0}
+  .gf-c{min-height:34px;font-size:12.5px}
+}
 /* ---- the wedding party ---- */
 .wp-list{padding:4px 0}
 .wp-grp{display:flex;gap:18px;padding:13px 22px;border-bottom:1px solid var(--line)}
@@ -2300,8 +2363,9 @@ td.inv-brk,td.g-brk{display:none}
   .g-tbl td.g-seat .g-unseat{color:var(--muted);font-size:12.5px}
   /* Line three: the facts, as chips. A chip does not need a caption — nobody
      reads "Beef" and wonders which column it came from. */
-  .g-tbl td.g-rolecell,.g-tbl td.g-sidecell,.g-tbl td.g-meal,.g-tbl td.g-diet{
-    order:7;flex:0 0 auto}
+  .g-tbl td.g-rolecell,.g-tbl td.g-sidecell,.g-tbl td.g-meal,.g-tbl td.g-diet,
+  .g-tbl td.g-tagcell{order:7;flex:0 0 auto}
+  .g-tbl td.g-tagcell{display:flex;flex-wrap:wrap;gap:6px}
   .g-tbl td.g-meal{font-size:12.5px;font-weight:600;color:var(--ink-soft);
     background:var(--sunk);border:1px solid var(--sunk-line);
     border-radius:var(--radius-pill);padding:4px 12px}
@@ -2935,6 +2999,9 @@ tr:hover .r-acts,.ev-card:hover .r-acts,.table-card:hover .r-acts,
 .star{color:var(--pink-300)}
 .star.on{color:var(--gold)}
 @media (max-width:560px){ .v-search{width:120px} }
+/* …except where it shares a row with a view switcher and a filter button, and
+   a 120px box is not a search box. */
+@media (max-width:700px){ .ev-h-r:has(.gv-seg) .v-search{width:auto} }
 
 /* ============ TASK TEMPLATES ============ */
 .tpl-preview{max-height:210px;overflow-y:auto;border:1px solid var(--line);border-radius:var(--radius-sm);
@@ -3187,6 +3254,12 @@ tr:hover .r-acts,.ev-card:hover .r-acts,.table-card:hover .r-acts,
   .ev-h-r:has(input),.ev-h-r:has(select){flex:1 1 100%;min-width:0}
   .ev-h-r .v-search{flex:1 1 auto;min-width:0}
   .ev-h-r select.mini{flex:0 1 auto;min-width:0;max-width:48%}
+  /* The guest header carries four things — search, the two views, the filter
+     button and the count — and at 390px they were all fighting for one line,
+     which left "Search gu…" in a 120px box. The search takes its own row and
+     the rest share the next. */
+  .ev-h-r{flex-wrap:wrap;row-gap:8px}
+  .ev-h-r:has(.gv-seg) .v-search{flex:1 1 100%;width:auto}
 }
 .ev-chev{width:7px;height:7px;opacity:.4}
 .ev-h:hover .ev-chev{opacity:.8}
@@ -4478,6 +4551,115 @@ function mealOptions(e){
   });
   out.sort(function(a,b){ return a.localeCompare(b); });
   return out;
+}
+/* ============================================================
+ * Labels, and how a 200-name list stays a list
+ *
+ * `party` answers one question — which family or table group somebody arrives
+ * with — and it is a single value, so it cannot also say "out of town", "plus
+ * one confirmed", "kids' table", "college". Labels are that second axis: any
+ * number of them, made up by the studio, and the thing the filter bar is
+ * really for. Stored only when there are some, so a guest who has none costs
+ * nothing in a list of two hundred.
+ * ============================================================ */
+function gTags(x){ return (x&&x.tags&&x.tags.length)?x.tags:[]; }
+function parseTags(str){
+  return String(str||'').split(',').map(function(t){ return t.trim(); })
+    .filter(function(t){ return !!t; });
+}
+/* Case-insensitively unique, first spelling wins — "Out of town" typed twice
+   in two cases is one label, not two that filter differently. */
+function setTags(x,list){
+  var seen={}, out=[];
+  (list||[]).forEach(function(t){
+    t=String(t||'').trim(); if(!t)return;
+    var k=t.toLowerCase(); if(seen[k])return; seen[k]=1; out.push(t);
+  });
+  if(out.length)x.tags=out; else delete x.tags;
+  return out;
+}
+function hasTag(x,t){
+  var k=String(t||'').toLowerCase();
+  return gTags(x).some(function(v){ return String(v).toLowerCase()===k; });
+}
+/* Every label anybody on this weekend carries, so the next guest picks from a
+   list rather than retyping — and so the filter bar knows what to offer. */
+function allTags(e){
+  var seen={}, out=[];
+  rosterFor(e).forEach(function(x){
+    gTags(x).forEach(function(t){
+      var k=String(t).toLowerCase(); if(seen[k])return; seen[k]=1; out.push(t);
+    });
+  });
+  out.sort(function(a,b){ return a.localeCompare(b); });
+  return out;
+}
+function allGroups(e){
+  var seen={}, out=[];
+  rosterFor(e).forEach(function(x){
+    var v=String(x.party||'').trim(); if(!v)return;
+    var k=v.toLowerCase(); if(seen[k])return; seen[k]=1; out.push(v);
+  });
+  out.sort(function(a,b){ return a.localeCompare(b); });
+  return out;
+}
+/* ---- the filter, which is one object and lives in memory ----
+   Deliberately not saved: a filter that survives a reload is a guest list with
+   half the names missing and nothing on screen to say why. */
+function gFilter(){
+  if(!state.gFilter)state.gFilter={side:'',rsvp:'',group:'',tag:'',seat:'',meal:'',inv:'',diet:false,party:false};
+  return state.gFilter;
+}
+var GF_KEYS=['side','rsvp','group','tag','seat','meal','inv'];
+function gFilterN(){
+  var f=gFilter(), n=0;
+  GF_KEYS.forEach(function(k){ if(f[k])n++; });
+  if(f.diet)n++; if(f.party)n++;
+  return n;
+}
+function guestPasses(x,e,f){
+  if(f.side){
+    var sd=x.side||'';
+    if(f.side==='none'?!!sd:sd!==f.side)return false;
+  }
+  if(f.rsvp){
+    var r=gRsvp(x,e);
+    if(f.rsvp==='wait'){ if(r!=='pending'&&r!=='invited')return false; }
+    else if(r!==f.rsvp)return false;
+  }
+  if(f.group&&String(x.party||'')!==f.group)return false;
+  if(f.tag&&!hasTag(x,f.tag))return false;
+  if(f.seat==='yes'&&!gTable(x,e))return false;
+  if(f.seat==='no'&&gTable(x,e))return false;
+  if(f.meal&&gMeal(x,e)!==f.meal)return false;
+  if(f.diet&&!x.diet)return false;
+  if(f.party&&!x.role)return false;
+  if(f.inv&&!inviteOf(x.id,f.inv))return false;
+  return true;
+}
+/* What the active filters read as in English, one chip each — shown whether or
+   not the panel is open, because a filtered list that does not say it is
+   filtered is a bug report waiting to happen. */
+function gFilterChips(e,subs){
+  var f=gFilter(), out=[];
+  var chip=function(k,txt){
+    return '<button type="button" class="gf-act" data-gfoff="'+k+'" '+
+      'aria-label="'+esc(txt)+' — remove this filter" title="Remove this filter">'+
+      esc(txt)+'<span aria-hidden="true">✕</span></button>';
+  };
+  if(f.side)out.push(chip('side',f.side==='none'?'Both / neither':sideLabel(e,f.side)));
+  if(f.rsvp)out.push(chip('rsvp',f.rsvp==='wait'?'Awaiting reply':((RSVP[f.rsvp]||{}).lbl||f.rsvp)));
+  if(f.group)out.push(chip('group',f.group));
+  if(f.tag)out.push(chip('tag',f.tag));
+  if(f.seat)out.push(chip('seat',f.seat==='yes'?'Seated':'Unseated'));
+  if(f.meal)out.push(chip('meal',f.meal));
+  if(f.diet)out.push(chip('diet','Dietary needs'));
+  if(f.party)out.push(chip('party','Wedding party'));
+  if(f.inv){
+    var sv=evById(f.inv);
+    out.push(chip('inv','Invited to '+(sv?roleLabel(sv,true):'that night')));
+  }
+  return out.join('');
 }
 function invoiceClientName(x){
   var l=x.leadId?leadById(x.leadId):null;
@@ -6793,6 +6975,8 @@ function guestCard(e,x,subs,sub,depth){
       (evHasSides(e)&&x.side?f('Whose','<span class="g-side s-'+x.side+'">'+esc(sideLabel(e,x.side))+'</span>'):'')+
       (gMeal(x,e)?f('Meal','<b>'+esc(gMeal(x,e))+'</b>'):'')+
       (x.diet?f('Dietary','<span class="status s-due">'+esc(x.diet)+'</span>'):'')+
+      (gTags(x).length?f('Labels','<span class="g-tagcell">'+gTags(x).map(function(t){
+        return '<span class="g-tag">'+esc(t)+'</span>';}).join('')+'</span>'):'')+
       f('Table',tb?'<span class="pill">'+esc(tb.name)+'</span>':'<span class="gc-none">Unseated</span>')+
     '</div>'+
     /* Only on the primary, and only on the card you are actually working —
@@ -6834,6 +7018,132 @@ function guestShuffle(d){
   render();                       /* render() wires the view itself */
   var st=$('.gstack'); if(st)st.focus();
 }
+/* Who is on screen: the search first, then the filter, so the two compose —
+   "Vance" and "awaiting a reply" is the Vances who have not written back.
+   Everything downstream reads this: the stat row, the meal counts, the bulk
+   invite, the deck, and the bulk label. One definition, so none of them can
+   drift from what the list is actually showing. */
+function guestsShown(e){
+  var q=(state.guestQ||'').trim().toLowerCase();
+  var all=rosterFor(e);
+  var g=q?all.filter(function(x){
+    return [x.name,x.party,gMeal(x,e),x.diet,x.email,x.role||'',gTags(x).join(' '),
+            evHasSides(e)?sideLabel(e,x.side):''].join(' ').toLowerCase().indexOf(q)>-1;
+  }):all;
+  var f=gFilter();
+  if(gFilterN())g=g.filter(function(x){ return guestPasses(x,e,f); });
+  return g;
+}
+/* ---- labelling a filtered list in one go ----
+   Filter to the twelve you mean, then name them. Doing it one guest at a time
+   through the row editor is the difference between labels being used and
+   labels being a field nobody fills in. */
+function openBulkLabelModal(){
+  var e=activeEvent(); if(!e)return;
+  var list=guestsShown(e);
+  if(!list.length){ toast('Nobody is showing to label.'); return; }
+  var names=list.slice(0,3).map(function(x){return x.name;}).join(', ')+
+    (list.length>3?' and '+(list.length-3)+' more':'');
+  var tags=allTags(e);
+  md.className='modal';
+  md.innerHTML='<h3>Label these '+list.length+'</h3>'+
+    '<p class="sub">'+esc(names)+'.</p>'+
+    '<div class="field"><label for="f_bulktag">Label</label>'+
+      '<input id="f_bulktag" placeholder="e.g. Bride\u2019s family">'+
+      (tags.length?'<div class="tag-sug">'+tags.map(function(t){
+        return '<button type="button" class="tag-sb" data-tagpick="'+esc(t)+'">'+esc(t)+'</button>';
+      }).join('')+'</div>':'')+
+      '<div class="hint">Labels are yours to invent — family, table group, travel, whatever you sort by.</div>'+
+    '</div>'+
+    '<div class="modal-actions wrap"><button class="btn btn-ghost" id="mCancel">Cancel</button>'+
+      '<button class="btn btn-ghost" id="mRemove">Remove from these</button>'+
+      '<button class="btn btn-gold" id="mSave">Add to '+list.length+'</button></div>';
+  ov.classList.add('show');
+  setTimeout(function(){ var f=$('#f_bulktag'); if(f)f.focus(); },60);
+  md.querySelectorAll('[data-tagpick]').forEach(function(b){
+    b.onclick=function(){ $('#f_bulktag').value=b.dataset.tagpick; $('#f_bulktag').focus(); };
+  });
+  var apply=function(add){
+    var t=$('#f_bulktag').value.trim();
+    if(!t){ $('#f_bulktag').focus(); return; }
+    var n=0;
+    list.forEach(function(x){
+      var cur=gTags(x).slice(), has=hasTag(x,t);
+      if(add){ if(has)return; cur.push(t); }
+      else { if(!has)return;
+             cur=cur.filter(function(v){ return String(v).toLowerCase()!==t.toLowerCase(); }); }
+      setTags(x,cur); n++;
+    });
+    if(!n){ toast(add?'They all have that one already.':'None of them had that one.'); return; }
+    save(); closeModal(); render(); wireGuests();
+    toast(n+(add?' labelled ':' cleared ')+'\u2726');
+  };
+  $('#mCancel').onclick=closeModal;
+  $('#mSave').onclick=function(){ apply(true); };
+  $('#mRemove').onclick=function(){ apply(false); };
+  $('#f_bulktag').onkeydown=function(ev2){ if(ev2.key==='Enter'){ ev2.preventDefault(); apply(true); } };
+}
+/* ---- the filter bar ----
+   Two parts, and only the first is ever in the way: a row of chips naming
+   what is currently being filtered by, and a panel of everything you could
+   filter by, which stays shut until asked for. Every control is one tap —
+   tap again to clear it — because the job this exists for is done standing
+   up with a phone in one hand. */
+function guestFilterBar(e,all,g,subs,sub){
+  var f=gFilter(), n=gFilterN();
+  var open=!!state.gPanel;
+  var chips=gFilterChips(e,subs);
+  if(!open&&!n)return '';
+  var groups=allGroups(e), tags=allTags(e), meals=mealOptions(e);
+  var sides=evHasSides(e);
+  var row=function(label,key,opts){
+    return '<div class="gf-row"><span class="gf-k">'+esc(label)+'</span>'+
+      '<span class="gf-vs">'+opts.map(function(o){
+        var on=String(f[key])===String(o.v);
+        return '<button type="button" class="gf-c'+(on?' on':'')+'" data-gf="'+key+'" '+
+          'data-gfv="'+esc(o.v)+'" aria-pressed="'+on+'">'+esc(o.l)+'</button>';
+      }).join('')+'</span></div>';
+  };
+  /* A select once a list is long enough that chips would wrap three deep —
+     a studio with forty family groups is not choosing between forty chips. */
+  var sel=function(label,key,vals,any){
+    if(!vals.length)return '';
+    if(vals.length<=5)return row(label,key,[{v:'',l:any}].concat(vals.map(function(v){return {v:v,l:v};})));
+    return '<div class="gf-row"><span class="gf-k">'+esc(label)+'</span>'+
+      '<span class="gf-vs"><select class="mini gf-sel" data-gfsel="'+key+'" aria-label="'+esc(label)+'">'+
+        '<option value="">'+esc(any)+'</option>'+
+        vals.map(function(v){
+          return '<option value="'+esc(v)+'"'+(f[key]===v?' selected':'')+'>'+esc(v)+'</option>';
+        }).join('')+'</select></span></div>';
+  };
+  return '<div class="gf-wrap">'+
+    (chips?'<div class="gf-active">'+chips+
+      '<button type="button" class="link-btn gf-clear" id="gfClear">Clear all</button></div>':'')+
+    (open?'<div class="gf-panel">'+
+      (sides?row('Whose guest','side',[{v:'',l:'Anyone'},{v:'A',l:sideLabel(e,'A')},
+        {v:'B',l:sideLabel(e,'B')},{v:'none',l:'Both / neither'}]):'')+
+      row('RSVP','rsvp',[{v:'',l:'Any'},{v:'yes',l:'Attending'},{v:'wait',l:'Awaiting'},{v:'no',l:'Declined'}])+
+      sel('Group','group',groups,'Any group')+
+      (tags.length?row('Label','tag',[{v:'',l:'Any'}].concat(tags.map(function(t){return {v:t,l:t};}))):'')+
+      row('Seating','seat',[{v:'',l:'Any'},{v:'yes',l:'Seated'},{v:'no',l:'Unseated'}])+
+      sel('Meal','meal',meals,'Any meal')+
+      /* Only on the primary: on a sub-event the list is already the people
+         asked to that night. */
+      (!sub&&subs.length?row('Invited to','inv',[{v:'',l:'Any'}].concat(subs.map(function(x){
+        return {v:x.id,l:roleLabel(x,true)};}))):'')+
+      '<div class="gf-row"><span class="gf-k">Only</span><span class="gf-vs">'+
+        '<button type="button" class="gf-c'+(f.diet?' on':'')+'" data-gftog="diet" aria-pressed="'+(!!f.diet)+'">Dietary needs</button>'+
+        (partyMembers(e).length?'<button type="button" class="gf-c'+(f.party?' on':'')+'" data-gftog="party" aria-pressed="'+(!!f.party)+'">Wedding party</button>':'')+
+      '</span></div>'+
+      '<div class="gf-foot">'+
+        /* The one action that makes labelling two hundred people bearable:
+           filter to the twelve you mean, then name them in one go. */
+        '<button type="button" class="btn btn-ghost btn-sm" id="gfLabel">Label these '+g.length+' ›</button>'+
+        '<span class="gf-hint">Filters stack with the search, and are forgotten when you leave.</span>'+
+      '</div>'+
+    '</div>':'')+
+  '</div>';
+}
 function viewGuests(){
   var e=activeEvent(); if(!e)return '<div class="card" style="padding:40px;text-align:center;color:var(--muted)">No events yet.</div>';
   /* On the primary the grid is the master list, and gains a tick-box column
@@ -6846,11 +7156,11 @@ function viewGuests(){
      actually searches by. */
   var q=(state.guestQ||'').trim().toLowerCase();
   var all=rosterFor(e);
-  var g=q?all.filter(function(x){
-    return [x.name,x.party,gMeal(x,e),x.diet,x.email,x.role||'',
-            evHasSides(e)?sideLabel(e,x.side):''].join(' ').toLowerCase().indexOf(q)>-1;
-  }):all;
+  var gfn=gFilterN();
+  var g=guestsShown(e);
+  var shown=(q||gfn);
   var sides=evHasSides(e), sn=sideNames(e);
+  var tagsUsed=allTags(e).length>0;
   var party=partyByRole(e), roles=party.length;
   var sideA=g.filter(function(x){return x.side==='A';}).length;
   var sideB=g.filter(function(x){return x.side==='B';}).length;
@@ -6986,11 +7296,18 @@ function viewGuests(){
             'role="tab" aria-selected="'+(guestViewMode()===m[0])+'">'+m[1]+'</button>';
         }).join('')+
       '</span>'+
-      '<span class="pill">'+(q?g.length+' of '+all.length:String(g.length))+'</span>'+
+      '<button type="button" class="btn btn-ghost btn-sm gf-btn'+(gfn?' on':'')+'" id="gfToggle" '+
+        'aria-expanded="'+(state.gPanel?'true':'false')+'">Filters'+
+        (gfn?'<span class="gf-n">'+gfn+'</span>':'')+'</button>'+
+      '<span class="pill">'+(shown?g.length+' of '+all.length:String(g.length))+'</span>'+
     '</span></div>'+
+    guestFilterBar(e,all,g,subs,sub)+
     (guestViewMode()==='stack'?guestStack(e,g,subs,sub):
     '<div class="tbl-wrap g-tbl-wrap"><table class="g-tbl"><thead><tr><th>Guest</th><th>Party</th>'+
-      (roles?'<th>Role</th>':'')+(sides?'<th>Side</th>':'')+'<th>RSVP</th><th>Meal</th><th>Dietary</th><th>Table</th><th></th>'+
+      (roles?'<th>Role</th>':'')+(sides?'<th>Side</th>':'')+'<th>RSVP</th><th>Meal</th><th>Dietary</th>'+
+      /* Only once the studio has invented one. A column of em dashes is not a
+         feature, it is a column. */
+      (tagsUsed?'<th>Labels</th>':'')+'<th>Table</th><th></th>'+
       /* One column per sub-event, only on the primary. This is the whole point
          of the feature: who is asked to what, readable in a single sweep. */
       /* The header doubles as a bulk control. Ticking 150 guests one at a time
@@ -7024,6 +7341,10 @@ function viewGuests(){
         '</select></td>'+
         '<td data-l="Meal" class="g-meal'+(gMeal(x,e)?'':' is-none')+'">'+(gMeal(x,e)?esc(gMeal(x,e)):'<span style="color:var(--muted)">—</span>')+'</td>'+
         '<td data-l="Dietary" class="g-diet'+(x.diet?'':' is-none')+'">'+(x.diet?'<span class="status s-due">'+esc(x.diet)+'</span>':'<span style="color:var(--muted)">—</span>')+'</td>'+
+        (tagsUsed?'<td data-l="Labels" class="g-tagcell'+(gTags(x).length?'':' is-none')+'">'+
+          (gTags(x).length?gTags(x).map(function(t){
+            return '<span class="g-tag">'+esc(t)+'</span>';}).join('')
+                          :'<span style="color:var(--muted)">—</span>')+'</td>':'')+
         '<td data-l="Table" class="g-seat">'+(tb?'<span class="pill">'+esc(tb.name)+'</span>':'<span class="g-unseat">Unseated</span>')+'</td>'+
         /* Its own cell, not tacked onto the end of Table. On the card that is
            the difference between the actions sitting at the right edge where
@@ -7089,6 +7410,36 @@ function wireGuests(){
       save();render();wireGuests();
     };
   });
+  /* ---- the filter bar ----
+     Every control writes one key on one object and re-renders. Tapping the
+     value that is already set clears it, so nothing needs an "off" button of
+     its own — which is what keeps the whole panel to one row per question. */
+  var gft=$('#gfToggle');
+  if(gft)gft.onclick=function(){ state.gPanel=!state.gPanel; render(); wireGuests(); };
+  document.querySelectorAll('[data-gf]').forEach(function(b){
+    b.onclick=function(){
+      var f=gFilter(), k=b.dataset.gf, v=b.dataset.gfv;
+      f[k]=(String(f[k])===String(v))?'':v;
+      render(); wireGuests();
+    };
+  });
+  document.querySelectorAll('[data-gftog]').forEach(function(b){
+    b.onclick=function(){ var f=gFilter(); f[b.dataset.gftog]=!f[b.dataset.gftog]; render(); wireGuests(); };
+  });
+  document.querySelectorAll('[data-gfsel]').forEach(function(sel){
+    sel.onchange=function(){ gFilter()[sel.dataset.gfsel]=sel.value; render(); wireGuests(); };
+  });
+  document.querySelectorAll('[data-gfoff]').forEach(function(b){
+    b.onclick=function(){
+      var f=gFilter(), k=b.dataset.gfoff;
+      f[k]=(k==='diet'||k==='party')?false:'';
+      render(); wireGuests();
+    };
+  });
+  var gfc=$('#gfClear');
+  if(gfc)gfc.onclick=function(){ state.gFilter=null; render(); wireGuests(); };
+  var gfl=$('#gfLabel');
+  if(gfl)gfl.onclick=function(){ openBulkLabelModal(); };
   var pp=$('[data-printparty]');
   if(pp)pp.onclick=function(ev2){ ev2.stopPropagation(); printSheet('party',activeEvent()); };
   /* One tick per person, and one action for the whole party — which is how a
@@ -11514,6 +11865,15 @@ function openGuestModal(ev){
       '<datalist id="gmealList">'+mealOptions(prim).map(function(m){
         return '<option value="'+esc(m)+'"></option>';}).join('')+'</datalist></div>'+
     '<div class="field"><label>Dietary needs <span style="font-weight:400;color:var(--muted)">(optional)</span></label><input id="f_gdiet" placeholder="e.g. Nut allergy"></div>'+
+    /* Whatever this weekend already uses, one tap each — and a run of names
+       from the same family keeps the labels between saves, the way the side
+       does. */
+    '<div class="field"><label>Labels <span class="lbl-note">optional</span></label>'+
+      '<input id="f_gtags" placeholder="Out of town, Kids\u2019 table…">'+
+      (allTags(prim).length?'<div class="tag-sug" data-tagfor="f_gtags">'+allTags(prim).map(function(t){
+        return '<button type="button" class="tag-sb" data-tagadd="'+esc(t)+'">'+esc(t)+'</button>';
+      }).join('')+'</div>':'')+
+    '</div>'+
     '<div class="modal-actions wrap"><button class="link-btn ma-lead" id="gFull">Open the full guest list ›</button>'+
       '<button class="btn btn-ghost" id="mCancel">Cancel</button>'+
       '<button class="btn btn-ghost" id="mAnother">Save &amp; add another</button>'+
@@ -11530,6 +11890,25 @@ function openGuestModal(ev){
       });
     };
   });
+  md.querySelectorAll('.tag-sug').forEach(function(box){
+    var input=$('#'+box.dataset.tagfor); if(!input)return;
+    var paint=function(){
+      var have=parseTags(input.value).map(function(t){return t.toLowerCase();});
+      box.querySelectorAll('[data-tagadd]').forEach(function(b){
+        b.classList.toggle('on',have.indexOf(b.dataset.tagadd.toLowerCase())>-1);
+      });
+    };
+    box.querySelectorAll('[data-tagadd]').forEach(function(b){
+      b.onclick=function(){
+        var cur=parseTags(input.value), t=b.dataset.tagadd, at=-1;
+        cur.forEach(function(v,i){ if(v.toLowerCase()===t.toLowerCase())at=i; });
+        if(at>-1)cur.splice(at,1); else cur.push(t);
+        input.value=cur.join(', '); paint();
+      };
+    });
+    input.addEventListener('input',paint);
+    paint();
+  });
 
   function add(){
     var n=$('#f_gname').value.trim();
@@ -11541,6 +11920,7 @@ function openGuestModal(ev){
       side:sideBtn?sideBtn.dataset.side:'',
       role:($('#f_grole')?$('#f_grole').value.trim():''),
       rsvp:$('#f_grsvp').value,meal:$('#f_gmeal').value.trim(),diet:$('#f_gdiet').value.trim(),tableId:null};
+    setTags(g,parseTags($('#f_gtags')?$('#f_gtags').value:''));
     prim.guests.push(g);
     /* On a sub-event the RSVP and meal just chosen describe THAT night, so
        they go on the invitation rather than the guest row. */
@@ -12031,6 +12411,17 @@ function openEditor(o){
             return '<option value="'+esc((typeof op==='object')?op.value:op)+'"></option>';
           }).join('')+'</datalist>';
       }
+      /* Several values in one field, so a datalist is no good — picking from
+         one replaces what is already typed. The suggestions are buttons that
+         append instead, and the field itself takes anything. */
+      else if(f.type==='tags'){
+        ctl='<input id="'+id+'" value="'+esc(v)+'"'+
+          (f.placeholder?' placeholder="'+esc(f.placeholder)+'"':'')+'>'+
+          ((f.options||[]).length?'<div class="tag-sug" data-tagfor="'+id+'">'+(f.options||[]).map(function(t){
+            return '<button type="button" class="tag-sb" data-tagadd="'+esc(t)+'">'+esc(t)+'</button>';
+          }).join('')+'</div>':'')+
+          '<div class="hint">Separate with commas.</div>';
+      }
       else ctl='<input id="'+id+'" type="'+(f.type||'text')+'" value="'+esc(v)+'"'+
         (f.placeholder?' placeholder="'+esc(f.placeholder)+'"':'')+'>';
       return '<div class="field" data-fid="'+f.id+'"'+(f.full?' style="grid-column:1/-1"':'')+'><label for="'+id+'">'+esc(f.label)+
@@ -12042,6 +12433,29 @@ function openEditor(o){
       '<button class="btn btn-gold" id="mSave">'+esc(o.saveLabel||'Save changes')+'</button></div>';
   ov.classList.add('show');
   $('#mCancel').onclick=closeModal;
+  /* A suggestion adds itself to what is there rather than replacing it, and
+     tapping it again takes it back off — the chip is the state of that label
+     on this record. */
+  md.querySelectorAll('.tag-sug').forEach(function(box){
+    var input=$('#'+box.dataset.tagfor); if(!input)return;
+    var paint=function(){
+      var have=parseTags(input.value).map(function(t){return t.toLowerCase();});
+      box.querySelectorAll('[data-tagadd]').forEach(function(b){
+        b.classList.toggle('on',have.indexOf(b.dataset.tagadd.toLowerCase())>-1);
+      });
+    };
+    box.querySelectorAll('[data-tagadd]').forEach(function(b){
+      b.onclick=function(){
+        var cur=parseTags(input.value), t=b.dataset.tagadd;
+        var at=-1;
+        cur.forEach(function(v,i){ if(v.toLowerCase()===t.toLowerCase())at=i; });
+        if(at>-1)cur.splice(at,1); else cur.push(t);
+        input.value=cur.join(', '); paint();
+      };
+    });
+    input.addEventListener('input',paint);
+    paint();
+  });
   var del=$('#mDelete');
   if(del)del.onclick=function(){ confirmDelete(o.deleteLabel||o.title,function(){ o.onDelete(); }); };
   /* Conditional fields. A field with showIf(vals) is hidden while that returns
@@ -14172,12 +14586,18 @@ function editRecord(kind,id){
               {id:'meal',label:evIsSub(ev)?'Meal · '+roleLabel(ev,true):'Meal',type:'combo',value:gMeal(it,ev),
                options:mealOptions(ev),placeholder:'e.g. Beef'},
               {id:'diet',label:'Dietary needs',value:it.diet,full:true},
-              {id:'email',label:'Email',type:'email',value:it.email,full:true}]),
+              {id:'email',label:'Email',type:'email',value:it.email,full:true},
+              /* party is one answer — which family they arrive with. Labels are
+                 the other axis: as many as the studio wants, invented by them,
+                 and what the filter bar is really for. */
+              {id:'tags',label:'Labels',type:'tags',value:gTags(it).join(', '),
+               options:allTags(ev),placeholder:'Out of town, Kids\u2019 table…',full:true}]),
       /* rsvp and meal belong to whichever event is open — the guest row for a
          primary, the invitation for a sub-event. Name, party and dietary needs
          are the person, so they always write to the guest. */
       onSave:function(v){
         it.name=v.name; it.party=v.party; it.diet=v.diet; it.email=v.email;
+        setTags(it,parseTags(v.tags));
         /* Only on a wedding — on anything else the field was not shown and
            v.side is undefined, which must not wipe what is there. */
         if(v.side!==undefined)it.side=v.side;
@@ -15515,6 +15935,18 @@ function sbAttireCol(){
   }
   return SB_ATTIRE_COL;
 }
+/* Migration 25. Same shape again: ask once, default to no, and leave the
+   column out of the payload until the answer comes back yes. */
+var SB_TAG_COL=null;
+function sbTagCol(){
+  if(SB_TAG_COL===null){
+    SB_TAG_COL=false;
+    sbRest('guests?select=tags&limit=1')
+      .then(function(){ SB_TAG_COL=true; })
+      .catch(function(){ SB_TAG_COL=false; });
+  }
+  return SB_TAG_COL;
+}
 var SB_ROLE_COL=null;
 function sbRoleCol(){
   if(SB_ROLE_COL===null){
@@ -15621,6 +16053,7 @@ function sbPush(opts){
         side:s(g.side),rsvp:g.rsvp||'pending',meal:nn(g.meal),dietary:nn(g.diet),table_id:nn(g.tableId)};
       if(sbRoleCol())row.role=nn(g.role);
       if(sbAttireCol())row.attire=g.attire||{};
+      if(sbTagCol())row.tags=gTags(g);
       guests.push(row); });
     if(e.floor&&e.floor.items)e.floor.items.forEach(function(f,i){ fitems.push({id:f.id,org_id:org,event_id:e.id,
       kind:s(f.kind||f.type)||'fixture',label:s(f.label),x:num(f.x),y:num(f.y),w:num(f.w),h:num(f.h),rotation:num(f.rot||f.rotation),sort_order:i}); });
@@ -16046,6 +16479,10 @@ function sbPull(opts){
             /* An empty object is no attire — carrying {} on every guest would
                put a row of blanks in local storage for a 200-name list. */
             attire:(x.attire&&Object.keys(x.attire).length)?x.attire:undefined,
+            /* Same reasoning as attire: an empty array on every guest is two
+               hundred empty arrays in local storage. Absent until 25, so it
+               must survive the column not being there at all. */
+            tags:(x.tags&&x.tags.length)?x.tags:undefined,
             meal:x.meal||'',diet:x.dietary||'',tableId:x.table_id};}),
           floor:Object.assign({items:of(R.floor_items,e.id).map(function(x){return {id:x.id,kind:x.kind,label:x.label,
             x:Number(x.x),y:Number(x.y),w:Number(x.w),h:Number(x.h),rot:Number(x.rotation)};})},e.floor||{}),
