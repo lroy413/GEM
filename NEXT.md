@@ -679,6 +679,34 @@ never pulled, which is what stops a fresh install overwriting the studio.
     `sbTagCol()` probes for it exactly as `sbAttireCol()` does. Verified
     against local Postgres: default, containment query, and the check refusing
     an object.
+- **Two dozen hand-picked creams and pinks were what stopped the theme being a
+  theme.** The tint ramp was derived from the start, but `--sunk`, the
+  sidebar's own gradient, every hover wash, the calendar's "today" and all four
+  shadow colours were literals — so a studio on sage still had a pink sidebar,
+  a pink calendar and pink shadows. They are four tokens now, all derived:
+  - `--accent-wash` / `--accent-wash-2` — a breath of the accent, for anything
+    the app is drawing the eye to (hovers, "today", the drop target).
+  - `--tint-wash` / `--tint-wash-2` — a breath of the tint, for quiet grounds.
+  - `--panel` — the sidebar's ground, three steps warmer than the tint by the
+    same hue offsets the page wash uses, so the default lands exactly where the
+    three creams it replaced did.
+  - `--accent-rgb`, `--accent-deep-rgb`, `--shade-1` (ink), `--shade-2` (a dark
+    step of the tint) are **bare channels**, because a colour used inside
+    `rgba()` cannot be a token that already carries its own alpha. Shadows and
+    focus rings read those.
+  - **Status colours stay put on purpose** — the ambers, greens and reds of
+    Paid, Overdue, Attending and Declined mean something, and a studio that
+    rebrands should not get a green "overdue".
+  - **The numbers are anchored on the originals**, so champagne reproduces the
+    old palette to within a hue degree; `scratchpad/theme-test.mjs` switches to
+    Basalt & Steel and asserts that *no* surface token stayed where it was, then
+    switches back and checks champagne returns.
+- **The palettes were all one house style.** Six soft, pink-adjacent sets is not
+  a choice. There are twelve now in two labelled groups — Soft as it was, and
+  Deep: Forest & Brass, Navy & Camel, Graphite & Copper, Oxblood & Stone,
+  Basalt & Steel, Tobacco & Linen — and the note under them says what each of
+  the three pickers actually governs, since any preset is only a starting
+  point.
 - **The phone bar floated up the screen while scrolling, and it was three
   things at once.** A fixed element the browser declines to composite gets
   repainted with the page instead of pinned to the viewport — so scrolling down
