@@ -10,7 +10,7 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
 <meta name="apple-mobile-web-app-title" content="GEM">
 <meta name="format-detection" content="telephone=no">
-<meta name="gem-build" content="c3d218e70333">
+<meta name="gem-build" content="182e274709dd">
 <link rel="manifest" href="/manifest.webmanifest">
 <link rel="icon" href="/icons/icon-192.png" sizes="192x192" type="image/png">
 <link rel="apple-touch-icon" href="/icons/icon-180.png">
@@ -762,6 +762,9 @@ html.no-motion body::before{opacity:.3}
 .tgl.on i{transform:translateX(19px)}
 .tgl:focus-visible{outline:none;box-shadow:var(--ring)}
 
+.gate-mark{color:var(--gold);margin-bottom:10px}
+.gate-mark .gi{width:30px;height:30px;stroke-width:1.4}
+.about-mark .gi{width:32px;height:32px;stroke:#fff;stroke-width:1.4}
 .about-mark{width:64px;height:64px;border-radius:18px;background:var(--gold-grad);display:grid;
   place-items:center;font-family:var(--serif);font-size:2rem;font-weight:600;color:#fff;margin-top:6px;
   border:1px solid var(--gold-deep);box-shadow:inset 0 1px 0 rgba(255,255,255,.5),0 6px 18px rgba(var(--accent-deep-rgb),.3)}
@@ -1311,6 +1314,15 @@ tbody tr:hover{background:var(--pink-50)}
 .check:last-child{border-bottom:none}
 .box{width:22px;height:22px;border-radius:7px;border:2px solid var(--pink-300);display:grid;place-items:center;flex:0 0 22px;transition:all .15s;color:#fff}
 .check.done .box{background:var(--gold-fill);border-color:transparent}
+.box .tickd{width:13px;height:13px;fill:none;stroke:#fff;stroke-width:2.2;
+  stroke-linecap:round;stroke-linejoin:round;display:block}
+/* Drawn, not stamped: the fresh tick strokes itself on and the box settles
+   with a small pop. Everything already ticked stays perfectly still. */
+.box.fresh{animation:boxpop .3s var(--ease)}
+.box.fresh .tickd path{stroke-dasharray:17;stroke-dashoffset:17;
+  animation:tickdraw .28s .06s var(--ease) forwards}
+@keyframes tickdraw{to{stroke-dashoffset:0}}
+@keyframes boxpop{0%{transform:scale(.9)}55%{transform:scale(1.12)}100%{transform:scale(1)}}
 .check.done .lbl{text-decoration:line-through;color:var(--muted)}
 /* The label takes the slack. Previously margin-left:auto sat on EVERY .cat, so
    the spare space was split between the date and the category and neither
@@ -3193,7 +3205,11 @@ select.rsvp-sel[data-r="no"]{background-color:#FBF4F4;border-color:#EDD1D1;color
 .cal-cell{min-width:0;min-height:104px;border-right:1px solid var(--line);border-bottom:1px solid var(--line);padding:8px 9px;display:flex;flex-direction:column;gap:3px;overflow:hidden}
 .cal-cell:nth-child(7n){border-right:none}
 .cal-cell.muted{background:var(--pink-50)}
-.cal-cell.today{background:linear-gradient(180deg,var(--accent-wash),var(--card));box-shadow:inset 0 0 0 2px var(--gold-soft)}
+/* One confident device for today — a single gold ring and the gilded
+   number. The old treatment stacked a wash, a soft ring and the number:
+   three ways of saying the same thing. */
+.cal-cell.today{box-shadow:inset 0 0 0 2px var(--gold)}
+.cal-cell.wknd:not(.today){background:var(--bg-2)}
 .cal-d{font-size:.75rem;font-weight:600;color:var(--ink-soft);font-variant-numeric:tabular-nums}
 .cal-cell.today .cal-d{color:var(--gold)}
 /* A day is a control now, so it says so on the way past. */
@@ -3212,7 +3228,7 @@ select.rsvp-sel[data-r="no"]{background-color:#FBF4F4;border-color:#EDD1D1;color
 .day-s{font-size:.6875rem;color:var(--muted)}
 .day-k{flex:0 0 auto;font-size:.625rem;letter-spacing:.1em;text-transform:uppercase;
   color:var(--muted);font-weight:600}
-.cal-ev{font-size:.625rem;display:flex;align-items:center;gap:5px;background:var(--pink-50);border-radius:6px;padding:3px 6px;
+.cal-ev{font-size:.625rem;display:flex;align-items:center;gap:5px;border-radius:0 5px 5px 0;padding:3px 6px 3px 5px;
   min-width:0;overflow:hidden}
 .cal-ev .cal-t{min-width:0;flex:1 1 auto;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .cal-dot{width:6px;height:6px;border-radius:50%;flex:0 0 6px}
@@ -3315,6 +3331,16 @@ tr:hover .r-acts,.ev-card:hover .r-acts,.table-card:hover .r-acts,
    touch sizing, further down — see the (pointer:coarse),(max-width:560px)
    block. Putting it here lost to `select.mini`'s higher specificity. */
 
+/* The project entrance. Children of the workspace rise in with a slight
+   stagger; reduced motion turns it off wholesale via the no-motion rule. */
+@keyframes riseIn{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:none}}
+.main.proj-enter #content>*{animation:riseIn .42s var(--ease) both}
+.main.proj-enter #content>*:nth-child(2){animation-delay:.05s}
+.main.proj-enter #content>*:nth-child(3){animation-delay:.1s}
+.main.proj-enter #content>*:nth-child(4){animation-delay:.15s}
+.main.proj-enter #content>*:nth-child(5){animation-delay:.2s}
+.main.proj-enter #content>*:nth-child(n+6){animation-delay:.24s}
+
 /* ============ FLOOR PLAN DESIGNER ============ */
 .seg{display:inline-flex;background:var(--pink-100);border:1px solid var(--line);
   border-radius:var(--radius-pill);padding:3px;gap:2px;margin-bottom:16px}
@@ -3330,6 +3356,11 @@ tr:hover .r-acts,.ev-card:hover .r-acts,.table-card:hover .r-acts,
 .seg-b.on{background:var(--card);color:var(--ink);box-shadow:var(--shadow-sm)}
 .seg-b:focus-visible{outline:none;box-shadow:var(--ring)}
 
+/* h3.cal-title, because .card-h h3 carries an element in its selector and
+   would outrank a lone class. */
+h3.cal-title{font-family:var(--serif);font-size:1.625rem;font-weight:600;letter-spacing:-.01em}
+h3.cal-title .cal-y{color:var(--muted);font-weight:500}
+.cal-hd{align-items:baseline}
 .fp-layout{display:grid;grid-template-columns:1fr 300px;gap:20px;align-items:start}
 .fp-wrap{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);
   box-shadow:var(--shadow-sm);overflow:hidden}
@@ -3997,6 +4028,9 @@ tr:hover .r-acts,.ev-card:hover .r-acts,.table-card:hover .r-acts,
   .page-title{font-size:1.625rem}
   .card-h{padding:14px 16px}
   .card-h h3{font-size:1.1875rem}
+  /* The month name is the subject of the calendar screen, not a card label,
+     so it keeps its display size where other card headers step down. */
+  .card-h h3.cal-title{font-size:1.625rem}
   th,td{padding:11px 14px}
   .bud-row{gap:10px;padding:11px 16px;flex-wrap:wrap}
   .bud-row .cat{width:100%}
@@ -4393,9 +4427,19 @@ html,body{max-width:100%;overflow-x:hidden}
       x.beginPath();
       if(x.roundRect)x.roundRect(m,m,w,w,r); else x.rect(m,m,w,w);
       x.fillStyle=g; x.fill();
-      x.fillStyle='#fff'; x.textAlign='center'; x.textBaseline='middle';
-      x.font='600 '+Math.round(size*0.46)+'px Georgia, serif';
-      x.fillText('G',size/2,size/2+size*0.02);
+      /* The drawn gem, not a letter — the same mark the gate and About wear. */
+      var u=size/20;
+      x.strokeStyle='#fff'; x.lineWidth=Math.max(1.2,size*0.075);
+      x.lineJoin='round'; x.lineCap='round';
+      x.beginPath();
+      x.moveTo(3.4*u,8.3*u); x.lineTo(5.9*u,5.4*u); x.lineTo(14.1*u,5.4*u);
+      x.lineTo(16.6*u,8.3*u); x.lineTo(10*u,15.6*u); x.closePath();
+      x.moveTo(3.4*u,8.3*u); x.lineTo(16.6*u,8.3*u);
+      x.moveTo(5.9*u,5.4*u); x.lineTo(7.3*u,8.3*u);
+      x.moveTo(14.1*u,5.4*u); x.lineTo(12.7*u,8.3*u);
+      x.moveTo(7.3*u,8.3*u); x.lineTo(10*u,15.6*u);
+      x.moveTo(12.7*u,8.3*u); x.lineTo(10*u,15.6*u);
+      x.stroke();
       return c.toDataURL('image/png');
     };
     /* Fill only what the wrapper did NOT provide. This used to append every
@@ -4432,6 +4476,11 @@ html,body{max-width:100%;overflow-x:hidden}
     meta('color-scheme','light');
     meta('apple-mobile-web-app-capable','yes');
     meta('apple-mobile-web-app-title','GEM');
+    if(lacks('link[rel="icon"]')){
+      var fi=document.createElement('link'); fi.rel='icon'; fi.type='image/png';
+      fi.setAttribute('sizes','192x192'); fi.href=icon(192);
+      head.appendChild(fi);
+    }
     if(lacks('link[rel="apple-touch-icon"]')){
       var ai=document.createElement('link'); ai.rel='apple-touch-icon'; ai.href=icon(180);
       head.appendChild(ai);
@@ -5770,7 +5819,11 @@ var GI={
   quest:'<circle cx="10" cy="10" r="7"/><path d="M7.8 8a2.2 2.2 0 113.6 1.7c-.8.7-1.4 1-1.4 2.1"/><path d="M10 14.6h.01"/>',
   sync:'<path d="M16 6.4H6.8a3.2 3.2 0 00-3.2 3.2"/><path d="M13.4 3.8L16 6.4l-2.6 2.6M4 13.6h9.2a3.2 3.2 0 003.2-3.2"/><path d="M6.6 16.2L4 13.6l2.6-2.6"/>',
   db:'<ellipse cx="10" cy="4.8" rx="6.2" ry="2.2"/><path d="M3.8 4.8v10.4c0 1.2 2.8 2.2 6.2 2.2s6.2-1 6.2-2.2V4.8"/><path d="M3.8 10c0 1.2 2.8 2.2 6.2 2.2s6.2-1 6.2-2.2"/>',
-  info:'<circle cx="10" cy="10" r="7"/><path d="M10 9v4.4M10 6.4h.01"/>'
+  info:'<circle cx="10" cy="10" r="7"/><path d="M10 9v4.4M10 6.4h.01"/>',
+  /* The mark. A faceted gem in the set's own stroke — GEM's identity where
+     the app speaks as itself (the gate, About, the favicon), never where the
+     studio's own brand belongs. */
+  gem:'<path d="M2.6 8.1L5.3 4.9h9.4l2.7 3.2L10 16.4z"/><path d="M2.6 8.1h14.8M5.3 4.9l1.6 3.2M14.7 4.9l-1.6 3.2M6.9 8.1L10 16.4M13.1 8.1L10 16.4"/>'
 };
 function icn(n,cls){return '<svg class="gi'+(cls?' '+cls:'')+'" viewBox="0 0 20 20" aria-hidden="true">'+GI[n]+'</svg>';}
 function money(n){return '$'+Number(n||0).toLocaleString('en-US');}
@@ -7324,6 +7377,14 @@ function openProject(id){
   var e=evById(id); if(!e)return;
   state.activeEventId=id;
   setView('dashboard',{eventId:id});
+  /* The one staged entrance in the app. Opening a project is the signature
+     moment — the workspace rises in, banner first, columns a beat behind.
+     Nothing else animates on navigation, which is what lets this one read
+     as an arrival rather than a transition effect. */
+  var mn=document.querySelector('.main');
+  if(mn){ mn.classList.remove('proj-enter'); void mn.offsetWidth;
+    mn.classList.add('proj-enter');
+    setTimeout(function(){ mn.classList.remove('proj-enter'); },800); }
   if(window.innerWidth<=860)setNav(false);
 }
 /* The old events grid lived here. It is the Projects board now — same job,
@@ -7448,7 +7509,16 @@ function wireEvents(){
     bx.onclick=function(e2){
       e2.stopPropagation();
       var t=findTask(bx.dataset.tick); if(!t.item)return;
-      t.item.done=!t.item.done; save(); render(); wireEvents();
+      t.item.done=!t.item.done;
+      /* The draw-on animation plays only on the box that was just ticked —
+         keyed off a transient id, so a re-render for any other reason leaves
+         every settled tick still. */
+      state.justTicked=t.item.done?t.item.id:null;
+      save(); render(); wireEvents();
+      setTimeout(function(){
+        state.justTicked=null;
+        document.querySelectorAll('.box.fresh').forEach(function(x){ x.classList.remove('fresh'); });
+      },500);
     };
   });
   document.querySelectorAll('.check[data-cid]').forEach(function(ch){
@@ -7776,7 +7846,9 @@ function chkRow(c,e,open){
   var isOpen=open===c.id;
   return '<div class="chk-wrap'+(isOpen?' open':'')+'">'+
     '<div class="check '+(c.done?'done':'')+'" data-cid="'+c.id+'">'+
-      '<div class="box" data-tick="'+c.id+'">'+(c.done?'✓':'')+'</div>'+
+      '<div class="box'+(c.id===state.justTicked?' fresh':'')+'" data-tick="'+c.id+'">'+
+        (c.done?'<svg class="tickd" viewBox="0 0 20 20" aria-hidden="true"><path d="M4.9 10.7l3.3 3.3 6.9-7.4"/></svg>':'')+
+      '</div>'+
       '<span class="lbl">'+esc(c.lbl)+(c.note?'<span class="has-note" title="Has notes">'+icn("pencil")+'</span>':'')+'</span>'+
       /* The two pills travel as one group, so when the row is too narrow for
          them they drop to their own line together and stay aligned instead of
@@ -10327,7 +10399,9 @@ function viewCalendar(){
     var iso=y+'-'+String(m+1).padStart(2,'0')+'-'+String(d).padStart(2,'0');
     var items=byDay[iso]||[];
     var isToday=(y+'-'+m+'-'+d)===tKey;
-    cells+='<div class="cal-cell'+(isToday?' today':'')+(items.length?'':' empty')+'" '+
+    var dow=new Date(y,m,d).getDay();
+    cells+='<div class="cal-cell'+(isToday?' today':'')+(items.length?'':' empty')+
+      ((dow===0||dow===6)?' wknd':'')+'" '+
       'data-day="'+iso+'" tabindex="0" role="button" '+
       'aria-label="'+esc(fmtDate(iso))+(items.length?' — '+items.length+' item'+(items.length===1?'':'s'):'')+'">'+
       '<div class="cal-d">'+d+'</div>'+
@@ -10338,7 +10412,10 @@ function viewCalendar(){
         return '<i class="cal-dot" style="background:'+it.c+'"></i>';
       }).join('')+'</div>':'')+
       items.slice(0,3).map(function(it){
-        return '<div class="cal-ev" title="'+esc(it.t)+'"><span class="cal-dot" style="background:'+it.c+'"></span>'+
+        /* A bar in the item's own colour — a tinted field with a firm left
+           edge — reads as a calendar entry; a grey chip with a dot read as a
+           tag. The hex+alpha keeps it derived from the same palette. */
+        return '<div class="cal-ev" title="'+esc(it.t)+'" style="background:'+it.c+'1c;border-left:3px solid '+it.c+'">'+
           '<span class="cal-t">'+esc(it.t)+'</span></div>';
       }).join('')+
       (items.length>3?'<div class="cal-more">+'+(items.length-3)+' more</div>':'')+
@@ -10360,7 +10437,8 @@ function viewCalendar(){
     }
   }
   var names=['January','February','March','April','May','June','July','August','September','October','November','December'];
-  return '<div class="card"><div class="card-h"><h3>'+names[m]+' '+y+'</h3>'+
+  return '<div class="card"><div class="card-h cal-hd"><h3 class="cal-title">'+names[m]+
+    ' <span class="cal-y">'+y+'</span></h3>'+
     '<div class="cal-key">'+
       '<span><i style="background:#C9A24B"></i>Event</span>'+
       '<span><i style="background:#E4AAB3"></i>Lead</span>'+
@@ -11697,7 +11775,7 @@ function settingsPage(k){
   }
   if(k==='about'){
     return back+'<div class="set-page">'+
-      '<div class="about-mark">G</div>'+
+      '<div class="about-mark">'+icn('gem')+'</div>'+
       '<div class="about-name">'+esc(p.bizName)+'</div>'+
       '<div class="about-v">Prototype build · gemevents.app</div>'+
       '<div class="set-card" style="margin-top:20px">'+
@@ -14175,7 +14253,8 @@ function afterGate(opts){
 }
 
 function gateChoice(){
-  md.innerHTML='<h3>Welcome to GEM</h3>'+
+  md.innerHTML='<div class="gate-mark">'+icn('gem')+'</div>'+
+    '<h3>Welcome to GEM</h3>'+
     '<p class="sub">Enquiries through to the day itself. How would you like to start?</p>'+
     '<div class="gate-opt">'+
       '<b>Create an account</b>'+

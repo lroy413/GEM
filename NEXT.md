@@ -871,6 +871,37 @@ never pulled, which is what stops a fresh install overwriting the studio.
   - `scratchpad/passone-test.mjs` locks all five in at 1400 and 393. Note for
     future seeds: a "quiet" fixture must also set questionnaires to draft —
     a sent questionnaire counts as waiting.
+- **Pass three of the visual audit — the signature.**
+  - **A real mark.** `GI.gem` is a faceted gem drawn in the set's own stroke.
+    It wears the identity where the app speaks as ITSELF — the welcome gate,
+    About, and the favicon — never where the studio's own brand belongs. The
+    canvas `icon(size)` in the PWA block strokes the same geometry, and
+    `deploy/icons/*.png` were regenerated from it (a scratchpad Playwright
+    script drew them at 180/192/512 plus a maskable 512 with the gradient
+    bled to the edges). The block also fills a `link[rel="icon"]` now: the
+    artifact host owns `<head>` and serves no files, so a preview had no tab
+    icon at all — build.py supplies one on the deployed site.
+  - **One signature motion, and one only.** `openProject()` stages an entrance
+    — `#content`'s children rise 12px with a 50ms stagger, the banner first —
+    then removes the class after 800ms so later renders sit perfectly still.
+    Ordinary navigation does not animate; that restraint is what lets this one
+    read as an arrival rather than a transition effect. `html.no-motion *`
+    already kills it for reduced-motion.
+  - **The tick is drawn, not stamped.** A completed checkbox holds an inline
+    SVG check that strokes itself on (`stroke-dasharray` 17 → 0) while the box
+    pops, keyed off a transient `state.justTicked` so ONLY the box you just
+    ticked animates. The class is removed from the DOM after 500ms rather
+    than waiting for a render that may never come.
+  - **Calendar craft.** The month is set in the display face at 1.625rem with
+    the year in muted weight (`h3.cal-title`, element-qualified because
+    `.card-h h3` would otherwise outrank it — and repeated inside the ≤560
+    block, where card headers step down but the month is the screen's
+    subject). Entries became tinted bars — the item's colour at `1c` alpha
+    with a 3px left edge — instead of grey chips with dots. Weekend columns
+    take `--bg-2`. Today is ONE gold ring, replacing a wash plus a soft ring
+    plus a gilded number saying the same thing three ways.
+  - `scratchpad/passthree-test.mjs` covers all of it at 1400 and 393,
+    including that ordinary navigation does NOT animate.
 - **The type has a volume knob now, and the base came up a step.** Every
   `font-size` is rem (the 13-step ladder made this a mechanical sweep), so
   `html{font-size:106.25%}` — a 17px base — raises the whole surface one
