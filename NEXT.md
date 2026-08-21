@@ -679,6 +679,32 @@ never pulled, which is what stops a fresh install overwriting the studio.
     `sbTagCol()` probes for it exactly as `sbAttireCol()` does. Verified
     against local Postgres: default, containment query, and the check refusing
     an object.
+- **Project-first meant the screens had to be re-cut, not just re-labelled.**
+  Once every screen is inside a job, the old shape leaves the same facts in
+  three places. What was actually duplicated: the client's contact details on
+  the workspace *and* on their file; documents in the project, in the studio
+  list and on the client file; a job's money split across a project Budget, the
+  studio's Invoicing and the client's Invoices; and Messages and Client Portal
+  sitting under a studio heading while reading `activeEvent()` — global-looking
+  screens behaving locally, which is the one that confused most.
+  - **Inside a project the client is a panel, not a screen** (`clientPanel()`):
+    who they are, tap-to-call, tap-to-write, a line naming their other projects,
+    and one door to their file. A project has one client; a client has many
+    projects, which is exactly why the file still earns its place at the studio
+    level.
+  - **`money` is a project view**: this job's invoices (matched by event, and
+    for older records by client), what has been collected, what is still owed,
+    and the budget. Budget & Invoicing stays as the studio roll-up.
+  - **The dashboard is the project's own week and its own list.** `weekDays()`
+    and `weekStrip()` take an optional project and narrow to its events, tasks
+    and invoices; the checklist is grouped by due date (`chkGrouped()`) and
+    lives at the top. There is no separate Checklist section — one list, or
+    people keep two of them.
+  - **The nav's "This project" group is Dashboard, Guests, Seating, Design,
+    Money, Messages, Portal**, and the studio's Client group keeps only what is
+    genuinely studio-wide.
+  - `scratchpad/money-test.mjs` covers all of it, including that switching
+    project switches the money with it.
 - **The app is project-first now, and that is an information architecture, not
   a screen.** It used to open on a studio-wide dashboard with nineteen tools
   that each acted on whichever event happened to be current — a filing cabinet

@@ -10,7 +10,7 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
 <meta name="apple-mobile-web-app-title" content="GEM">
 <meta name="format-detection" content="telephone=no">
-<meta name="gem-build" content="03e1c250e5ec">
+<meta name="gem-build" content="73cd553b710a">
 <link rel="manifest" href="/manifest.webmanifest">
 <link rel="icon" href="/icons/icon-192.png" sizes="192x192" type="image/png">
 <link rel="apple-touch-icon" href="/icons/icon-180.png">
@@ -2097,6 +2097,33 @@ td.inv-col{text-align:center;width:1%}
 .nb-clear{display:flex;align-items:center;gap:9px;font-size:12.5px;color:var(--muted);
   padding:11px 2px;margin:18px 0 0}
 .nb-clear .nb-ic{color:var(--gold)}
+/* ---- the client, inside their job ---- */
+.cp{padding:16px 22px 6px}
+.cp-top{display:flex;align-items:center;gap:12px}
+.cp-av{width:46px;height:46px;flex:0 0 46px;border-radius:14px;background-size:cover;
+  background-position:center;border:1px solid var(--line);display:grid;place-items:center;
+  color:#fff;font-family:var(--serif);font-size:19px;font-weight:600}
+.cp-who{display:flex;flex-direction:column;gap:2px;min-width:0}
+.cp-who b{font-family:var(--serif);font-size:18px;font-weight:600;line-height:1.15}
+.cp-sub{font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);font-weight:600}
+.cp-acts{display:flex;flex-wrap:wrap;gap:8px;margin-top:13px}
+.cp-a{display:inline-flex;align-items:center;gap:7px;font-size:12.5px;font-weight:600;
+  color:var(--ink-soft);text-decoration:none;padding:7px 13px;border-radius:var(--radius-pill);
+  border:1px solid var(--line);background:var(--card)}
+.cp-a:hover{border-color:var(--gold-line);color:var(--gold-deep)}
+.cp-ic{color:var(--gold-deep);font-size:12px}
+.cp-none{font-size:12.5px;color:var(--muted)}
+.cp-more{font-size:11.5px;color:var(--muted);margin-top:11px;line-height:1.45}
+/* ---- the project's list of work, grouped by when it is due ---- */
+.chk-g{margin-bottom:6px}
+.chk-gh{display:flex;align-items:center;gap:7px;font-size:10px;letter-spacing:.12em;
+  text-transform:uppercase;color:var(--muted);font-weight:600;padding:10px 2px 4px}
+.chk-gn{background:var(--sunk);border-radius:var(--radius-pill);padding:1px 7px;
+  font-size:10.5px;letter-spacing:0;color:var(--ink-soft)}
+.chk-g.over .chk-gh{color:#A75252}
+.chk-g.over .chk-gn{background:#F9E5E5;color:#A75252}
+.chk-g.now .chk-gh{color:var(--gold-deep)}
+.chk-g.done{opacity:.6}
 /* ============ PROJECTS — the front door ============
    A board of jobs. Cards when you want to see them, a list when you want to
    scan them, and the same facts either way: when it is, who for, how far
@@ -4015,6 +4042,9 @@ html,body{max-width:100%;overflow-x:hidden}
         <div class="nav-item" data-view="guests" tabindex="0"><svg class="ic" viewBox="0 0 20 20" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"><circle cx="7.4" cy="6.6" r="2.6"/><path d="M2.6 15.9a4.8 4.8 0 0 1 9.6 0"/><path d="M13.6 8.6l1.6 1.7 3-3.4"/></svg><span class="lbl">Guests &amp; RSVP</span></div>
         <div class="nav-item" data-view="seating" tabindex="0"><svg class="ic" viewBox="0 0 20 20" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"><circle cx="10" cy="10" r="4"/><circle cx="10" cy="3.1" r="1.5"/><circle cx="10" cy="16.9" r="1.5"/><circle cx="3.1" cy="10" r="1.5"/><circle cx="16.9" cy="10" r="1.5"/></svg><span class="lbl">Seating Chart</span></div>
         <div class="nav-item" data-view="design" tabindex="0"><svg class="ic" viewBox="0 0 20 20" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"><circle cx="7.6" cy="8" r="4.2"/><circle cx="12.4" cy="12" r="4.2"/></svg><span class="lbl">Design Studio</span></div>
+        <div class="nav-item" data-view="money" tabindex="0"><svg class="ic" viewBox="0 0 20 20" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"><path d="M4.2 2.6h11.6v14.8l-1.9-1.3-1.9 1.3-1.9-1.3-1.9 1.3-1.9-1.3-2.1 1.3Z"/><path d="M7.2 6.8h5.6M7.2 10.2h5.6"/></svg><span class="lbl">Money</span></div>
+        <div class="nav-item" data-view="messages" tabindex="0"><svg class="ic" viewBox="0 0 20 20" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"><path d="M3.2 5.2h13.6v8.6H8.4L4.6 17v-3.2H3.2Z"/></svg><span class="lbl">Messages</span></div>
+        <div class="nav-item" data-view="portal" tabindex="0"><svg class="ic" viewBox="0 0 20 20" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"><path d="M1.6 10S4.6 4.6 10 4.6 18.4 10 18.4 10 15.4 15.4 10 15.4 1.6 10 1.6 10Z"/><circle cx="10" cy="10" r="2.4"/></svg><span class="lbl">Client Portal</span></div>
       </div></div>
     </div>
     <div class="nav-group" data-group="workspace">
@@ -4032,8 +4062,6 @@ html,body{max-width:100%;overflow-x:hidden}
       <div class="nav-items"><div class="nav-items-inner">
         <div class="nav-item" data-view="inquiries" tabindex="0"><svg class="ic" viewBox="0 0 20 20" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"><path d="M2.8 11.6h4.1l1 2.2h4.2l1-2.2h4.1"/><path d="M2.8 11.6 5.3 4.2h9.4l2.5 7.4v5.2H2.8Z"/></svg><span class="lbl">Inquiries</span></div>
         <div class="nav-item" data-view="questionnaires" tabindex="0"><svg class="ic" viewBox="0 0 20 20" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"><path d="M7 3.4H5.2a1.4 1.4 0 0 0-1.4 1.4v11.4a1.4 1.4 0 0 0 1.4 1.4h9.6a1.4 1.4 0 0 0 1.4-1.4V4.8a1.4 1.4 0 0 0-1.4-1.4H13"/><path d="M7.6 2.3h4.8v2.6H7.6Z"/><path d="M6.9 9.4l1.3 1.3 2.4-2.5M6.9 13.6l1.3 1.3 2.4-2.5"/></svg><span class="lbl">Questionnaires</span></div>
-        <div class="nav-item" data-view="messages" tabindex="0"><svg class="ic" viewBox="0 0 20 20" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"><path d="M3.2 5.2h13.6v8.6H8.4L4.6 17v-3.2H3.2Z"/></svg><span class="lbl">Messages</span></div>
-        <div class="nav-item" data-view="portal" tabindex="0"><svg class="ic" viewBox="0 0 20 20" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"><path d="M1.6 10S4.6 4.6 10 4.6 18.4 10 18.4 10 15.4 15.4 10 15.4 1.6 10 1.6 10Z"/><circle cx="10" cy="10" r="2.4"/></svg><span class="lbl">Client Portal</span></div>
       </div></div>
     </div>
     <div class="nav-group" data-group="business">
@@ -5553,6 +5581,19 @@ function pageHead(v){
             isTouchMode()?'Use a card’s menu to move it through your booking flow.'
                          :'Drag a card between stages to move it through your flow.'];
   }
+  if(v==='money'){
+    var me=activeEvent();
+    if(!me)return [lab,'No projects yet',sub];
+    return [lab+' · '+me.title, (function(){
+      var ids=evBlock(me).map(function(x){return x.id;});
+      var ld=leadForEvent(me);
+      var iv=(db.invoices||[]).filter(function(x){ return x.eventId?ids.indexOf(x.eventId)>-1
+        :(ld&&(x.leadId?x.leadId===ld.id:x.client===ld.names)); });
+      var owed=iv.filter(function(x){return x.status!=='draft';})
+        .reduce(function(a,x){return a+Math.max(0,invBalance(x));},0);
+      return owed>0.004?money(owed)+' still owed':'Nothing outstanding';
+    })(), sub];
+  }
   if(v==='guests'){
     var ev=activeEvent();
     if(!ev)return [lab,'No events yet',sub];
@@ -5611,6 +5652,7 @@ function pageHead(v){
 }
 var TITLES={
   projects:['Projects','Every job you are running, and what needs you today.'],
+  money:['Money','What this job costs, what it earns, and what is still owed.'],
   dashboard:['Dashboard',''],
   pipeline:['Leads & Pipeline',''],
   clients:['Clients','Every couple and host, in one place.'],
@@ -5859,6 +5901,8 @@ function render(){
     if(!state.eventId){ el.innerHTML=viewProjects(); wireDashboard(); wireSetupCard(); wireProjects(); }
     else { el.innerHTML=viewEventDetail(state.eventId); wireEvents(); wireSampleBanner(); }
   }
+  else if(state.view==='money'){ el.innerHTML= state.invoiceId?viewInvoiceDetail(state.invoiceId):viewMoney();
+    if(state.invoiceId)wireFinance(); else wireMoney(); }
   else if(state.view==='guests'){ el.innerHTML=viewGuests(); wireGuests(); }
   else if(state.view==='seating'){ el.innerHTML=viewSeating(); wireSeating(); }
   else if(state.view==='vendors'){ el.innerHTML=viewVendors(); wireVendors(); }
@@ -6245,17 +6289,23 @@ function heroStack(list){
    amount — with a sentence at the top that answers the question without
    reading the grid at all. The seven columns stay because the SHAPE of a week
    carries information a list cannot: you can see where the clear days are. */
-function weekDays(){
+/* `only` narrows the week to one project — the same seven days, showing that
+   job's events, its tasks and its invoices and nothing else. The studio home
+   passes nothing and gets everything. */
+function weekDays(only){
   var today=new Date(); today.setHours(0,0,0,0);
+  var ids=only?evBlock(only).map(function(x){return x.id;}):null;
+  var mine=function(id){ return !ids||ids.indexOf(id)>-1; };
   var out=[];
   for(var d=0;d<7;d++){
     var dt=new Date(today.getTime()+d*86400000);
     var iso=dt.getFullYear()+'-'+String(dt.getMonth()+1).padStart(2,'0')+'-'+String(dt.getDate()).padStart(2,'0');
-    var evs=db.events.filter(function(e){return e.date===iso;});
+    var evs=db.events.filter(function(e){return e.date===iso&&mine(e.id);});
     var tasks=[];
-    db.events.forEach(function(e){ (e.checklist||[]).forEach(function(c){
+    db.events.forEach(function(e){ if(!mine(e.id))return; (e.checklist||[]).forEach(function(c){
       if(!c.done&&c.due===iso&&c.owner!=='client')tasks.push({e:e,c:c}); }); });
-    var invs=db.invoices.filter(function(x){return x.due===iso&&x.status!=='paid'&&x.status!=='draft';});
+    var invs=db.invoices.filter(function(x){return x.due===iso&&x.status!=='paid'&&x.status!=='draft'&&
+      (!ids||ids.indexOf(x.eventId)>-1);});
     out.push({dt:dt,iso:iso,idx:d,evs:evs,tasks:tasks,invs:invs,today:d===0,
               due:invs.reduce(function(a,x){return a+(Number(x.amount)||0);},0)});
   }
@@ -6291,12 +6341,12 @@ function weekLine(days){
   if(due)parts.push(money(due)+' to collect');
   return parts.length?parts.join(' \u00b7 '):'Nothing on, nothing due.';
 }
-function weekStrip(){
-  var days=weekDays();
+function weekStrip(only){
+  var days=weekDays(only);
   var DOW=['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
   return '<div class="wk">'+
     '<div class="wk-h">'+
-      '<span class="fig-head">Your week</span>'+
+      '<span class="fig-head">'+(only?'This week':'Your week')+'</span>'+
       '<span class="wk-sum">'+esc(weekLine(days))+'</span>'+
       '<button class="link-btn" data-goto="calendar">Open calendar \u203a</button>'+
     '</div>'+
@@ -7263,6 +7313,39 @@ function viewEventDetail(id){
   '</div>'+
 
   '<div class="grid-2" style="align-items:start">'+
+    /* What is happening this week on this job, and everything still to do on
+       it — the two questions a planner opens a project to answer. The list is
+       the checklist; there is not a second one anywhere. */
+    weekStrip(e)+
+    evSection('checklist','Checklist',null,
+        '<div style="padding:6px 22px 14px">'+
+          /* Two lists, not one. The studio's own work and the couple's jobs are
+             different things, and the couple's are the only ones the portal
+             shows — see migration 13. */
+          (function(){
+            var tab=state.chkTab==='client'?'client':'planner';
+            var mine=e.checklist.filter(function(c){return c.owner!=='client';});
+            var theirs=e.checklist.filter(function(c){return c.owner==='client';});
+            var list=tab==='client'?theirs:mine;
+            var open=state.chkOpen;
+            /* The due date and the category each get their own fixed column,
+               and the date cell renders even when empty — otherwise a task with
+               no due date pulls its category left and the list reads as ragged.
+               The scroller keeps a full template from burying the workspace. */
+            return '<div class="chk-tabs">'+
+              '<button class="chk-tab'+(tab==='planner'?' on':'')+'" data-chktab="planner">Yours'+
+                '<span class="ct-n">'+mine.filter(function(c){return !c.done;}).length+'</span></button>'+
+              '<button class="chk-tab'+(tab==='client'?' on':'')+'" data-chktab="client">'+esc(clientTerm(e,true))+'’s'+
+                '<span class="ct-n">'+theirs.filter(function(c){return !c.done;}).length+'</span></button>'+
+            '</div>'+
+            (list.length?'<div class="chk-scroll">'+chkGrouped(list,e,open)+'</div>'
+            :'<div class="empty-hint">'+(tab==='client'
+                ?'Nothing assigned to '+esc(clientTerm(e))+' yet — open a task and use “Assign to '+esc(clientTerm(e))+'”.'
+                :'No tasks yet — apply a template to get started.')+'</div>');
+          })()+
+          '<div class="sec-actions"><button class="btn btn-ghost btn-sm" data-addck="1">＋ Add task</button>'+
+          '<button class="btn btn-gold btn-sm" data-template="1">✦ Apply template</button></div>'+
+        '</div>','<span class="pill gold">'+pct+'%</span>')+
     '<div class="ev-col">'+
       evSection('timeline','Day-of Timeline',tlRows(e).length,
         '<div style="padding:20px 22px"><div class="tl">'+
@@ -7301,66 +7384,9 @@ function viewEventDetail(id){
     '</div>'+
 
     '<div class="ev-col">'+
-      evSection('checklist','Checklist',null,
-        '<div style="padding:6px 22px 14px">'+
-          /* Two lists, not one. The studio's own work and the couple's jobs are
-             different things, and the couple's are the only ones the portal
-             shows — see migration 13. */
-          (function(){
-            var tab=state.chkTab==='client'?'client':'planner';
-            var mine=e.checklist.filter(function(c){return c.owner!=='client';});
-            var theirs=e.checklist.filter(function(c){return c.owner==='client';});
-            var list=tab==='client'?theirs:mine;
-            var open=state.chkOpen;
-            /* The due date and the category each get their own fixed column,
-               and the date cell renders even when empty — otherwise a task with
-               no due date pulls its category left and the list reads as ragged.
-               The scroller keeps a full template from burying the workspace. */
-            return '<div class="chk-tabs">'+
-              '<button class="chk-tab'+(tab==='planner'?' on':'')+'" data-chktab="planner">Yours'+
-                '<span class="ct-n">'+mine.filter(function(c){return !c.done;}).length+'</span></button>'+
-              '<button class="chk-tab'+(tab==='client'?' on':'')+'" data-chktab="client">'+esc(clientTerm(e,true))+'’s'+
-                '<span class="ct-n">'+theirs.filter(function(c){return !c.done;}).length+'</span></button>'+
-            '</div>'+
-            (list.length?'<div class="chk-scroll">'+list.map(function(c){
-              var isOpen=open===c.id;
-              return '<div class="chk-wrap'+(isOpen?' open':'')+'">'+
-                '<div class="check '+(c.done?'done':'')+'" data-cid="'+c.id+'">'+
-                  '<div class="box" data-tick="'+c.id+'">'+(c.done?'✓':'')+'</div>'+
-                  '<span class="lbl">'+esc(c.lbl)+(c.note?'<span class="has-note" title="Has notes">✎</span>':'')+'</span>'+
-                  /* The two pills travel as one group, so when the row is too
-                     narrow for them they drop to their own line together and
-                     stay aligned instead of scattering after the text. */
-                  '<span class="chk-meta">'+
-                    '<span class="cat due">'+(c.due?fmtDate(c.due):'')+'</span>'+
-                    '<span class="cat tag">'+esc(c.cat)+'</span>'+
-                  '</span>'+rowActions('checklist',c.id)+'</div>'+
-                (isOpen?'<div class="chk-detail">'+
-                  '<textarea class="chk-note" data-note="'+c.id+'" rows="3" '+
-                    'placeholder="Notes on this task — where it got to, what is blocking it, what was agreed.">'+esc(c.note||'')+'</textarea>'+
-                  '<div class="chk-dact">'+
-                    '<button class="btn btn-ghost btn-sm" data-assign="'+c.id+'">'+
-                      (c.owner==='client'?'↩ Move back to your list':'→ Assign to '+esc(clientTerm(e)))+'</button>'+
-                    '<span class="chk-saved" data-saved="'+c.id+'"></span>'+
-                  '</div></div>':'')+
-              '</div>';
-            }).join('')+'</div>'
-            :'<div class="empty-hint">'+(tab==='client'
-                ?'Nothing assigned to '+esc(clientTerm(e))+' yet — open a task and use “Assign to '+esc(clientTerm(e))+'”.'
-                :'No tasks yet — apply a template to get started.')+'</div>');
-          })()+
-          '<div class="sec-actions"><button class="btn btn-ghost btn-sm" data-addck="1">＋ Add task</button>'+
-          '<button class="btn btn-gold btn-sm" data-template="1">✦ Apply template</button></div>'+
-        '</div>','<span class="pill gold">'+pct+'%</span>')+
+      ''+
 
-      evSection('budget','Budget',null,
-        (e.budget.length?'<div style="padding:6px 0 10px">'+e.budget.map(function(b){
-          var aw=b.est?Math.round(b.act/b.est*100):0;
-          return '<div class="bud-row"><div class="cat">'+esc(b.cat)+'</div>'+
-            '<div class="track"><div class="bar" style="height:10px"><i style="width:'+Math.min(100,aw)+'%"></i></div></div>'+
-            '<div class="amt"><b>'+money(b.act)+'</b> / '+money(b.est)+'</div>'+rowActions('budget',b.id)+'</div>';
-        }).join('')+'<div class="sec-actions"><button class="btn btn-ghost btn-sm" data-addbl="1">＋ Add line</button></div></div>':'<div class="empty-hint" style="padding:20px">No budget lines yet.<div class="sec-actions" style="justify-content:center"><button class="btn btn-ghost btn-sm" data-addbl="1">＋ Add line</button></div></div>'),
-        '<span class="sec-badge">'+money(actT)+' of '+money(estT)+'</span>')+
+      ''+
 
       evSection('docs','Documents',docs.length,
         (docs.length?'<div class="tbl-wrap"><table><tbody>'+docs.map(function(d){
@@ -7372,18 +7398,152 @@ function viewEventDetail(id){
 
       (customFieldsFor('event').length?evSection('eventcustom','Details',null,
         customFieldsMarkup('event',e)):'')+
-      evSection('client','Client',null,
-        '<div style="padding:16px 22px">'+
-          '<div class="kv"><span>Contact</span><b>'+esc(lead.partnerA||e.title)+'</b></div>'+
-          (lead.partnerB?'<div class="kv"><span>Partner</span><b>'+esc(lead.partnerB)+'</b></div>':'')+
-          '<div class="kv"><span>Email</span><b>'+(lead.email?'<a href="mailto:'+esc(lead.email)+'">'+esc(lead.email)+'</a>':'—')+'</b></div>'+
-          '<div class="kv"><span>Phone</span><b>'+(lead.phone?'<a href="tel:'+esc(String(lead.phone).replace(/[^\d+]/g,''))+'">'+esc(lead.phone)+'</a>':'—')+'</b></div>'+
-          (lead.id?'<button class="link-btn" data-client="'+esc(lead.id)+'" style="margin-top:10px">Open full client file ›</button>':'')+
-        '</div>')+
+      evSection('client','Client',null,clientPanel(e,lead))+
     '</div>'+
   '</div>';
 }
 
+/* ---- the project's list of work ----
+   One list, grouped by when it is due, because "what is late" and "what is
+   this week" are the only two questions anybody asks a checklist. The rows are
+   the same rows they always were — tick, open for notes, assign to the client,
+   edit, delete. */
+function chkRow(c,e,open){
+  var isOpen=open===c.id;
+  return '<div class="chk-wrap'+(isOpen?' open':'')+'">'+
+    '<div class="check '+(c.done?'done':'')+'" data-cid="'+c.id+'">'+
+      '<div class="box" data-tick="'+c.id+'">'+(c.done?'✓':'')+'</div>'+
+      '<span class="lbl">'+esc(c.lbl)+(c.note?'<span class="has-note" title="Has notes">✎</span>':'')+'</span>'+
+      /* The two pills travel as one group, so when the row is too narrow for
+         them they drop to their own line together and stay aligned instead of
+         scattering after the text. */
+      '<span class="chk-meta">'+
+        '<span class="cat due">'+(c.due?fmtDate(c.due):'')+'</span>'+
+        '<span class="cat tag">'+esc(c.cat)+'</span>'+
+      '</span>'+rowActions('checklist',c.id)+'</div>'+
+    (isOpen?'<div class="chk-detail">'+
+      '<textarea class="chk-note" data-note="'+c.id+'" rows="3" '+
+        'placeholder="Notes on this task — where it got to, what is blocking it, what was agreed.">'+esc(c.note||'')+'</textarea>'+
+      '<div class="chk-dact">'+
+        '<button class="btn btn-ghost btn-sm" data-assign="'+c.id+'">'+
+          (c.owner==='client'?'↩ Move back to your list':'→ Assign to '+esc(clientTerm(e)))+'</button>'+
+        '<span class="chk-saved" data-saved="'+c.id+'"></span>'+
+      '</div></div>':'')+
+  '</div>';
+}
+function chkGrouped(list,e,open){
+  var g={over:[],today:[],week:[],later:[],none:[],done:[]};
+  list.forEach(function(c){
+    if(c.done){ g.done.push(c); return; }
+    if(!c.due){ g.none.push(c); return; }
+    var d=daysAway(c.due);
+    if(d<0)g.over.push(c); else if(d===0)g.today.push(c);
+    else if(d<=7)g.week.push(c); else g.later.push(c);
+  });
+  var by=function(a,b){ return (a.due||'9')<(b.due||'9')?-1:1; };
+  var part=function(key,label,cls){
+    var l=g[key]; if(!l.length)return '';
+    l.sort(by);
+    return '<div class="chk-g'+(cls?' '+cls:'')+'">'+
+      '<div class="chk-gh">'+esc(label)+'<span class="chk-gn">'+l.length+'</span></div>'+
+      l.map(function(c){ return chkRow(c,e,open); }).join('')+'</div>';
+  };
+  return part('over','Overdue','over')+part('today','Today','now')+
+         part('week','This week')+part('later','Later')+
+         part('none','No date yet')+part('done','Done','done');
+}
+/* ---- the client, inside their own job ----
+   One project has one client, so in here they are context rather than a screen
+   to manage: who they are, how to reach them in one tap, and a door to the
+   file that holds everything about them across every job they have given you. */
+function clientPanel(e,lead){
+  lead=lead||{};
+  var name=lead.partnerA||lead.names||e.title;
+  var cov=lead.photo||lead.cover||null;
+  var st=lead.stage?stageOf(lead.stage):null;
+  var line=[lead.type||evType(e),st?st.name:''].filter(Boolean).join(' · ');
+  var mine=lead.id?evPrimaries().filter(function(x){ return x.leadId===lead.id; }):[];
+  return '<div class="cp">'+
+    '<div class="cp-top">'+
+      (cov?'<span class="cp-av" style="background-image:url('+cov+')"></span>'
+          :'<span class="cp-av cp-mono" style="background:'+eventTint(lead.id||e.id)+'">'+
+             esc(String(name||'?').trim()[0]||'?').toUpperCase()+'</span>')+
+      '<span class="cp-who"><b>'+esc(name)+(lead.partnerB?' & '+esc(lead.partnerB):'')+'</b>'+
+        (line?'<span class="cp-sub">'+esc(line)+'</span>':'')+'</span>'+
+    '</div>'+
+    /* Tap to call, tap to write. On a phone standing at a venue this is the
+       whole reason to open the card. */
+    '<div class="cp-acts">'+
+      (lead.phone?'<a class="cp-a" href="tel:'+esc(String(lead.phone).replace(/[^\d+]/g,''))+'">'+
+        '<span class="cp-ic">☎</span>'+esc(lead.phone)+'</a>':'')+
+      (lead.email?'<a class="cp-a" href="mailto:'+esc(lead.email)+'">'+
+        '<span class="cp-ic">✉</span>'+esc(lead.email)+'</a>':'')+
+      (!lead.phone&&!lead.email?'<span class="cp-none">No contact details yet.</span>':'')+
+    '</div>'+
+    (mine.length>1?'<div class="cp-more">'+mine.length+' projects with them — '+
+      esc(mine.filter(function(x){return x.id!==evPrimary(e).id;}).map(function(x){return x.title;}).join(', '))+'</div>':'')+
+    (lead.id?'<div class="sec-actions"><button class="btn btn-ghost btn-sm" data-client="'+esc(lead.id)+'">Open their file ›</button></div>':'')+
+  '</div>';
+}
+/* ---- one job's money ----
+   It was in three places: what you plan to spend (the project), what you charge
+   (the studio's invoicing) and what this client owes (their file). None of them
+   answered "how is this job doing", which is the question. */
+function viewMoney(){
+  var e=activeEvent(); if(!e)return viewProjects();
+  var lead=leadForEvent(e)||null;
+  var estT=e.budget.reduce(function(a,b){return a+b.est;},0);
+  var actT=e.budget.reduce(function(a,b){return a+b.act;},0);
+  var ids=evBlock(e).map(function(x){return x.id;});
+  /* An invoice belongs to this job if it was raised against one of its events,
+     or — for invoices raised before events carried one — against its client. */
+  var inv=(db.invoices||[]).filter(function(x){
+    return x.eventId?ids.indexOf(x.eventId)>-1:(lead&&(x.leadId?x.leadId===lead.id:x.client===lead.names));
+  });
+  var billed=inv.filter(function(x){return x.status!=='draft';}).reduce(function(a,x){return a+invTotal(x);},0);
+  var paid=inv.reduce(function(a,x){return a+invPaid(x);},0);
+  var owed=inv.filter(function(x){return x.status!=='draft';}).reduce(function(a,x){return a+Math.max(0,invBalance(x));},0);
+  var late=inv.filter(function(x){return invStatus(x)==='over';}).length;
+  return '<div class="stat-row cols-3">'+
+      stat('Invoiced',money(billed),inv.length+' invoice'+(inv.length===1?'':'s'))+
+      stat('Collected',money(paid),billed?Math.round(paid/billed*100)+'% of what is billed':'nothing billed yet','up')+
+      stat('Outstanding',money(owed),late?late+' overdue':'nothing overdue')+
+      stat('Committed',money(actT),money(estT)+' budgeted')+
+    '</div>'+
+    '<div class="card" style="margin-bottom:20px"><div class="card-h"><h3>Invoices</h3>'+
+      '<span class="ev-h-r"><button class="btn btn-ghost btn-sm" id="mnNew">＋ New invoice</button></span></div>'+
+      (inv.length?'<div class="tbl-wrap"><table><thead><tr><th>Invoice</th><th>Issued</th><th>Due</th><th>Status</th>'+
+        '<th style="text-align:right">Amount</th></tr></thead><tbody>'+
+        inv.map(function(x){
+          var st=invStatus(x), bal=invBalance(x);
+          return '<tr class="row-link" data-invoice="'+esc(x.id)+'" tabindex="0" role="link">'+
+            '<td><b>'+esc(x.num)+'</b></td>'+
+            '<td>'+(x.issued?fmtDate(x.issued):'—')+'</td>'+
+            '<td>'+(x.due?fmtDate(x.due):'—')+'</td>'+
+            '<td><span class="status '+INV_CLS[st]+'">'+INV_LBL[st]+'</span></td>'+
+            '<td style="text-align:right"><span class="val">'+money(invTotal(x))+'</span>'+
+            (bal>0.004&&invPaid(x)?'<div class="inv-bal">'+money(bal)+' left</div>':'')+
+            rowActions('invoice',x.id)+'</td></tr>';
+        }).join('')+'</tbody></table></div>'
+      :'<div class="empty-hint" style="padding:26px">Nothing invoiced on this project yet.</div>')+
+    '</div>'+
+    '<div class="card"><div class="card-h"><h3>Budget</h3>'+
+      '<span class="sec-badge">'+money(actT)+' of '+money(estT)+' committed</span></div>'+
+      (e.budget.length?'<div style="padding:6px 0 10px">'+e.budget.map(function(b){
+        var aw=b.est?Math.round(b.act/b.est*100):0;
+        return '<div class="bud-row"><div class="cat">'+esc(b.cat)+'</div>'+
+          '<div class="track"><div class="bar" style="height:10px"><i style="width:'+Math.min(100,aw)+'%"></i></div></div>'+
+          '<div class="amt"><b>'+money(b.act)+'</b> / '+money(b.est)+'</div>'+rowActions('budget',b.id)+'</div>';
+      }).join('')+'<div class="sec-actions"><button class="btn btn-ghost btn-sm" data-addbl="1">＋ Add line</button></div></div>'
+      :'<div class="empty-hint" style="padding:26px">No budget lines yet.'+
+        '<div class="sec-actions" style="justify-content:center"><button class="btn btn-ghost btn-sm" data-addbl="1">＋ Add line</button></div></div>')+
+    '</div>';
+}
+function wireMoney(){
+  var n=$('#mnNew'); if(n)n.onclick=function(){ openInvoiceModal(); };
+  /* The budget rows are the workspace's rows, and they keep its handlers. */
+  wireEvents();
+}
 /* --- Guests & RSVP --- */
 var RSVP={yes:{lbl:'Attending',cls:'s-paid'},no:{lbl:'Declined',cls:'s-over'},pending:{lbl:'Pending',cls:'s-due'},invited:{lbl:'Invited',cls:'s-draft'}};
 /* ============================================================
