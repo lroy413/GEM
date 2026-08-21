@@ -679,6 +679,195 @@ never pulled, which is what stops a fresh install overwriting the studio.
     `sbTagCol()` probes for it exactly as `sbAttireCol()` does. Verified
     against local Postgres: default, containment query, and the check refusing
     an object.
+- **A phone pass over the project screens, from a real device.** Six separate
+  complaints, all of them about weight and space rather than function.
+  - **A checklist task cost 258px and three stacked lines** — name, then the
+    date and category pills on an indented line of their own, then the edit and
+    delete buttons on a third, because `.r-acts` is always visible on a touch
+    screen and had nowhere left to wrap to. Two 32px bordered squares ended up
+    the loudest thing in the row, louder than the tick box. Under 700px the row
+    is a grid now: `"box lbl lbl" "box meta acts"`, so the name owns the full
+    width, the date drops its pill and reads as plain muted text beside the one
+    category chip, and the actions sit at the right of the meta line as quiet
+    borderless glyphs. 83px, and six tasks fit where three did.
+  - **`.modal-actions` had no `flex-wrap`.** Three buttons come to 358px inside
+    a 315px row on a phone, and with `justify-content:flex-end` the FIRST one
+    was painted 34px off the modal's left edge — "Save this checklist" arrived
+    as "ave this checklist". That painted overflow is also what made the page
+    drift sideways while scrolling a modal. Wrapping is the fix; below 560px
+    the buttons also share the row evenly so a wrap does not read as debris.
+  - **The new-event form asked where the event was three times**: a free-text
+    "City / region" (`e.loc`), then the address's own City and State / region.
+    `e.loc` is only ever a short display string, so it is derived from the
+    address on save now and no longer asked for. An older event with a `loc`
+    and no address seeds the City box rather than losing it.
+  - **Inside a project, the page is about the project.** The `‹ All projects`
+    link came off the top of the project screen — the nav, the switcher card
+    and the Projects tab are three ways out already, and a fourth sitting above
+    the headline said the screen was somewhere you pass through. `＋ Add a
+    sub-event` moved from a bar above the content to a dashed offer at the foot
+    (only when the project has no weekend; when it has one the bar stays,
+    because then it is navigation). And with no cover photo the four figures
+    come before the venue card: a photograph is a header, an address is a
+    detail.
+  - **Edit and Print are words again.** As `btn-icon` they lost their labels
+    below 560px and became two unidentifiable marks in the corner. They are
+    `btn-sm` now, and `#pgActions:not(:has(.ev-switch)):not(:has(.btn-gold))`
+    keeps any purely-secondary group on the title's row instead of costing a
+    row of its own — about 110px of blank, on the screen whose whole complaint
+    was blank at the top.
+  - **A project ran to 5.3 phone screens.** The timeline, the vendor team and
+    the documents are 2,300px of it and none is what you open a project to
+    check, so on a narrow first load they join the guest list in starting
+    collapsed — 2.9 screens, everything one tap away, each section header
+    acting as its own index. A default only; the moment anyone opens one it is
+    remembered.
+  - **The guest screen led with three buttons of equal weight** for one
+    everyday action and two CSV utilities you use twice a year. The utilities
+    moved to the foot of the list they act on, as words; they wire in
+    `wireGuests()` now, because `wireActions()` runs before `render()` paints
+    `#content`. And `evSwitcher()` is scoped to `evBlock(activeEvent())` — it
+    used to list every event in the studio, which made it a second project
+    switcher able to take you out of the project you were standing in. It
+    answers "which night" now, and says nothing at all when there is one night.
+  - **`.btn-gold` lost its `text-shadow`** and half its inner highlight.
+    Embossed white-on-gold type is the single thing that made the primaries
+    read as chunky rather than expensive. `.chk-tab.on` lost its solid gold
+    fill for the same reason — a filter should not be the loudest thing on the
+    screen.
+  - `scratchpad/polish-test.mjs` covers all of it at 393 and 1400.
+- **Why a form could still pan sideways on an iPhone, and what a time field
+  should ask for.**
+  - **`input[type=date]` was the culprit.** iOS Safari gives it an intrinsic
+    minimum width from its own date format at the field's font size — and
+    coarse pointers force 16px here to stop zoom-on-focus — so `width:100%`
+    could not shrink it and the box ran past the modal's right edge. Because
+    `.modal-scroll` is `overflow-y:auto`, its `overflow-x` resolves to `auto`
+    too, and the whole form became horizontally scrollable: it drifted left and
+    took the first characters off every label ("PART OF" reading as "T OF").
+    Three rules, because any one alone leaves a way back in: `-webkit-appearance:
+    none` on date/time/datetime-local so the control sizes like a text box,
+    `min-width:0` on `.field` and its controls (grid and flex children default
+    to `min-width:auto`), and `overflow-x:hidden` on `.modal-scroll` so no
+    future field can pan a form again.
+  - **The time field takes digits and a tap.** `fmt:'time'` boxes now render
+    inside a `.t-row` with an AM/PM pair beside them. `inputmode="numeric"`
+    was already there, so "430" off the number pad plus one tap is a whole
+    time — nobody types letters, and nobody has to fall back on 17:30 to be
+    unambiguous. The pair READS the box rather than holding a value of its
+    own, so it is right whether the time was typed, tidied on blur or loaded
+    off a record, and there is never a second opinion to keep in step. Empty
+    box: the pair is muted, and a tap still answers ("morning" → 9:00 AM,
+    "evening" → 5:00 PM) rather than being dropped. A range — a timeline
+    moment's "9:00 AM – 10:00 PM" — has two halves and no single answer, so
+    `.is-range` hides the pair instead of lying about one of them.
+  - `scratchpad/time-test.mjs` covers both at 393 and 1400.
+- **A template applied to a late booking used to arrive already overdue.** A
+  template's offsets are "N days before the event", written for a job with a
+  full run-up. Applied to a wedding seven weeks out, a twelve-month countdown
+  put seventeen of its twenty-eight tasks in the past — a brand-new checklist
+  whose first act was to show you seventeen overdue items. The only remedy on
+  offer was a tick-box, on by default, that DELETED them, and "Book the venue"
+  is not a task you skip because you booked late; it is a task you do now.
+  - **`templateOffsets(items, evDate)`** fits the countdown to the time that is
+    actually left. Everything that still fits keeps its exact day — a final
+    walk-through is three days before the wedding whether the job was booked a
+    year out or a month out, because those offsets are tied to the event and
+    not to the runway. Only the prep work above them is squeezed, evenly and in
+    its original order, into the gap between the last task that fits and today.
+    Nothing lands in the past, nothing is thrown away, and the order a planner
+    works in survives. Seventeen tasks landing in the next nine days is not a
+    layout failure — it is what booking a wedding seven weeks out looks like.
+  - **The tick-box is off by default now** and says what it does: "Leave out
+    the tasks there is no longer time for". Dropping work is a choice, not the
+    default.
+  - **The modal's subtitle explains itself** rather than stating a rule that
+    was not being followed: with a full run-up it still says dates are worked
+    backwards from the date; when they are fitted it says which template, how
+    much time is left, how many moved, and that nothing lands in the past. The
+    preview shows the fitted dates, marked FITTED, so what is on screen is what
+    gets added — `plan()` is the single place the dates come from.
+  - Event with no date: the tasks arrive without due dates. Event today or
+    already gone: everything is due now, and says so.
+  - `scratchpad/tpl-test.mjs` covers a 51-day run-up, a 420-day one and the day
+    itself, at 393 and 1400.
+
+  Once every screen is inside a job, the old shape leaves the same facts in
+  three places. What was actually duplicated: the client's contact details on
+  the workspace *and* on their file; documents in the project, in the studio
+  list and on the client file; a job's money split across a project Budget, the
+  studio's Invoicing and the client's Invoices; and Messages and Client Portal
+  sitting under a studio heading while reading `activeEvent()` — global-looking
+  screens behaving locally, which is the one that confused most.
+  - **Inside a project the client is a panel, not a screen** (`clientPanel()`):
+    who they are, tap-to-call, tap-to-write, a line naming their other projects,
+    and one door to their file. A project has one client; a client has many
+    projects, which is exactly why the file still earns its place at the studio
+    level.
+  - **`money` is a project view**: this job's invoices (matched by event, and
+    for older records by client), what has been collected, what is still owed,
+    and the budget. Budget & Invoicing stays as the studio roll-up.
+  - **The dashboard is the project's own week and its own list.** `weekDays()`
+    and `weekStrip()` take an optional project and narrow to its events, tasks
+    and invoices; the checklist is grouped by due date (`chkGrouped()`) and
+    lives at the top. There is no separate Checklist section — one list, or
+    people keep two of them.
+  - **The nav's "This project" group is Dashboard, Guests, Seating, Design,
+    Money, Messages, Portal**, and the studio's Client group keeps only what is
+    genuinely studio-wide.
+  - `scratchpad/money-test.mjs` covers all of it, including that switching
+    project switches the money with it.
+  - **The client file is the person across their jobs, and that is the whole
+    reason it survives.** A project can tell you everything about one job; only
+    the file can put a couple's wedding and their anniversary party side by
+    side. So it lost the things a project owns and gained the things only it
+    can show: `projectsForLead()` returns every primary event of theirs,
+    upcoming first and finished last, drawn with `projCard()` — the same card
+    the board uses, so one card means one thing everywhere. The single "The
+    Weekend / Event" card is gone; the weekend is inside its project now.
+  - **Money and paperwork on the file are across all their projects**, not just
+    the next one: `blockIds` is built from every project's block, so the
+    Documents stat counts the contract from the job two years ago. The stat row
+    is Collected / Outstanding / Projects / Documents.
+  - **Bookings belong to the job, not the person.** The Vendor Team section is
+    off the client file, and the project's own vendor section no longer links
+    back to the file to "manage" them — that arrow pointed the wrong way once
+    projects owned their work.
+  - **The band's subtitle stops lying when there are two.** One project and it
+    reads the date and venue; more than one and it reads "N projects · next
+    <date>", because a single date on a returning client's file is wrong.
+  - `openEventModal(existing,parentId,seedLeadId)` — the third way in. "New
+    project for them" on the file opens the form already pointed at that
+    client, and the event type follows their type.
+  - `scratchpad/client-file-test.mjs` covers it at 1400 and 390.
+- **The app is project-first now, and that is an information architecture, not
+  a screen.** It used to open on a studio-wide dashboard with nineteen tools
+  that each acted on whichever event happened to be current — a filing cabinet
+  with all the drawers open. The front door is a board of projects; opening one
+  makes the whole app about it.
+  - **`projects` is the new view and the default landing.** `viewProjects()` is
+    `viewStudio(projectBoard())` — the old dashboard body, renamed, with the
+    card stack of upcoming events replaced by the projects themselves and a
+    one-line band of what is overdue or waiting above them.
+  - **`dashboard` means "this project"** and renders `viewEventDetail()` of the
+    active event, so there is one page for a project rather than two competing
+    ones. `pageHead('dashboard')` says which project and how long there is.
+  - **`.app.at-home` hides the project tools** at the front door, because a
+    tool that acts on a project you are not in is a trap. Set in `setView()`,
+    the only place a view changes.
+  - **The nav switcher is the switcher.** Pressing the "working on" card lists
+    the other projects; picking one **keeps you on the same screen** —
+    comparing the same thing across two jobs is the whole point. Detail screens
+    that name a record (a board, an invoice) fall back to that project's
+    dashboard, since the record belonged to the project you left.
+  - **The phone tabs are Projects · Dashboard · Clients · Calendar · More.**
+  - **Everything still routes through `state.activeEventId`** — the earlier fix
+    that made opening an event set it is what let this be a small change rather
+    than a rewrite.
+  - **`viewEvents()` is gone**; the guided tour and every "all events" link
+    point at the board. `scratchpad/projects-test.mjs` covers the front door,
+    the card facts, the ordering, the nav at home versus inside, Dashboard
+    meaning this project, the switcher keeping your place, and the way out.
 - **Two dozen hand-picked creams and pinks were what stopped the theme being a
   theme.** The tint ramp was derived from the start, but `--sunk`, the
   sidebar's own gradient, every hover wash, the calendar's "today" and all four
