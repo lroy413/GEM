@@ -871,6 +871,43 @@ never pulled, which is what stops a fresh install overwriting the studio.
   - `scratchpad/passone-test.mjs` locks all five in at 1400 and 393. Note for
     future seeds: a "quiet" fixture must also set questionnaires to draft —
     a sent questionnaire counts as waiting.
+- **Evening mode — the last audit item, and the one the theming engine was
+  always going to make cheap.** Because every surface, line, ink and wash is
+  DERIVED from two colours, a second ground is a change to the derivation
+  rather than a second stylesheet: `applyBrand()` branches to `applyEvening()`
+  or `dayPalette()`, and `paintBrandArtwork()` (the logo work) runs either way.
+  A studio on sage gets a sage-tinted night, not a generic grey one.
+  - Settings → Appearance → **Ground**: Day / Evening / Follow my device. The
+    `auto` case binds a `prefers-color-scheme` listener so a device that flips
+    at sunset repaints live. `mode` is the pref; changing it calls
+    `applyBrand()`, not just `applyPrefs()`, because a ground is a palette.
+  - **Tokenising was most of the work.** `--lift` (the raised surface: focused
+    inputs, hovered rows, card heads, floor-plan paper) replaced 29 literal
+    `#fff` backgrounds; `--veil` replaced a translucent white panel that would
+    have been a light slab at night; and the status literals collapsed into
+    three semantic triplets (`--ok-/--warn-/--danger-` × wash/line/ink), which
+    also merged near-duplicate greens that had been drifting apart. The ~49
+    `color:#fff` uses were checked and deliberately LEFT — they are type over
+    photographs, accent fills and scrims, and stay white on either ground. The
+    two logo plates stay white on purpose: a client's artwork is drawn for
+    white paper.
+  - **A contrast audit came out of it** (`scratchpad/contrast.mjs`, run per
+    ground and width). Its first version reported white-on-white for every
+    legible thing because this app paints grounds with GRADIENTS — the walker
+    now reads a gradient's first colour stop. Findings, all pre-existing in
+    day: `--muted` sat at 4.2:1 on near-white (offset +32 → +26, ~40 runs
+    fixed), and small text in brand gold sat at 2.5-3.1:1 — so 105
+    `color:var(--gold)` declarations became `--gold-deep`, which already had
+    the right value in BOTH grounds. `border-color` and backgrounds keep
+    `--gold`, whose lightness is right for a line and wrong for a letter.
+    Day went 93 → 31 low-contrast runs, evening sits at 9.
+  - Known residue, deliberately not "fixed": the `.avatar` monogram is white
+    on a mid-gold identity tile (~2:1) — decorative, and the same initials sit
+    beside it as text; and several flagged runs are white on a scrim over a
+    dark photograph, which the audit cannot composite and which read fine.
+  - `scratchpad/evening-test.mjs` covers both grounds, the hue surviving the
+    night, the status-bar band following it down, `auto` under an emulated
+    dark device, and "no surface is left as a light slab".
 - **Pass three of the visual audit — the signature.**
   - **A real mark.** `GI.gem` is a faceted gem drawn in the set's own stroke.
     It wears the identity where the app speaks as ITSELF — the welcome gate,
