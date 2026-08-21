@@ -679,6 +679,34 @@ never pulled, which is what stops a fresh install overwriting the studio.
     `sbTagCol()` probes for it exactly as `sbAttireCol()` does. Verified
     against local Postgres: default, containment query, and the check refusing
     an object.
+- **The app is project-first now, and that is an information architecture, not
+  a screen.** It used to open on a studio-wide dashboard with nineteen tools
+  that each acted on whichever event happened to be current — a filing cabinet
+  with all the drawers open. The front door is a board of projects; opening one
+  makes the whole app about it.
+  - **`projects` is the new view and the default landing.** `viewProjects()` is
+    `viewStudio(projectBoard())` — the old dashboard body, renamed, with the
+    card stack of upcoming events replaced by the projects themselves and a
+    one-line band of what is overdue or waiting above them.
+  - **`dashboard` means "this project"** and renders `viewEventDetail()` of the
+    active event, so there is one page for a project rather than two competing
+    ones. `pageHead('dashboard')` says which project and how long there is.
+  - **`.app.at-home` hides the project tools** at the front door, because a
+    tool that acts on a project you are not in is a trap. Set in `setView()`,
+    the only place a view changes.
+  - **The nav switcher is the switcher.** Pressing the "working on" card lists
+    the other projects; picking one **keeps you on the same screen** —
+    comparing the same thing across two jobs is the whole point. Detail screens
+    that name a record (a board, an invoice) fall back to that project's
+    dashboard, since the record belonged to the project you left.
+  - **The phone tabs are Projects · Dashboard · Clients · Calendar · More.**
+  - **Everything still routes through `state.activeEventId`** — the earlier fix
+    that made opening an event set it is what let this be a small change rather
+    than a rewrite.
+  - **`viewEvents()` is gone**; the guided tour and every "all events" link
+    point at the board. `scratchpad/projects-test.mjs` covers the front door,
+    the card facts, the ordering, the nav at home versus inside, Dashboard
+    meaning this project, the switcher keeping your place, and the way out.
 - **Two dozen hand-picked creams and pinks were what stopped the theme being a
   theme.** The tint ramp was derived from the start, but `--sunk`, the
   sidebar's own gradient, every hover wash, the calendar's "today" and all four
