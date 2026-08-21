@@ -858,6 +858,16 @@ never pulled, which is what stops a fresh install overwriting the studio.
     busy ones (the chips speak). The floating `nb-clear` line is gone, and
     render() repaints the sub so ticking off the last overdue task updates the
     sentence.
+  - **Headers vanished on dark-mode phones — a latent bug the pass exposed.**
+    The section headers are `<button class="card-h ev-h">`, and a button never
+    inherits `color`: it wears the UA's ButtonText, which iOS paints blue in
+    light mode and near-white in dark mode. Headless Chromium paints it black,
+    which is why every local screenshot looked fine while "Checklist" was
+    invisible on the user's phone at night. Fix: `button{color:inherit}` at the
+    base (every button that wants another colour already says so), plus
+    `color-scheme:light` declared three ways — static meta, `:root` CSS, and
+    the runtime `meta()` helper — so UA form-control defaults never go dark.
+    `scratchpad/uacolor-test.mjs` re-runs the check under `colorScheme:'dark'`.
   - `scratchpad/passone-test.mjs` locks all five in at 1400 and 393. Note for
     future seeds: a "quiet" fixture must also set questionnaires to draft —
     a sent questionnaire counts as waiting.

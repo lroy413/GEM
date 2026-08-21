@@ -10,13 +10,14 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
 <meta name="apple-mobile-web-app-title" content="GEM">
 <meta name="format-detection" content="telephone=no">
-<meta name="gem-build" content="d1b28874cfcb">
+<meta name="gem-build" content="fd71664fd7f2">
 <link rel="manifest" href="/manifest.webmanifest">
 <link rel="icon" href="/icons/icon-192.png" sizes="192x192" type="image/png">
 <link rel="apple-touch-icon" href="/icons/icon-180.png">
 <title>GEM · Glimmer Events Management</title>
 </head>
 <body>
+<meta name="color-scheme" content="light">
 <style>
 /* Karla (SIL OFL 1.1) — inlined; artifact CSP blocks font CDNs. One
    variable file, wght 400–800, 24KB: every weight the app uses out of a
@@ -122,6 +123,12 @@
   --ease:cubic-bezier(.22,.61,.36,1);
 }
 *{box-sizing:border-box;margin:0;padding:0}
+:root{color-scheme:light}
+/* A button never inherits color; it wears the UA's ButtonText, which iOS
+   repaints blue in light mode and near-white in dark mode. Every header that
+   doubles as a collapse control was invisible on a dark-mode phone. Inherit,
+   and let the rules that want another colour say so - they all already do. */
+button{color:inherit}
 /* Anything that sets one number above or beside another gets tabular figures.
    Proportional digits are correct in a sentence and wrong in a column: a 1 is
    half the width of a 0, so a list of amounts wanders. */
@@ -4385,6 +4392,7 @@ html,body{max-width:100%;overflow-x:hidden}
       var m=document.createElement('meta'); m.name=name; m.content=content; head.appendChild(m);
     };
     meta('theme-color','#F2DFE1');
+    meta('color-scheme','light');
     meta('apple-mobile-web-app-capable','yes');
     meta('apple-mobile-web-app-title','GEM');
     if(lacks('link[rel="apple-touch-icon"]')){
