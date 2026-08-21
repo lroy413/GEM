@@ -821,6 +821,38 @@ never pulled, which is what stops a fresh install overwriting the studio.
   - A solo project's `.vb-switch` is no longer rendered as an empty div, which
     was claiming a flex gap either side of itself.
   - `scratchpad/vb-test.mjs` covers with and without a cover, at 393 and 1400.
+- **The calendar could be read and not written to, and its link out of a
+  project did nothing.**
+  - **"Open calendar ›" was dead on the one screen it matters on.** The week
+    strip navigates by `[data-goto]`, which only `wireDashboard()` bound — and
+    `wireDashboard()` only runs at the front door. On a project's dashboard the
+    strip rendered and neither the link nor its quiet days did anything.
+    `wireEvents()` binds it too now, and `[data-goto]` joined `SAMPLE_SAFE`
+    because navigating is never a write.
+  - **A day is a control.** Every cell carries `data-day` and opens
+    `openDayModal(iso)`: what is on that day (events, leads, tasks with the
+    project they belong to, invoices due) and `＋ Add a task`. The task is an
+    ordinary checklist item on a project — so it shows in that project's list,
+    its week strip, its overdue grouping and back on the calendar. There is no
+    second kind of task and nothing to keep in step. The project select
+    defaults to the active one and lists them all, because a studio calendar
+    shows every job and the day you tapped may belong to another.
+    `checklistCats()` suggests the categories this studio already uses.
+  - **The month controls wrapped onto two rows** on a phone — "‹ Today" then a
+    stranded "›" — once purely-secondary action groups started sharing the
+    title's row. They are one `.btn-group` (`flex-wrap:nowrap`) at `btn-sm`
+    now, and `.page-head{min-width:0}` lets a long title yield to them.
+- **`theme-color` was a hardcoded powder pink.** The browser paints the strip
+  behind the status bar from it — and, added to a home screen, the whole status
+  bar — so on any other palette that strip stayed pink while the page under it
+  went green, and the app appeared to stop short of the top of the screen.
+  `applyBrand()` sets it from `--wash-a`, the top of the page's own gradient,
+  which is exactly the colour the strip should be continuing. `hslToHex()`
+  exists because theme-color wants a plain colour and Safari has been fussy
+  about `hsl()` in it.
+  - `scratchpad/cal-test.mjs` covers the link, the day sheet, the task landing
+    on the right project's checklist, the one-row controls and the theme colour
+    changing with the palette, at 393 and 1400.
 
   Once every screen is inside a job, the old shape leaves the same facts in
   three places. What was actually duplicated: the client's contact details on
