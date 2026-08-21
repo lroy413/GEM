@@ -10,7 +10,7 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
 <meta name="apple-mobile-web-app-title" content="GEM">
 <meta name="format-detection" content="telephone=no">
-<meta name="gem-build" content="a3e9753a59d1">
+<meta name="gem-build" content="d1b28874cfcb">
 <link rel="manifest" href="/manifest.webmanifest">
 <link rel="icon" href="/icons/icon-192.png" sizes="192x192" type="image/png">
 <link rel="apple-touch-icon" href="/icons/icon-180.png">
@@ -48,6 +48,10 @@
 
   /* Metal — a narrower, deeper gold ramp reads as leaf, not yellow. */
   --gold:#B08D3E;
+  /* The flat fill a primary button wears, and the step under the pointer.
+     The gradient is retired from controls; it survives only on identity
+     tiles (avatars, marks), which is what makes those read as the brand. */
+  --gold-fill:#96762F;  --gold-press:#7E6226;
   --gold-2:#DEBC6A;
   --gold-deep:#8F7130;
   --gold-soft:#EFE3C4;
@@ -55,7 +59,7 @@
   --gold-line:rgba(176,141,62,.28);
 
   /* Ink — cooler and deeper for crisper text on warm ground. */
-  --ink:#3B2E33;
+  --ink:#332629;
   --ink-soft:#5E4E54;
   --muted:#948289;
   --line:#EEE1E3;
@@ -122,8 +126,14 @@
    Proportional digits are correct in a sentence and wrong in a column: a 1 is
    half the width of a 0, so a list of amounts wanders. */
 table,td,th,.pill,.status,.stat .v,.stat .d,.wk-n,.wk-due,.arc-s,.vn-f,
-.money,.amt,.j-c,.sec-badge,.count,.dh-band-v,.hero-count{
-  font-variant-numeric:tabular-nums;font-feature-settings:"tnum" 1}
+.money,.amt,.j-c,.sec-badge,.count,.dh-band-v,.hero-count,.fig-v,.nb-i b,
+.dh-v,.pj-when,.pj-rd,.iv-num,.due,.tpl-d,.day-k{
+  /* lnum as well as tnum: Cormorant's default figures are old-style, and at
+     stat size its 1 reads as a small-cap Roman numeral - screenshots showed
+     8 / 12 reading as 8 / I2. Data numerals are lining, everywhere, in both
+     faces; old-style stays available to running prose, where it belongs. */
+  font-variant-numeric:tabular-nums lining-nums;
+  font-feature-settings:"tnum" 1,"lnum" 1}
 /* min-height, not height: a fixed 100% pinned the document to the
    viewport, so anything taller than the fold could not be scrolled to. */
 html,body{min-height:100%}
@@ -370,7 +380,7 @@ html.no-motion body::before{opacity:.3}
 /* A leaf marker rather than a heavier fill. */
 .nav-item.active::before{
   content:"";position:absolute;left:-14px;top:50%;transform:translateY(-50%);
-  width:3px;height:17px;border-radius:0 3px 3px 0;background:var(--gold-grad);
+  width:3px;height:17px;border-radius:0 3px 3px 0;background:var(--gold);
 }
 .nav-item.active .ic{opacity:1;color:var(--gold)}
 .sidebar .spacer{flex:1}
@@ -504,23 +514,26 @@ html.no-motion body::before{opacity:.3}
              background-color .18s var(--ease),border-color .18s var(--ease),color .18s var(--ease);
 }
 .btn:focus-visible{outline:none;box-shadow:var(--ring)}
+/* The drawn set. currentColor, so an icon is always the colour of the text
+   it sits beside, and one stroke width everywhere. */
+.gi{width:15px;height:15px;fill:none;stroke:currentColor;stroke-width:1.6;
+  stroke-linecap:round;stroke-linejoin:round;flex:0 0 auto;display:inline-block;
+  vertical-align:-2.5px}
+.btn-sm .gi{width:14px;height:14px}
+.r-act .gi{width:13px;height:13px;vertical-align:0}
+.gi.lg{width:22px;height:22px}
 .btn:active{transform:translateY(0) scale(.985)}
 
 /* The inset top highlight is what sells the metal. */
-.btn-gold{
-  background:var(--gold-grad);color:var(--on-accent,#fff);
-  border-color:var(--gold-deep);
-  box-shadow:inset 0 1px 0 rgba(255,255,255,.22),
-             0 1px 2px rgba(var(--accent-deep-rgb),.22), 0 4px 12px rgba(var(--accent-deep-rgb),.16);
-  /* No text-shadow. Embossed white-on-gold type is the single thing that made
-     these read as chunky rather than expensive, and at phone sizes it just
-     smears the letterforms. The inner highlight is halved for the same
-     reason — the button should look pressed out of one piece, not lacquered. */
-}
-.btn-gold:hover{transform:translateY(-1px);
-  box-shadow:inset 0 1px 0 rgba(255,255,255,.5), inset 0 -1px 0 rgba(0,0,0,.10),
-             0 2px 4px rgba(var(--accent-deep-rgb),.26), 0 10px 26px rgba(var(--accent-deep-rgb),.28)}
-.btn-gold:focus-visible{box-shadow:var(--ring), 0 6px 18px rgba(var(--accent-deep-rgb),.22)}
+/* Flat, and confident about it. The gradient, the bevel highlight and the
+   glow were lighting effects on the chrome; the finish belongs to the type
+   and the spacing. Hover darkens, press darkens further, nothing lifts. */
+.btn-gold{background:var(--gold-fill);color:var(--on-accent,#fff);
+  border-color:transparent;
+  box-shadow:0 1px 2px rgba(var(--accent-deep-rgb),.18)}
+.btn-gold:hover{background:var(--gold-press)}
+.btn-gold:active{background:var(--gold-press)}
+.btn-gold:focus-visible{box-shadow:var(--ring)}
 
 /* For the corner of a screen whose subject is a photograph: still a button,
    still reachable, but not competing with the thing the page is about. */
@@ -539,12 +552,16 @@ html.no-motion body::before{opacity:.3}
 /* Figures support the thing above them; they are not the thing. Sunk into the
    ground rather than lifted off it, so a row of them under a plate reads as
    supporting detail instead of eleven equal panels. */
+/* Paper, not wash. The sunk pink tile was the biggest single source of the
+   everything-is-tinted mush: four of them at the top of every project put a
+   field of pigment where the page most needed an anchor. A white card with a
+   hairline reads as an instrument; the wash stays on the ground behind it. */
 .stat{
-  background:var(--sunk);
-  border:0;border-radius:var(--radius-sm);
-  padding:16px 18px 15px;box-shadow:var(--sunk-line);position:relative;overflow:hidden;
+  background:var(--card);
+  border:1px solid var(--line);border-radius:var(--radius-sm);
+  padding:16px 18px 15px;box-shadow:var(--shadow-xs);position:relative;overflow:hidden;
 }
-.stat:hover{box-shadow:var(--sunk-line)}
+.stat:hover{box-shadow:var(--shadow-xs)}
 .stat .k{font-size:10px;letter-spacing:1.9px;text-transform:uppercase;color:var(--muted);font-weight:600}
 .stat .v{font-family:var(--serif);font-size:35px;font-weight:600;margin-top:8px;line-height:1;
   font-variant-numeric:tabular-nums;letter-spacing:-.015em}
@@ -595,8 +612,8 @@ html.no-motion body::before{opacity:.3}
 .bp-chip{font-size:10.5px;font-weight:600;padding:4px 11px;border-radius:var(--radius-pill);
   background:var(--gold-soft);color:var(--gold-deep);border:1px solid var(--gold-line)}
 .bp-btn{font-size:12.5px;font-weight:600;padding:9px 16px;border-radius:var(--radius-sm);
-  background:var(--gold-grad);color:var(--on-accent,#fff);border:1px solid var(--gold-deep);
-  box-shadow:inset 0 1px 0 rgba(255,255,255,.4)}
+  background:var(--gold-fill);color:var(--on-accent,#fff);border:1px solid transparent;
+  box-shadow:0 1px 2px rgba(var(--accent-deep-rgb),.16)}
 .bp-note{font-size:11.5px;color:var(--muted);flex:1;min-width:160px}
 
 .logo-row{display:flex;align-items:center;gap:12px;flex-wrap:wrap}
@@ -724,7 +741,7 @@ html.no-motion body::before{opacity:.3}
   background:var(--pink-200);transition:background-color .2s var(--ease)}
 .tgl i{position:absolute;top:3px;left:3px;width:21px;height:21px;border-radius:50%;background:#fff;
   box-shadow:0 1px 3px rgba(var(--shade-1),.25);transition:transform .2s var(--ease)}
-.tgl.on{background:var(--gold-grad)}
+.tgl.on{background:var(--gold-fill)}
 .tgl.on i{transform:translateX(19px)}
 .tgl:focus-visible{outline:none;box-shadow:var(--ring)}
 
@@ -744,7 +761,7 @@ html.no-motion body::before{opacity:.3}
 .tour-tile.done{background:linear-gradient(180deg,var(--accent-wash),var(--card))}
 .tt-top{display:flex;align-items:center;justify-content:space-between;gap:8px}
 .tt-n{font-family:var(--serif);font-size:17px;font-weight:600}
-.tt-done{width:20px;height:20px;border-radius:50%;background:var(--gold-grad);color:#fff;
+.tt-done{width:20px;height:20px;border-radius:50%;background:var(--gold-fill);color:#fff;
   font-size:10px;display:grid;place-items:center;flex:0 0 auto}
 .tt-d{font-size:11.5px;color:var(--ink-soft);line-height:1.5}
 .tt-m{font-size:10.5px;color:var(--muted);margin-top:3px}
@@ -884,7 +901,7 @@ body.portal-only .main{margin-left:0!important}
 .setup-row.done{opacity:.6;cursor:default}
 .setup-box{width:20px;height:20px;flex:0 0 20px;border-radius:6px;border:1.5px solid var(--pink-300);
   display:grid;place-items:center;font-size:10px;color:#fff;background:#fff}
-.setup-row.done .setup-box{background:var(--gold-grad);border-color:transparent}
+.setup-row.done .setup-box{background:var(--gold-fill);border-color:transparent}
 .setup-l{flex:1;min-width:0;display:flex;flex-direction:column;gap:1px}
 .setup-l b{font-size:12.5px;font-weight:600}
 .setup-l em{font-style:normal;font-size:10.5px;color:var(--muted)}
@@ -1004,7 +1021,7 @@ body.portal-only .main{margin-left:0!important}
 .tbox::after{content:"";position:absolute;inset:-9px}
 .tbox:hover{border-color:var(--gold)}
 .tbox:focus-visible{outline:none;box-shadow:var(--ring)}
-.task.done .tbox{background:var(--gold-grad);border-color:transparent}
+.task.done .tbox{background:var(--gold-fill);border-color:transparent}
 .t-main{flex:1;min-width:0}
 .t-l{font-size:13.5px;font-weight:500;line-height:1.35}
 .t-m{font-size:11.5px;color:var(--muted);margin-top:2px}
@@ -1019,7 +1036,9 @@ body.portal-only .main{margin-left:0!important}
    which was written for the ✦ — but the ✦ is a bare text node, so the selector
    landed on the SENTENCE instead: the message came out 20px gold and the mark
    came out 13px grey, precisely the wrong way round. */
-.all-clear .ac-ic{font-size:19px;color:var(--gold);line-height:1}
+.all-clear .ac-ic{color:var(--gold);line-height:1}
+.all-clear .ac-ic .gi{width:19px;height:19px}
+.cf-ic .gi{width:24px;height:24px}
 
 /* ---- waiting on ---- */
 .waits{padding:6px 0 8px;max-height:min(58vh,540px);overflow-y:auto}
@@ -1265,7 +1284,7 @@ tbody tr:hover{background:var(--pink-50)}
 .check{display:flex;align-items:center;gap:12px;padding:11px 0;border-bottom:1px solid var(--line);cursor:pointer}
 .check:last-child{border-bottom:none}
 .box{width:22px;height:22px;border-radius:7px;border:2px solid var(--pink-300);display:grid;place-items:center;flex:0 0 22px;transition:all .15s;color:#fff}
-.check.done .box{background:var(--gold-grad);border-color:transparent}
+.check.done .box{background:var(--gold-fill);border-color:transparent}
 .check.done .lbl{text-decoration:line-through;color:var(--muted)}
 /* The label takes the slack. Previously margin-left:auto sat on EVERY .cat, so
    the spare space was split between the date and the category and neither
@@ -2088,13 +2107,12 @@ td.inv-col{text-align:center;width:1%}
 /* These had no resting shadow — only one on hover — so on a palette where the
    card and the page sit close together the whole strip dissolved into the
    background. Every other card in the app is lifted; these are cards too. */
-.wk-d{min-width:0;background:linear-gradient(180deg,var(--ivory),var(--card));
+.wk-d{min-width:0;background:var(--card);
   border:1px solid var(--line);border-radius:var(--radius);
   padding:9px 10px 10px;cursor:pointer;min-height:92px;display:flex;flex-direction:column;gap:7px;
-  box-shadow:inset 0 1px 0 rgba(255,255,255,.7), var(--shadow-sm);
+  box-shadow:var(--shadow-xs);
   transition:border-color .14s var(--ease),transform .14s var(--ease),box-shadow .14s var(--ease)}
-.wk-d:hover{border-color:var(--gold-line);transform:translateY(-3px);
-  box-shadow:inset 0 1px 0 rgba(255,255,255,.7), var(--shadow)}
+.wk-d:hover{border-color:var(--gold-line);transform:translateY(-2px);box-shadow:var(--shadow-sm)}
 .wk-d:focus-visible{outline:none;box-shadow:var(--ring)}
 /* Today is the one that should look picked up off the page. */
 .wk-d.today{border-color:var(--gold);
@@ -2104,8 +2122,11 @@ td.inv-col{text-align:center;width:1%}
 /* A clear day is a slot with nothing in it, not a gap in the strip — the
    recess tier says that exactly, and it keeps the seven columns reading as one
    object while the days that hold something stay lifted off the page. */
-.wk-d.quiet{background:var(--sunk);border-color:transparent;box-shadow:var(--sunk-line);cursor:default}
-.wk-d.quiet:hover{transform:none;border-color:transparent;box-shadow:var(--sunk-line)}
+/* An empty day recedes by having no paper at all, not by wearing pigment —
+   six pink tiles out of seven put a band of wash exactly where the anchor
+   pass took it away. */
+.wk-d.quiet{background:none;border-color:var(--line);box-shadow:none;cursor:default}
+.wk-d.quiet:hover{transform:none;border-color:var(--line);box-shadow:none}
 .wk-d.quiet .wk-n{color:var(--muted);font-weight:400}
 .wk-d.quiet.today{background:var(--card);border-color:var(--gold);
   box-shadow:0 0 0 3px rgba(var(--accent-rgb),.13), inset 0 1px 0 rgba(255,255,255,.8), var(--shadow-sm)}
@@ -2192,16 +2213,13 @@ td.inv-col{text-align:center;width:1%}
   padding:9px 15px;border-radius:var(--radius-pill);border:1px solid var(--line);
   background:var(--card);box-shadow:var(--shadow-xs);color:var(--ink-soft);
   transition:border-color .14s var(--ease),transform .14s var(--ease)}
-.nb-i:hover{border-color:var(--gold-line);transform:translateY(-1px)}
+.nb-i:hover{border-color:var(--gold-line)}
 .nb-i:focus-visible{outline:none;box-shadow:var(--ring)}
 .nb-i b{font-family:var(--serif);font-size:19px;font-weight:600;line-height:1}
 .nb-i span{font-size:12px}
 .nb-i.over{border-color:#EDD1D1;background:#FBF4F4}
 .nb-i.over b{color:#A75252}
 .nb-i.now b{color:var(--gold-deep)}
-.nb-clear{display:flex;align-items:center;gap:9px;font-size:12.5px;color:var(--muted);
-  padding:11px 2px;margin:18px 0 0}
-.nb-clear .nb-ic{color:var(--gold)}
 /* ---- the client, inside their job ---- */
 .cp{padding:16px 22px 6px}
 .cp-top{display:flex;align-items:center;gap:12px}
@@ -2259,7 +2277,7 @@ td.inv-col{text-align:center;width:1%}
 .pj-d{font-size:12.5px;color:var(--ink-soft)}
 .pj-f{font-size:11.5px;color:var(--muted);margin-top:2px}
 .pj-bar{display:block;height:5px;border-radius:99px;background:var(--sunk);overflow:hidden;margin-top:11px}
-.pj-bar i{display:block;height:100%;background:var(--gold-grad);border-radius:99px}
+.pj-bar i{display:block;height:100%;background:var(--gold);border-radius:99px}
 .pj-pct{font-size:10.5px;color:var(--muted);margin-top:5px}
 /* ---- the same board as a list ---- */
 .pj-rows{display:flex;flex-direction:column;border:1px solid var(--line);border-radius:var(--radius);
@@ -3236,9 +3254,9 @@ tr:hover .r-acts,.ev-card:hover .r-acts,.table-card:hover .r-acts,
 .r-act:hover{background:var(--pink-100);color:var(--ink);border-color:var(--pink-300)}
 .r-act.r-del:hover{background:#F9E5E5;color:#A75252;border-color:#EDD1D1}
 .r-act:focus-visible{outline:none;box-shadow:var(--ring)}
-.btn-danger{background:#B85C5C;color:#fff;border-color:#9E4C4C;
-  box-shadow:inset 0 1px 0 rgba(255,255,255,.22),0 4px 12px rgba(184,92,92,.26)}
-.btn-danger:hover{background:#A85252;transform:translateY(-1px)}
+.btn-danger{background:#A85252;color:#fff;border-color:transparent;
+  box-shadow:0 1px 2px rgba(120,50,50,.2)}
+.btn-danger:hover{background:#934747}
 .modal-confirm{max-width:390px;text-align:center}
 .cf-ic{font-size:26px;color:var(--warn);margin-bottom:6px}
 .modal-confirm .modal-actions{justify-content:center;border-top:none;padding-top:6px}
@@ -3321,7 +3339,7 @@ tr:hover .r-acts,.ev-card:hover .r-acts,.table-card:hover .r-acts,
 .chair{position:absolute;transform:translate(-50%,-50%);border-radius:50% 50% 42% 42%;
   background:#fff;border:1.5px solid var(--pink-300);box-sizing:border-box;
   transition:background-color .16s var(--ease),border-color .16s var(--ease)}
-.chair.taken{background:var(--gold-grad);border-color:var(--gold-deep);
+.chair.taken{background:var(--gold);border-color:var(--gold-deep);
   box-shadow:inset 0 1px 0 rgba(255,255,255,.4)}
 
 .fp-fix{border-radius:8px;border:1.5px dashed var(--pink-400);background:rgba(242,223,225,.5);
@@ -3492,7 +3510,7 @@ tr:hover .r-acts,.ev-card:hover .r-acts,.table-card:hover .r-acts,
   border:1px solid var(--line);border-radius:var(--radius-lg);
   padding:24px 26px;margin-bottom:20px;box-shadow:var(--shadow-sm);position:relative;overflow:hidden;
 }
-.venue-band::before{content:"";position:absolute;left:0;top:0;bottom:0;width:3px;background:var(--gold-grad)}
+.venue-band::before{content:"";position:absolute;left:0;top:0;bottom:0;width:3px;background:var(--gold)}
 /* With a cover the band becomes a banner: the photograph runs the full width,
    the name and the countdown sit on it under a scrim, and everything that has
    to stay readable moves to the card below. */
@@ -4076,7 +4094,7 @@ tr:hover .r-acts,.ev-card:hover .r-acts,.table-card:hover .r-acts,
 .fp-in{height:34px;border-radius:9px;border:1px solid var(--line);background:#fff;
   font-size:12px;color:var(--muted);padding:8px 10px}
 .fp-in.tall{height:60px}
-.fp-btn{margin-top:16px;background:var(--gold-grad);color:#fff;text-align:center;
+.fp-btn{margin-top:16px;background:var(--gold-fill);color:#fff;text-align:center;
   padding:11px;border-radius:11px;font-size:13px;font-weight:600}
 
 /* ============ MESSAGES ============ */
@@ -4092,7 +4110,7 @@ tr:hover .r-acts,.ev-card:hover .r-acts,.table-card:hover .r-acts,
 .msg.me{align-self:flex-end;text-align:right}
 .msg-b{display:inline-block;padding:11px 15px;border-radius:16px;font-size:13.5px;line-height:1.5;text-align:left}
 .msg.them .msg-b{background:var(--pink-100);border:1px solid var(--line);border-bottom-left-radius:5px}
-.msg.me .msg-b{background:var(--gold-grad);color:#fff;border-bottom-right-radius:5px;
+.msg.me .msg-b{background:var(--gold-fill);color:#fff;border-bottom-right-radius:5px;
   box-shadow:0 4px 12px rgba(201,162,75,.26)}
 .msg-m{font-size:10.5px;color:var(--muted);margin-top:5px}
 .composer{display:flex;gap:10px;padding:14px 22px;border-top:1px solid var(--line)}
@@ -4116,7 +4134,7 @@ tr:hover .r-acts,.ev-card:hover .r-acts,.table-card:hover .r-acts,
 .col-bar{flex:1;display:flex;flex-direction:column;align-items:center;gap:7px}
 .cb-track{width:100%;height:120px;display:flex;align-items:flex-end;
   background:linear-gradient(180deg,transparent,var(--pink-50));border-radius:9px}
-.cb-fill{width:100%;background:var(--gold-grad);border-radius:9px 9px 4px 4px;min-height:4px;
+.cb-fill{width:100%;background:var(--gold);border-radius:9px 9px 4px 4px;min-height:4px;
   transition:height .3s ease}
 .cb-l{font-size:11px;color:var(--muted);font-weight:600}
 .cb-v{font-size:11px;font-weight:600;font-variant-numeric:tabular-nums}
@@ -4208,7 +4226,7 @@ html,body{max-width:100%;overflow-x:hidden}
 <canvas id="sparkles"></canvas>
 <div class="app">
   <aside class="sidebar" id="sidebar">
-    <button class="rail-btn" id="railBtn" type="button" aria-label="Close sidebar" title="Close sidebar">✕</button>
+    <button class="rail-btn" id="railBtn" type="button" aria-label="Close sidebar" title="Close sidebar"><svg class="gi" viewBox="0 0 20 20" aria-hidden="true"><path d="M5.2 5.2l9.6 9.6M14.8 5.2l-9.6 9.6"/></svg></button>
     <div class="brand">
       <div class="mark">G</div>
       <div class="brand-tx">
@@ -4684,7 +4702,7 @@ function adoptSample(){
   Object.keys(SAMPLE_IDS).forEach(function(k){ SAMPLE_IDS[k]=[]; });
   try{ localStorage.setItem('gem-sample-adopted','1'); }catch(e){}
   save(); render();
-  toast(n+' records are yours to edit now ✦');
+  toast(n+' records are yours to edit now');
 }
 function sampleAdopted(){ try{ return localStorage.getItem('gem-sample-adopted')==='1'; }catch(e){ return false; } }
 /* Shown at the top of anything belonging to the sample. Says what it is, why
@@ -4709,7 +4727,7 @@ function wireSampleBanner(){
   var r=$('#sampleRemove');
   if(r)r.onclick=function(ev){ ev.stopPropagation();
     confirmDelete('the sample wedding and everything attached to it',function(){
-      var n=removeSampleData(); render(); toast(n+' sample records removed ✦');
+      var n=removeSampleData(); render(); toast(n+' sample records removed');
     }); };
 }
 
@@ -5147,7 +5165,7 @@ function gFilterChips(e,subs){
   var chip=function(k,txt){
     return '<button type="button" class="gf-act" data-gfoff="'+k+'" '+
       'aria-label="'+esc(txt)+' — remove this filter" title="Remove this filter">'+
-      esc(txt)+'<span aria-hidden="true">✕</span></button>';
+      esc(txt)+'<span aria-hidden="true">'+icn("x")+'</span></button>';
   };
   if(f.side)out.push(chip('side',f.side==='none'?'Both / neither':sideLabel(e,f.side)));
   if(f.rsvp)out.push(chip('rsvp',f.rsvp==='wait'?'Awaiting reply':((RSVP[f.rsvp]||{}).lbl||f.rsvp)));
@@ -5671,6 +5689,29 @@ function requestPersistence(){
 /* ---------- helpers ---------- */
 var $=function(s,r){return (r||document).querySelector(s);};
 function esc(s){return String(s==null?'':s).replace(/[&<>"']/g,function(m){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m];});}
+/* ---- the drawn icon set ----
+   One 20px grid, one 1.6px stroke, rounded caps. These replace the unicode
+   glyphs (\u270e \u2399 \u2715 \u260e \u2709 \u21ea \u21e9 \u25c8) that used to stand in for an icon set:
+   font characters render differently on every OS, sit on their own
+   baselines, and mix stroke weights - the single loudest thing that made
+   the app read as a template. Drawn once, identical everywhere. The \u2726
+   sparkle survives only as a brand mark at a handful of chosen moments,
+   never as UI furniture. */
+var GI={
+  pencil:'<path d="M13.1 3.7l3.2 3.2L7 16.2l-4 .8.8-4z"/>',
+  x:'<path d="M5.2 5.2l9.6 9.6M14.8 5.2l-9.6 9.6"/>',
+  chev:'<path d="M7.6 4.4l5.6 5.6-5.6 5.6"/>',
+  chevl:'<path d="M12.4 4.4L6.8 10l5.6 5.6"/>',
+  print:'<path d="M6 7.2V3.6h8v3.6M6 14.4H3.6V9.2a2 2 0 012-2h8.8a2 2 0 012 2v5.2H14"/><path d="M6 12.2h8v4.4H6z"/>',
+  phone:'<path d="M4.3 3.7h2.9l1.4 3.3-1.8 1.5a11.2 11.2 0 004.7 4.7l1.5-1.8 3.3 1.4v2.9a1.5 1.5 0 01-1.6 1.5A14 14 0 012.8 5.3a1.5 1.5 0 011.5-1.6z"/>',
+  mail:'<path d="M3.1 5.3h13.8v9.4H3.1z"/><path d="M3.6 5.8l6.4 5 6.4-5"/>',
+  upload:'<path d="M10 13.2V3.8M6.5 7.3L10 3.8l3.5 3.5M4 13.6v1.9A1.5 1.5 0 005.5 17h9a1.5 1.5 0 001.5-1.5v-1.9"/>',
+  download:'<path d="M10 3.8v9.4M6.5 9.7l3.5 3.5 3.5-3.5M4 13.6v1.9A1.5 1.5 0 005.5 17h9a1.5 1.5 0 001.5-1.5v-1.9"/>',
+  plus:'<path d="M10 4.6v10.8M4.6 10h10.8"/>',
+  spark:'<path d="M10 2.6l1.9 5.5 5.5 1.9-5.5 1.9-1.9 5.5-1.9-5.5-5.5-1.9 5.5-1.9z"/>',
+  doc:'<path d="M5.4 2.9h6l3.2 3.2v11h-9.2z"/><path d="M11.2 3.1v3.4h3.4M7.7 10h4.6M7.7 13h4.6"/>'
+};
+function icn(n,cls){return '<svg class="gi'+(cls?' '+cls:'')+'" viewBox="0 0 20 20" aria-hidden="true">'+GI[n]+'</svg>';}
 function money(n){return '$'+Number(n||0).toLocaleString('en-US');}
 function fmtDate(iso){if(!iso)return '';var d=new Date(iso+'T00:00');return d.toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'});}
 function daysAway(iso){var d=new Date(iso+'T00:00'),now=new Date();return Math.ceil((d-now)/86400000);}
@@ -5742,8 +5783,16 @@ function countdownLine(){
 function pageHead(v){
   var lab=(TITLES[v]||['',''])[0], sub=(TITLES[v]||['',''])[1];
   /* [eyebrow, headline, sub] — an empty eyebrow hides itself. */
-  if(v==='projects')
-    return [dateLine(),countdownLine(),'A calm day of details.'];
+  if(v==='projects'){
+    /* One voice. The sub used to say a calm day unconditionally while a
+       floating line under it repeated the sentiment on quiet days and the
+       needs-band contradicted it on busy ones. Quiet days get the whole
+       sentence here; busy days say nothing and let the band's chips speak. */
+    var pt=allOpenTasks(), pw=waitingOn().length;
+    var pquiet=!pw&&!pt.some(function(x){return x.days!==null&&x.days<=0;});
+    return [dateLine(),countdownLine(),
+      pquiet?'Nothing overdue, nothing waiting \u2014 enjoy the quiet.':''];
+  }
   /* Dashboard is a project now, so the head says which one and how long there
      is — the two things you want confirmed the second the screen paints. */
   if(v==='dashboard'){
@@ -5974,13 +6023,13 @@ function evSwitcher(){
   }).join('')+'</select>';
 }
 function actionsFor(v){
-  if(v==='pipeline')return '<button class="btn btn-gold" id="addLead">＋ New lead</button>';
-  if(v==='clients')return state.clientId?'':'<button class="btn btn-gold" id="addClient">＋ New client</button>';
+  if(v==='pipeline')return '<button class="btn btn-gold" id="addLead">'+icn("plus")+'New lead</button>';
+  if(v==='clients')return state.clientId?'':'<button class="btn btn-gold" id="addClient">'+icn("plus")+'New client</button>';
   /* The invoice's own actions live on the sheet; the list's belong to the
      list, and offering "New invoice" while reading one is a way to lose the
      one you were reading. */
   if(v==='finance')return state.invoiceId?'':
-    '<button class="btn btn-ghost" id="exportInv">Export CSV</button> <button class="btn btn-gold" id="addInv">＋ New invoice</button>';
+    '<button class="btn btn-ghost" id="exportInv">Export CSV</button> <button class="btn btn-gold" id="addInv">'+icn("plus")+'New invoice</button>';
   /* The board carries its own New project, so the topbar stays empty at the
      front door rather than offering the same action twice. */
   if(v==='projects')return '';
@@ -5990,8 +6039,8 @@ function actionsFor(v){
      what they are" is the whole review. They are short words; they can afford
      to be words. */
   if(v==='events'||v==='dashboard')return (v==='dashboard'||state.eventId)
-    ?'<button class="btn btn-quiet btn-sm" id="editEvent" title="Edit this project" aria-label="Edit this project">✎ Edit</button> '+
-     '<button class="btn btn-quiet btn-sm" id="printEvent" title="Print the event sheet" aria-label="Print the event sheet">⎙ Print</button>'
+    ?'<button class="btn btn-quiet btn-sm" id="editEvent" title="Edit this project" aria-label="Edit this project">'+icn("pencil")+' Edit</button> '+
+     '<button class="btn btn-quiet btn-sm" id="printEvent" title="Print the event sheet" aria-label="Print the event sheet">'+icn("print")+' Print</button>'
     :'';
   /* The switcher is context, not an action, and the two CSV utilities are
      things you do twice a year. Below 700px the switcher takes its own line
@@ -6003,22 +6052,22 @@ function actionsFor(v){
      a year. They have moved to the foot of the list, next to the data they
      act on, as words. */
   if(v==='guests')return evSwitcher()+
-    ' <button class="btn btn-gold" id="addGuest">＋ Add guest</button>';
-  if(v==='seating')return evSwitcher()+' <button class="btn btn-gold" id="addTable">＋ Add table</button>';
-  if(v==='vendors')return '<button class="btn btn-gold" id="addVendor">＋ Add vendor</button>';
-  if(v==='design')return state.boardId?'':evSwitcher()+' <button class="btn btn-gold" id="addSwatch">＋ Add colour</button>';
-  if(v==='documents')return '<button class="btn btn-ghost" id="uploadDoc">⇪ Upload</button>'+
-    ' <button class="btn btn-gold" id="addDoc">＋ New document</button>';
+    ' <button class="btn btn-gold" id="addGuest">'+icn("plus")+'Add guest</button>';
+  if(v==='seating')return evSwitcher()+' <button class="btn btn-gold" id="addTable">'+icn("plus")+'Add table</button>';
+  if(v==='vendors')return '<button class="btn btn-gold" id="addVendor">'+icn("plus")+'Add vendor</button>';
+  if(v==='design')return state.boardId?'':evSwitcher()+' <button class="btn btn-gold" id="addSwatch">'+icn("plus")+'Add colour</button>';
+  if(v==='documents')return '<button class="btn btn-ghost" id="uploadDoc">'+icn("upload")+' Upload</button>'+
+    ' <button class="btn btn-gold" id="addDoc">'+icn("plus")+'New document</button>';
   if(v==='portal')return evSwitcher();
   if(v==='messages')return evSwitcher();
-  if(v==='questionnaires')return state.qId?'':'<button class="btn btn-gold" id="addQuestionnaire">＋ New questionnaire</button>';
+  if(v==='questionnaires')return state.qId?'':'<button class="btn btn-gold" id="addQuestionnaire">'+icn("plus")+'New questionnaire</button>';
   /* One group that never breaks internally. As three separate buttons at full
      height they wrapped onto two rows on a phone — "‹ Today" on one and "›"
      stranded on the next — which reads as a layout accident because it is. */
   if(v==='calendar')return '<span class="btn-group">'+
-    '<button class="btn btn-ghost btn-sm" id="calPrev" aria-label="Previous month">‹</button>'+
+    '<button class="btn btn-ghost btn-sm" id="calPrev" aria-label="Previous month">'+icn("chevl")+'</button>'+
     '<button class="btn btn-ghost btn-sm" id="calToday">Today</button>'+
-    '<button class="btn btn-ghost btn-sm" id="calNext" aria-label="Next month">›</button></span>';
+    '<button class="btn btn-ghost btn-sm" id="calNext" aria-label="Next month">'+icn("chev")+'</button></span>';
   return '';
 }
 function wireActions(){
@@ -6072,7 +6121,11 @@ function shiftMonth(d){
 function render(){
   var el=$('#content');
   /* The front door: everything true across the studio, then the projects. */
-  if(state.view==='projects'){ el.innerHTML=viewProjects(); wireDashboard(); wireSetupCard(); wireProjects(); }
+  if(state.view==='projects'){ el.innerHTML=viewProjects(); wireDashboard(); wireSetupCard(); wireProjects();
+    /* The sub-line is state now (quiet or not), so ticking off the last
+       overdue task has to update the sentence, not just the list. */
+    var ph=pageHead('projects'), ps=$('#pgSub'); if(ps)ps.textContent=ph[2]||'';
+  }
   /* Dashboard means "this project" now. It renders the workspace — the screen
      that was already the best answer to where a job is at — so there is one
      page for a project rather than two competing ones. */
@@ -6250,6 +6303,27 @@ function allOpenTasks(){
    launch. It is the top of the Projects home now, and the card stack of
    upcoming events at the top of it is replaced by the projects themselves —
    which is what that stack was always standing in for. */
+/* Everything sitting with someone else - inquiries, signatures, invoices,
+   questionnaires. Factored out of viewStudio so the page header can tell the
+   truth about the day without rebuilding the whole dashboard's sums. */
+function waitingOn(){
+  var waiting=[]; var pr=prefs();
+  if(pr.alertInquiries)db.submissions.filter(function(s){return s.status==='new';}).forEach(function(s){
+    waiting.push({tone:'gold',t:'New inquiry from '+s.names,m:s.type+' \u00b7 '+(s.date?fmtDate(s.date):'date TBD'),v:'inquiries'});
+  });
+  if(pr.alertSignatures)db.documents.filter(function(d){return d.status==='sent';}).forEach(function(d){
+    var e=db.events.find(function(x){return x.id===d.eventId;});
+    waiting.push({tone:'warn',t:d.title+' awaiting signature',m:(e?e.title:'')+' \u00b7 sent '+(d.sent?fmtDate(d.sent):'\u2014'),v:'documents'});
+  });
+  if(pr.alertInvoices)db.invoices.filter(function(i){return i.status==='over';}).forEach(function(i){
+    waiting.push({tone:'danger',t:i.num+' is overdue',m:invoiceClientName(i)+' \u00b7 '+money(i.amount),v:'finance'});
+  });
+  if(pr.alertQuestionnaires)db.questionnaires.filter(function(q){return q.status!=='draft'&&qProgress(q).done<qProgress(q).total;}).forEach(function(q){
+    var p=qProgress(q);
+    waiting.push({tone:'gold',t:q.title+' unanswered',m:p.done+' of '+p.total+' answered',v:'questionnaires'});
+  });
+  return waiting;
+}
 function viewStudio(boardHtml){
   var tasks=allOpenTasks();
   var overdue=tasks.filter(function(t){return t.days!==null&&t.days<0;});
@@ -6267,23 +6341,7 @@ function viewStudio(boardHtml){
   var nextLead=db.leads.slice().filter(function(l){return daysAway(l.date)>=0;})
     .sort(function(a,b){return a.date<b.date?-1:1;})[0];
 
-  // things waiting on someone else
-  var waiting=[];
-  var pr=prefs();
-  if(pr.alertInquiries)db.submissions.filter(function(s){return s.status==='new';}).forEach(function(s){
-    waiting.push({tone:'gold',t:'New inquiry from '+s.names,m:s.type+' · '+(s.date?fmtDate(s.date):'date TBD'),v:'inquiries'});
-  });
-  if(pr.alertSignatures)db.documents.filter(function(d){return d.status==='sent';}).forEach(function(d){
-    var e=db.events.find(function(x){return x.id===d.eventId;});
-    waiting.push({tone:'warn',t:d.title+' awaiting signature',m:(e?e.title:'')+' · sent '+(d.sent?fmtDate(d.sent):'—'),v:'documents'});
-  });
-  if(pr.alertInvoices)db.invoices.filter(function(i){return i.status==='over';}).forEach(function(i){
-    waiting.push({tone:'danger',t:i.num+' is overdue',m:invoiceClientName(i)+' · '+money(i.amount),v:'finance'});
-  });
-  if(pr.alertQuestionnaires)db.questionnaires.filter(function(q){return q.status!=='draft'&&qProgress(q).done<qProgress(q).total;}).forEach(function(q){
-    var p=qProgress(q);
-    waiting.push({tone:'gold',t:q.title+' unanswered',m:p.done+' of '+p.total+' answered',v:'questionnaires'});
-  });
+  var waiting=waitingOn();
 
   function taskRow(t){
     var badge = t.days===null ? '<span class="due none">No date</span>'
@@ -6351,8 +6409,9 @@ function viewStudio(boardHtml){
     if(today.length)items.push(['now',today.length,today.length===1?'due today':'due today']);
     if(week.length)items.push(['soon',week.length,'this week']);
     if(waiting.length)items.push(['wait',waiting.length,'waiting on others']);
-    if(!items.length)return '<div class="nb nb-clear"><span class="nb-ic">✦</span>'+
-      '<span>Nothing overdue, nothing waiting. Enjoy the quiet.</span></div>';
+    /* Quiet days render nothing at all - the header's sub-line already said
+       it, and a floating whisper between two voids was the complaint. */
+    if(!items.length)return '';
     return '<div class="nb">'+items.map(function(it){
       return '<button type="button" class="nb-i '+it[0]+'" data-needs="'+it[0]+'">'+
         '<b>'+it[1]+'</b><span>'+esc(it[2])+'</span></button>';
@@ -6388,7 +6447,7 @@ function viewStudio(boardHtml){
         group('Today',today,'today','now')+
         group(horizon===7?'This week':'Next '+horizon+' days',week,'week')+
         group('Later',later,'later')+
-        (tasks.length?'':'<div class="all-clear"><span class="ac-ic">✦</span><span>Everything is done. Enjoy the quiet.</span></div>')+
+        (tasks.length?'':'<div class="all-clear"><span class="ac-ic">'+icn("spark")+'</span><span>Everything is done. Enjoy the quiet.</span></div>')+
         (taskHidden?'<div class="tg-cap">Showing the '+taskShown+' most urgent of '+tasks.length+
           ' \u00b7 the rest are further out.</div>':'')+
       '</div></div>'+
@@ -6399,8 +6458,8 @@ function viewStudio(boardHtml){
         return '<div class="wait" data-goto="'+esc(w.v)+'" tabindex="0" role="link">'+
           '<span class="w-dot '+w.tone+'"></span>'+
           '<div><div class="w-t">'+esc(w.t)+'</div><div class="w-m">'+esc(w.m)+'</div></div>'+
-          '<span class="w-go">›</span></div>';
-      }).join(''):'<div class="all-clear"><span class="ac-ic">✦</span><span>Nothing pending. You are all caught up.</span></div>')+'</div></div>'+
+          '<span class="w-go">'+icn("chev")+'</span></div>';
+      }).join(''):'<div class="all-clear"><span class="ac-ic">'+icn("spark")+'</span><span>Nothing pending. You are all caught up.</span></div>')+'</div></div>'+
     '</div>';
   }
 
@@ -6483,12 +6542,12 @@ function heroStack(list){
       '</div>'+
     '</div>'+
     (list.length>1?'<div class="hero-nav">'+
-      '<button class="hn-b" data-hero="prev" aria-label="Previous event">‹</button>'+
+      '<button class="hn-b" data-hero="prev" aria-label="Previous event">'+icn("chevl")+'</button>'+
       '<div class="hn-dots">'+list.map(function(x,n){
         return '<button class="hn-d'+(n===i?' on':'')+'" data-heroi="'+n+'" '+
           'style="--d:'+eventTint(x.id)+'" aria-label="'+esc(x.title)+'"></button>';
       }).join('')+'</div>'+
-      '<button class="hn-b" data-hero="next" aria-label="Next event">›</button>'+
+      '<button class="hn-b" data-hero="next" aria-label="Next event">'+icn("chev")+'</button>'+
     '</div>':'')+
   '</div>';
 }
@@ -6667,9 +6726,9 @@ function viewPipeline(){
         :'Drag a card between stages')+'</span>'+
     '</div>'+
     '<div class="board-scroll">'+
-      '<button class="b-arrow b-prev" id="boardPrev" aria-label="Scroll stages left">‹</button>'+
+      '<button class="b-arrow b-prev" id="boardPrev" aria-label="Scroll stages left">'+icn("chevl")+'</button>'+
       '<div class="board" style="--cols:'+STAGES.length+'">'+cols+'</div>'+
-      '<button class="b-arrow b-next" id="boardNext" aria-label="Scroll stages right">›</button>'+
+      '<button class="b-arrow b-next" id="boardNext" aria-label="Scroll stages right">'+icn("chev")+'</button>'+
     '</div>';
 }
 function leadCard(l){
@@ -6962,7 +7021,7 @@ function viewClientDetail(id){
        '<input type="file" id="clientCoverInput" accept="image/*" hidden>'+
        '<input type="file" id="clientPhotoInput" accept="image/*" hidden>'+
        '<span class="dh-band-acts">'+
-         '<button type="button" class="dh-band-ed" id="clientCover">✎ '+
+         '<button type="button" class="dh-band-ed" id="clientCover">'+icn("pencil")+' '+
            (cover?'Replace cover':'Add a cover')+'</button>'+
          (l.cover?'<button type="button" class="dh-band-ed" id="clientCoverClear" '+
            'title="Go back to the event’s cover">Use the event’s</button>':'')+
@@ -6972,7 +7031,7 @@ function viewClientDetail(id){
            'title="'+(l.photo?'Replace the portrait':'Add a portrait')+'" '+
            (l.photo?'style="background-image:url('+l.photo+')"':'style="background:'+wash[0]+'"')+'>'+
            (l.photo?'':'<span>'+esc(initials)+'</span>')+
-           '<span class="dh-face-ed">✎</span>'+
+           '<span class="dh-face-ed">'+icn("pencil")+'</span>'+
          '</button>'+
          '<span class="dh-band-id">'+
            '<span class="dh-band-k">'+esc(l.type||'Client')+'</span>'+
@@ -6999,8 +7058,8 @@ function viewClientDetail(id){
        (l.guests?'<span class="pill">'+l.guests+' guests</span>':'')+
        (away>=0?'<span class="pill gold">'+away+' days away</span>':'<span class="pill">Completed</span>')+
        '<span style="flex:1"></span>'+
-       '<button class="btn btn-quiet btn-sm" id="editClient">✎ Edit details</button>'+
-       '<button class="btn btn-quiet btn-sm" id="clientBible">◈ Export bible</button>'+
+       '<button class="btn btn-quiet btn-sm" id="editClient">'+icn("pencil")+' Edit details</button>'+
+       '<button class="btn btn-quiet btn-sm" id="clientBible">'+icn("doc")+' Export bible</button>'+
      '</div>'+
    '</div>'+
   '<div class="stat-row">'+
@@ -7016,14 +7075,14 @@ function viewClientDetail(id){
     '<div style="padding:18px 20px 20px">'+
       (projs.length?'<div class="pj-grid">'+projs.map(projCard).join('')+'</div>'
         :'<div class="empty-hint">Nothing booked yet. A project is where the date, the guest list and the money live.</div>')+
-      '<div class="sec-actions"><button class="btn btn-ghost btn-sm" id="clientNewProj">＋ New project for them</button></div>'+
+      '<div class="sec-actions"><button class="btn btn-ghost btn-sm" id="clientNewProj">'+icn("plus")+'New project for them</button></div>'+
     '</div>',
     projs.length>1?'<span class="sec-badge">'+money(projs.reduce(function(a,e){
       return a+(e.budget||[]).reduce(function(n,b){ return n+(Number(b.est)||0); },0); },0))+' budgeted</span>':'')+
   '<div class="grid-2">'+
     '<div>'+
       '<div class="card" style="margin-bottom:20px"><div class="card-h"><h3>Contact</h3>'+
-        '<button class="btn btn-ghost btn-sm" id="editContact">✎ Edit</button></div><div style="padding:18px 22px">'+
+        '<button class="btn btn-ghost btn-sm" id="editContact">'+icn("pencil")+' Edit</button></div><div style="padding:18px 22px">'+
         (l.partnerA?'<div class="kv"><span>'+esc(l.type==='Wedding'?'Partner 1':'Primary contact')+'</span><b>'+esc(l.partnerA)+(l.pronounsA?' <em class="pron">'+esc(l.pronounsA)+'</em>':'')+'</b></div>':'')+
         (l.partnerB?'<div class="kv"><span>Partner 2</span><b>'+esc(l.partnerB)+(l.pronounsB?' <em class="pron">'+esc(l.pronounsB)+'</em>':'')+'</b></div>':'')+
         '<div class="kv"><span>Email</span><b>'+(l.email?'<a href="mailto:'+esc(l.email)+'">'+esc(l.email)+'</a>':'—')+'</b></div>'+
@@ -7065,7 +7124,7 @@ function viewClientDetail(id){
         '</div></div>':'')+
       '<div class="card"><div class="card-h"><h3>Documents</h3>'+
         '<span class="ev-h-r"><span class="pill">'+docs.length+'</span>'+
-        (ev?'<button class="btn btn-ghost btn-sm" id="clientDocUpload">⇪ Upload</button>':'')+'</span></div>'+
+        (ev?'<button class="btn btn-ghost btn-sm" id="clientDocUpload">'+icn("upload")+' Upload</button>':'')+'</span></div>'+
         '<div class="tbl-wrap"><table><tbody>'+(docs.length?docs.map(function(d){
           var st=DOCST[d.status]||DOCST.draft;
           var de=db.events.find(function(x){return x.id===d.eventId;});
@@ -7075,7 +7134,7 @@ function viewClientDetail(id){
               (d.file
                 ? '<button class="link-btn doc-open" data-id="'+esc(d.id)+'">'+esc(d.file.name)+'</button>'+
                   '<span class="df-m">'+fileSize(d.file.size)+(d.file.path?'':' · on this device only')+'</span>'
-                : '<button class="link-btn doc-add" data-id="'+esc(d.id)+'">＋ Attach a file</button>')+
+                : '<button class="link-btn doc-add" data-id="'+esc(d.id)+'">'+icn("plus")+'Attach a file</button>')+
             '</div></td>'+
             '<td style="text-align:right;vertical-align:top"><span class="status '+st.cls+'">'+st.lbl+'</span></td></tr>';
         }).join(''):'<tr><td style="color:var(--muted)">No documents yet.'+
@@ -7152,7 +7211,7 @@ function projRow(e){
     '<span class="pj-rg">'+(f.roster?f.yes+'/'+f.roster:'—')+'<span class="pj-rk">guests</span></span>'+
     '<span class="pj-rp"><span class="pj-bar"><i style="width:'+f.pct+'%"></i></span>'+
       '<span class="pj-rk">'+f.pct+'%</span></span>'+
-    '<span class="pj-go" aria-hidden="true">›</span>'+
+    '<span class="pj-go" aria-hidden="true">'+icn("chev")+'</span>'+
   '</button>';
 }
 /* Soonest first, and the ones already behind you at the end — a board you read
@@ -7179,14 +7238,14 @@ function projectBoard(){
               'role="tab" aria-selected="'+(mode===m[0])+'">'+m[1]+'</button>';
           }).join('')+
         '</span>'+
-        '<button class="btn btn-gold btn-sm" id="pjNew">＋ New project</button>'+
+        '<button class="btn btn-gold btn-sm" id="pjNew">'+icn("plus")+'New project</button>'+
       '</span>'+
     '</div>'+
     (g.live.length?wrap(g.live):
-      '<div class="pj-empty"><span class="pj-e-ic">✦</span>'+
+      '<div class="pj-empty"><span class="pj-e-ic">'+icn("spark","lg")+'</span>'+
       '<span class="pj-e-t">No projects yet</span>'+
       '<span class="pj-e-s">Every guest list, budget and timeline lives inside one. Start with the date and the names — the rest can wait.</span>'+
-      '<button class="btn btn-gold btn-sm" id="pjNew2">＋ New project</button></div>')+
+      '<button class="btn btn-gold btn-sm" id="pjNew2">'+icn("plus")+'New project</button></div>')+
     (g.past.length?'<div class="pj-sub">Finished</div>'+wrap(g.past):'');
 }
 function viewProjects(){ return viewStudio(projectBoard()); }
@@ -7259,7 +7318,7 @@ function wireEvents(){
            old key here would keep the old object on every other device. */
         ev.photo=dataUrl; ev.photoPath=null;
         if(!save()){ ev.photo=prev; ev.photoPath=prevPath; return; }
-        closeModal(); render(); toast('Cover updated ✦');
+        closeModal(); render(); toast('Cover updated');
       });
   };
   if(clbl)clbl.onkeydown=function(e){
@@ -7356,7 +7415,7 @@ function wireEvents(){
       state.chkTab=t.item.owner;
       save(); render(); wireEvents();
       var ev3=db.events.find(function(x){return x.id===state.eventId;});
-      toast(t.item.owner==='client'?('Assigned to '+clientTerm(ev3)+' — it shows in their portal ✦')
+      toast(t.item.owner==='client'?('Assigned to '+clientTerm(ev3)+' — it shows in their portal')
                                    :'Moved back to your list');
     };
   });
@@ -7434,7 +7493,7 @@ function viewEventDetail(id){
      because then it is navigation. When there is not, the offer moves to the
      foot of the page, which is where "and another thing" belongs. */
   var subFoot=(blk.length>1?'':'<div class="wknd-foot"><button type="button" class="ew-add" data-addsub="'+e.id+'">'+
-    '＋ Add a sub-event</button><span class="ew-h">Welcome party, rehearsal dinner, farewell brunch…</span></div>');
+    ''+icn("plus")+'Add a sub-event</button><span class="ew-h">Welcome party, rehearsal dinner, farewell brunch…</span></div>');
 
   /* The banner comes first. It is the header for this screen, so anything
      above it pushes the thing the page is about below the fold of the eye —
@@ -7589,14 +7648,14 @@ function viewEventDetail(id){
                 ?'Nothing assigned to '+esc(clientTerm(e))+' yet — open a task and use “Assign to '+esc(clientTerm(e))+'”.'
                 :'No tasks yet — apply a template to get started.')+'</div>');
           })()+
-          '<div class="sec-actions"><button class="btn btn-ghost btn-sm" data-addck="1">＋ Add task</button>'+
-          '<button class="btn btn-gold btn-sm" data-template="1">✦ Apply template</button></div>'+
+          '<div class="sec-actions"><button class="btn btn-ghost btn-sm" data-addck="1">'+icn("plus")+'Add task</button>'+
+          '<button class="btn btn-gold btn-sm" data-template="1">'+icn("spark")+' Apply template</button></div>'+
         '</div>','<span class="pill gold">'+pct+'%</span>')+
 
       evSection('timeline','Day-of Timeline',tlRows(e).length,
         '<div style="padding:20px 22px"><div class="tl">'+
           (tlRows(e).length?tlMarkup(e,true):'<div class="empty-hint">No running order yet.</div>')+
-        '</div><button class="btn btn-ghost btn-sm" data-addtl="1" style="margin-top:14px">＋ Add moment</button></div>')+
+        '</div><button class="btn btn-ghost btn-sm" data-addtl="1" style="margin-top:14px">'+icn("plus")+'Add moment</button></div>')+
 
       evSection('vendors','Vendor Team',vend.length,
         /* This used to point at the client file to "manage" the team. Bookings
@@ -7627,7 +7686,7 @@ function viewEventDetail(id){
           :'<div class="empty-hint">'+(evIsSub(e)?'Nobody invited yet — tick them on the guest list.':'No guests added yet.')+'</div>')+
         /* Checklist and Budget both had an add control here and Guests did
            not, so the only way in was the Guests view via the sidebar. */
-        '<div class="sec-actions"><button class="btn btn-ghost btn-sm" data-addguest="1">＋ Add guest</button>'+
+        '<div class="sec-actions"><button class="btn btn-ghost btn-sm" data-addguest="1">'+icn("plus")+'Add guest</button>'+
         '<button class="btn btn-ghost btn-sm" data-openguests="1">Open guest list ›</button></div>')+
     '</div>'+
 
@@ -7661,7 +7720,7 @@ function chkRow(c,e,open){
   return '<div class="chk-wrap'+(isOpen?' open':'')+'">'+
     '<div class="check '+(c.done?'done':'')+'" data-cid="'+c.id+'">'+
       '<div class="box" data-tick="'+c.id+'">'+(c.done?'✓':'')+'</div>'+
-      '<span class="lbl">'+esc(c.lbl)+(c.note?'<span class="has-note" title="Has notes">✎</span>':'')+'</span>'+
+      '<span class="lbl">'+esc(c.lbl)+(c.note?'<span class="has-note" title="Has notes">'+icn("pencil")+'</span>':'')+'</span>'+
       /* The two pills travel as one group, so when the row is too narrow for
          them they drop to their own line together and stay aligned instead of
          scattering after the text. */
@@ -7723,9 +7782,9 @@ function clientPanel(e,lead){
        whole reason to open the card. */
     '<div class="cp-acts">'+
       (lead.phone?'<a class="cp-a" href="tel:'+esc(String(lead.phone).replace(/[^\d+]/g,''))+'">'+
-        '<span class="cp-ic">☎</span>'+esc(fmtPhone(lead.phone))+'</a>':'')+
+        '<span class="cp-ic">'+icn("phone")+'</span>'+esc(fmtPhone(lead.phone))+'</a>':'')+
       (lead.email?'<a class="cp-a" href="mailto:'+esc(lead.email)+'">'+
-        '<span class="cp-ic">✉</span>'+esc(lead.email)+'</a>':'')+
+        '<span class="cp-ic">'+icn("mail")+'</span>'+esc(lead.email)+'</a>':'')+
       (!lead.phone&&!lead.email?'<span class="cp-none">No contact details yet.</span>':'')+
     '</div>'+
     (mine.length>1?'<div class="cp-more">'+mine.length+' projects with them — '+
@@ -7759,7 +7818,7 @@ function viewMoney(){
       stat('Committed',money(actT),money(estT)+' budgeted')+
     '</div>'+
     '<div class="card" style="margin-bottom:20px"><div class="card-h"><h3>Invoices</h3>'+
-      '<span class="ev-h-r"><button class="btn btn-ghost btn-sm" id="mnNew">＋ New invoice</button></span></div>'+
+      '<span class="ev-h-r"><button class="btn btn-ghost btn-sm" id="mnNew">'+icn("plus")+'New invoice</button></span></div>'+
       (inv.length?'<div class="tbl-wrap"><table><thead><tr><th>Invoice</th><th>Issued</th><th>Due</th><th>Status</th>'+
         '<th style="text-align:right">Amount</th></tr></thead><tbody>'+
         inv.map(function(x){
@@ -7782,9 +7841,9 @@ function viewMoney(){
         return '<div class="bud-row"><div class="cat">'+esc(b.cat)+'</div>'+
           '<div class="track"><div class="bar" style="height:10px"><i style="width:'+Math.min(100,aw)+'%"></i></div></div>'+
           '<div class="amt"><b>'+money(b.act)+'</b> / '+money(b.est)+'</div>'+rowActions('budget',b.id)+'</div>';
-      }).join('')+'<div class="sec-actions"><button class="btn btn-ghost btn-sm" data-addbl="1">＋ Add line</button></div></div>'
+      }).join('')+'<div class="sec-actions"><button class="btn btn-ghost btn-sm" data-addbl="1">'+icn("plus")+'Add line</button></div></div>'
       :'<div class="empty-hint" style="padding:26px">No budget lines yet.'+
-        '<div class="sec-actions" style="justify-content:center"><button class="btn btn-ghost btn-sm" data-addbl="1">＋ Add line</button></div></div>')+
+        '<div class="sec-actions" style="justify-content:center"><button class="btn btn-ghost btn-sm" data-addbl="1">'+icn("plus")+'Add line</button></div></div>')+
     '</div>';
 }
 function wireMoney(){
@@ -8144,7 +8203,7 @@ function viewGuests(){
        meant scrolling past the whole card to the guest list, finding her, and
        editing a field — so the action that belongs to this card lives on it,
        at the end, where you are when you think of the next name. */
-    '<div class="sec-actions"><button class="btn btn-ghost btn-sm" id="wpAdd">＋ Add to the wedding party</button></div>'+
+    '<div class="sec-actions"><button class="btn btn-ghost btn-sm" id="wpAdd">'+icn("plus")+'Add to the wedding party</button></div>'+
     '<div class="wp-foot"><b>'+total+'</b> standing up, in processional order. '+
       'The count beside each role is what the florist and the venue both ask for.</div></div>';
   })():'')+
@@ -8244,9 +8303,9 @@ function viewGuests(){
        added one, and scrolled back to where you were. It lives at the end of
        the list too now, which is where you are when you think of the next
        name. */
-    '<div class="sec-actions"><button class="btn btn-ghost btn-sm" id="addGuestFoot">＋ Add guest</button>'+
-      '<button class="btn btn-quiet btn-sm" id="importGuests">⇪ Import CSV</button>'+
-      '<button class="btn btn-quiet btn-sm" id="exportGuests">⇩ Export</button>'+
+    '<div class="sec-actions"><button class="btn btn-ghost btn-sm" id="addGuestFoot">'+icn("plus")+'Add guest</button>'+
+      '<button class="btn btn-quiet btn-sm" id="importGuests">'+icn("upload")+' Import CSV</button>'+
+      '<button class="btn btn-quiet btn-sm" id="exportGuests">'+icn("download")+' Export</button>'+
       (q?'<span class="sec-badge" style="margin-left:auto">'+g.length+' of '+all.length+' shown</span>':'')+
     '</div>'+
     (!sub&&subs.length?'<div class="inv-key">Tick to invite. <b>✓</b> attending · <b>✕</b> declined · <b>·</b> awaiting reply'+
@@ -8331,7 +8390,7 @@ function wireGuests(){
       if(!inviteOf(g.id,sub.id)){ setInvited(g,sub,true); n++; }
     });
     save(); render();
-    toast(n?(n+' added to the '+roleLabel(sub,true).toLowerCase()+' ✦'):'They were all invited already.');
+    toast(n?(n+' added to the '+roleLabel(sub,true).toLowerCase()+''):'They were all invited already.');
   };
   var ar=$('#wpAddReh');
   if(ar)ar.onclick=function(ev2){
@@ -8576,7 +8635,7 @@ function viewFloorPlan(ev){
 
   return '<div class="fp-wrap">'+
     '<div class="fp-toolbar">'+
-      '<button class="btn btn-ghost btn-sm" id="fpAddTable">＋ Table</button>'+
+      '<button class="btn btn-ghost btn-sm" id="fpAddTable">'+icn("plus")+'Table</button>'+
       '<select class="mini" id="fpAddFix" aria-label="Add a fixture"><option value="">＋ Add fixture…</option>'+
         Object.keys(FIXTURES).map(function(k){return '<option value="'+k+'">'+FIXTURES[k].label+'</option>';}).join('')+
       '</select>'+
@@ -8586,7 +8645,7 @@ function viewFloorPlan(ev){
       '<button class="btn btn-ghost btn-sm" id="fpRoom">Room size</button>'+
       '<span style="flex:1"></span>'+
       '<span class="fp-stat">'+(attending.length-unseated.length)+' of '+attending.length+' seated</span>'+
-      '<button class="btn btn-ghost btn-sm" id="fpPrint">⎙ Print</button>'+
+      '<button class="btn btn-ghost btn-sm" id="fpPrint">'+icn("print")+' Print</button>'+
     '</div>'+
     '<div class="fp-stage'+(f.snap?' grid':'')+'" id="fpStage" style="aspect-ratio:'+f.w+'/'+f.h+'">'+
       fixtures+tables+
@@ -8600,7 +8659,7 @@ function viewFloorPlan(ev){
       '<div style="padding:14px">'+(unseated.length?unseated.map(function(g){
         return '<div class="gchip" data-gid="'+esc(g.id)+'"><span class="gname">'+esc(g.name)+'</span>'+
           (g.diet?'<span class="gdiet">◆</span>':'')+'<span class="gparty">'+esc(g.party||'')+'</span></div>';
-      }).join(''):'<div class="empty-hint">Everyone is seated ✦</div>')+
+      }).join(''):'<div class="empty-hint">Everyone is seated.</div>')+
       '<div class="fp-side-note">Select a table to seat people.</div></div></div>');
 }
 function fpPanel(ev,sel){
@@ -8609,7 +8668,7 @@ function fpPanel(ev,sel){
     var i=ev.floor.items.find(function(x){return x.id===id;});
     if(!i)return '';
     return '<div class="card fp-side"><div class="card-h"><h3>'+esc(i.label||FIXTURES[i.kind].label)+'</h3>'+
-      '<button class="r-act" id="fpClose" aria-label="Close">✕</button></div>'+
+      '<button class="r-act" id="fpClose" aria-label="Close">'+icn("x")+'</button></div>'+
       '<div style="padding:16px 20px">'+
         '<div class="field"><label>Label</label><input id="fx_label" value="'+esc(i.label||'')+'"></div>'+
         '<div class="fgrid">'+
@@ -8626,7 +8685,7 @@ function fpPanel(ev,sel){
   var at=seatedAt(ev,t.id);
   var unseated=rosterFor(ev).filter(function(g){return gRsvp(g,ev)==='yes'&&!gTable(g,ev);});
   return '<div class="card fp-side"><div class="card-h"><h3>'+esc(t.name)+'</h3>'+
-    '<button class="r-act" id="fpClose" aria-label="Close">✕</button></div>'+
+    '<button class="r-act" id="fpClose" aria-label="Close">'+icn("x")+'</button></div>'+
     '<div style="padding:16px 20px">'+
       '<div class="fgrid">'+
         '<div class="field"><label>Name</label><input id="tb_name" value="'+esc(t.name)+'"></div>'+
@@ -8656,7 +8715,7 @@ function fpPanel(ev,sel){
       '<div class="fp-seatlist"><div class="fp-sl-h">Seated · '+at.length+' of '+t.seats+'</div>'+
         (at.length?at.map(function(g){
           return '<div class="fp-guest"><span>'+esc(g.name)+'</span>'+
-            '<button class="r-act" data-unseat="'+esc(g.id)+'" aria-label="Unseat">✕</button></div>';
+            '<button class="r-act" data-unseat="'+esc(g.id)+'" aria-label="Unseat">'+icn("x")+'</button></div>';
         }).join(''):'<div class="empty-hint" style="padding:12px">Nobody seated yet</div>')+
       '</div>'+
       (at.length<t.seats&&unseated.length?
@@ -8879,7 +8938,7 @@ function viewSeating(){
   '</div>'+
   '<div class="seat-wrap'+(pick?' picking':'')+'">'+
     '<div class="card unseated-col" id="unseatedCol" data-table="none"><div class="card-h"><h3>Unseated</h3><span class="pill">'+unseated.length+'</span></div>'+
-      '<div style="padding:14px">'+ (unseated.length?unseated.map(function(g){return guestChip(g,e.tables,e);}).join(''):'<div style="color:var(--muted);font-size:13px;text-align:center;padding:20px 0">Everyone is seated ✦</div>') +'</div></div>'+
+      '<div style="padding:14px">'+ (unseated.length?unseated.map(function(g){return guestChip(g,e.tables,e);}).join(''):'<div style="color:var(--muted);font-size:13px;text-align:center;padding:20px 0">Everyone is seated.</div>') +'</div></div>'+
     '<div class="tables-grid">'+e.tables.map(function(t){
       var at=attending.filter(function(g){return gTable(g,e)===t.id;});
       var full=at.length>=t.seats;
@@ -9339,7 +9398,7 @@ function viewVendors(){
     (list.length?list.map(function(v){
       var bk=bookingsForVendor(v.id);
       var total=bk.reduce(function(a,b){return a+b.fee;},0);
-      return '<tr><td><b>'+esc(v.name)+'</b>'+(v.preferred?' <span class="pref">✦ Preferred</span>':'')+
+      return '<tr><td><b>'+esc(v.name)+'</b>'+(v.preferred?' <span class="pref">Preferred</span>':'')+
           (v.notes?'<div class="v-sub">'+esc(v.notes)+'</div>':'')+'</td>'+
         '<td><span class="pill">'+esc(v.cat||'—')+'</span></td>'+
         '<td>'+esc(v.contact||'—')+
@@ -9375,7 +9434,7 @@ function vendorTeamMarkup(ev,editable){
   var total=bk.reduce(function(a,b){return a+b.fee;},0);
   if(!bk.length){
     return '<div class="empty-hint" style="padding:26px 20px">No vendors booked yet.'+
-      (editable?'<div class="sec-actions" style="justify-content:center"><button class="btn btn-ghost btn-sm" data-addbooking="'+esc(ev.id)+'">＋ Book a vendor</button></div>':'')+'</div>';
+      (editable?'<div class="sec-actions" style="justify-content:center"><button class="btn btn-ghost btn-sm" data-addbooking="'+esc(ev.id)+'">'+icn("plus")+'Book a vendor</button></div>':'')+'</div>';
   }
   /* The one table in the app with no header row that still needs the phone
      card layout: a vendor name, a status picker and the row actions come to
@@ -9396,7 +9455,7 @@ function vendorTeamMarkup(ev,editable){
         (editable?'<td style="width:70px;text-align:right">'+rowActions('booking',b.id)+'</td>':'')+
       '</tr>';
     }).join('')+'</tbody></table></div>'+
-    (editable?'<div class="sec-actions"><button class="btn btn-ghost btn-sm" data-addbooking="'+esc(ev.id)+'">＋ Book a vendor</button>'+
+    (editable?'<div class="sec-actions"><button class="btn btn-ghost btn-sm" data-addbooking="'+esc(ev.id)+'">'+icn("plus")+'Book a vendor</button>'+
       '<span class="sec-badge" style="margin-left:auto">'+money(total)+' total</span></div>':'');
 }
 /* "Beauty" was one box for a trade a planner books by name — the hair and
@@ -9476,7 +9535,7 @@ function openBookingModal(eventId,existing){
       else { db.bookings.push({id:uid('bk'),eventId:eventId,vendorId:vid,
                                status:v.status||'quote',fee:v.fee,notes:v.notes}); }
       closeModal(); afterChange();
-      if(v.vendorId==='__new')toast('Added to your directory and booked to this event ✦');
+      if(v.vendorId==='__new')toast('Added to your directory and booked to this event');
     }
   });
 }
@@ -9493,12 +9552,12 @@ function viewDesign(){
         '<div class="sw-name">'+esc(c.name)+'</div><div class="sw-hex">'+esc(c.hex.toUpperCase())+'</div></div>';
     }).join('')+'</div></div>'+
   '<div class="card" style="margin-bottom:20px"><div class="card-h"><h3>Mood Boards</h3>'+
-    '<button class="btn btn-ghost btn-sm" id="newBoard">＋ New board</button></div>'+
+    '<button class="btn btn-ghost btn-sm" id="newBoard">'+icn("plus")+'New board</button></div>'+
     '<div class="boards">'+d.boards.map(function(b){
       var cover=b.images&&b.images.length?b.images[0].src:null;
       return '<div class="board board-link" data-board="'+esc(b.id)+'" tabindex="0" role="link">'+
         '<div class="board-img" style="'+(cover?'background-image:url('+cover+');background-size:cover;background-position:center':'background:'+esc(b.tone))+'">'+
-          '<span class="board-count">'+((b.images||[]).length)+' ◈</span></div>'+
+          '<span class="board-count">'+((b.images||[]).length)+' photos</span></div>'+
         '<div class="board-b"><div class="board-t">'+esc(b.title)+'</div><div class="board-n">'+esc(b.note)+'</div>'+
         '<div class="board-meta">'+((b.swatches||[]).length)+' swatches · '+((b.ideas||[]).length)+' ideas</div></div></div>';
     }).join('')+
@@ -9594,8 +9653,8 @@ function boardWall(b){
     var head='data-tile="'+esc(t.k+':'+t.id)+'" data-i="'+i+'"';
     /* Every tile can be nudged along the wall, whatever kind it is — that is
        the arrangement control on a phone, where dragging fights the scroll. */
-    var nudge=(i>0?'<button type="button" class="mb-a" data-mv="'+esc(t.k+':'+t.id)+'" data-dir="-1" title="Move earlier" aria-label="Move earlier">‹</button>':'')+
-              (i<list.length-1?'<button type="button" class="mb-a" data-mv="'+esc(t.k+':'+t.id)+'" data-dir="1" title="Move later" aria-label="Move later">›</button>':'');
+    var nudge=(i>0?'<button type="button" class="mb-a" data-mv="'+esc(t.k+':'+t.id)+'" data-dir="-1" title="Move earlier" aria-label="Move earlier">'+icn("chevl")+'</button>':'')+
+              (i<list.length-1?'<button type="button" class="mb-a" data-mv="'+esc(t.k+':'+t.id)+'" data-dir="1" title="Move later" aria-label="Move later">'+icn("chev")+'</button>':'');
     if(t.k==='img'){
       var im=t.ref;
       return '<figure class="mb-t mb-img'+(span===2?' feat':'')+'" '+head+' tabindex="0">'+
@@ -9604,7 +9663,7 @@ function boardWall(b){
         '<span class="mb-acts">'+
           '<button type="button" class="mb-a" data-span="'+esc(im.id)+'" title="'+(span===2?'Make it one column':'Make it two columns wide')+'" aria-label="Change size">'+(span===2?'▭':'▬')+'</button>'+
           nudge+
-          '<button type="button" class="mb-a" data-delimg="'+esc(im.id)+'" title="Remove" aria-label="Remove photo">✕</button>'+
+          '<button type="button" class="mb-a" data-delimg="'+esc(im.id)+'" title="Remove" aria-label="Remove photo">'+icn("x")+'</button>'+
         '</span>'+
       '</figure>';
     }
@@ -9619,13 +9678,13 @@ function boardWall(b){
           '<button type="button" class="mb-hex" data-copyhex="'+esc(hex)+'" title="Copy '+esc(hex)+'">'+esc(hex)+'</button>'+
         '</span>'+
         '<span class="mb-acts">'+nudge+
-          '<button type="button" class="mb-a" data-delsw="'+t.idx+'" title="Remove" aria-label="Remove colour">✕</button></span>'+
+          '<button type="button" class="mb-a" data-delsw="'+t.idx+'" title="Remove" aria-label="Remove colour">'+icn("x")+'</button></span>'+
       '</div>';
     }
     return '<div class="mb-t mb-note" '+head+' tabindex="0">'+
       '<span class="mb-nt">'+esc(t.ref.text||t.ref.body||'')+'</span>'+
       '<span class="mb-acts">'+nudge+
-        '<button type="button" class="mb-a" data-delidea="'+esc(t.id)+'" title="Remove" aria-label="Remove note">✕</button></span>'+
+        '<button type="button" class="mb-a" data-delidea="'+esc(t.id)+'" title="Remove" aria-label="Remove note">'+icn("x")+'</button></span>'+
     '</div>';
   });
   if(!tiles.length)return '';
@@ -9648,9 +9707,9 @@ function viewBoardDetail(id){
     '<div class="card-h"><h3>The Board</h3>'+
       '<span class="ev-h-r">'+
         (bits.length?'<span class="sec-badge">'+esc(bits.join(' · '))+'</span>':'')+
-        '<button class="btn btn-ghost btn-sm" id="addBoardSwatch">＋ Colour</button>'+
-        '<button class="btn btn-ghost btn-sm" id="addBoardNote">＋ Note</button>'+
-        '<button class="btn btn-ghost btn-sm" id="addBoardPhoto">＋ Photos</button>'+
+        '<button class="btn btn-ghost btn-sm" id="addBoardSwatch">'+icn("plus")+'Colour</button>'+
+        '<button class="btn btn-ghost btn-sm" id="addBoardNote">'+icn("plus")+'Note</button>'+
+        '<button class="btn btn-ghost btn-sm" id="addBoardPhoto">'+icn("plus")+'Photos</button>'+
       '</span>'+
     '</div>'+
     '<div class="mb-body">'+
@@ -9662,7 +9721,7 @@ function viewBoardDetail(id){
          there is anything to look at. */
       '<label class="dropzone'+(b.images.length?' slim':'')+'" id="dropzone" tabindex="0">'+
         '<input type="file" id="imgInput" accept="image/*" multiple hidden>'+
-        '<span class="dz-ic">✦</span>'+
+        '<span class="dz-ic">'+icn("spark","lg")+'</span>'+
         '<span class="dz-t">'+(b.images.length?'Add more photos':'Add reference photos')+'</span>'+
         '<span class="dz-s">Drag images here, or tap to choose</span>'+
       '</label>'+
@@ -9891,7 +9950,7 @@ function wireBoardDetail(){
           added++;
         }
         if(--pending===0){
-          if(added&&save()) toast(added+(added>1?' photos added ✦':' photo added ✦'));
+          if(added&&save()) toast(added+(added>1?' photos added':' photo added'));
           else if(added) b.images.splice(-added);   // quota refused: roll back
           render();
         }
@@ -9961,7 +10020,7 @@ function wireBoardDetail(){
       e.preventDefault(); e.stopPropagation();
       var h=x.dataset.copyhex;
       if(navigator.clipboard&&navigator.clipboard.writeText)navigator.clipboard.writeText(h);
-      toast(h+' copied ✦');
+      toast(h+' copied');
     };
   });
   /* Pictures arrive at their own pace, and each one changes the height of the
@@ -10138,7 +10197,7 @@ function openDayModal(iso){
     '</div>'+
     '<div class="modal-actions">'+
       '<button class="btn btn-ghost" id="mCancel">Close</button>'+
-      (projs.length?'<button class="btn btn-gold" id="dayAdd">＋ Add a task</button>':'')+
+      (projs.length?'<button class="btn btn-gold" id="dayAdd">'+icn("plus")+'Add a task</button>':'')+
     '</div>';
   ov.classList.add('show');
   $('#mCancel').onclick=closeModal;
@@ -10166,7 +10225,7 @@ function openDayModal(iso){
           due:iso,owner:v.owner||'planner'});
         t.checklist.sort(function(a,b){ return (a.due||'9999')<(b.due||'9999')?-1:1; });
         closeModal(); afterChange();
-        toast('Added to '+t.title+' for '+fmtDate(iso)+' ✦');
+        toast('Added to '+t.title+' for '+fmtDate(iso)+'');
       }});
   };
 }
@@ -10332,7 +10391,7 @@ function uploadDocFor(eventId,after){
         closeModal();
         /* docAttach saves and re-renders once the blob is in IndexedDB. */
         docAttach(d.id,f);
-        toast(raised?('Filed, and raised '+raised.num+' ✦'):('Filed under '+docTypeLabel(v.type)));
+        toast(raised?('Filed, and raised '+raised.num+''):('Filed under '+docTypeLabel(v.type)));
       }
     });
   };
@@ -10363,8 +10422,8 @@ function viewDocuments(){
             ? '<div class="doc-file"><button class="link-btn doc-open" data-id="'+esc(d.id)+'">'+
               esc(d.file.name)+'</button><span class="df-m">'+fsz+
               (d.file.path?'':' · on this device only')+'</span>'+
-              '<button class="r-act r-del doc-drop" data-id="'+esc(d.id)+'" aria-label="Remove file" title="Remove file">✕</button></div>'
-            : '<div class="doc-file"><button class="link-btn doc-add" data-id="'+esc(d.id)+'">＋ Attach a file</button></div>')+
+              '<button class="r-act r-del doc-drop" data-id="'+esc(d.id)+'" aria-label="Remove file" title="Remove file">'+icn("x")+'</button></div>'
+            : '<div class="doc-file"><button class="link-btn doc-add" data-id="'+esc(d.id)+'">'+icn("plus")+'Attach a file</button></div>')+
           '</td>'+
           '<td><span class="pill">'+esc(docTypeLabel(d.type))+'</span></td>'+
           '<td>'+(d.sent?fmtDate(d.sent):'<span style="color:var(--muted)">—</span>')+'</td>'+
@@ -10417,7 +10476,7 @@ function wireDocuments(){
   document.querySelectorAll('.doc-send').forEach(function(b){
     b.onclick=function(){
       var d=db.documents.find(function(x){return x.id===b.dataset.id;});
-      if(d){d.status='sent';d.sent=todayISO();save();render();wireDocuments();toast('Sent for signature ✦');}
+      if(d){d.status='sent';d.sent=todayISO();save();render();wireDocuments();toast('Sent for signature');}
     };
   });
   document.querySelectorAll('.doc-sign').forEach(function(b){
@@ -10540,7 +10599,7 @@ function wireClientDetail(){
           '<span class="status '+(r.claimed_at?'s-paid':'s-due')+'">'+
             (r.claimed_at?'Signed in':'Invited')+'</span>'+
           (r.source==='client'?'<span class="pill">added by '+esc(clientTerm(pev))+'</span>':'')+
-          '<button class="r-act r-del" data-revoke="'+esc(r.email)+'" aria-label="Revoke">✕</button></div>';
+          '<button class="r-act r-del" data-revoke="'+esc(r.email)+'" aria-label="Revoke">'+icn("x")+'</button></div>';
       }).join('');
       box.querySelectorAll('[data-revoke]').forEach(function(b){
         b.onclick=function(e2){ e2.stopPropagation();
@@ -10641,7 +10700,7 @@ function wireClientDetail(){
            handler never got. */
         l.photo=dataUrl; l.photoPath=null;
         if(!save()){ l.photo=prev; l.photoPath=prevPath; return; }
-        closeModal(); render(); toast('Photo updated ✦');
+        closeModal(); render(); toast('Photo updated');
       });
   };
 
@@ -10726,7 +10785,7 @@ function viewQuestionnaireDetail(id){
   '</div>'+
   '<div class="q-sheet">'+
     '<div class="q-sheet-h"><span>Questions &amp; Responses</span>'+
-      '<button class="btn btn-ghost btn-sm" id="addQuestion">＋ Question</button></div>'+
+      '<button class="btn btn-ghost btn-sm" id="addQuestion">'+icn("plus")+'Question</button></div>'+
     (q.questions.length?q.questions.map(function(x,i){
       var a=q.answers[x.id];
       return '<article class="qa'+(a?' answered':'')+'">'+
@@ -10739,7 +10798,7 @@ function viewQuestionnaireDetail(id){
           (a?'<blockquote class="qa-a">'+esc(a)+'</blockquote>'
             :'<div class="qa-a empty">Awaiting the client’s answer</div>')+
         '</div>'+
-        '<button class="qa-x" data-delq="'+esc(x.id)+'" aria-label="Remove question">✕</button>'+
+        '<button class="qa-x" data-delq="'+esc(x.id)+'" aria-label="Remove question">'+icn("x")+'</button>'+
       '</article>';
     }).join(''):'<div class="empty-hint" style="padding:44px 20px">No questions yet — add your first.</div>')+
   '</div>';
@@ -10748,7 +10807,7 @@ function wireQuestionnaires(){
   var sq=$('#sendQ');
   if(sq)sq.onclick=function(){
     var q=db.questionnaires.find(function(x){return x.id===state.qId;});
-    if(q){q.status='sent';save();render();wireQuestionnaires();toast('Sent to client ✦');}
+    if(q){q.status='sent';save();render();wireQuestionnaires();toast('Sent to client');}
   };
   var aq=$('#addQuestion'); if(aq)aq.onclick=openQuestionModal;
   document.querySelectorAll('[data-delq]').forEach(function(b){
@@ -10812,7 +10871,7 @@ function wireInquiries(){
       db.leads.unshift({id:uid('l'),names:s.names,type:s.type,date:s.date||'2027-01-01',venue:'TBD',
         value:0,stage:'inquiry',guests:s.guests||0,email:s.email,phone:s.phone,notes:s.message});
       s.status='converted';
-      save();render();wireInquiries();toast(s.names+' added to your pipeline ✦');
+      save();render();wireInquiries();toast(s.names+' added to your pipeline');
     };
   });
   document.querySelectorAll('[data-archive]').forEach(function(b){
@@ -10918,6 +10977,8 @@ function applyBrand(){
   root.setProperty('--gold-deep',   hsl(a.h,Math.min(a.s+4,95),Math.max(a.l-13,16)));
   root.setProperty('--gold-soft',   hsl(a.h,Math.max(a.s-22,12),Math.min(a.l+42,95)));
   root.setProperty('--gold-line',   hslA(a.h,a.s,a.l,.28));
+  root.setProperty('--gold-fill',   hsl(a.h,Math.min(a.s+4,90),Math.max(a.l-9,18)));
+  root.setProperty('--gold-press',  hsl(a.h,Math.min(a.s+4,90),Math.max(a.l-16,13)));
   root.setProperty('--gold-grad',
     'linear-gradient(145deg,'+hsl(a.h,Math.min(a.s+6,95),Math.min(a.l+16,84))+' 0%,'+
     hsl(a.h,a.s,a.l)+' 42%,'+hsl(a.h,Math.min(a.s+4,95),Math.max(a.l-10,18))+' 100%)');
@@ -10985,7 +11046,7 @@ function applyBrand(){
   tc.setAttribute('content',hslToHex(H(6), Math.min(t.s+5,55), Math.min(t.l+6,97.5)));
 
   // ink follows the tint's hue a touch so nothing looks pasted on
-  var ink=hexToHsl(p.ink||'#3B2E33');
+  var ink=hexToHsl(p.ink||'#332629');
   root.setProperty('--ink',      hsl(ink.h,ink.s,ink.l));
   root.setProperty('--shade-1',  hslRgb(ink.h,ink.s,ink.l));
   root.setProperty('--ink-soft', hsl(ink.h,Math.max(ink.s-3,4),Math.min(ink.l+16,52)));
@@ -11016,7 +11077,7 @@ function applyBrand(){
    second row is deliberately cooler, darker and more neutral. Any of them is
    only a starting point: the three pickers underneath take anything. */
 var BRAND_PRESETS=[
-  {id:'champagne',name:'Champagne & Blush',accent:'#B08D3E',tint:'#F2DFE1',ink:'#3B2E33',group:'soft'},
+  {id:'champagne',name:'Champagne & Blush',accent:'#B08D3E',tint:'#F2DFE1',ink:'#332629',group:'soft'},
   {id:'sage',     name:'Sage & Ivory',      accent:'#7C8C6A',tint:'#E6E9DF',ink:'#2F352C',group:'soft'},
   {id:'midnight', name:'Midnight & Gold',   accent:'#C2A052',tint:'#DDDFE6',ink:'#23262E',group:'soft'},
   {id:'terracotta',name:'Terracotta & Cream',accent:'#B4643F',tint:'#F0E2D6',ink:'#38271F',group:'soft'},
@@ -11082,7 +11143,7 @@ function prefs(){
     brandMark:d.brandMark||'GEM',
     accent:d.accent||'#B08D3E',
     tint:d.tint||'#F2DFE1',
-    ink:d.ink||'#3B2E33',
+    ink:d.ink||'#332629',
     portalWelcome:d.portalWelcome||'',
     portalHost:d.portalHost||'',
     sbUrl:d.sbUrl||'https://dqntxdhzcieycifzjzwc.supabase.co',
@@ -11130,9 +11191,9 @@ var ROLE_CAN={
 var SET_PAGES=[
   {g:'Studio',items:[
     {k:'business',icon:'◆',t:'Business profile',d:'Name, contact details and letterhead'},
-    {k:'branding',icon:'◈',t:'Branding',d:'Your logo, colours and how clients see you'},
+    {k:'branding',icon:icn('spark'),t:'Branding',d:'Your logo, colours and how clients see you'},
     {k:'pipeline',icon:'▥',t:'Pipeline stages',d:'Rename, reorder and colour your booking flow'},
-    {k:'templates',icon:'✦',t:'Templates',d:'Task countdowns and document boilerplate'},
+    {k:'templates',icon:icn('spark'),t:'Templates',d:'Task countdowns and document boilerplate'},
     {k:'fields',icon:'▤',t:'Custom fields',d:'Extra details you track on clients and events'},
     {k:'team',icon:'◉',t:'Team & roles',d:'Who has access and what they can do'}
   ]},
@@ -11177,7 +11238,7 @@ function viewSettings(){
         return '<button class="set-item" data-setpage="'+it.k+'">'+
           '<span class="set-ic">'+it.icon+'</span>'+
           '<span class="set-tx"><b>'+esc(it.t)+'</b><em>'+esc(it.d)+'</em></span>'+
-          '<span class="set-ch">›</span></button>';
+          '<span class="set-ch">'+icn("chev")+'</span></button>';
       }).join('')+'</div></div>';
   }).join('')+'</div>';
 }
@@ -11220,9 +11281,9 @@ function settingsPage(k){
         return '<div class="set-row team-row"><div class="set-rl"><span>'+esc(m.name)+'</span><em>'+esc(m.email)+'</em></div>'+
           '<div class="set-rc"><select class="mini" data-role="'+esc(m.id)+'" aria-label="Role for '+esc(m.name)+'">'+
             Object.keys(ROLES).map(function(r){return '<option value="'+r+'"'+(m.role===r?' selected':'')+'>'+ROLES[r]+'</option>';}).join('')+
-          '</select>'+(m.role==='owner'?'':'<button class="r-act r-del" data-rmteam="'+esc(m.id)+'" aria-label="Remove">✕</button>')+'</div></div>';
+          '</select>'+(m.role==='owner'?'':'<button class="r-act r-del" data-rmteam="'+esc(m.id)+'" aria-label="Remove">'+icn("x")+'</button>')+'</div></div>';
       }).join('')+'</div>'+
-      '<button class="btn btn-ghost btn-sm" id="addTeam" style="margin-top:12px">＋ Invite someone</button>'+
+      '<button class="btn btn-ghost btn-sm" id="addTeam" style="margin-top:12px">'+icn("plus")+'Invite someone</button>'+
       '<div class="set-card" style="margin-top:20px">'+Object.keys(ROLES).map(function(r){
         return '<div class="set-row"><div class="set-rl"><span>'+ROLES[r]+'</span><em>'+esc(ROLE_CAN[r])+'</em></div></div>';
       }).join('')+'</div></div>';
@@ -11391,10 +11452,10 @@ function settingsPage(k){
           '<input type="color" class="sr-clr" data-scolor="'+esc(x.id)+'" value="'+esc(x.color)+'" aria-label="Colour for '+esc(x.name)+'">'+
           '<input class="set-in sr-name" data-sname="'+esc(x.id)+'" value="'+esc(x.name)+'">'+
           '<span class="sr-n">'+n+' lead'+(n===1?'':'s')+'</span>'+
-          (st.length>2?'<button class="r-act r-del" data-sdel="'+esc(x.id)+'" aria-label="Remove stage">✕</button>':'')+
+          (st.length>2?'<button class="r-act r-del" data-sdel="'+esc(x.id)+'" aria-label="Remove stage">'+icn("x")+'</button>':'')+
         '</div>';
       }).join('')+'</div>'+
-      '<div class="sec-actions"><button class="btn btn-ghost btn-sm" id="addStage">＋ Add stage</button>'+
+      '<div class="sec-actions"><button class="btn btn-ghost btn-sm" id="addStage">'+icn("plus")+'Add stage</button>'+
         '<button class="btn btn-ghost btn-sm" id="resetStages">Restore defaults</button></div>'+
     '</div>';
   }
@@ -11414,18 +11475,18 @@ function settingsPage(k){
           return '<div class="set-row"><div class="set-rl"><span>'+esc(t.name)+'</span>'+
             '<em>'+t.items.length+' tasks · yours</em></div>'+
             '<div class="set-rc"><span class="pill gold">Custom</span>'+
-            '<button class="r-act r-del" data-deltpl="'+esc(t.id)+'" aria-label="Delete template">✕</button></div></div>';
+            '<button class="r-act r-del" data-deltpl="'+esc(t.id)+'" aria-label="Delete template">'+icn("x")+'</button></div></div>';
         }).join(''):'')+
       '</div>'+
-      '<div class="set-note" style="margin-top:10px">To save your own: open an event whose checklist you like, then <b>Checklist → ✦ Apply template → Save this checklist</b>.</div>'+
+      '<div class="set-note" style="margin-top:10px">To save your own: open an event whose checklist you like, then <b>Checklist → Apply template → Save this checklist</b>.</div>'+
       '<div class="set-gh" style="margin-top:24px">Document templates</div>'+
       '<div class="set-card">'+(dt.length?dt.map(function(t){
         return '<div class="set-row"><div class="set-rl"><span>'+esc(t.title)+'</span>'+
           '<em>'+esc(t.type)+(t.amount?' · '+money(t.amount):'')+'</em></div>'+
-          '<div class="set-rc"><button class="r-act" data-editdoctpl="'+esc(t.id)+'" aria-label="Edit">✎</button>'+
-          '<button class="r-act r-del" data-deldoctpl="'+esc(t.id)+'" aria-label="Delete">✕</button></div></div>';
+          '<div class="set-rc"><button class="r-act" data-editdoctpl="'+esc(t.id)+'" aria-label="Edit">'+icn("pencil")+'</button>'+
+          '<button class="r-act r-del" data-deldoctpl="'+esc(t.id)+'" aria-label="Delete">'+icn("x")+'</button></div></div>';
       }).join(''):'<div class="empty-hint" style="padding:24px">No document templates yet.</div>')+'</div>'+
-      '<div class="sec-actions"><button class="btn btn-ghost btn-sm" id="addDocTpl">＋ New document template</button></div>'+
+      '<div class="sec-actions"><button class="btn btn-ghost btn-sm" id="addDocTpl">'+icn("plus")+'New document template</button></div>'+
     '</div>';
   }
   if(k==='fields'){
@@ -11441,10 +11502,10 @@ function settingsPage(k){
           '<div class="set-card">'+(list.length?list.map(function(f){
             return '<div class="set-row"><div class="set-rl"><span>'+esc(f.label)+'</span>'+
               '<em>'+esc(FIELD_KINDS[f.kind]||f.kind)+(f.options&&f.options.length?' · '+f.options.map(esc).join(' / '):'')+'</em></div>'+
-              '<div class="set-rc"><button class="r-act" data-editfield="'+esc(f.id)+'" aria-label="Edit">✎</button>'+
-              '<button class="r-act r-del" data-delfield="'+esc(f.id)+'" aria-label="Delete">✕</button></div></div>';
+              '<div class="set-rc"><button class="r-act" data-editfield="'+esc(f.id)+'" aria-label="Edit">'+icn("pencil")+'</button>'+
+              '<button class="r-act r-del" data-delfield="'+esc(f.id)+'" aria-label="Delete">'+icn("x")+'</button></div></div>';
           }).join(''):'<div class="empty-hint" style="padding:22px">Nothing extra yet.</div>')+'</div>'+
-          '<div class="sec-actions"><button class="btn btn-ghost btn-sm" data-addfield="'+ent+'">＋ Add field</button></div>';
+          '<div class="sec-actions"><button class="btn btn-ghost btn-sm" data-addfield="'+ent+'">'+icn("plus")+'Add field</button></div>';
       }).join('')+
     '</div>';
   }
@@ -11820,7 +11881,7 @@ function wireSettings(){
                options:Object.keys(ROLES).filter(function(r){return r!=='owner';})
                  .map(function(r){return {value:r,label:ROLES[r]};})}],
       onSave:function(v){ p.team.push({id:uid('tm'),name:v.name,email:v.email,role:v.role||'assistant'});
-        savePrefs(); closeModal(); render(); toast('Invitation queued ✦'); }});
+        savePrefs(); closeModal(); render(); toast('Invitation queued'); }});
   };
   var vp=$('#viewPortal'); if(vp)vp.onclick=function(){ setView('portal'); };
 
@@ -11954,7 +12015,7 @@ function wireSettings(){
         function(url){
           var prev=p.logo; p.logo=url;
           if(!savePrefsSafe()){ p.logo=prev; return; }
-          closeModal(); applyBrand(); render(); toast('Logo updated ✦');
+          closeModal(); applyBrand(); render(); toast('Logo updated');
         });
     };
   }
@@ -11976,12 +12037,12 @@ function wireSettings(){
       var pr=BRAND_PRESETS.find(function(x){return x.id===b.dataset.preset;});
       if(!pr)return;
       p.accent=pr.accent; p.tint=pr.tint; p.ink=pr.ink;
-      savePrefs(); applyBrand(); render(); toast(pr.name+' applied ✦');
+      savePrefs(); applyBrand(); render(); toast(pr.name+' applied');
     };
   });
   var br=$('#b_reset');
   if(br)br.onclick=function(){
-    p.accent='#B08D3E'; p.tint='#F2DFE1'; p.ink='#3B2E33';
+    p.accent='#B08D3E'; p.tint='#F2DFE1'; p.ink='#332629';
     savePrefs(); applyBrand(); render();
   };
 
@@ -12072,7 +12133,7 @@ function wireSettings(){
   var sbGo=function(mode,btn){
     btn.disabled=true; sbSay('wait',mode==='up'?'Creating your account…':'Signing in…');
     sbAuthGo(mode,($('#s_sbEmail')||{}).value,($('#s_sbPw')||{}).value).then(function(r){
-      if(r==='in'){ toast('Signed in ✦'); render(); }
+      if(r==='in'){ toast('Signed in'); render(); }
       else sbSay('ok','Account created. Confirm the email we just sent, then sign in.');
     }).catch(function(e){ sbSay('bad',e.message); })
       .then(function(){ btn.disabled=false; });
@@ -12112,7 +12173,7 @@ function wireSettings(){
       if(mk)mk.onclick=function(){
         mk.disabled=true;
         sbCreateOrg(prefs().bizName||'My Studio')
-          .then(function(){ toast('Studio created ✦'); render(); })
+          .then(function(){ toast('Studio created'); render(); })
           .catch(function(e){ sbSay('bad',e.message); mk.disabled=false; });
       };
     }).catch(function(e){ orgEl.className='pill'; orgEl.textContent='error'; sbSay('bad',e.message); });
@@ -12141,7 +12202,7 @@ function wireSettings(){
       sbResolveOrg().then(function(id){
         if(!id)throw new Error('Create your studio first.');
         return sbPull();
-      }).then(function(){ toast('Workspace downloaded ✦'); render(); })
+      }).then(function(){ toast('Workspace downloaded'); render(); })
         .catch(function(e){ sbSay('bad',e.message); })
         .then(function(){ sbPl.disabled=false; });
     });
@@ -12151,7 +12212,7 @@ function wireSettings(){
   if(ws)ws.onclick=function(){
     confirmDelete('the sample wedding and everything attached to it',function(){
       var n=removeSampleData();
-      toast(n+' sample records removed ✦');
+      toast(n+' sample records removed');
       render();
     });
   };
@@ -12219,7 +12280,7 @@ function wireSettings(){
       if(cp)cp.onclick=function(){
         var txt=JSON.stringify(d,null,2);
         (navigator.clipboard?navigator.clipboard.writeText(txt):Promise.reject())
-          .then(function(){ toast('Report copied — paste it to us ✦'); })
+          .then(function(){ toast('Report copied — paste it to us'); })
           .catch(function(){ toast('Select the table and copy it manually.'); });
       };
       /* Offered right here because the moment someone runs this is the moment a
@@ -12249,7 +12310,7 @@ function wireSettings(){
     a.href=url; a.download='glimmer-gem-backup-'+new Date().toISOString().slice(0,10)+'.json';
     document.body.appendChild(a); a.click(); a.remove();
     setTimeout(function(){URL.revokeObjectURL(url);},800);
-    toast('Backup downloaded ✦');
+    toast('Backup downloaded');
   };
   var im=$('#s_import'), imf=$('#s_importFile');
   if(im&&imf){
@@ -12268,7 +12329,7 @@ function wireSettings(){
             if(parsed.settings){ settings=null; localStorage.setItem(SET_KEY,JSON.stringify(parsed.settings)); prefs(); }
             save(); loadStages(); applyPrefs(); applyBrand(); paintIdentity();
 /* Photos are stored apart from the workspace now, so put them back. */
-try{ mediaRehydrate(); }catch(e){} setView('projects',{eventId:null}); toast('Backup restored ✦');
+try{ mediaRehydrate(); }catch(e){} setView('projects',{eventId:null}); toast('Backup restored');
           });
         }catch(err){ toast('That file isn’t a GEM backup.'); }
       };
@@ -12524,11 +12585,11 @@ function viewTax(){
         }).join('')+'</div></div>'+
     '</div>'+
     '<div class="card"><div class="card-h"><h3>Deductible Expenses</h3>'+
-      '<button class="btn btn-ghost btn-sm" id="addExpense">＋ Expense</button></div>'+
+      '<button class="btn btn-ghost btn-sm" id="addExpense">'+icn("plus")+'Expense</button></div>'+
       '<div class="tbl-wrap"><table><tbody>'+t.expenses.map(function(e){
         return '<tr><td><b>'+esc(e.label)+'</b></td>'+
           '<td style="text-align:right"><span class="val">'+money(e.amount)+'</span></td>'+
-          '<td style="width:44px"><button class="idea-x" style="position:static;opacity:1;background:var(--pink-100);color:var(--ink-soft)" data-delexp="'+esc(e.id)+'" aria-label="Remove">✕</button></td></tr>';
+          '<td style="width:44px"><button class="idea-x" style="position:static;opacity:1;background:var(--pink-100);color:var(--ink-soft)" data-delexp="'+esc(e.id)+'" aria-label="Remove">'+icn("x")+'</button></td></tr>';
       }).join('')+
       '<tr><td><b>Total</b></td><td style="text-align:right"><span class="val">'+money(expenses)+'</span></td><td></td></tr>'+
       '</tbody></table></div></div>'+
@@ -12781,7 +12842,7 @@ function openAnswerModal(qid){
       if(v)q.answers[x.id]=v; else delete q.answers[x.id];
     });
     if(missing){ missing.focus(); toast('Please answer the required questions.'); return; }
-    save();closeModal();render();wirePortal();toast('Answers saved — thank you ✦');
+    save();closeModal();render();wirePortal();toast('Answers saved — thank you');
   };
 }
 
@@ -12897,7 +12958,7 @@ function wireFinance(){
   var sd=$('#ivSend'); if(sd)sd.onclick=function(){
     x.status='due'; if(!x.issued)x.issued=todayLocal();
     invRecalc(x); save(); render();
-    toast(x.num+' marked sent ✦');
+    toast(x.num+' marked sent');
   };
   var pay=$('#ivPay'); if(pay)pay.onclick=function(){ openPaymentModal(x); };
   var sp=$('[data-setpay]'); if(sp)sp.onclick=function(){ setView('settings',{settingsPage:'business'}); };
@@ -12916,7 +12977,7 @@ function wireFinance(){
  */
 function openPartyAddModal(){
   var e=activeEvent(), prim=evPrimary(e)||e;
-  if(!prim){ toast('Create an event first ✦'); return; }
+  if(!prim){ toast('Create an event first'); return; }
   /* Anyone not already standing up, alphabetically — this is a list you scan
      for a name, not the order the guest list happens to be in. */
   var free=(prim.guests||[]).filter(function(g){ return !String(g.role||'').trim(); })
@@ -12956,7 +13017,7 @@ function openPartyAddModal(){
         prim.guests.push(g);
       }
       save(); closeModal(); render();
-      toast(g.name+' — '+role+' ✦');
+      toast(g.name+' — '+role+'');
     }
   });
 }
@@ -13013,12 +13074,12 @@ function openPaymentModal(x){
       if(x.status==='draft')x.status='due';
       invRecalc(x);
       save(); closeModal(); render();
-      toast(money(Number(v.amount)||0)+' recorded'+(invBalance(x)<=0.004?' — settled in full ✦':' ✦'));
+      toast(money(Number(v.amount)||0)+' recorded'+(invBalance(x)<=0.004?' — settled in full':''));
     }
   });
 }
 function printInvoice(x){
-  if(!x){toast('Open an invoice first ✦');return;}
+  if(!x){toast('Open an invoice first');return;}
   var pf=prefs();
   var w=document.getElementById('printFrame');
   if(!w){ w=document.createElement('iframe'); w.id='printFrame';
@@ -13107,7 +13168,7 @@ function invLineRow(l){
     '<input class="il-qty" data-k="qty" type="number" step="any" value="'+esc(l.qty==null?1:l.qty)+'" aria-label="Quantity">'+
     '<input class="il-rate" data-k="rate" type="number" step="any" value="'+esc(l.rate==null?'':l.rate)+'" placeholder="0" aria-label="Rate">'+
     '<span class="il-amt">'+money(invLineTotal(l))+'</span>'+
-    '<button type="button" class="il-x" data-ilx aria-label="Remove line">✕</button>'+
+    '<button type="button" class="il-x" data-ilx aria-label="Remove line">'+icn("x")+'</button>'+
   '</div>';
 }
 function openInvoiceModal(existing){
@@ -13143,7 +13204,7 @@ function openInvoiceModal(existing){
     '<div class="fig-head" style="margin:18px 0 8px">Lines</div>'+
     '<div class="il-head"><span>Description</span><span>Qty</span><span>Rate</span><span>Amount</span><span></span></div>'+
     '<div id="ilBody">'+lines.map(invLineRow).join('')+'</div>'+
-    '<button type="button" class="btn btn-ghost btn-sm" id="ilAdd" style="margin-top:8px">＋ Add line</button>'+
+    '<button type="button" class="btn btn-ghost btn-sm" id="ilAdd" style="margin-top:8px">'+icn("plus")+'Add line</button>'+
     '<div class="il-sums">'+
       '<div class="kv"><span>Subtotal</span><b id="ilSub">—</b></div>'+
       '<div class="kv"><span>'+esc(pf.taxLabel||'Tax')+
@@ -13223,7 +13284,7 @@ function openInvoiceModal(existing){
 function openGuestModal(ev){
   /* Belt and braces for the trap above: a DOM event is not an event record. */
   if(ev&&typeof ev.preventDefault==='function')ev=null;
-  var e=ev||activeEvent(); if(!e){toast('Create an event first ✦');return;}
+  var e=ev||activeEvent(); if(!e){toast('Create an event first');return;}
   /* Guests belong to the primary. Adding one from a sub-event adds them to the
      weekend's list and invites them to that night, which is what "add a guest
      here" means when you are looking at the rehearsal dinner. */
@@ -13348,7 +13409,7 @@ function openGuestModal(ev){
   };
 }
 function openTableModal(){
-  var e=activeEvent(); if(!e){toast('Create an event first ✦');return;}
+  var e=activeEvent(); if(!e){toast('Create an event first');return;}
   md.className='modal';md.innerHTML='<h3>Add table</h3><p class="sub">Adding to '+esc(e.title)+'.</p>'+
     '<div class="field"><label>Table name</label><input id="f_tname" placeholder="e.g. Table 3 · Friends"></div>'+
     '<div class="field"><label>Seats</label><input id="f_tseats" type="number" value="8" min="1"></div>'+
@@ -13389,7 +13450,7 @@ function openVendorModal(){
       }
       closeModal(); save();
       var ev=v.bookTo?evById(v.bookTo):null;
-      toast(ev?(rec.name+' added and booked to '+ev.title+' ✦'):(rec.name+' added to your directory ✦'));
+      toast(ev?(rec.name+' added and booked to '+ev.title+''):(rec.name+' added to your directory'));
       setView('vendors');
     }
   });
@@ -13443,7 +13504,7 @@ function nearestSwatchName(hex){
 function openSwatchModal(board){
   /* A DOM event is not a board — see the note on the wiring in wirePageActions. */
   if(board&&typeof board.preventDefault==='function')board=null;
-  var e=activeEvent(); if(!e){toast('Create an event first ✦');return;}
+  var e=activeEvent(); if(!e){toast('Create an event first');return;}
   if(!e.design)e.design={palette:[],boards:[],decor:[]};
   if(!e.design.palette)e.design.palette=[];
   if(board&&!board.swatches)board.swatches=[];
@@ -13473,7 +13534,7 @@ function openSwatchModal(board){
   $('#f_chexcopy').onclick=function(){
     var h=hexEl.value.toUpperCase();
     if(navigator.clipboard&&navigator.clipboard.writeText)navigator.clipboard.writeText(h);
-    toast(h+' copied ✦');
+    toast(h+' copied');
   };
   $('#mCancel').onclick=closeModal;
   $('#mSave').onclick=function(){
@@ -13487,7 +13548,7 @@ function openSwatchModal(board){
   };
 }
 function openBoardModal(){
-  var e=activeEvent(); if(!e){toast('Create an event first ✦');return;}
+  var e=activeEvent(); if(!e){toast('Create an event first');return;}
   var TONES=[
     ['Blush → Champagne','linear-gradient(135deg,#F5DDE0,#EFE0B8)'],
     ['Sage → Blush','linear-gradient(135deg,#E8EDE6,#F5DDE0)'],
@@ -13550,7 +13611,7 @@ function openDocModal(){
     db.documents.push(nd);
     var raised2=invoiceForDoc(nd);
     save();closeModal();
-    if(raised2){ toast('Raised '+raised2.num+' ✦'); setView('finance',{invoiceId:raised2.id}); }
+    if(raised2){ toast('Raised '+raised2.num+''); setView('finance',{invoiceId:raised2.id}); }
     else setView('documents');
   };
 }
@@ -13654,7 +13715,7 @@ function openClientModal(existing){
       }
       save();closeModal();
       setView('clients',{clientId:l.id});
-      toast(madeEvent?(l.names+' added, with their event ✦'):(l.names+' added ✦'));
+      toast(madeEvent?(l.names+' added, with their event'):(l.names+' added'));
       return;
     }
     /* A rename has to reach the records that cached the old name, or the
@@ -13708,7 +13769,7 @@ function openInquiryModal(){
     db.submissions.unshift({id:uid('s'),names:get('f1'),email:get('f2'),phone:get('f3'),date:get('f4'),
       type:get('f5')||'Wedding',guests:Number(get('f6'))||0,message:get('f7'),status:'new',
       at:new Date().toISOString().slice(0,10)});
-    save();closeModal();setView('inquiries');toast('Inquiry received ✦');
+    save();closeModal();setView('inquiries');toast('Inquiry received');
   };
 }
 /* ============================================================
@@ -13966,7 +14027,7 @@ function confirmDelete(what,onYes){
    "cannot be undone", because the action it guards is reversible. */
 function confirmAction(title,body,yesLabel,onYes){
   md.className='modal modal-confirm';
-  md.innerHTML='<div class="cf-ic">✦</div>'+
+  md.innerHTML='<div class="cf-ic">'+icn("spark","lg")+'</div>'+
     '<h3>'+esc(title)+'</h3>'+
     '<p class="sub">'+esc(body)+'</p>'+
     '<div class="modal-actions"><button class="btn btn-ghost" id="mNo">Cancel</button>'+
@@ -13980,8 +14041,8 @@ function confirmAction(title,body,yesLabel,onYes){
 /* A compact edit/delete pair for table rows and cards. */
 function rowActions(kind,id){
   return '<span class="r-acts">'+
-    '<button class="r-act" data-edit="'+kind+':'+esc(id)+'" aria-label="Edit" title="Edit">✎</button>'+
-    '<button class="r-act r-del" data-del="'+kind+':'+esc(id)+'" aria-label="Delete" title="Delete">✕</button></span>';
+    '<button class="r-act" data-edit="'+kind+':'+esc(id)+'" aria-label="Edit" title="Edit">'+icn("pencil")+'</button>'+
+    '<button class="r-act r-del" data-del="'+kind+':'+esc(id)+'" aria-label="Delete" title="Delete">'+icn("x")+'</button></span>';
 }
 
 /* ============================================================
@@ -14108,7 +14169,7 @@ function gateGo(mode,btn){
     }
     setWelcome('account');
     closeGate();
-    toast(mode==='in'?'Signed in ✦':'Account created ✦');
+    toast(mode==='in'?'Signed in':'Account created');
     render();
     afterGate({existing:mode==='in'});
   }).catch(function(e){
@@ -14185,7 +14246,7 @@ var TOURS={
     {view:'projects', sel:'.pj-grid,.pj-rows,.pj-empty', place:'bottom', title:'Venue details matter',
      body:'The venue band holds the full address, an Open in Maps link, your venue contact, and site notes like load-in gates and curfews.'},
     {view:'projects', sel:'.pj-grid,.pj-rows,.pj-empty', place:'bottom', title:'Task templates save the day',
-     body:'In the Checklist section, “✦ Apply template” generates a full countdown — 12-month wedding, 6-month express, corporate or milestone — with dates worked backwards from the event.'},
+     body:'In the Checklist section, “Apply template” generates a full countdown — 12-month wedding, 6-month express, corporate or milestone — with dates worked backwards from the event.'},
     {view:'projects', sel:'.pj-grid,.pj-rows,.pj-empty', place:'bottom', title:'Print what you need on site',
      body:'The Print button produces the running order, guest list, seating chart, vendor contact sheet or floor plan on letterhead.'}
   ]},
@@ -14250,7 +14311,7 @@ function endTour(completed){
   if(completed){
     toursDone[tourKeyRunning]=true; saveTours();
     var t=TOURS[tourKeyRunning];
-    toast((t?t.name:'Tour')+' complete ✦');
+    toast((t?t.name:'Tour')+' complete');
     if(tourKeyRunning==='basics')setView('projects',{eventId:null});
     else setView('settings',{settingsPage:'tours'});
   }
@@ -14329,7 +14390,7 @@ function showTourStep(){
       }
       var n=removeSampleData();
       var box=wipe.parentNode;
-      box.innerHTML='<div class="tcs-t">Sample wedding removed ✦</div>'+
+      box.innerHTML='<div class="tcs-t">Sample wedding removed</div>'+
         '<div class="tcs-b">'+n+' records cleared. Your studio is empty and ready for your own events.</div>';
     };
     $('#tourSkip').onclick=function(){ endTour(false); };
@@ -14352,17 +14413,17 @@ function startTour(key){
 function setupSteps(){
   var ev=db.events[0];
   return [
-    {k:'lead', label:'Add your first enquiry', hint:'Leads & Pipeline → ＋ New lead',
+    {k:'lead', label:'Add your first enquiry', hint:'Leads & Pipeline → '+icn("plus")+'New lead',
      done:db.leads.length>0, view:'pipeline'},
-    {k:'event', label:'Create an event', hint:'Events → ＋ New event',
+    {k:'event', label:'Create an event', hint:'Events → '+icn("plus")+'New event',
      done:db.events.length>0, view:'events'},
-    {k:'tasks', label:'Apply a task template', hint:'Open an event → Checklist → ✦ Apply template',
+    {k:'tasks', label:'Apply a task template', hint:'Open an event → Checklist → Apply template',
      done:db.events.some(function(e){return e.checklist.length>=8;}), view:'events'},
-    {k:'guests', label:'Add or import your guest list', hint:'Guests & RSVP → ⇪ Import CSV',
+    {k:'guests', label:'Add or import your guest list', hint:'Guests & RSVP → Import CSV',
      done:db.events.some(function(e){return e.guests.length>0;}), view:'guests'},
     {k:'floor', label:'Lay out the room', hint:'Seating Chart → drag tables into place',
      done:db.events.some(function(e){return e.tables.length>0&&(e.floor&&e.floor.items.length>0);}), view:'seating'},
-    {k:'vendor', label:'Build your vendor directory', hint:'Vendors → ＋ Add vendor',
+    {k:'vendor', label:'Build your vendor directory', hint:'Vendors → '+icn("plus")+'Add vendor',
      done:db.vendors.length>0, view:'vendors'},
     {k:'doc', label:'Send a contract or questionnaire', hint:'Contracts & Docs, or Questionnaires',
      done:db.documents.some(function(d){return d.status!=='draft';})||db.questionnaires.some(function(q){return q.status!=='draft';}),
@@ -14388,14 +14449,14 @@ function setupCard(){
         '<div class="setup-t">'+done+' of '+steps.length+' complete</div></div>'+
       '<div class="setup-r">'+
         '<button class="btn btn-ghost btn-sm" id="setupTour">Replay tour</button>'+
-        '<button class="r-act" id="setupHide" aria-label="Dismiss">✕</button></div>'+
+        '<button class="r-act" id="setupHide" aria-label="Dismiss">'+icn("x")+'</button></div>'+
     '</div>'+
     '<div class="bar setup-bar"><i style="width:'+Math.round(done/steps.length*100)+'%"></i></div>'+
     '<div class="setup-list">'+shown.map(function(s){
       return '<button class="setup-row" data-setup="'+esc(s.view)+'">'+
         '<span class="setup-box"></span>'+
         '<span class="setup-l"><b>'+esc(s.label)+'</b><em>'+esc(s.hint)+'</em></span>'+
-        '<span class="setup-go">›</span></button>';
+        '<span class="setup-go">'+icn("chev")+'</span></button>';
     }).join('')+'</div>'+
     (rest>0||open
       ?'<button class="setup-more" id="setupMore">'+(open?'Show less':rest+' more to go')+'</button>'
@@ -14511,7 +14572,7 @@ function openSearch(){
  * Print / PDF — the sheets a planner actually hands out on site.
  * ============================================================ */
 function printSheet(kind,ev){
-  if(!ev){toast('Open an event first ✦');return;}
+  if(!ev){toast('Open an event first');return;}
   var addr=addrLines(ev.venueAddress);
   var pf=prefs();
   var head='<div class="pr-head">'+
@@ -14711,7 +14772,7 @@ function invPrintCss(){ var a=accentHex(); return ''+
    'font-size:9.5px;color:#8b7b80}';
 }
 function openPrintMenu(ev){
-  if(!ev){toast('Open an event first ✦');return;}
+  if(!ev){toast('Open an event first');return;}
   md.className='modal';
   /* Every sheet below prints the event you opened, so say which one that is —
      "Guest List" means something different for the rehearsal dinner. */
@@ -15195,7 +15256,7 @@ function bibleEmail(ev,opts){
     '?subject='+encodeURIComponent(meta.title+' — planning bible')+
     '&body='+encodeURIComponent(body);
   setTimeout(function(){ location.href=href; },600);
-  toast(name+' saved — attach it to the message that just opened ✦');
+  toast(name+' saved — attach it to the message that just opened');
 }
 function bibleCss(){ return ''+
  '.bib-cover{text-align:center;padding:26px 0 30px;border-bottom:2px solid '+accentHex()+';margin-bottom:26px}'+
@@ -15215,7 +15276,7 @@ function bibleCss(){ return ''+
 
 /* ---------- the picker ---------- */
 function openBibleModal(ev){
-  if(!ev){ toast('Open an event or a client first ✦'); return; }
+  if(!ev){ toast('Open an event or a client first'); return; }
   var state={audience:'planner',sections:bibleDefaults('planner')};
   md.className='modal modal-bible';
   function draw(){
@@ -15243,9 +15304,9 @@ function openBibleModal(ev){
       '<div class="modal-actions wrap">'+
         '<button class="link-btn ma-lead" id="bibAll">'+
           (avail.every(function(s){return state.sections[s.k];})?'Clear all':'Select all')+'</button>'+
-        '<button class="btn btn-ghost" id="bibMail">✉ Email</button>'+
+        '<button class="btn btn-ghost" id="bibMail">'+icn("mail")+' Email</button>'+
         '<button class="btn btn-ghost" id="bibDoc">⬇ Word</button>'+
-        '<button class="btn btn-gold" id="bibPdf">⎙ Print / PDF</button>'+
+        '<button class="btn btn-gold" id="bibPdf">'+icn("print")+' Print / PDF</button>'+
       '</div>';
     md.querySelectorAll('[data-bibaud]').forEach(function(b){
       b.onclick=function(){ state.audience=b.dataset.bibaud; state.sections=bibleDefaults(state.audience); draw(); };
@@ -15266,7 +15327,7 @@ function openBibleModal(ev){
       closeModal(); setTimeout(function(){ fn(ev,state); },180);
     }; };
     $('#bibPdf').onclick=go(biblePrint);
-    $('#bibDoc').onclick=go(function(e,o){ toast(bibleSave(e,o)+' saved ✦'); });
+    $('#bibDoc').onclick=go(function(e,o){ toast(bibleSave(e,o)+' saved'); });
     $('#bibMail').onclick=go(bibleEmail);
   }
   draw();
@@ -15415,7 +15476,7 @@ function templateOffsets(items,evDate){
   return out;
 }
 function openTemplateModal(ev){
-  if(!ev){toast('Open an event first ✦');return;}
+  if(!ev){toast('Open an event first');return;}
   refreshTemplates();
   var keys=Object.keys(TASK_TEMPLATES);
   var suggested=keys.find(function(k){return TASK_TEMPLATES[k].type===(db.leads.find(function(l){return l.id===ev.leadId;})||{}).type;})||'wedding12';
@@ -15482,7 +15543,7 @@ function openTemplateModal(ev){
         pr.taskTemplates.push({id:id,name:v.name,items:items});
         savePrefs(); refreshTemplates();
         closeModal(); closeModal();
-        toast('“'+v.name+'” saved with '+items.length+' tasks ✦');
+        toast('“'+v.name+'” saved with '+items.length+' tasks');
       }});
   };
   $('#mCancel').onclick=closeModal;
@@ -15495,7 +15556,7 @@ function openTemplateModal(ev){
     });
     ev.checklist.sort(function(a,b){return (a.due||'9999')<(b.due||'9999')?-1:1;});
     closeModal(); afterChange();
-    toast(rows.length+' tasks added'+(fitted?' — '+fitted+' fitted into the time left':'')+' ✦');
+    toast(rows.length+' tasks added'+(fitted?' — '+fitted+' fitted into the time left':'')+'');
   };
 }
 var FIELD_KINDS={short_text:'Short text',long_text:'Long text',number:'Number',
@@ -15587,7 +15648,7 @@ function openEventModal(existing,parentId,seedLeadId){
   var parent=evById(parentId)||(e?evById(e.parentId):null)||null;
   var isSub=!!parent;
   var bookable=db.leads.filter(function(l){return ['booked','planning','wrapped'].indexOf(l.stage)>-1;});
-  /* "＋ Add a new client" writes into the name field below rather than opening
+  /* "'+icn("plus")+'Add a new client" writes into the name field below rather than opening
      a second modal on top of this one. */
   var opts=[{value:'',label:'No linked client'},{value:'__new',label:'＋ Add a new client…'}].concat(
     (e?db.leads:bookable.length?bookable:db.leads).map(function(l){return {value:l.id,label:l.names+' · '+l.type};}));
@@ -15724,7 +15785,7 @@ function openEventModal(existing,parentId,seedLeadId){
       var rec=e||{id:uid('e'),timeline:[],checklist:[],budget:[],tables:[],guests:[],
                   floor:{w:60,h:40,unit:'ft',items:[],snap:true,showChairs:true},
                   design:{palette:[],boards:[],decor:[]}};
-      /* "＋ Add a new client…" creates the lead here, so an event can be made
+      /* "'+icn("plus")+'Add a new client…" creates the lead here, so an event can be made
          for someone who is not in the pipeline yet without leaving the form. */
       var lid=v.leadId||null;
       if(lid==='__new'){
@@ -15782,7 +15843,7 @@ function openEventModal(existing,parentId,seedLeadId){
       if(!e){ db.events.push(rec); state.activeEventId=rec.id; }
       closeModal(); save();
       if(!e){ setView('events',{eventId:rec.id});
-        setTimeout(function(){ toast('Event created — apply a task template to get going ✦'); },250); }
+        setTimeout(function(){ toast('Event created — apply a task template to get going'); },250); }
       else afterChange();
     }
   });
@@ -16172,7 +16233,7 @@ function editRecord(kind,id){
            creating it that way would have. */
         var raised=invoiceForDoc(it);
         closeModal(); afterChange();
-        if(raised)toast('Raised '+raised.num+' ✦');
+        if(raised)toast('Raised '+raised.num+'');
       }});},
     questionnaire:function(){ openEditor({title:'Edit questionnaire',onDelete:del,deleteLabel:it.title,
       fields:[{id:'title',label:'Title',value:it.title,required:true},
@@ -16297,12 +16358,12 @@ function normaliseRsvp(v){
   return 'invited';
 }
 function openImportModal(ev){
-  if(!ev){toast('Choose an event first ✦');return;}
+  if(!ev){toast('Choose an event first');return;}
   md.className='modal modal-import';
   md.innerHTML='<h3>Import guests</h3><p class="sub">Adding to '+esc(ev.title)+'. A header row is detected automatically.</p>'+
     '<label class="dropzone" id="csvZone" tabindex="0">'+
       '<input type="file" id="csvInput" accept=".csv,text/csv" hidden>'+
-      '<span class="dz-ic">⇪</span><span class="dz-t">Choose a CSV file</span>'+
+      '<span class="dz-ic">'+icn("upload","lg")+'</span><span class="dz-t">Choose a CSV file</span>'+
       '<span class="dz-s">or drag one here — exported from any spreadsheet</span></label>'+
     '<div id="csvMap"></div>'+
     '<div class="modal-actions"><button class="btn btn-ghost" id="mCancel">Cancel</button>'+
@@ -16369,7 +16430,7 @@ function openImportModal(ev){
       added++;
     });
     closeModal(); afterChange();
-    toast(added+' guest'+(added===1?'':'s')+' imported'+(skipped?' · '+skipped+' skipped':'')+' ✦');
+    toast(added+' guest'+(added===1?'':'s')+' imported'+(skipped?' · '+skipped+' skipped':'')+'');
   };
 }
 
@@ -16399,7 +16460,7 @@ function exportGuestsCsv(){
       .concat([(RSVP[gRsvp(g,e)]||{}).lbl||'',gMeal(g,e),g.diet||'',g.email||'',t?t.name:'']));
   });
   downloadCsv('glimmer-guests-'+e.title.toLowerCase().replace(/[^a-z0-9]+/g,'-')+'.csv',rows);
-  toast('Guest list exported ✦');
+  toast('Guest list exported');
 }
 function exportInvoicesCsv(){
   if(!db.invoices.length){ toast('No invoices to export.'); return; }
@@ -16410,7 +16471,7 @@ function exportInvoicesCsv(){
   rows.push([]);
   rows.push(['Total','','','',db.invoices.reduce(function(a,x){return a+Number(x.amount||0);},0).toFixed(2)]);
   downloadCsv('glimmer-invoices-'+new Date().toISOString().slice(0,10)+'.csv',rows);
-  toast('Invoices exported ✦');
+  toast('Invoices exported');
 }
 function toast(msg){
   var t=document.createElement('div');t.textContent=msg;
@@ -16754,7 +16815,7 @@ function docAttach(id,file){
     .then(function(){
       d.file={name:file.name,type:file.type||'application/octet-stream',size:file.size,path:null};
       save(); render(); wireDocuments();
-      toast('Attached '+file.name+' ✦');
+      toast('Attached '+file.name+'');
       return true;
     }).catch(function(){ toast('Could not store that file.'); return false; });
 }
@@ -17078,7 +17139,7 @@ function sbAuthGo(mode,em,pw){
     if(r!=='in')return 'confirm';
     var q=prefs(); if(!q.bizEmail)q.bizEmail=em; savePrefs();
     return sbAfterSignIn().then(function(n){
-      if(n)toast('Portal access granted for '+n+' event'+(n===1?'':'s')+' ✦');
+      if(n)toast('Portal access granted for '+n+' event'+(n===1?'':'s')+'');
       return 'in';
     });
   });
@@ -18435,7 +18496,7 @@ var appEl=document.querySelector('.app');
 function setRail(on){
   appEl.classList.toggle('rail',on);
   var b=$('#railBtn');
-  if(b){ b.textContent=on?'›':'✕';
+  if(b){ b.innerHTML=on?icn('chev'):icn('x');
          b.setAttribute('aria-label',on?'Expand sidebar':'Close sidebar');
          b.title=on?'Expand sidebar':'Close sidebar'; }
   try{ localStorage.setItem(RAIL_KEY,on?'1':'0'); }catch(e){}
