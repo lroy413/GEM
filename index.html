@@ -10,7 +10,7 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
 <meta name="apple-mobile-web-app-title" content="GEM">
 <meta name="format-detection" content="telephone=no">
-<meta name="gem-build" content="c29d67ececdd">
+<meta name="gem-build" content="b02160989510">
 <link rel="manifest" href="/manifest.webmanifest">
 <link rel="icon" href="/icons/icon-192.png" sizes="192x192" type="image/png">
 <link rel="apple-touch-icon" href="/icons/icon-180.png">
@@ -3587,8 +3587,54 @@ tr:hover .r-acts,.ev-card:hover .r-acts,.table-card:hover .r-acts,
 .venue-band.has-cover .vb-note{flex:0 0 100%;padding:0 26px 14px;border-top:0;margin-top:-4px}
 @media (max-width:700px){
   .venue-band.has-cover .vb-cover-row{margin-left:0}
+  /* ---- the caption bar, once it stops being a bar ----
+     Wide, this is one horizontal line under the photograph: where it is, how
+     to get there, and the contact at the right. On a phone the flex row wraps
+     into a stack — and .vb-side's padding was written for the RIGHT of that
+     row, so its left padding was 0. Stacked, that put the venue contact hard
+     against the card's edge while the address above it sat 26px in: two left
+     margins in one card, which is what makes it read as broken rather than
+     merely narrow. Below 700px it is a stacked card and is laid out as one —
+     a single margin, a rule between the blocks that were only separated by
+     air, and type at a size you can read at arm's length. */
+  .venue-band.has-cover{display:block}
+  .venue-band.has-cover .vb-main{display:block;padding:17px 18px 15px}
+  .venue-band.has-cover .vb-side{display:block;padding:0 18px 16px}
+  .venue-band.has-cover .vb-switch{margin-bottom:12px}
+  .venue-band.has-cover .vb-contact{border-top:1px solid var(--line);padding-top:15px}
+  .venue-band.has-cover .vb-note{padding:15px 18px 16px;margin-top:0;
+    border-top:1px solid var(--line)}
+  .venue-band.has-cover .vb-addr{font-size:14px;line-height:1.55}
+  .venue-band.has-cover .vb-map{margin-top:12px;font-size:13.5px}
+  .venue-band.has-cover .vc-k{font-size:10px}
+  .venue-band.has-cover .vc-n{font-size:16px;margin-top:6px}
+  .venue-band.has-cover .vc-r{font-size:13px}
+  /* These two are a phone call and an email, not captions. They get the size
+     and the target of the actions they are. */
+  .venue-band.has-cover .vc-l{gap:2px;margin-top:8px}
+  .venue-band.has-cover .vc-l a{font-size:14.5px;color:var(--ink);
+    display:inline-flex;align-items:center;min-height:38px}
 }
-@media (max-width:700px){ .vb-banner{min-height:230px} }
+@media (max-width:700px){
+  /* justify-content:space-between comes from the row layout, where it pushed
+     the title left and the date right. Turned into a column it pushes them to
+     opposite ENDS of the picture — the title up under the camera and close
+     buttons, with a void between. Both blocks belong at the foot, where the
+     scrim is darkest and the buttons are not. */
+  .vb-banner{min-height:230px;flex-direction:column;align-items:flex-start;
+    justify-content:flex-end;gap:9px;padding:20px 18px}
+  /* Side by side, a three-line title and a three-line date block each get
+     half a phone's width and both look squeezed — and over a busy photograph
+     two columns of white type read as one collision. Stacked, each gets the
+     full width and the eye has an order to follow. */
+  .vb-bwhen{flex-direction:row;align-items:baseline;gap:10px;flex-wrap:wrap;text-align:left}
+  .vb-bwhen .vb-count{margin-top:0}
+  .vb-banner .vb-name{font-size:28px}
+  /* A poster is not a photograph: it is already full of high-contrast type,
+     and a scrim that only starts at 34% leaves the top of the picture — and
+     the buttons sitting on it — fighting whatever is up there. */
+  .vb-banner::after{background:linear-gradient(180deg,rgba(18,12,15,.34) 0%,rgba(18,12,15,.18) 26%,rgba(18,12,15,.52) 62%,rgba(18,12,15,.84) 100%)}
+}
 .vb-k{font-size:9.5px;letter-spacing:1.9px;text-transform:uppercase;color:var(--gold);font-weight:600}
 .vb-name{font-family:var(--serif);font-size:32px;font-weight:600;line-height:1.05;margin-top:6px;letter-spacing:-.012em}
 .vb-name.tbc{color:var(--muted);font-style:italic}
@@ -6955,7 +7001,7 @@ function viewClientDetail(id){
         (l.partnerB?'<div class="kv"><span>Partner 2</span><b>'+esc(l.partnerB)+(l.pronounsB?' <em class="pron">'+esc(l.pronounsB)+'</em>':'')+'</b></div>':'')+
         '<div class="kv"><span>Email</span><b>'+(l.email?'<a href="mailto:'+esc(l.email)+'">'+esc(l.email)+'</a>':'—')+'</b></div>'+
         (l.altEmail?'<div class="kv"><span>Second email</span><b><a href="mailto:'+esc(l.altEmail)+'">'+esc(l.altEmail)+'</a></b></div>':'')+
-        '<div class="kv"><span>Phone</span><b>'+(l.phone?'<a href="tel:'+esc(l.phone.replace(/[^\d+]/g,''))+'">'+esc(l.phone)+'</a>':'—')+'</b></div>'+
+        '<div class="kv"><span>Phone</span><b>'+(l.phone?'<a href="tel:'+esc(l.phone.replace(/[^\d+]/g,''))+'">'+esc(fmtPhone(l.phone))+'</a>':'—')+'</b></div>'+
         '<div class="kv"><span>Preferred contact</span><b>'+esc(l.preferred||'—')+'</b></div>'+
         '<div class="kv"><span>Lead source</span><b>'+esc(l.source||'—')+'</b></div>'+
       '</div></div>'+
@@ -7428,7 +7474,10 @@ function viewEventDetail(id){
                   :'<div class="vb-addr muted">No address on file</div>')+
       /* Sits with the map link because both answer the same question — what
          else is there, and where. */
-      (cover?'<div class="vb-switch">'+switcher+'</div>':'')+
+      /* Only when there IS a weekend to switch between. A solo project's
+         switcher is an empty string now, and an empty div still claimed a
+         flex gap either side of it. */
+      (cover&&switcher?'<div class="vb-switch">'+switcher+'</div>':'')+
       (addr.length?'<a class="vb-map" href="https://maps.google.com/?q='+mapQ+'" target="_blank" rel="noopener">Open in Maps ›</a>':'')+
       /* Only when there is no picture yet, which is the only time this is
          information rather than furniture. Once there IS one, the control
@@ -7452,7 +7501,7 @@ function viewEventDetail(id){
           '<div class="vc-n">'+esc(e.venueContact.name)+'</div>'+
           '<div class="vc-r">'+esc(e.venueContact.role)+'</div>'+
           '<div class="vc-l">'+
-            (e.venueContact.phone?'<a href="tel:'+esc(e.venueContact.phone.replace(/[^\d+]/g,''))+'">'+esc(e.venueContact.phone)+'</a>':'')+
+            (e.venueContact.phone?'<a href="tel:'+esc(e.venueContact.phone.replace(/[^\d+]/g,''))+'">'+esc(fmtPhone(e.venueContact.phone))+'</a>':'')+
             (e.venueContact.email?'<a href="mailto:'+esc(e.venueContact.email)+'">'+esc(e.venueContact.email)+'</a>':'')+
           '</div></div>':'')+
     '</div>'+
@@ -7638,7 +7687,7 @@ function clientPanel(e,lead){
        whole reason to open the card. */
     '<div class="cp-acts">'+
       (lead.phone?'<a class="cp-a" href="tel:'+esc(String(lead.phone).replace(/[^\d+]/g,''))+'">'+
-        '<span class="cp-ic">☎</span>'+esc(lead.phone)+'</a>':'')+
+        '<span class="cp-ic">☎</span>'+esc(fmtPhone(lead.phone))+'</a>':'')+
       (lead.email?'<a class="cp-a" href="mailto:'+esc(lead.email)+'">'+
         '<span class="cp-ic">✉</span>'+esc(lead.email)+'</a>':'')+
       (!lead.phone&&!lead.email?'<span class="cp-none">No contact details yet.</span>':'')+
@@ -9041,7 +9090,7 @@ function viewVenueDetail(id){
           (c.name
             ?'<div class="vc-n">'+esc(c.name)+'</div><div class="vc-r">'+esc(c.role||'')+'</div>'+
              '<div class="vc-l">'+
-               (c.phone?'<a href="tel:'+esc(String(c.phone).replace(/[^\d+]/g,''))+'">'+esc(c.phone)+'</a>':'')+
+               (c.phone?'<a href="tel:'+esc(String(c.phone).replace(/[^\d+]/g,''))+'">'+esc(fmtPhone(c.phone))+'</a>':'')+
                (c.email?'<a href="mailto:'+esc(c.email)+'">'+esc(c.email)+'</a>':'')+
              '</div>'
             :'<div class="empty-hint">No coordinator on file. Add one under Edit details.</div>')+
@@ -9258,7 +9307,7 @@ function viewVendors(){
           (v.notes?'<div class="v-sub">'+esc(v.notes)+'</div>':'')+'</td>'+
         '<td><span class="pill">'+esc(v.cat||'—')+'</span></td>'+
         '<td>'+esc(v.contact||'—')+
-          '<div class="v-links">'+(v.phone?'<a href="tel:'+esc(String(v.phone).replace(/[^\d+]/g,''))+'">'+esc(v.phone)+'</a>':'')+
+          '<div class="v-links">'+(v.phone?'<a href="tel:'+esc(String(v.phone).replace(/[^\d+]/g,''))+'">'+esc(fmtPhone(v.phone))+'</a>':'')+
           (v.email?'<a href="mailto:'+esc(v.email)+'">'+esc(v.email)+'</a>':'')+'</div></td>'+
         '<td><button class="rate" data-rate="'+esc(v.id)+'" aria-label="Rate '+esc(v.name)+'">'+stars(v.rating)+'</button></td>'+
         '<td>'+bk.length+(total?'<div class="v-sub">'+money(total)+'</div>':'')+'</td>'+
@@ -9301,7 +9350,7 @@ function vendorTeamMarkup(ev,editable){
       var v=vendorById(b.vendorId)||{name:'(removed vendor)'};
       var st=VSTATUS[b.status]||VSTATUS.quote;
       return '<tr><td><b>'+esc(v.name)+'</b><div class="v-sub">'+esc(v.cat||'')+(v.contact?' · '+esc(v.contact):'')+'</div>'+
-        '<div class="v-links">'+(v.phone?'<a href="tel:'+esc(String(v.phone).replace(/[^\d+]/g,''))+'">'+esc(v.phone)+'</a>':'')+
+        '<div class="v-links">'+(v.phone?'<a href="tel:'+esc(String(v.phone).replace(/[^\d+]/g,''))+'">'+esc(fmtPhone(v.phone))+'</a>':'')+
         (v.email?'<a href="mailto:'+esc(v.email)+'">'+esc(v.email)+'</a>':'')+'</div></td>'+
         '<td style="text-align:right" data-l="Booking">'+
           (editable?'<select class="mini bstat-sel" data-bid="'+esc(b.id)+'" aria-label="Status for '+esc(v.name)+'">'+
@@ -15158,6 +15207,21 @@ function refreshTemplates(){
                           type:t.type||'',items:t.items,custom:true};
   });
   return TASK_TEMPLATES;
+}
+/* A phone number as somebody would say it, not as it was pasted. Ten digits
+   is a North American number and gets its brackets and dash; eleven starting
+   with a 1 is the same number wearing its country code. Anything else — an
+   international number, an extension, a note in the field — is left exactly as
+   it was typed, because guessing at a format we do not know is worse than the
+   digits. The tel: href is always the stripped digits either way. */
+function fmtPhone(v){
+  var s=String(v==null?'':v).trim();
+  if(!s)return '';
+  var d=s.replace(/[^\d]/g,'');
+  if(/[a-zA-Z]/.test(s))return s;                       // "555 0110 ext 4" etc
+  if(d.length===11&&d.charAt(0)==='1')d=d.slice(1);
+  else if(d.length!==10)return s;
+  return '('+d.slice(0,3)+') '+d.slice(3,6)+'-'+d.slice(6);
 }
 function isoMinusDays(iso,days){
   var d=new Date(iso+'T00:00');
