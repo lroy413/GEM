@@ -821,6 +821,86 @@ never pulled, which is what stops a fresh install overwriting the studio.
   - A solo project's `.vb-switch` is no longer rendered as an empty div, which
     was claiming a flex gap either side of itself.
   - `scratchpad/vb-test.mjs` covers with and without a cover, at 393 and 1400.
+- **Pass one of the visual audit — the finishing habits that read "template".**
+  The full audit lives in the GEM Visual Audit artifact; this pass is its first
+  five items, chosen for perception-per-effort.
+  - **The drawn icon set.** `GI` + `icn(name,cls)` render inline SVGs on a 20px
+    grid with one 1.6px stroke — pencil, x, chevrons, print, phone, mail,
+    upload, download, plus, doc, spark. They replaced ~95 unicode glyphs
+    (✎ ⎙ ✕ ☎ ✉ ⇪ ⇩ ◈ ＋ and the icon-duty ‹ ›) that rendered differently on
+    every OS. Sweep rules worth knowing: `＋ ` inside JS string literals became
+    `'+icn("plus")+' ` (valid because every occurrence sits in a concat chain);
+    `<option>` labels keep the ＋ character because options cannot hold SVG;
+    typographic marks stay — trailing ›/‹ in text links, `Settings › Connection`
+    breadcrumbs, and the ✓/✕/· data marks in RSVP cells and legends. `.gi` CSS
+    sizes by context (`.r-act .gi`, `.btn-sm .gi`, `.gi.lg`).
+  - **The ✦ is a brand mark now, not furniture.** 62 toast suffixes dropped;
+    it survives, drawn, only in the all-clear states, the empty projects board,
+    the template button and the confirm dialog.
+  - **Anchored color.** `.stat` tiles are paper (`--card` + hairline +
+    `--shadow-xs`) instead of sunk pink; quiet week-days are ghost outlines
+    instead of pigment fills; default ink deepened `#3B2E33 → #332629` (all
+    three defaults: root token, applyBrand fallback, champagne palette). The
+    wash stays on the page ground — the theming engine is untouched.
+  - **Flat chrome.** New derived tokens `--gold-fill` / `--gold-press` (accent
+    −9L / −16L). `.btn-gold`, `.btn-danger`, `.bp-btn`, toggles, done-ticks,
+    progress fills, message bubbles and chart bars are flat; hover darkens,
+    nothing lifts or glows. `--gold-grad` survives ONLY on identity tiles
+    (avatar, brand marks, portal mark) — deliberately, so the metal reads as
+    the brand. `.nb-i` chips no longer levitate on hover.
+  - **Lining figures.** The tabular-nums rule now also forces `lnum` (and
+    covers `.fig-v`, `.nb-i b`, `.dh-v`, `.iv-num`, `.due`, `.tpl-d` etc.) —
+    Cormorant's old-style 1 read as a Roman numeral I in stats. The inlined
+    font subset carries the lining alternates (verified by width probe).
+  - **The quiet front door.** `waitingOn()` factored out of viewStudio;
+    `pageHead('projects')` computes quiet/busy and says "Nothing overdue,
+    nothing waiting — enjoy the quiet." in the sub on quiet days, nothing on
+    busy ones (the chips speak). The floating `nb-clear` line is gone, and
+    render() repaints the sub so ticking off the last overdue task updates the
+    sentence.
+  - **Headers vanished on dark-mode phones — a latent bug the pass exposed.**
+    The section headers are `<button class="card-h ev-h">`, and a button never
+    inherits `color`: it wears the UA's ButtonText, which iOS paints blue in
+    light mode and near-white in dark mode. Headless Chromium paints it black,
+    which is why every local screenshot looked fine while "Checklist" was
+    invisible on the user's phone at night. Fix: `button{color:inherit}` at the
+    base (every button that wants another colour already says so), plus
+    `color-scheme:light` declared three ways — static meta, `:root` CSS, and
+    the runtime `meta()` helper — so UA form-control defaults never go dark.
+    `scratchpad/uacolor-test.mjs` re-runs the check under `colorScheme:'dark'`.
+  - `scratchpad/passone-test.mjs` locks all five in at 1400 and 393. Note for
+    future seeds: a "quiet" fixture must also set questionnaires to draft —
+    a sent questionnaire counts as waiting.
+- **The settings pass, and the Learn content caught up with project-first.**
+  A standing rule now applies: after every phase, a premium passover — walk the
+  screens the phase touched plus the ones nobody has looked at lately, on both
+  widths, before offering to deploy.
+  - **Fourteen more drawn icons** (briefcase, palette, columns, rows, people,
+    sliders, layout, bell, eye, flag, question-circle, sync, database, info)
+    replaced the settings index's geometric unicode (◆ ▥ ▤ ◉ ◐ ◍ ◔ ◑ ✧ ? ⇄ ▢ ◇),
+    which rendered as mystery blobs at tile size. Branding got the palette so
+    Templates keeps the spark to itself.
+  - **The icon sweep had put SVG into `setupSteps()` hints**, which render
+    through `esc()` — the getting-started card would have printed raw markup.
+    Hints are plain text again, with a comment saying why they must stay so.
+  - **The basics tour is project-first**: board → to-do → waiting → a project's
+    dashboard → the switcher → pipeline → seating → search. "Running an event"
+    is "Running a project" and points at the dashboard, checklist section and
+    Money screen instead of narrating over the board. The clients tour's
+    vendor-team step became "the person across their jobs". Selectors verified
+    by `scratchpad/tour-test.mjs`, which clicks through every tour end to end
+    and fails if a pointed step cannot find its target — at 1400 and 393.
+  - **HELP rewritten**: "Dashboard" → "The projects home" (board, needs chips,
+    quiet header), "Events" → "Projects" (This Project group, switcher, Money,
+    sub-events), Clients (projects as cards, vendors live in the project),
+    Vendors, Contracts & money (per-project Money vs the studio roll-up), and
+    a new Calendar entry (tap a day, add a task).
+  - **Appearance**: "Dashboard layout" → "Projects home layout"; the dead
+    "Upcoming events" hero toggle removed by retiring 'hero' from
+    `DASH_MODULES` (dashOrder() drops unknown keys, so saved orders migrate
+    themselves); to-do-rows copy updated. Free-text settings inputs get
+    `.set-in.wide` (330px) so default terms stop truncating. The Connection
+    card description stopped saying "Supabase" to a planner.
 - **The calendar could be read and not written to, and its link out of a
   project did nothing.**
   - **"Open calendar ›" was dead on the one screen it matters on.** The week
