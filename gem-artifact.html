@@ -3401,6 +3401,10 @@ tr:hover .r-acts,.ev-card:hover .r-acts,.table-card:hover .r-acts,
 .tpl-row{display:flex;align-items:center;gap:10px;padding:5px 0;border-bottom:1px solid var(--line);font-size:12px}
 .tpl-row:last-child{border-bottom:none}
 .tpl-d{width:96px;flex:0 0 96px;color:var(--muted);font-size:11px}
+/* Says the date is not the template's own — it was moved up because the job
+   was booked with less run-up than the countdown assumes. */
+.tpl-fit{display:block;font-size:9px;letter-spacing:.1em;text-transform:uppercase;
+  color:var(--gold-deep);font-weight:700;margin-top:1px}
 .tpl-t{flex:1;min-width:0}
 
 /* ============ GLOBAL SEARCH ============ */
@@ -15143,6 +15147,40 @@ function isoMinusDays(iso,days){
   d.setDate(d.getDate()-days);
   return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');
 }
+/* ---- a template, fitted to the time that is actually left ----
+   A template's offsets are "N days before the event", written for a job booked
+   with a full runway. Applied to a wedding eight weeks out, a twelve-month
+   countdown put nine of its twelve tasks in the past: a fresh checklist that
+   arrived already overdue, which is worse than no checklist. The only remedy
+   on offer was a tick-box that DELETED those tasks — and "Book the venue" and
+   "Confirm the budget" are not tasks you skip because you booked late, they
+   are tasks you do now.
+
+   So the dates are fitted instead. Everything that still fits keeps its exact
+   day, because a final walk-through is three days before the wedding whether
+   the job was booked a year out or a month out — those offsets are tied to the
+   event, not to the runway. Only the prep work above them is squeezed, evenly
+   and in its original order, into the gap between the last task that fits and
+   today. Nothing lands in the past, nothing is thrown away, and the order a
+   planner works in survives.
+
+   Returns one row per item: the offset to use, and whether it had to move. */
+function templateOffsets(items,evDate){
+  var out=items.map(function(i){ return {i:i,d:Math.max(0,i.d||0),moved:false}; });
+  if(!evDate)return out;
+  var left=daysAway(evDate);
+  /* The day of, or already gone. There is no runway to fit anything into, so
+     everything is due now and says so. */
+  if(left<=0){ out.forEach(function(r){ if(r.d>0){ r.d=0; r.moved=true; } }); return out; }
+  var span=out.reduce(function(m,r){ return Math.max(m,r.d); },0);
+  if(span<=left)return out;                       // the whole countdown fits
+  var late=out.filter(function(r){ return r.d<=left; });
+  var early=out.filter(function(r){ return r.d>left; }).sort(function(a,b){ return a.d-b.d; });
+  var base=late.reduce(function(m,r){ return Math.max(m,r.d); },0);
+  var room=left-base, n=early.length;
+  early.forEach(function(r,j){ r.d=base+Math.round(room*(j+1)/n); r.moved=true; });
+  return out;
+}
 function openTemplateModal(ev){
   if(!ev){toast('Open an event first ✦');return;}
   refreshTemplates();
@@ -15150,27 +15188,47 @@ function openTemplateModal(ev){
   var suggested=keys.find(function(k){return TASK_TEMPLATES[k].type===(db.leads.find(function(l){return l.id===ev.leadId;})||{}).type;})||'wedding12';
   md.className='modal';
   md.innerHTML='<h3>Apply a task template</h3>'+
-    '<p class="sub">Due dates are calculated backwards from '+fmtDate(ev.date)+'. Existing tasks are kept.</p>'+
+    '<p class="sub" id="tplSub"></p>'+
     '<div class="field"><label>Template</label><select id="tpl_pick">'+
       keys.map(function(k){return '<option value="'+k+'"'+(k===suggested?' selected':'')+'>'+esc(TASK_TEMPLATES[k].name)+' ('+TASK_TEMPLATES[k].items.length+' tasks)</option>';}).join('')+
     '</select></div>'+
-    '<div class="field"><label><input type="checkbox" id="tpl_skip" checked style="width:auto;margin-right:8px">Skip tasks whose date has already passed</label></div>'+
+    /* Off by default now. It used to be on, quietly dropping the early half of
+       a template on any job booked late; with the dates fitted there is no
+       longer a reason to lose the work, only a choice to. */
+    '<div class="field"><label><input type="checkbox" id="tpl_skip" style="width:auto;margin-right:8px">Leave out the tasks there is no longer time for</label></div>'+
     '<div class="tpl-preview" id="tplPreview"></div>'+
     '<div class="modal-actions"><button class="btn btn-ghost" id="tplSave">Save this checklist</button>'+
       '<span style="flex:1"></span>'+
       '<button class="btn btn-ghost" id="mCancel">Cancel</button>'+
       '<button class="btn btn-gold" id="mSave">Add tasks</button></div>';
   ov.classList.add('show');
+  /* One place works out the dates and the preview shows exactly those, so what
+     is on screen is what gets added. */
+  function plan(){
+    var t=TASK_TEMPLATES[$('#tpl_pick').value];
+    var rows=templateOffsets(t.items,ev.date);
+    if($('#tpl_skip').checked)rows=rows.filter(function(r){ return !r.moved; });
+    return rows;
+  }
   function preview(){
     var t=TASK_TEMPLATES[$('#tpl_pick').value];
-    var skip=$('#tpl_skip').checked;
-    var rows=t.items.map(function(i){
-      var due=isoMinusDays(ev.date,i.d);
-      var past=due&&daysAway(due)<0;
-      if(skip&&past)return null;
-      return '<div class="tpl-row"><span class="tpl-d">'+(due?fmtDate(due):'—')+'</span>'+
-        '<span class="tpl-t">'+esc(i.t)+'</span><span class="pill">'+esc(i.c)+'</span></div>';
-    }).filter(Boolean);
+    var all=templateOffsets(t.items,ev.date);
+    var fitted=all.filter(function(r){ return r.moved; }).length;
+    var left=ev.date?daysAway(ev.date):null;
+    $('#tplSub').innerHTML=!ev.date
+      ?'This project has no date yet, so the tasks arrive without due dates. Existing tasks are kept.'
+      :(fitted
+        ?esc(t.name)+' is written for a longer run-up than the '+
+          (left>0?left+' day'+(left===1?'':'s'):'no time')+' left before '+fmtDate(ev.date)+
+          ', so '+fitted+' of its tasks are fitted into the time you have, in order. '+
+          'Nothing lands in the past. Existing tasks are kept.'
+        :'Due dates are worked backwards from '+fmtDate(ev.date)+'. Existing tasks are kept.');
+    var rows=plan().map(function(r){
+      var due=ev.date?isoMinusDays(ev.date,r.d):null;
+      return '<div class="tpl-row"><span class="tpl-d">'+(due?fmtDate(due):'—')+
+        (r.moved?'<span class="tpl-fit" title="Moved up to fit the time left">fitted</span>':'')+'</span>'+
+        '<span class="tpl-t">'+esc(r.i.t)+'</span><span class="pill">'+esc(r.i.c)+'</span></div>';
+    });
     $('#tplPreview').innerHTML='<div class="tpl-count">'+rows.length+' task'+(rows.length===1?'':'s')+' will be added</div>'+rows.join('');
   }
   $('#tpl_pick').onchange=preview; $('#tpl_skip').onchange=preview; preview();
@@ -15196,15 +15254,15 @@ function openTemplateModal(ev){
   };
   $('#mCancel').onclick=closeModal;
   $('#mSave').onclick=function(){
-    var t=TASK_TEMPLATES[$('#tpl_pick').value], skip=$('#tpl_skip').checked, n=0;
-    t.items.forEach(function(i){
-      var due=isoMinusDays(ev.date,i.d);
-      if(skip&&due&&daysAway(due)<0)return;
-      ev.checklist.push({id:uid('ck'),lbl:i.t,cat:i.c,done:false,due:due});
-      n++;
+    var rows=plan(), fitted=0;
+    rows.forEach(function(r){
+      if(r.moved)fitted++;
+      ev.checklist.push({id:uid('ck'),lbl:r.i.t,cat:r.i.c,done:false,
+        due:ev.date?isoMinusDays(ev.date,r.d):''});
     });
     ev.checklist.sort(function(a,b){return (a.due||'9999')<(b.due||'9999')?-1:1;});
-    closeModal(); afterChange(); toast(n+' tasks added ✦');
+    closeModal(); afterChange();
+    toast(rows.length+' tasks added'+(fitted?' — '+fitted+' fitted into the time left':'')+' ✦');
   };
 }
 var FIELD_KINDS={short_text:'Short text',long_text:'Long text',number:'Number',

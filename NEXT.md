@@ -762,6 +762,35 @@ never pulled, which is what stops a fresh install overwriting the studio.
     moment's "9:00 AM – 10:00 PM" — has two halves and no single answer, so
     `.is-range` hides the pair instead of lying about one of them.
   - `scratchpad/time-test.mjs` covers both at 393 and 1400.
+- **A template applied to a late booking used to arrive already overdue.** A
+  template's offsets are "N days before the event", written for a job with a
+  full run-up. Applied to a wedding seven weeks out, a twelve-month countdown
+  put seventeen of its twenty-eight tasks in the past — a brand-new checklist
+  whose first act was to show you seventeen overdue items. The only remedy on
+  offer was a tick-box, on by default, that DELETED them, and "Book the venue"
+  is not a task you skip because you booked late; it is a task you do now.
+  - **`templateOffsets(items, evDate)`** fits the countdown to the time that is
+    actually left. Everything that still fits keeps its exact day — a final
+    walk-through is three days before the wedding whether the job was booked a
+    year out or a month out, because those offsets are tied to the event and
+    not to the runway. Only the prep work above them is squeezed, evenly and in
+    its original order, into the gap between the last task that fits and today.
+    Nothing lands in the past, nothing is thrown away, and the order a planner
+    works in survives. Seventeen tasks landing in the next nine days is not a
+    layout failure — it is what booking a wedding seven weeks out looks like.
+  - **The tick-box is off by default now** and says what it does: "Leave out
+    the tasks there is no longer time for". Dropping work is a choice, not the
+    default.
+  - **The modal's subtitle explains itself** rather than stating a rule that
+    was not being followed: with a full run-up it still says dates are worked
+    backwards from the date; when they are fitted it says which template, how
+    much time is left, how many moved, and that nothing lands in the past. The
+    preview shows the fitted dates, marked FITTED, so what is on screen is what
+    gets added — `plan()` is the single place the dates come from.
+  - Event with no date: the tasks arrive without due dates. Event today or
+    already gone: everything is due now, and says so.
+  - `scratchpad/tpl-test.mjs` covers a 51-day run-up, a 420-day one and the day
+    itself, at 393 and 1400.
 
   Once every screen is inside a job, the old shape leaves the same facts in
   three places. What was actually duplicated: the client's contact details on
