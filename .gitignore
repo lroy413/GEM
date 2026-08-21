@@ -19,3 +19,4 @@ node_modules/
 # Test screenshots. They belong in the session scratchpad, not the repo.
 *.png
 !deploy/icons/*.png
+gem-preview.html

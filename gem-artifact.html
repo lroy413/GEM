@@ -6688,13 +6688,17 @@ function wireClients(){
 function viewClientDetail(id){
   var l=db.leads.find(function(x){return x.id===id;}); if(!l)return viewClients();
   var s=stageOf(l.stage);
-  var ev=eventForLead(l);
-  /* The whole weekend's paperwork, not just the ceremony's — a rehearsal
-     dinner contract belongs in the client's file like everything else. */
-  var blockIds=ev?evBlock(ev).map(function(x){return x.id;}):[];
-  var docs=ev?db.documents.filter(function(d){return blockIds.indexOf(d.eventId)>-1;}):[];
+  var projs=projectsForLead(l);
+  var ev=projs[0]||eventForLead(l);
+  /* Every project's paperwork, and inside each one the whole weekend's — a
+     rehearsal dinner contract belongs in the client's file like everything
+     else, and so does the contract from the job they booked two years ago. */
+  var blockIds=[];
+  (projs.length?projs:(ev?[ev]:[])).forEach(function(p){
+    evBlock(p).forEach(function(x){ if(blockIds.indexOf(x.id)<0)blockIds.push(x.id); });
+  });
+  var docs=db.documents.filter(function(d){return blockIds.indexOf(d.eventId)>-1;});
   var invs=invoicesForLead(l);
-  var vends=ev?bookingsForEvent(ev.id):[];
   var paid=invs.filter(function(x){return x.status==='paid';}).reduce(function(a,x){return a+x.amount;},0);
   var owed=invs.filter(function(x){return x.status==='due'||x.status==='over';}).reduce(function(a,x){return a+x.amount;},0);
   var away=daysAway(l.date);
@@ -6743,7 +6747,16 @@ function viewClientDetail(id){
          '<span class="dh-band-id">'+
            '<span class="dh-band-k">'+esc(l.type||'Client')+'</span>'+
            '<span class="dh-band-n">'+esc(l.names)+'</span>'+
-           '<span class="dh-band-m">'+fmtDate(l.date)+' · '+esc(venueName(l.venue))+'</span>'+
+           /* One job, and the line is that job's date and venue. Two, and a
+              single date is a lie — say how many there are and when the next
+              one falls, which is the thing a planner actually wants off a
+              returning client's file. */
+           '<span class="dh-band-m">'+(projs.length>1
+             ?projs.length+' projects'+(function(){
+                var n=projs.filter(function(e){ return e.date&&daysAway(e.date)>=0; })[0];
+                return n?' · next '+fmtDate(n.date):' · all wrapped';
+              })()
+             :fmtDate(l.date)+' · '+esc(venueName(l.venue)))+'</span>'+
          '</span>'+
        '</span>'+
        '<span class="dh-band-v">'+
@@ -6763,33 +6776,22 @@ function viewClientDetail(id){
   '<div class="stat-row">'+
     stat('Collected',money(paid),invs.filter(function(x){return x.status==='paid';}).length+' payments','up')+
     stat('Outstanding',money(owed),owed?'awaiting payment':'all settled')+
+    stat('Projects',String(projs.length),projs.filter(function(e){return e.date&&daysAway(e.date)>=0;}).length+' still to come')+
     stat('Documents',String(docs.length),docs.filter(function(d){return d.status==='sent';}).length+' awaiting signature')+
-    stat('Vendors',String(vends.length),vends.filter(function(b){return b.status==='booked';}).length+' booked')+
   '</div>'+
-  (ev?evSection('clientvendors','Vendor Team',vends.length,vendorTeamMarkup(ev,true),
-      vends.length?'<span class="sec-badge">'+money(vends.reduce(function(a,b){return a+b.fee;},0))+'</span>':'')
-     :'')+
+  /* Their projects, as the projects board draws them. The vendor team used to
+     sit here, booked against one event from a screen that belongs to a person;
+     it lives in the project now, where the booking actually happens. */
+  evSection('clientprojects','Their Projects',projs.length,
+    '<div style="padding:18px 20px 20px">'+
+      (projs.length?'<div class="pj-grid">'+projs.map(projCard).join('')+'</div>'
+        :'<div class="empty-hint">Nothing booked yet. A project is where the date, the guest list and the money live.</div>')+
+      '<div class="sec-actions"><button class="btn btn-ghost btn-sm" id="clientNewProj">＋ New project for them</button></div>'+
+    '</div>',
+    projs.length>1?'<span class="sec-badge">'+money(projs.reduce(function(a,e){
+      return a+(e.budget||[]).reduce(function(n,b){ return n+(Number(b.est)||0); },0); },0))+' budgeted</span>':'')+
   '<div class="grid-2">'+
     '<div>'+
-      (ev?'<div class="card" style="margin-bottom:20px"><div class="card-h"><h3>'+
-        (evChildren(ev.id).length?'The Weekend':'Event')+'</h3>'+
-        '<button class="link-btn" data-openevent="'+esc(ev.id)+'">Open workspace ›</button></div>'+
-        '<div style="padding:18px 22px">'+
-          '<div class="kv"><span>Venue</span><b>'+esc(venueName(ev.venue))+'</b></div>'+
-          '<div class="kv"><span>Location</span><b>'+esc(ev.loc)+'</b></div>'+
-          '<div class="kv"><span>Guests attending</span><b>'+rosterFor(ev).filter(function(g){return gRsvp(g,ev)==='yes';}).length+' of '+rosterFor(ev).length+'</b></div>'+
-          '<div class="kv"><span>Planning progress</span><b>'+(evPct(ev))+'%</b></div>'+
-          /* The whole weekend in date order, each row its own workspace. The
-             client file is where a planner checks what is still to come, so
-             four events listed once beats four cards to hunt through. */
-          (evChildren(ev.id).length?'<div class="wk-list">'+evBlock(ev).map(function(x){
-            return '<button type="button" class="wk-row'+(x.id===ev.id?' lead':'')+'" data-openevent="'+esc(x.id)+'">'+
-              '<span class="wk-r">'+esc(roleLabel(x,true))+'</span>'+
-              '<span class="wk-t">'+esc(x.title)+'</span>'+
-              '<span class="wk-d">'+fmtDate(x.date)+(x.startTime?' · '+esc(x.startTime):'')+'</span>'+
-              '<span class="wk-v">'+esc(venueName(x.venue))+'</span></button>';
-          }).join('')+'</div>':'')+
-        '</div></div>':'')+
       '<div class="card" style="margin-bottom:20px"><div class="card-h"><h3>Contact</h3>'+
         '<button class="btn btn-ghost btn-sm" id="editContact">✎ Edit</button></div><div style="padding:18px 22px">'+
         (l.partnerA?'<div class="kv"><span>'+esc(l.type==='Wedding'?'Partner 1':'Primary contact')+'</span><b>'+esc(l.partnerA)+(l.pronounsA?' <em class="pron">'+esc(l.pronounsA)+'</em>':'')+'</b></div>':'')+
@@ -7338,8 +7340,10 @@ function viewEventDetail(id){
         '</div><button class="btn btn-ghost btn-sm" data-addtl="1" style="margin-top:14px">＋ Add moment</button></div>')+
 
       evSection('vendors','Vendor Team',vend.length,
-        vendorTeamMarkup(e,true)+
-        (lead.id?'<div class="sec-actions"><button class="link-btn" data-client="'+esc(lead.id)+'">Manage on the client file ›</button></div>':''),
+        /* This used to point at the client file to "manage" the team. Bookings
+           belong to the job, not the person, and the file no longer carries
+           them — the row actions above are the whole story now. */
+        vendorTeamMarkup(e,true),
         vend.length?'<span class="sec-badge">'+money(vend.reduce(function(a,b){return a+b.fee;},0))+'</span>':'')+
 
       evSection('guests',evIsSub(e)?'Invited to '+esc(roleLabel(e,true)):'Guest List',roster.length,
@@ -8724,6 +8728,22 @@ function eventForLead(lead){
   return db.events.find(function(e){return e.leadId===lead.id&&!evIsSub(e);})||
          db.events.find(function(e){return e.leadId===lead.id;})||
          db.events.find(function(e){return e.title===lead.names;})||null;
+}
+/* Every job this client has ever given the studio, soonest first and the
+   finished ones at the end. A couple who came back for an anniversary party
+   has two projects, and the client file is the only screen in the app that can
+   put them side by side — which is exactly what stops it being a second copy
+   of the project dashboard. */
+function projectsForLead(lead){
+  if(!lead)return [];
+  var mine=evPrimaries().filter(function(e){
+    return e.leadId?e.leadId===lead.id:e.title===lead.names;
+  });
+  var live=mine.filter(function(e){ return !e.date||daysAway(e.date)>=0; })
+    .sort(function(a,b){ return (a.date||'9')<(b.date||'9')?-1:1; });
+  var past=mine.filter(function(e){ return e.date&&daysAway(e.date)<0; })
+    .sort(function(a,b){ return a.date<b.date?1:-1; });
+  return live.concat(past);
 }
 /* ---- Venues: the directory, and one place ----
    A venue is the thing a studio accumulates knowledge about. Which gate the
@@ -10112,6 +10132,14 @@ function addrLines(a){
 }
 function wireClientDetail(){
   var l=db.leads.find(function(x){return x.id===state.clientId;}); if(!l)return;
+  /* Their project cards. Wired here rather than by wireProjects(), because
+     this screen is not the board and does not want the board's view toggle or
+     its "+ New project" button — only the way in. */
+  document.querySelectorAll('[data-openproj]').forEach(function(b){
+    b.onclick=function(){ openProject(b.dataset.openproj); };
+  });
+  var np=$('#clientNewProj');
+  if(np)np.onclick=function(e2){ e2.stopPropagation(); openEventModal(null,null,l.id); };
   /* Filing paperwork the studio already holds, straight from the client file —
      the venue's fire certificate, a vendor's insurance, the couple's own
      inspiration deck. */
@@ -15060,7 +15088,10 @@ function wireCustomFields(rec){
 }
 
 /* ---- event create / edit ---- */
-function openEventModal(existing,parentId){
+/* seedLeadId is how "New project for them" starts the form already pointed at
+   the client whose file you are standing in — the third way in, alongside a
+   plain new event and "+ Sub-event". */
+function openEventModal(existing,parentId,seedLeadId){
   var e=existing||null;
   var a=(e&&e.venueAddress)||{};
   var vc=(e&&e.venueContact)||{};
@@ -15075,7 +15106,7 @@ function openEventModal(existing,parentId){
     (e?db.leads:bookable.length?bookable:db.leads).map(function(l){return {value:l.id,label:l.names+' · '+l.type};}));
   /* A sub-event's type follows its parent — the roles on offer have to match
      the block it is joining, not whatever this form last had selected. */
-  var typeOf=parent?evType(parent):(e?evType(e):((leadById((e&&e.leadId))||{}).type||'Wedding'));
+  var typeOf=parent?evType(parent):(e?evType(e):((leadById((e&&e.leadId)||seedLeadId)||{}).type||'Wedding'));
   var roleOpts=rolesForType(typeOf).map(function(r){return {value:r.id,label:r.label};});
   /* Sub-events are one level deep, so only events that are not already part of
      a block, and have no block of their own, may be attached to one. An event
@@ -15127,7 +15158,7 @@ function openEventModal(existing,parentId){
        placeholder:isSub?'Rehearsal Dinner':''},
       /* A sub-event's client is its parent's, always — asking again is an
          invitation to contradict the block it belongs to. */
-      {id:'leadId',label:'Client',type:'select',value:(e&&e.leadId)||(parent&&parent.leadId),options:opts,full:true,
+      {id:'leadId',label:'Client',type:'select',value:(e&&e.leadId)||(parent&&parent.leadId)||seedLeadId,options:opts,full:true,
        showIf:function(v){ return !v.parentId; }},
       /* Present rather than revealed: openEditor builds its fields once, and a
          field that appears mid-edit loses whatever was typed in it. */

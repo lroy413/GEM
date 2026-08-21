@@ -705,6 +705,29 @@ never pulled, which is what stops a fresh install overwriting the studio.
     genuinely studio-wide.
   - `scratchpad/money-test.mjs` covers all of it, including that switching
     project switches the money with it.
+  - **The client file is the person across their jobs, and that is the whole
+    reason it survives.** A project can tell you everything about one job; only
+    the file can put a couple's wedding and their anniversary party side by
+    side. So it lost the things a project owns and gained the things only it
+    can show: `projectsForLead()` returns every primary event of theirs,
+    upcoming first and finished last, drawn with `projCard()` — the same card
+    the board uses, so one card means one thing everywhere. The single "The
+    Weekend / Event" card is gone; the weekend is inside its project now.
+  - **Money and paperwork on the file are across all their projects**, not just
+    the next one: `blockIds` is built from every project's block, so the
+    Documents stat counts the contract from the job two years ago. The stat row
+    is Collected / Outstanding / Projects / Documents.
+  - **Bookings belong to the job, not the person.** The Vendor Team section is
+    off the client file, and the project's own vendor section no longer links
+    back to the file to "manage" them — that arrow pointed the wrong way once
+    projects owned their work.
+  - **The band's subtitle stops lying when there are two.** One project and it
+    reads the date and venue; more than one and it reads "N projects · next
+    <date>", because a single date on a returning client's file is wrong.
+  - `openEventModal(existing,parentId,seedLeadId)` — the third way in. "New
+    project for them" on the file opens the form already pointed at that
+    client, and the event type follows their type.
+  - `scratchpad/client-file-test.mjs` covers it at 1400 and 390.
 - **The app is project-first now, and that is an information architecture, not
   a screen.** It used to open on a studio-wide dashboard with nineteen tools
   that each acted on whichever event happened to be current — a filing cabinet
