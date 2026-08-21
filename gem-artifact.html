@@ -7294,12 +7294,15 @@ function viewEventDetail(id){
     stat('Committed',money(actT),estT?Math.round(actT/estT*100)+'% of '+money(estT):'no budget set')+
   '</div>'+
 
+  /* What is happening this week on this job, and everything still to do on it
+     — the two questions a planner opens a project to answer. Both are full
+     width and sit above the two columns; inside the grid the list would be
+     half a column wide with the week strip alongside it. The list IS the
+     checklist; there is not a second one anywhere. */
+  weekStrip(e)+
   '<div class="grid-2" style="align-items:start">'+
-    /* What is happening this week on this job, and everything still to do on
-       it — the two questions a planner opens a project to answer. The list is
-       the checklist; there is not a second one anywhere. */
-    weekStrip(e)+
-    evSection('checklist','Checklist',null,
+    '<div class="ev-col">'+
+      evSection('checklist','Checklist',null,
         '<div style="padding:6px 22px 14px">'+
           /* Two lists, not one. The studio's own work and the couple's jobs are
              different things, and the couple's are the only ones the portal
@@ -7328,7 +7331,7 @@ function viewEventDetail(id){
           '<div class="sec-actions"><button class="btn btn-ghost btn-sm" data-addck="1">＋ Add task</button>'+
           '<button class="btn btn-gold btn-sm" data-template="1">✦ Apply template</button></div>'+
         '</div>','<span class="pill gold">'+pct+'%</span>')+
-    '<div class="ev-col">'+
+
       evSection('timeline','Day-of Timeline',tlRows(e).length,
         '<div style="padding:20px 22px"><div class="tl">'+
           (tlRows(e).length?tlMarkup(e,true):'<div class="empty-hint">No running order yet.</div>')+
