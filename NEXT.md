@@ -871,6 +871,52 @@ never pulled, which is what stops a fresh install overwriting the studio.
   - `scratchpad/passone-test.mjs` locks all five in at 1400 and 393. Note for
     future seeds: a "quiet" fixture must also set questionnaires to draft —
     a sent questionnaire counts as waiting.
+- **The type has a volume knob now, and the base came up a step.** Every
+  `font-size` is rem (the 13-step ladder made this a mechanical sweep), so
+  `html{font-size:106.25%}` — a 17px base — raises the whole surface one
+  comfortable step without a single rule changing. Settings → Appearance →
+  **Text size** offers Compact (16px), Comfortable (17px, default) and Large
+  (18px); the pref is `textScale`, applied in `applyPrefs()` by SETTING the
+  root font-size for the non-defaults and CLEARING it for the default, so the
+  stylesheet stays the single source of truth. `@media print{html{font-size:
+  16px!important}}` keeps every printed sheet at its designed size whatever
+  the screen preference. The one remaining px font-size in the file is that
+  print reset, on purpose.
+  - Feedback fixes from the same session: the `.seg` control carried a 16px
+    bottom margin from the seating screen into the projects toolbar, which
+    read as misalignment beside the New project button — `.pj-tools .seg`
+    zeroes it and matches `--ctl-h-sm`. The week strip gained air above its
+    header (`.wk{margin:30px 0 22px}`). The needs chips slimmed from button
+    weight to annotation weight (5px padding, figure at 15px, no shadow) so
+    they stop outshouting the headline, and the front door's date eyebrow
+    went up to 12px at .15em tracking — it is a fact people read, not
+    decoration. `scratchpad/textsize-test.mjs` covers the knob, persistence,
+    print immunity and the toolbar alignment at 1400 and 393.
+- **Pass two of the visual audit — the system underneath.**
+  - **The type scale is 13 steps, from 47.** A mechanical sweep mapped every
+    `font-size` (597 CSS declarations plus ~50 inline) onto the ladder
+    10 / 11 / 12 / 13.5 / 15 / 16 / 19 / 22 / 26 / 32 / 40 / 52 / 56, chosen so
+    nothing moved more than about a pixel. The calm comes from repetition:
+    when a size appears, it is one the eye has already seen.
+  - **Border or shadow, never both.** Static containers (`.card`, `.stat`,
+    `.wk-d`) are a hairline; things that float or invite a press (modals,
+    `.pj-card`) carry the shadow and drop the border. Half the boxy weight of
+    the old grammar was the doubling.
+  - **Counts are figures, statuses are chips.** A numeric `.pill` in a card
+    header sheds its capsule and reads as quiet tabular text; `.gold`,
+    `.warn` and `.danger` pills keep their tint because state is the thing
+    worth a colour.
+  - **Form labels are sentence case** (12px medium, no tracking). The eyebrow
+    device is saved for opening sections, where rarity is what makes it read
+    as considered.
+  - **`coverArt(id)`** — a project with no photograph wears a composed field of
+    its own tint (three soft radial lights over a deep diagonal floor, the page
+    grain showing through) instead of a flat block with a monogram letter.
+    Used by the board cards, list thumbs, archive cards and the nav switcher.
+    Real sample photography is still open — it needs an asset-size decision
+    for a single-file app.
+  - `scratchpad/passtwo-test.mjs` locks all of it in at 1400 and 393,
+    including "the stylesheet runs on ≤14 font sizes" as a standing gate.
 - **The settings pass, and the Learn content caught up with project-first.**
   A standing rule now applies: after every phase, a premium passover — walk the
   screens the phase touched plus the ones nobody has looked at lately, on both
