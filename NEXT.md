@@ -871,6 +871,27 @@ never pulled, which is what stops a fresh install overwriting the studio.
   - `scratchpad/passone-test.mjs` locks all five in at 1400 and 393. Note for
     future seeds: a "quiet" fixture must also set questionnaires to draft —
     a sent questionnaire counts as waiting.
+- **The type has a volume knob now, and the base came up a step.** Every
+  `font-size` is rem (the 13-step ladder made this a mechanical sweep), so
+  `html{font-size:106.25%}` — a 17px base — raises the whole surface one
+  comfortable step without a single rule changing. Settings → Appearance →
+  **Text size** offers Compact (16px), Comfortable (17px, default) and Large
+  (18px); the pref is `textScale`, applied in `applyPrefs()` by SETTING the
+  root font-size for the non-defaults and CLEARING it for the default, so the
+  stylesheet stays the single source of truth. `@media print{html{font-size:
+  16px!important}}` keeps every printed sheet at its designed size whatever
+  the screen preference. The one remaining px font-size in the file is that
+  print reset, on purpose.
+  - Feedback fixes from the same session: the `.seg` control carried a 16px
+    bottom margin from the seating screen into the projects toolbar, which
+    read as misalignment beside the New project button — `.pj-tools .seg`
+    zeroes it and matches `--ctl-h-sm`. The week strip gained air above its
+    header (`.wk{margin:30px 0 22px}`). The needs chips slimmed from button
+    weight to annotation weight (5px padding, figure at 15px, no shadow) so
+    they stop outshouting the headline, and the front door's date eyebrow
+    went up to 12px at .15em tracking — it is a fact people read, not
+    decoration. `scratchpad/textsize-test.mjs` covers the knob, persistence,
+    print immunity and the toolbar alignment at 1400 and 393.
 - **Pass two of the visual audit — the system underneath.**
   - **The type scale is 13 steps, from 47.** A mechanical sweep mapped every
     `font-size` (597 CSS declarations plus ~50 inline) onto the ladder
