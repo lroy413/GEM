@@ -895,6 +895,65 @@ never pulled, which is what stops a fresh install overwriting the studio.
     is NOT an invalid colour. iOS snapshots the status-bar appearance when an
     app is added to the Home Screen — an install predating these metas keeps
     the old band until it is removed and re-added.
+  - **Two ID selectors in the phone block were quietly winning.** `#sidebar`
+    sets both `padding-top` and `padding-bottom` inside `@media (max-width:860px)`,
+    and an ID beats a class no matter what the source order says. So the
+    class-level `.sidebar{padding-bottom:calc(var(--tabbar-h) + …)}` written for
+    the tab-bar fix above NEVER APPLIED — the drawer's 78px reserve was the
+    pre-existing ID rule all along, and measuring the drawer against HEAD~1
+    gave byte-identical geometry. The lesson is in the file now: both reserves
+    are ID rules, both derive from `--tabbar-h`, and the dead class rule is
+    gone. Check what actually computes, not what the diff says.
+  - **`@media (display-mode:standalone)` lost the same way, twice over.** It
+    declared `.main{padding-top:…}` near the top of the file; the tablet and
+    phone blocks set `.main`'s padding as a SHORTHAND several thousand lines
+    later, and `#sidebar{padding-top:12px}` outranked it on specificity. So the
+    top inset applied on a desktop and nowhere else — on a phone, the only
+    device with a notch. It is a token now: `--safe-top`, `0px` on `:root` and
+    `env(safe-area-inset-top,0px)` under the standalone query, added into every
+    place `.main`, `.sidebar` and `.overlay` set a top padding. A token
+    composes with each breakpoint instead of fighting it.
+    `scratchpad/standalone-test.mjs` proves composition by setting `--safe-top`
+    to 47px and asserting all three grow by exactly 47 at 393, 760 and 1400 —
+    the emulator always reports `env()` as 0, so asserting a pixel value would
+    have passed on a broken build.
+  - **The page under the tab bar cleared it by two pixels.** `.main` reserved a
+    flat 48px for a 46px bar, and the bar throws a 28px shadow upwards, so the
+    last rows of a long settings page were under a veil even where they were
+    not under the bar. Both reserves are `var(--tabbar-h) + env(…) + gap` now
+    (22px for the page, 32px for the drawer), and the test asserts the gap, not
+    just the absence of overlap.
+  - **`100vh` → `100dvh`** on `.sidebar`, `.app` and `.main.fill`, with the
+    `vh` line kept first as the fallback. iOS resolves `100vh` to the LARGE
+    viewport — the height the page would have with the browser chrome hidden —
+    so a fixed full-height drawer hangs below the visible screen and takes
+    `.side-foot` (`margin-top:auto`) with it. A desktop emulator cannot show
+    this: there the two are equal. Suspect it whenever something fixed to the
+    bottom is right locally and wrong on a phone.
+  - **The install-time colours were still the old powder pink.** iOS reads
+    `theme-color` and the manifest's `theme_color`/`background_color` when an
+    app is added to the Home Screen and does not re-read them afterwards, so
+    those three static values ARE the installed app's status bar and launch
+    screen. All three still carried `#F2DFE1` / `#FAF2F3` — the tint, from
+    before the strip was made to follow the ground. `applyBrand()` corrects
+    `theme-color` at runtime, but only after the first paint, and a manifest
+    has no runtime. They are `#FBF4F4` (`--wash-a`, the top of the page's own
+    gradient) and `#FDFAF8` (`--wash-b`, what `html` paints) now, so the
+    launch screen, the status bar and the page are one colour from the moment
+    the icon is tapped. Three files: `build.py`'s static head,
+    `deploy/manifest.webmanifest`, and the blob manifest the artifact host
+    falls back to.
+  - `apple-mobile-web-app-status-bar-style` stays `default` ON PURPOSE. The
+    alternative, `black-translucent`, is the only value that puts the web view
+    genuinely under the bar — but iOS then draws the clock and battery in
+    white, which is illegible on a cream ground and cannot be overridden from
+    CSS. `default` keeps the glyphs legible and lets modern iOS tint the bar
+    from `theme-color`; the day ground is near-white, so the seam is a few
+    per-channel points rather than a band.
+  - `.overlay` takes the top inset too: a modal is centred in the viewport, and
+    in an installed app the viewport starts at the top of the screen, so at
+    `max-height:88vh` on a short phone its top edge lands within a few pixels
+    of the clock.
   - `scratchpad/chrome-test.mjs` covers all of it at 393 and 1400.
 - **Evening mode — the last audit item, and the one the theming engine was
   always going to make cheap.** Because every surface, line, ink and wash is

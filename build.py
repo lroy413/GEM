@@ -24,7 +24,7 @@ HEAD = """<!doctype html>
 <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="description" content="Wedding and event planning for Glimmer Events Management.">
-<meta name="theme-color" content="#F2DFE1">
+<meta name="theme-color" content="#FBF4F4">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
 <meta name="apple-mobile-web-app-title" content="GEM">
