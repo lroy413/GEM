@@ -10,7 +10,7 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
 <meta name="apple-mobile-web-app-title" content="GEM">
 <meta name="format-detection" content="telephone=no">
-<meta name="gem-build" content="1f3fddad6dfe">
+<meta name="gem-build" content="4a2caaa8c91a">
 <link rel="manifest" href="/manifest.webmanifest">
 <link rel="icon" href="/icons/icon-192.png" sizes="192x192" type="image/png">
 <link rel="apple-touch-icon" href="/icons/icon-180.png">
@@ -1491,6 +1491,44 @@ tbody tr:hover{background:var(--pink-50)}
   background-repeat:no-repeat;background-position:right 13px center}
 .field input:focus,.field select:focus{outline:none;border-color:var(--gold);background:#fff;box-shadow:var(--ring)}
 .field input::placeholder{color:var(--muted)}
+/* ---- why a form could pan sideways on an iPhone ----
+   iOS Safari gives input[type=date] an intrinsic minimum width from its own
+   date format at the field's font size — and coarse pointers force 16px here
+   to stop the zoom-on-focus. width:100% cannot shrink a control below that
+   minimum, so the date box ran past the modal's right edge, and because
+   .modal-scroll is overflow-y:auto its overflow-x resolves to auto too: the
+   whole form became horizontally scrollable and drifted left as you scrolled,
+   taking every label's first characters off the screen with it.
+
+   Three things, because any one alone leaves a way back in: strip the native
+   appearance so the control sizes like a text box, let it actually shrink
+   (grid and flex children default to min-width:auto), and clamp the scroller
+   so no future field can pan the form again. */
+.field{min-width:0}
+.field input,.field select,.field textarea{max-width:100%;min-width:0}
+.field input[type=date],.field input[type=time],.field input[type=datetime-local]{
+  -webkit-appearance:none;appearance:none}
+.fgrid{min-width:0}
+.modal-scroll{overflow-x:hidden}
+
+/* ---- the time field's am/pm ----
+   The box takes "430" from a numeric keypad and the pair says which half of
+   the day it is, so nobody has to type letters or fall back on 24-hour time
+   to be unambiguous. Muted until there is a time to apply it to. */
+.t-row{display:flex;align-items:center;gap:8px;min-width:0}
+.t-row input{flex:1 1 auto;min-width:0}
+.t-mer{flex:0 0 auto;display:inline-flex;background:var(--pink-100);border:1px solid var(--line);
+  border-radius:var(--radius-pill);padding:3px;gap:2px}
+.t-mer button{font-family:var(--sans);font-size:12px;font-weight:600;letter-spacing:.02em;
+  color:var(--muted);background:none;border:none;border-radius:var(--radius-pill);
+  padding:0 12px;height:calc(var(--ctl-h) - 10px);min-width:44px;cursor:pointer;
+  transition:background-color .16s var(--ease),color .16s var(--ease),box-shadow .16s var(--ease)}
+.t-mer button.on{background:var(--card);color:var(--gold-deep);box-shadow:var(--shadow-sm)}
+.t-mer button:focus-visible{outline:none;box-shadow:var(--ring)}
+.t-mer.off button{opacity:.5;cursor:default}
+/* A range — "9:00 AM – 10:00 PM" on a timeline moment — has two halves and no
+   single answer, so the pair steps aside rather than lying about one of them. */
+.t-row.is-range .t-mer{display:none}
 /* flex-wrap is not a nicety here. Three buttons — "Save this checklist",
    "Cancel", "Add tasks" — come to 358px inside a 315px row on a phone, and
    with justify-content:flex-end and no wrap the FIRST one is painted 34px
@@ -13576,8 +13614,18 @@ function openEditor(o){
           }).join('')+'</div>':'')+
           '<div class="hint">Separate with commas.</div>';
       }
-      else ctl='<input id="'+id+'" type="'+(f.type||'text')+'" value="'+esc(v)+'"'+
-        (f.placeholder?' placeholder="'+esc(f.placeholder)+'"':'')+'>';
+      else{
+        ctl='<input id="'+id+'" type="'+(f.type||'text')+'" value="'+esc(v)+'"'+
+          (f.placeholder?' placeholder="'+esc(f.placeholder)+'"':'')+'>';
+        /* Type the digits, tap the half of the day. Nobody should have to
+           write "PM", and nobody should have to fall back on 17:30 to be
+           understood. */
+        if(f.fmt==='time')ctl='<div class="t-row" data-tfor="'+id+'">'+ctl+
+          '<span class="t-mer">'+
+            '<button type="button" data-mer="AM">AM</button>'+
+            '<button type="button" data-mer="PM">PM</button>'+
+          '</span></div>';
+      }
       return '<div class="field" data-fid="'+f.id+'"'+(f.full?' style="grid-column:1/-1"':'')+'><label for="'+id+'">'+esc(f.label)+
         (f.required?' <span class="req">required</span>':'')+'</label>'+ctl+'</div>';
     }).join('')+'</div></div>'+
@@ -13665,7 +13713,34 @@ function openEditor(o){
     if(f.fmt!=='time')return;
     var el=$('#ed_'+f.id); if(!el)return;
     el.setAttribute('inputmode','numeric');
-    el.onblur=function(){ el.value=normTime(el.value); };
+    var row=el.closest('.t-row');
+    /* The pair reads the box rather than holding a value of its own — so it
+       is right whether the time was typed, tidied on blur, or loaded off a
+       record, and there is never a second opinion to keep in step. */
+    var paint=function(){
+      if(!row)return;
+      var one=normTimeOne(el.value), rng=!one&&!!normTime(el.value);
+      row.classList.toggle('is-range',rng);
+      var mer=one?one.slice(-2):'';
+      row.querySelector('.t-mer').classList.toggle('off',!one);
+      row.querySelectorAll('[data-mer]').forEach(function(b){
+        b.classList.toggle('on',b.dataset.mer===mer);
+      });
+    };
+    el.onblur=function(){ el.value=normTime(el.value); paint(); };
+    el.addEventListener('input',paint);
+    if(row)row.querySelectorAll('[data-mer]').forEach(function(b){
+      b.onclick=function(){
+        var one=normTimeOne(el.value);
+        /* Nothing typed yet: the tap is the answer to "morning or evening",
+           so it stands as a whole time rather than being dropped. */
+        el.value=one?one.slice(0,-2)+b.dataset.mer
+                   :(b.dataset.mer==='AM'?'9:00 AM':'5:00 PM');
+        paint();
+        if(typeof o.onFieldChange==='function')o.onFieldChange(currentVals(),md);
+      };
+    });
+    paint();
   });
   var first=md.querySelector('.modal-scroll input,.modal-scroll select,.modal-scroll textarea');
   if(first)setTimeout(function(){first.focus();},60);

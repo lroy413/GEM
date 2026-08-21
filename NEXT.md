@@ -736,6 +736,32 @@ never pulled, which is what stops a fresh install overwriting the studio.
     fill for the same reason — a filter should not be the loudest thing on the
     screen.
   - `scratchpad/polish-test.mjs` covers all of it at 393 and 1400.
+- **Why a form could still pan sideways on an iPhone, and what a time field
+  should ask for.**
+  - **`input[type=date]` was the culprit.** iOS Safari gives it an intrinsic
+    minimum width from its own date format at the field's font size — and
+    coarse pointers force 16px here to stop zoom-on-focus — so `width:100%`
+    could not shrink it and the box ran past the modal's right edge. Because
+    `.modal-scroll` is `overflow-y:auto`, its `overflow-x` resolves to `auto`
+    too, and the whole form became horizontally scrollable: it drifted left and
+    took the first characters off every label ("PART OF" reading as "T OF").
+    Three rules, because any one alone leaves a way back in: `-webkit-appearance:
+    none` on date/time/datetime-local so the control sizes like a text box,
+    `min-width:0` on `.field` and its controls (grid and flex children default
+    to `min-width:auto`), and `overflow-x:hidden` on `.modal-scroll` so no
+    future field can pan a form again.
+  - **The time field takes digits and a tap.** `fmt:'time'` boxes now render
+    inside a `.t-row` with an AM/PM pair beside them. `inputmode="numeric"`
+    was already there, so "430" off the number pad plus one tap is a whole
+    time — nobody types letters, and nobody has to fall back on 17:30 to be
+    unambiguous. The pair READS the box rather than holding a value of its
+    own, so it is right whether the time was typed, tidied on blur or loaded
+    off a record, and there is never a second opinion to keep in step. Empty
+    box: the pair is muted, and a tap still answers ("morning" → 9:00 AM,
+    "evening" → 5:00 PM) rather than being dropped. A range — a timeline
+    moment's "9:00 AM – 10:00 PM" — has two halves and no single answer, so
+    `.is-range` hides the pair instead of lying about one of them.
+  - `scratchpad/time-test.mjs` covers both at 393 and 1400.
 
   Once every screen is inside a job, the old shape leaves the same facts in
   three places. What was actually duplicated: the client's contact details on
