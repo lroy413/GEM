@@ -871,6 +871,158 @@ never pulled, which is what stops a fresh install overwriting the studio.
   - `scratchpad/passone-test.mjs` locks all five in at 1400 and 393. Note for
     future seeds: a "quiet" fixture must also set questionnaires to draft —
     a sent questionnaire counts as waiting.
+- **Two pieces of phone chrome, reported from a real device.**
+  - **The drawer's footer slid under the tab bar.** The tab bar is fixed at
+    z-index 60, the sidebar is 40, and the sidebar reserved
+    `26px + env(safe-area-inset-bottom)` at the bottom — which covers the home
+    indicator and nothing else, while the BAR itself is 46px on top of that
+    inset. So the studio chip, the settings gear and help were behind it. The
+    reserve is `var(--tabbar-h) + env(safe-area-inset-bottom) + 14px` now, and
+    `--tabbar-h` is a token so the two cannot drift apart.
+  - **Nothing behind the page was painted.** `body` paints its gradient over
+    its own box; anything the browser composites OUTSIDE that box — the strip
+    behind a status bar, an overscroll rubber-band — fell through to the UA's
+    white. `html{background-color:var(--wash-b)}` closes it, from the same
+    token family the theme-color meta reads, so the document, the page and the
+    status bar agree (the test asserts they agree to within 14 per channel).
+  - **`@media (display-mode:standalone)`** adds `env(safe-area-inset-top)` to
+    the main column and the sidebar. Scoped to standalone deliberately: in
+    Safari that inset is the notch and the toolbar already sits below it, so
+    padding there would open a gap; in an installed app whose web view runs
+    under a translucent bar it is exactly the room the clock needs.
+  - Verified: `theme-color` produces a valid six-digit hex for all eight
+    palettes in both grounds (`scratchpad/tcheck.mjs`), so a grey status band
+    is NOT an invalid colour. iOS snapshots the status-bar appearance when an
+    app is added to the Home Screen — an install predating these metas keeps
+    the old band until it is removed and re-added.
+  - **Two ID selectors in the phone block were quietly winning.** `#sidebar`
+    sets both `padding-top` and `padding-bottom` inside `@media (max-width:860px)`,
+    and an ID beats a class no matter what the source order says. So the
+    class-level `.sidebar{padding-bottom:calc(var(--tabbar-h) + …)}` written for
+    the tab-bar fix above NEVER APPLIED — the drawer's 78px reserve was the
+    pre-existing ID rule all along, and measuring the drawer against HEAD~1
+    gave byte-identical geometry. The lesson is in the file now: both reserves
+    are ID rules, both derive from `--tabbar-h`, and the dead class rule is
+    gone. Check what actually computes, not what the diff says.
+  - **`@media (display-mode:standalone)` lost the same way, twice over.** It
+    declared `.main{padding-top:…}` near the top of the file; the tablet and
+    phone blocks set `.main`'s padding as a SHORTHAND several thousand lines
+    later, and `#sidebar{padding-top:12px}` outranked it on specificity. So the
+    top inset applied on a desktop and nowhere else — on a phone, the only
+    device with a notch. It is a token now: `--safe-top`, `0px` on `:root` and
+    `env(safe-area-inset-top,0px)` under the standalone query, added into every
+    place `.main`, `.sidebar` and `.overlay` set a top padding. A token
+    composes with each breakpoint instead of fighting it.
+    `scratchpad/standalone-test.mjs` proves composition by setting `--safe-top`
+    to 47px and asserting all three grow by exactly 47 at 393, 760 and 1400 —
+    the emulator always reports `env()` as 0, so asserting a pixel value would
+    have passed on a broken build.
+  - **The page under the tab bar cleared it by two pixels.** `.main` reserved a
+    flat 48px for a 46px bar, and the bar throws a 28px shadow upwards, so the
+    last rows of a long settings page were under a veil even where they were
+    not under the bar. Both reserves are `var(--tabbar-h) + env(…) + gap` now
+    (22px for the page, 32px for the drawer), and the test asserts the gap, not
+    just the absence of overlap.
+  - **`100vh` → `100dvh`** on `.sidebar`, `.app` and `.main.fill`, with the
+    `vh` line kept first as the fallback. iOS resolves `100vh` to the LARGE
+    viewport — the height the page would have with the browser chrome hidden —
+    so a fixed full-height drawer hangs below the visible screen and takes
+    `.side-foot` (`margin-top:auto`) with it. A desktop emulator cannot show
+    this: there the two are equal. Suspect it whenever something fixed to the
+    bottom is right locally and wrong on a phone.
+  - **The install-time colours were still the old powder pink.** iOS reads
+    `theme-color` and the manifest's `theme_color`/`background_color` when an
+    app is added to the Home Screen and does not re-read them afterwards, so
+    those three static values ARE the installed app's status bar and launch
+    screen. All three still carried `#F2DFE1` / `#FAF2F3` — the tint, from
+    before the strip was made to follow the ground. `applyBrand()` corrects
+    `theme-color` at runtime, but only after the first paint, and a manifest
+    has no runtime. They are `#FBF4F4` (`--wash-a`, the top of the page's own
+    gradient) and `#FDFAF8` (`--wash-b`, what `html` paints) now, so the
+    launch screen, the status bar and the page are one colour from the moment
+    the icon is tapped. Three files: `build.py`'s static head,
+    `deploy/manifest.webmanifest`, and the blob manifest the artifact host
+    falls back to.
+  - `apple-mobile-web-app-status-bar-style` stays `default` ON PURPOSE. The
+    alternative, `black-translucent`, is the only value that puts the web view
+    genuinely under the bar — but iOS then draws the clock and battery in
+    white, which is illegible on a cream ground and cannot be overridden from
+    CSS. `default` keeps the glyphs legible and lets modern iOS tint the bar
+    from `theme-color`; the day ground is near-white, so the seam is a few
+    per-channel points rather than a band.
+  - `.overlay` takes the top inset too: a modal is centred in the viewport, and
+    in an installed app the viewport starts at the top of the screen, so at
+    `max-height:88vh` on a short phone its top edge lands within a few pixels
+    of the clock.
+  - `scratchpad/chrome-test.mjs` covers all of it at 393 and 1400.
+- **Evening mode — the last audit item, and the one the theming engine was
+  always going to make cheap.** Because every surface, line, ink and wash is
+  DERIVED from two colours, a second ground is a change to the derivation
+  rather than a second stylesheet: `applyBrand()` branches to `applyEvening()`
+  or `dayPalette()`, and `paintBrandArtwork()` (the logo work) runs either way.
+  A studio on sage gets a sage-tinted night, not a generic grey one.
+  - Settings → Appearance → **Ground**: Day / Evening / Follow my device. The
+    `auto` case binds a `prefers-color-scheme` listener so a device that flips
+    at sunset repaints live. `mode` is the pref; changing it calls
+    `applyBrand()`, not just `applyPrefs()`, because a ground is a palette.
+  - **Tokenising was most of the work.** `--lift` (the raised surface: focused
+    inputs, hovered rows, card heads, floor-plan paper) replaced 29 literal
+    `#fff` backgrounds; `--veil` replaced a translucent white panel that would
+    have been a light slab at night; and the status literals collapsed into
+    three semantic triplets (`--ok-/--warn-/--danger-` × wash/line/ink), which
+    also merged near-duplicate greens that had been drifting apart. The ~49
+    `color:#fff` uses were checked and deliberately LEFT — they are type over
+    photographs, accent fills and scrims, and stay white on either ground. The
+    two logo plates stay white on purpose: a client's artwork is drawn for
+    white paper.
+  - **A contrast audit came out of it** (`scratchpad/contrast.mjs`, run per
+    ground and width). Its first version reported white-on-white for every
+    legible thing because this app paints grounds with GRADIENTS — the walker
+    now reads a gradient's first colour stop. Findings, all pre-existing in
+    day: `--muted` sat at 4.2:1 on near-white (offset +32 → +26, ~40 runs
+    fixed), and small text in brand gold sat at 2.5-3.1:1 — so 105
+    `color:var(--gold)` declarations became `--gold-deep`, which already had
+    the right value in BOTH grounds. `border-color` and backgrounds keep
+    `--gold`, whose lightness is right for a line and wrong for a letter.
+    Day went 93 → 31 low-contrast runs, evening sits at 9.
+  - Known residue, deliberately not "fixed": the `.avatar` monogram is white
+    on a mid-gold identity tile (~2:1) — decorative, and the same initials sit
+    beside it as text; and several flagged runs are white on a scrim over a
+    dark photograph, which the audit cannot composite and which read fine.
+  - `scratchpad/evening-test.mjs` covers both grounds, the hue surviving the
+    night, the status-bar band following it down, `auto` under an emulated
+    dark device, and "no surface is left as a light slab".
+- **Pass three of the visual audit — the signature.**
+  - **A real mark.** `GI.gem` is a faceted gem drawn in the set's own stroke.
+    It wears the identity where the app speaks as ITSELF — the welcome gate,
+    About, and the favicon — never where the studio's own brand belongs. The
+    canvas `icon(size)` in the PWA block strokes the same geometry, and
+    `deploy/icons/*.png` were regenerated from it (a scratchpad Playwright
+    script drew them at 180/192/512 plus a maskable 512 with the gradient
+    bled to the edges). The block also fills a `link[rel="icon"]` now: the
+    artifact host owns `<head>` and serves no files, so a preview had no tab
+    icon at all — build.py supplies one on the deployed site.
+  - **One signature motion, and one only.** `openProject()` stages an entrance
+    — `#content`'s children rise 12px with a 50ms stagger, the banner first —
+    then removes the class after 800ms so later renders sit perfectly still.
+    Ordinary navigation does not animate; that restraint is what lets this one
+    read as an arrival rather than a transition effect. `html.no-motion *`
+    already kills it for reduced-motion.
+  - **The tick is drawn, not stamped.** A completed checkbox holds an inline
+    SVG check that strokes itself on (`stroke-dasharray` 17 → 0) while the box
+    pops, keyed off a transient `state.justTicked` so ONLY the box you just
+    ticked animates. The class is removed from the DOM after 500ms rather
+    than waiting for a render that may never come.
+  - **Calendar craft.** The month is set in the display face at 1.625rem with
+    the year in muted weight (`h3.cal-title`, element-qualified because
+    `.card-h h3` would otherwise outrank it — and repeated inside the ≤560
+    block, where card headers step down but the month is the screen's
+    subject). Entries became tinted bars — the item's colour at `1c` alpha
+    with a 3px left edge — instead of grey chips with dots. Weekend columns
+    take `--bg-2`. Today is ONE gold ring, replacing a wash plus a soft ring
+    plus a gilded number saying the same thing three ways.
+  - `scratchpad/passthree-test.mjs` covers all of it at 1400 and 393,
+    including that ordinary navigation does NOT animate.
 - **The type has a volume knob now, and the base came up a step.** Every
   `font-size` is rem (the 13-step ladder made this a mechanical sweep), so
   `html{font-size:106.25%}` — a 17px base — raises the whole surface one
