@@ -978,6 +978,38 @@ never pulled, which is what stops a fresh install overwriting the studio.
     `__BUILD__` stamp throws instead of warning.
   - The served manifest was fine throughout — it is copied verbatim, so it
     never had a second copy to drift from. Only the head did.
+- **The status bar, settled with a measurement.** A device screenshot put the
+  band at `#c4bfc1`. That is the `#FBF4F4` we ship under a ~22% black scrim,
+  which says two things at once: iOS WAS reading `theme-color`, and under
+  `apple-mobile-web-app-status-bar-style: default` it draws the bar itself and
+  DIMS whatever colour it is handed. No value can match the page that way.
+  - The second half is worse and would have survived a fix to the first: the
+    meta is one static value baked at build time, while the ground is derived
+    per studio. The reporting studio is on slate (`#e4e7ea`), so it was being
+    handed the DEFAULT palette's cream — a warm grey band over a cool
+    blue-grey page. A meta tag cannot follow a derived palette.
+  - `black-translucent` now, so the web view runs the full height of the screen
+    and the PAGE paints that strip, in whatever palette the studio is on.
+    `--safe-top` was already plumbed through every breakpoint; note that
+    `env(safe-area-inset-top)` is **0 under `default`** and only becomes real
+    under `black-translucent`, which is exactly why the padding looked correct
+    in every local test and did nothing on the device.
+  - Known trade: iOS picks the clock and battery colour from the SYSTEM
+    appearance, not from the page. Day ground with a light system, and evening
+    with a dark one, both land right — `mode:'auto'` keeps them correlated.
+    Forcing Evening on a light-mode phone is the case that can read wrong.
+  - `scratchpad/notch-test.mjs` drives `--safe-top` directly, since an emulator
+    always reports a zero inset, and asserts the ground is the studio's.
+- **Dismissals were device state and should have been studio state.**
+  `gem-setup-hidden` and `gem-sample-adopted` were bare localStorage keys.
+  Uninstalling the home screen app wipes its storage, so a planner who
+  reinstalled and signed back in got every project back from the studio and
+  none of the "I have seen this": Getting started and the sample banner both
+  returned, months in. Both ride in the synced preferences now, like
+  `tourDone`. `prefs()` reads through the old keys and writes the migration
+  once on load — reading alone would have left the dismissal on the device
+  until some unrelated setting happened to save. `scratchpad/dismiss-test.mjs`
+  covers dismiss, reinstall-and-pull, the legacy device, and a new studio.
 - **`deploy/offline.html`** got the same three fixes as the app (`html`
   carries the ground, `dvh`, a `theme-color`), its ground moved off the old
   pre-token pink onto the app's own, and the placeholder "G" in a box became

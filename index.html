@@ -7,10 +7,10 @@
 <meta name="description" content="Wedding and event planning for Glimmer Events Management.">
 <meta name="theme-color" content="#FBF4F4">
 <meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="GEM">
 <meta name="format-detection" content="telephone=no">
-<meta name="gem-build" content="82956f06a71e">
+<meta name="gem-build" content="5b27fa17907c">
 <link rel="manifest" href="/manifest.webmanifest">
 <link rel="icon" href="/icons/icon-192.png" sizes="192x192" type="image/png">
 <link rel="apple-touch-icon" href="/icons/icon-180.png">
@@ -4534,6 +4534,16 @@ html,body{max-width:100%;overflow-x:hidden}
     meta('theme-color','#FBF4F4');
     meta('color-scheme','light');
     meta('apple-mobile-web-app-capable','yes');
+    /* Full-bleed under the status bar. The alternative, 'default', hands iOS
+       a colour and lets it draw the bar - and it draws that colour under a
+       22% black scrim, so the strip can never match the page no matter what
+       is passed. Worse, a meta is one static value while the ground is
+       derived per studio, so a studio on slate got the default palette's
+       cream dimmed to a warm grey above a cool blue-grey page. Under
+       black-translucent the page paints that strip itself, in whatever
+       palette the studio is actually on, and --safe-top (env(safe-area-inset-top),
+       which is 0 until this is set) keeps content clear of the clock. */
+    meta('apple-mobile-web-app-status-bar-style','black-translucent');
     meta('apple-mobile-web-app-title','GEM');
     if(lacks('link[rel="icon"]')){
       var fi=document.createElement('link'); fi.rel='icon'; fi.type='image/png';
@@ -4853,11 +4863,11 @@ function adoptSample(){
   /* The id lists are how an un-flagged record is still recognised as sample,
      so they have to stop matching too. */
   Object.keys(SAMPLE_IDS).forEach(function(k){ SAMPLE_IDS[k]=[]; });
-  try{ localStorage.setItem('gem-sample-adopted','1'); }catch(e){}
+  prefs().sampleAdopted=true; savePrefs();
   save(); render();
   toast(n+' records are yours to edit now');
 }
-function sampleAdopted(){ try{ return localStorage.getItem('gem-sample-adopted')==='1'; }catch(e){ return false; } }
+function sampleAdopted(){ return !!prefs().sampleAdopted; }
 /* Shown at the top of anything belonging to the sample. Says what it is, why
    it will not take edits, and offers both ways out. */
 function sampleBanner(){
@@ -11418,10 +11428,15 @@ var BRAND_PRESETS=[
  * ============================================================ */
 var SET_KEY='gem-settings';
 var settings=null;
+/* A flag that used to live on its own key. Only ever read - nothing writes
+   these any more - so a device carries its old dismissals into the synced
+   preferences on the next load and the key can be dropped later. */
+function legacyFlag(k,v){ try{ return localStorage.getItem(k)===v; }catch(e){ return false; } }
 function prefs(){
   if(settings)return settings;
   var d={};
   try{ d=JSON.parse(localStorage.getItem(SET_KEY))||{}; }catch(e){ d={}; }
+  var oldSetup=legacyFlag('gem-setup-hidden','1'), oldSample=legacyFlag('gem-sample-adopted','1');
   settings={
     bizName:d.bizName||'Glimmer Events Management',
     plannerName:d.plannerName||'Glimmer M.',
@@ -11480,6 +11495,16 @@ function prefs(){
     /* Whitelisted like everything else here, or it is dropped on the next
        rebuild — the trap autoSync and dashOrder both fell into. */
     tourDone:!!d.tourDone,
+    /* Dismissals belong to the STUDIO, not the device. Both of these used to
+       be bare localStorage keys, so uninstalling the home screen app - which
+       wipes its storage - and signing back in restored every project from the
+       studio and none of the "I have seen this" state, and the Getting
+       started card and the sample banner came back to a planner two months
+       in. They ride in the synced preferences now, like tourDone. Read
+       through the legacy key too, so a device that dismissed them before this
+       change does not see them return once. */
+    setupHidden:!!d.setupHidden||oldSetup,
+    sampleAdopted:!!d.sampleAdopted||oldSample,
     /* How many task rows the dashboard draws before it stops. Ten by default:
        the point of the list is what is due, and past about ten rows it stops
        being a list and starts being the page. */
@@ -11497,6 +11522,13 @@ function prefs(){
       {id:uid('tm'),name:'Rosa Mendez',email:'rosa@gemevents.app',role:'planner'}
     ]
   };
+  /* Carry a device's old bare-key dismissals into the preferences once, here
+     rather than on the next save: read alone leaves them on this device, so
+     the studio would only learn about them if the planner happened to change
+     an unrelated setting later. */
+  if((oldSetup&&!d.setupHidden)||(oldSample&&!d.sampleAdopted)){
+    try{ localStorage.setItem(SET_KEY,JSON.stringify(settings)); }catch(e){}
+  }
   return settings;
 }
 function savePrefs(){ try{ localStorage.setItem(SET_KEY,JSON.stringify(prefs())); }catch(e){} }
@@ -14781,7 +14813,7 @@ function setupSteps(){
   ];
 }
 function setupCard(){
-  if(localStorage.getItem('gem-setup-hidden')==='1')return '';
+  if(prefs().setupHidden)return '';
   var steps=setupSteps();
   var done=steps.filter(function(s){return s.done;}).length;
   if(done===steps.length)return '';
@@ -14816,7 +14848,7 @@ function setupCard(){
 function wireSetupCard(){
   var t=$('#setupTour'); if(t)t.onclick=startTour;
   var h=$('#setupHide');
-  if(h)h.onclick=function(){ try{localStorage.setItem('gem-setup-hidden','1');}catch(e){} render(); };
+  if(h)h.onclick=function(){ prefs().setupHidden=true; savePrefs(); render(); };
   var mo=$('#setupMore');
   if(mo)mo.onclick=function(){
     var open=localStorage.getItem('gem-setup-open')==='1';
