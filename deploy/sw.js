@@ -7,7 +7,7 @@
  *
  * Bump CACHE_VERSION on every deploy so clients pick up the new shell.
  */
-const CACHE_VERSION = 'gem-v2';
+const CACHE_VERSION = 'gem-v3';
 const SHELL_CACHE  = `${CACHE_VERSION}-shell`;
 const ASSET_CACHE  = `${CACHE_VERSION}-assets`;
 
