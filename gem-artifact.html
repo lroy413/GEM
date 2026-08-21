@@ -715,6 +715,8 @@ html.no-motion body::before{opacity:.3}
 .set-in{height:36px;padding:0 11px;border:1px solid var(--line-strong);border-radius:9px;
   font-family:var(--sans);font-size:13px;color:var(--ink);background:var(--pink-50);width:230px}
 .set-in.num{width:78px}
+/* Free-text settings (default terms, payment link) truncated at 230px. */
+.set-in.wide{width:330px;max-width:100%}
 .set-in:focus{outline:none;border-color:var(--gold);background:#fff;box-shadow:var(--ring)}
 .set-sel{height:36px;padding:0 30px 0 11px;border:1px solid var(--line-strong);border-radius:9px;
   font-family:var(--sans);font-size:13px;color:var(--ink);background-color:var(--pink-50);
@@ -5699,7 +5701,23 @@ var GI={
   download:'<path d="M10 3.8v9.4M6.5 9.7l3.5 3.5 3.5-3.5M4 13.6v1.9A1.5 1.5 0 005.5 17h9a1.5 1.5 0 001.5-1.5v-1.9"/>',
   plus:'<path d="M10 4.6v10.8M4.6 10h10.8"/>',
   spark:'<path d="M10 2.6l1.9 5.5 5.5 1.9-5.5 1.9-1.9 5.5-1.9-5.5-5.5-1.9 5.5-1.9z"/>',
-  doc:'<path d="M5.4 2.9h6l3.2 3.2v11h-9.2z"/><path d="M11.2 3.1v3.4h3.4M7.7 10h4.6M7.7 13h4.6"/>'
+  doc:'<path d="M5.4 2.9h6l3.2 3.2v11h-9.2z"/><path d="M11.2 3.1v3.4h3.4M7.7 10h4.6M7.7 13h4.6"/>',
+  /* The settings index. One drawn mark per page; the geometric unicode that
+     used to sit here (\u25c6 \u25a5 \u25c9 \u25d0\u2026) rendered as mystery blobs at tile size. */
+  case_:'<path d="M3.2 6.6h13.6v9.2H3.2z"/><path d="M7.4 6.4V4.6a1.2 1.2 0 011.2-1.2h2.8a1.2 1.2 0 011.2 1.2v1.8M3.4 10.2h13.2"/>',
+  palette:'<path d="M10 3a7 7 0 100 14c1.2 0 1.6-.8 1.3-1.7-.4-1.2.2-2.3 1.6-2.3h1.4A2.7 2.7 0 0017 10.3 7 7 0 0010 3z"/><path d="M6.6 8.2h.01M10 6.2h.01M13.4 8.2h.01"/>',
+  cols:'<path d="M3.4 3.6h3.6v12.8H3.4zM8.2 3.6h3.6v9H8.2zM13 3.6h3.6v6.4H13z"/>',
+  rows:'<path d="M3.4 5h13.2M3.4 10h13.2M3.4 15h8.2"/>',
+  people:'<circle cx="7.4" cy="7" r="2.6"/><path d="M2.8 16a4.6 4.6 0 019.2 0"/><path d="M12.6 4.7a2.6 2.6 0 010 4.7M14.4 11.7a4.6 4.6 0 012.8 4.3"/>',
+  sliders:'<path d="M3.4 6h13.2M3.4 14h13.2"/><circle cx="12.6" cy="6" r="1.9"/><circle cx="7.4" cy="14" r="1.9"/>',
+  layout:'<path d="M3.4 3.4h13.2v13.2H3.4z"/><path d="M3.6 8h13M8.6 8v8.4"/>',
+  bell:'<path d="M10 3.2a4.4 4.4 0 014.4 4.4c0 3.6 1.4 4.6 1.4 4.6H4.2s1.4-1 1.4-4.6A4.4 4.4 0 0110 3.2z"/><path d="M8.4 15.4a1.7 1.7 0 003.2 0"/>',
+  eye:'<path d="M2.6 10S5.4 5.2 10 5.2 17.4 10 17.4 10 14.6 14.8 10 14.8 2.6 10 2.6 10z"/><circle cx="10" cy="10" r="2.3"/>',
+  flag:'<path d="M5 17V3.4"/><path d="M5 4h9.6l-2.4 3.2 2.4 3.2H5"/>',
+  quest:'<circle cx="10" cy="10" r="7"/><path d="M7.8 8a2.2 2.2 0 113.6 1.7c-.8.7-1.4 1-1.4 2.1"/><path d="M10 14.6h.01"/>',
+  sync:'<path d="M16 6.4H6.8a3.2 3.2 0 00-3.2 3.2"/><path d="M13.4 3.8L16 6.4l-2.6 2.6M4 13.6h9.2a3.2 3.2 0 003.2-3.2"/><path d="M6.6 16.2L4 13.6l2.6-2.6"/>',
+  db:'<ellipse cx="10" cy="4.8" rx="6.2" ry="2.2"/><path d="M3.8 4.8v10.4c0 1.2 2.8 2.2 6.2 2.2s6.2-1 6.2-2.2V4.8"/><path d="M3.8 10c0 1.2 2.8 2.2 6.2 2.2s6.2-1 6.2-2.2"/>',
+  info:'<circle cx="10" cy="10" r="7"/><path d="M10 9v4.4M10 6.4h.01"/>'
 };
 function icn(n,cls){return '<svg class="gi'+(cls?' '+cls:'')+'" viewBox="0 0 20 20" aria-hidden="true">'+GI[n]+'</svg>';}
 function money(n){return '$'+Number(n||0).toLocaleString('en-US');}
@@ -6470,7 +6488,6 @@ function viewStudio(boardHtml){
    keys are dropped and missing ones appended, so a saved order from an older
    build still works after a module is added or renamed. */
 var DASH_MODULES=[
-  {k:'hero',   label:'Upcoming events',  hint:'The card stack, with the next event on top'},
   {k:'week',   label:'Your week',        hint:'Seven days, and what lands on each'},
   {k:'work',   label:'To Do & Waiting On',hint:'The list you actually work from'},
   {k:'figures',label:'At a glance',      hint:'Booked, pipeline, collected, outstanding'}
@@ -11180,27 +11197,27 @@ var ROLE_CAN={
 };
 var SET_PAGES=[
   {g:'Studio',items:[
-    {k:'business',icon:'◆',t:'Business profile',d:'Name, contact details and letterhead'},
-    {k:'branding',icon:icn('spark'),t:'Branding',d:'Your logo, colours and how clients see you'},
-    {k:'pipeline',icon:'▥',t:'Pipeline stages',d:'Rename, reorder and colour your booking flow'},
+    {k:'business',icon:icn('case_'),t:'Business profile',d:'Name, contact details and letterhead'},
+    {k:'branding',icon:icn('palette'),t:'Branding',d:'Your logo, colours and how clients see you'},
+    {k:'pipeline',icon:icn('cols'),t:'Pipeline stages',d:'Rename, reorder and colour your booking flow'},
     {k:'templates',icon:icn('spark'),t:'Templates',d:'Task countdowns and document boilerplate'},
-    {k:'fields',icon:'▤',t:'Custom fields',d:'Extra details you track on clients and events'},
-    {k:'team',icon:'◉',t:'Team & roles',d:'Who has access and what they can do'}
+    {k:'fields',icon:icn('rows'),t:'Custom fields',d:'Extra details you track on clients and events'},
+    {k:'team',icon:icn('people'),t:'Team & roles',d:'Who has access and what they can do'}
   ]},
   {g:'App',items:[
-    {k:'appearance',icon:'◐',t:'Appearance',d:'Motion, density and where GEM opens'},
-    {k:'planning',icon:'◍',t:'Planning defaults',d:'Room size, table preset, grid and chairs'},
-    {k:'alerts',icon:'◔',t:'Alerts',d:'What appears in Waiting On, and how far ahead'},
-    {k:'portal',icon:'◑',t:'Client portal',d:'What couples can see and do'}
+    {k:'appearance',icon:icn('sliders'),t:'Appearance',d:'Motion, density and where GEM opens'},
+    {k:'planning',icon:icn('layout'),t:'Planning defaults',d:'Room size, table preset, grid and chairs'},
+    {k:'alerts',icon:icn('bell'),t:'Alerts',d:'What appears in Waiting On, and how far ahead'},
+    {k:'portal',icon:icn('eye'),t:'Client portal',d:'What couples can see and do'}
   ]},
   {g:'Learn',items:[
-    {k:'tours',icon:'✧',t:'Getting started',d:'Guided walkthroughs for every toolset'},
-    {k:'help',icon:'?',t:'Help & instructions',d:'How each part of GEM works'}
+    {k:'tours',icon:icn('flag'),t:'Getting started',d:'Guided walkthroughs for every toolset'},
+    {k:'help',icon:icn('quest'),t:'Help & instructions',d:'How each part of GEM works'}
   ]},
   {g:'Data',items:[
-    {k:'connection',icon:'⇄',t:'Connection',d:'Link this device to your Supabase project'},
-    {k:'data',icon:'▢',t:'Data & storage',d:'Export, import, storage used'},
-    {k:'about',icon:'◇',t:'About GEM',d:'Version, security and what’s coming'}
+    {k:'connection',icon:icn('sync'),t:'Connection',d:'Back your studio up and sync between devices'},
+    {k:'data',icon:icn('db'),t:'Data & storage',d:'Export, import, storage used'},
+    {k:'about',icon:icn('info'),t:'About GEM',d:'Version, security and what’s coming'}
   ]}
 ];
 /* Which build is this? Stamped into the page head by build.py and
@@ -11256,9 +11273,9 @@ function settingsPage(k){
                'VAT, Sales tax, GST — whatever your invoices say')+
         setRow('Default tax rate','<input class="set-in" id="s_taxRate" type="number" step="any" value="'+esc(p.taxRate)+'">',
                'Applied to a new invoice; every invoice can override it')+
-        setRow('Default terms','<input class="set-in" id="s_payTerms" value="'+esc(p.payTerms)+'">',
+        setRow('Default terms','<input class="set-in wide" id="s_payTerms" value="'+esc(p.payTerms)+'">',
                'Printed at the foot of the invoice')+
-        setRow('Payment link','<input class="set-in" id="s_payLink" value="'+esc(p.payLink)+'" placeholder="https://buy.stripe.com/…">',
+        setRow('Payment link','<input class="set-in wide" id="s_payLink" value="'+esc(p.payLink)+'" placeholder="https://buy.stripe.com/…">',
                'Your own checkout — Stripe, Square, PayPal, a bank page. A couple with a balance sees it as a Pay button in their portal.')+
       '</div>'+
       '<div class="set-note">GEM does not take card details itself, and does not touch the money — '+
@@ -11291,7 +11308,7 @@ function settingsPage(k){
         setRow('To-do rows','<select class="set-sel" id="s_todoRows">'+
           [10,15,20].map(function(n){
             return '<option value="'+n+'"'+(p.todoRows===n?' selected':'')+'>'+n+' rows</option>';}).join('')+'</select>',
-          'How much of the list the dashboard shows before it stops. The card collapses either way.')+
+          'How much of the list the projects home shows before it stops. The card collapses either way.')+
         setRow('Open GEM on','<select class="set-sel" id="s_landing">'+
           [['projects','All projects'],['dashboard','The project I was in'],['calendar','Calendar'],['pipeline','Leads & Pipeline']]
           .map(function(o){return '<option value="'+o[0]+'"'+(p.landing===o[0]?' selected':'')+'>'+o[1]+'</option>';}).join('')+'</select>')+
@@ -11299,9 +11316,12 @@ function settingsPage(k){
       /* Everyone works differently. Some planners want the money first; most
          want the list. Rather than argue for a default, the dashboard is
          ordered here. */
-      '<div class="fig-head" style="margin:22px 0 8px">Dashboard layout</div>'+
+      '<div class="fig-head" style="margin:22px 0 8px">Projects home layout</div>'+
       '<div class="set-card"><div class="dash-ord">'+
-        dashOrder().map(function(k,i,arr){
+        dashOrder().filter(function(k){return k!=='hero';}).map(function(k,i,arr){
+          /* 'hero' is the old card stack of upcoming events. The projects
+             board replaced it at the front door, so a toggle for it would be
+             a switch wired to nothing. */
           var m=DASH_MODULES.find(function(x){return x.k===k;});
           var off=!!dashHidden()[k];
           return '<div class="do-row'+(off?' off':'')+'" data-dkey="'+k+'">'+
@@ -11319,7 +11339,7 @@ function settingsPage(k){
           '</div>';
         }).join('')+
       '</div></div>'+
-      '<div class="set-note">The order here is the order on your dashboard. '+
+      '<div class="set-note">The order here is the order on your projects home, beneath the board. '+
         'Hiding a module does not delete anything — it just stops it competing for the space.</div>'+
     '</div>';
   }
@@ -11639,7 +11659,7 @@ function toursPage(){
   var keys=Object.keys(TOURS);
   var done=keys.filter(function(k){return toursDone[k];}).length;
   return '<div class="set-page">'+
-    '<p class="set-intro">Short guided walkthroughs that highlight the real interface as they explain it. '+done+' of '+keys.length+' finished.</p>'+
+    '<p class="set-intro">Short guided walkthroughs that highlight the real interface as they explain it. <span style="white-space:nowrap">'+done+' of '+keys.length+' finished.</span></p>'+
     '<div class="bar" style="margin-bottom:18px"><i style="width:'+Math.round(done/keys.length*100)+'%"></i></div>'+
     '<div class="tour-grid">'+keys.map(function(k){
       var t=TOURS[k];
@@ -11669,20 +11689,23 @@ function toursPage(){
   '</div>';
 }
 var HELP=[
-  {t:'Dashboard',b:['Opens on what needs doing rather than what you have earned. The band at the top is your nearest event — click it to open that workspace.',
-    'To Do gathers every open task across every event and groups them Overdue, Today, This week and Later. Tick the box to complete one; it saves straight away.',
+  {t:'The projects home',b:['GEM opens on a board of your projects — every job as a card with its date, venue, guest count and progress. Open one and the whole app becomes about that project; All projects in the sidebar brings you back out.',
+    'When something needs you, chips above the board say so — overdue, due today, waiting on others. On a quiet day the header simply says it is quiet.',
+    'To Do gathers every open task across every project and groups them Overdue, Today, This week and Later. Tick the box to complete one; it saves straight away.',
     'Waiting On is the chase list — new enquiries, unsigned contracts, overdue invoices and unanswered questionnaires. Click a row to jump to it.',
     'At a glance at the bottom holds the money figures, deliberately quiet.']},
   {t:'Leads & Pipeline',b:['Five stages: Enquiry, Proposal Sent, Booked, In Planning, Wrapped. Each header shows how many and how much.',
     'On a computer, drag a card between columns. On a phone or tablet the board stacks and each card carries a stage menu instead.',
     'Click a card to open the full client file. Collapse stages you are not working on.']},
-  {t:'Clients',b:['A client file holds both partners with pronouns, two email addresses, phone, preferred contact method, postal address, lead source and private notes that save as you type.',
-    'Add a photo by clicking the initials tile.',
-    'Their vendor team lives here — book vendors from your directory, set the fee and track contract status.',
-    'Invoices and documents for that client appear alongside.']},
-  {t:'Events',b:['Each event opens as a workspace. The venue band carries the full address, an Open in Maps link, your venue contact and site notes such as load-in gates or noise curfews.',
-    'Sections collapse and remember their state: day-of timeline, vendor team, guest list, checklist, budget, documents and client.',
-    'Apply a task template from the Checklist section to generate a full countdown with dates worked backwards from the event date.',
+  {t:'Clients',b:['A client file is the person across their jobs: every project they have given you as cards, with their money and paperwork totalled across all of them.',
+    'It holds both partners with pronouns, two email addresses, phone, preferred contact method, postal address, lead source and private notes that save as you type.',
+    'Add a photo by clicking the initials tile, and a cover photo on the band.',
+    'Vendors are booked inside each project’s Vendor Team section — the booking belongs to the job, not the person.']},
+  {t:'Projects',b:['Opening a project lands on its dashboard: the countdown, checklist progress, guests and money at a glance, then the venue, this week, and the working detail. The venue band carries the full address, an Open in Maps link, your venue contact and site notes such as load-in gates or noise curfews.',
+    'The This Project group in the sidebar holds that job’s other rooms — Guests & RSVP, Seating Chart, Design Studio, Money, Messages and the Client Portal. The switcher card above it moves between projects without leaving the screen you are on.',
+    'Money shows this project’s invoices, what has been collected and what is still owed, next to its budget. The studio-wide roll-up stays under Business.',
+    'Apply a task template from the Checklist to generate a full countdown with dates worked backwards from the event date — fitted to the time you actually have if the job was booked late.',
+    'A weekend is one project: add the rehearsal dinner or farewell brunch as sub-events and step between them in the strip under the banner.',
     'Print produces the running order, guest list, seating chart, vendor contact sheet, floor plan or task checklist on letterhead.']},
   {t:'Guests & RSVP',b:['Track replies, meals and dietary needs. Change an RSVP inline — marking someone as declined frees their seat automatically.',
     'Import a CSV and GEM maps the columns for you. It understands headers like Guest Name, Household, Entree and Allergies, and copes with commas inside quoted names.',
@@ -11694,7 +11717,7 @@ var HELP=[
     'Click a table to rename it, change size or shape, rotate it, and seat guests from the unseated list. Arrow keys nudge; Delete removes.']},
   {t:'Vendors',b:['The Vendors tab is your directory — each vendor exists once and can be booked to many events.',
     'Mark the ones you trust as Preferred and rate them; the list sorts favourites first. Search and filter by category.',
-    'Client vendor teams are managed on each client file. The cards at the top of the directory jump you straight there.']},
+    'Each project books its own vendor team from this directory, in the Vendor Team section of its dashboard.']},
   {t:'Design studio',b:['Pin a colour palette for the event, with hex values ready for suppliers.',
     'Create a mood board per moment — ceremony, tablescape, lighting. Open one to add reference photos, colours specific to that board, and a running list of ideas.',
     'Photos are downscaled automatically so they do not fill your storage.',
@@ -11702,13 +11725,16 @@ var HELP=[
   {t:'Enquiries & questionnaires',b:['Your public capture form feeds the enquiry inbox. Convert a submission and it becomes a lead with its details attached.',
     'Questionnaires are built question by question with six answer types. Send one and the couple answers it in their portal; progress is tracked per question.']},
   {t:'Contracts & money',b:['Documents move through draft, sent, signed and declined, with dates stamped automatically. A couple signs by typing their name in the portal.',
-    'Invoices show paid, due and overdue, and export to CSV. Budgets sit per event, showing committed against estimated.',
+    'Each project’s Money screen shows its invoices and budget side by side; Budget & Invoicing under Business rolls every job up, and exports to CSV.',
     'Analytics covers revenue by month, the pipeline funnel, lead sources and value by event type.',
     'The tax tool estimates what to set aside from net income. It is a planning aid, not tax advice — confirm categories with your accountant.']},
   {t:'Client portal',b:['A read-only view of the event for your couple: countdown, timeline, checklist, documents and payment schedule.',
     'They can sign contracts, answer questionnaires and message you.',
     'Your pipeline, vendor fees and internal budget lines are never visible. That is enforced by database rules, not by hiding things in the interface.']},
-  {t:'Search & shortcuts',b:['Press ⌘K, or Ctrl K on Windows, to search everything at once — clients, events, vendors, guests, documents, invoices, questionnaires, mood boards and open tasks.',
+  {t:'Calendar',b:['One month, every project on it — events gold, leads blush, tasks green, invoices amber. The same month renders as a list on a phone.',
+    'Tap any day to see what is on it and add a task due that day. The task joins a project’s checklist like any other, so it shows up in that project’s list, its week strip and back here.',
+    'Open calendar from any week strip jumps straight in.']},
+  {t:'Search & shortcuts',b:['Press ⌘K, or Ctrl K on Windows, to search everything at once — clients, projects, vendors, guests, documents, invoices, questionnaires, mood boards and open tasks.',
     'Arrow keys move through results, Enter opens one, Escape closes.',
     'Escape also closes any dialog, and the sidebar on a phone.']}
 ];
@@ -14188,36 +14214,36 @@ var TOUR=[
   {title:'Welcome to GEM',
    body:'Your whole studio in one place — enquiries through to the day itself. This takes about a minute; you can leave at any point.',
    center:true},
-  {view:'dashboard', sel:'.next-band', place:'bottom',
-   title:'What’s next, first',
-   body:'Your nearest event sits at the top with a live countdown. Click it any time to open that event’s workspace.'},
-  {view:'dashboard', sel:'.tasks', place:'right',
+  {view:'projects', sel:'.pj-grid,.pj-rows,.pj-empty', place:'top',
+   title:'Every job is a project',
+   body:'This board is the front door. Each card is one job — its date, venue, guest count and how far along it is. Open one and the whole app becomes about that project.'},
+  {view:'projects', sel:'.tasks', place:'right',
    title:'Your to-do list',
-   body:'Every open task across every event, grouped by urgency. Anything due today is gilded so it catches your eye. Tick it off right here.'},
-  {view:'dashboard', sel:'.waits', place:'left',
+   body:'Every open task across every project, grouped by urgency. Anything due today is gilded so it catches your eye. Tick it off right here.'},
+  {view:'projects', sel:'.waits', place:'left',
    title:'Waiting on other people',
    body:'New enquiries, unsigned contracts, overdue invoices and unanswered questionnaires — the chase list. Click any row to jump to it.'},
+  {view:'dashboard', sel:'.stat-row', place:'bottom',
+   title:'Inside a project',
+   body:'Opening a project lands on its dashboard: the countdown, checklist progress, guests and money at a glance, with the venue, this week and the working detail below.'},
+  {view:'dashboard', sel:'#navSwitch', place:'right',
+   title:'Switch projects from anywhere',
+   body:'The card at the top of the sidebar is your quick switcher. Pick another project and you stay on the same screen — guests, money, seating — just for that job.'},
   {view:'pipeline', sel:'.board', place:'top',
    title:'Your booking pipeline',
    body:'Drag a couple between stages as they move from enquiry to booked. On a phone, each card has a menu instead.'},
-  {view:'clients', sel:'.tbl-wrap', place:'top',
-   title:'Client files',
-   body:'Click any name for the full file — contact details, address, their vendor team, invoices, documents and private notes.'},
-  {view:'projects', sel:'.pj-grid,.pj-rows,.pj-empty', place:'top',
-   title:'Event workspaces',
-   body:'Each event holds its venue and address, running order, guest list, budget and documents in collapsible sections.'},
   {view:'seating', sel:'#fpStage', place:'top',
    title:'Lay out the room',
    body:'Drag tables and fixtures to scale. Chairs show who’s seated at a glance, and you can add doors, windows and a backdrop.'},
-  {view:'dashboard', sel:'#srchOpen', place:'right',
+  {view:'projects', sel:'#srchOpen', place:'right',
    title:'Find anything instantly',
-   body:'Press ⌘K on a Mac, or Ctrl K on Windows, to search across clients, events, vendors, guests, documents and tasks from anywhere.'},
+   body:'Press ⌘K on a Mac, or Ctrl K on Windows, to search across clients, projects, vendors, guests, documents and tasks from anywhere.'},
   {center:true, sample:true, title:'That’s the tour',
-   body:'A short checklist on your dashboard walks you through setting up your first event, and you can replay any of this from Help in the sidebar. Everything you have just seen belongs to one sample wedding — keep playing with it, or clear it out below.'}
+   body:'A short checklist on your projects home walks you through setting up your first project, and you can replay any of this from Settings → Getting started. Everything you have just seen belongs to one sample wedding — keep playing with it, or clear it out below.'}
 ];
 /* One playlist per toolset, so each area can be learned on its own. */
 var TOURS={
-  basics:{name:'The basics',mins:1,desc:'Dashboard, pipeline, search — the daily loop.',steps:TOUR},
+  basics:{name:'The basics',mins:1,desc:'The projects board, your to-do list, search — the daily loop.',steps:TOUR},
   clients:{name:'Clients & enquiries',mins:2,desc:'Capture an enquiry, convert it, and work the client file.',steps:[
     {view:'inquiries', sel:'.jump-grid,.card', place:'bottom', title:'Enquiries land here',
      body:'Your public form feeds this inbox. Each submission shows the couple, their date and what they wrote.'},
@@ -14227,18 +14253,18 @@ var TOURS={
      body:'Enquiry → Proposal Sent → Booked → In Planning → Wrapped. Each stage header shows the count and total value.'},
     {view:'clients', sel:'.tbl-wrap', place:'top', title:'Open a client file',
      body:'Click any name. You get both partners with pronouns, two emails, phone, address, lead source and private notes.'},
-    {view:'clients', sel:'.tbl-wrap', place:'top', title:'Their vendor team lives here',
-     body:'Inside a client file you can book vendors from your directory, set fees and track contract status.'}
+    {view:'clients', sel:'.tbl-wrap', place:'top', title:'The person, across their jobs',
+     body:'A client file shows every project they have given you as cards, with their money and paperwork totalled across all of them — the one view a single project can never give you.'}
   ]},
-  events:{name:'Running an event',mins:2,desc:'Venue details, running order, tasks and budget.',steps:[
-    {view:'projects', sel:'.pj-grid,.pj-rows,.pj-empty', place:'bottom', title:'Every event is a workspace',
-     body:'Open one to find its venue, day-of timeline, guest list, vendors, budget and documents in one place.'},
-    {view:'projects', sel:'.pj-grid,.pj-rows,.pj-empty', place:'bottom', title:'Venue details matter',
+  events:{name:'Running a project',mins:2,desc:'One job’s dashboard — venue, tasks, money and the print pack.',steps:[
+    {view:'dashboard', sel:'.stat-row', place:'bottom', title:'A project is a workspace',
+     body:'Its dashboard holds the venue, day-of timeline, guest list, vendors, checklist and documents in one place — and the This Project group in the sidebar carries its other rooms.'},
+    {view:'dashboard', sel:'.venue-band', place:'bottom', title:'Venue details matter',
      body:'The venue band holds the full address, an Open in Maps link, your venue contact, and site notes like load-in gates and curfews.'},
-    {view:'projects', sel:'.pj-grid,.pj-rows,.pj-empty', place:'bottom', title:'Task templates save the day',
-     body:'In the Checklist section, “Apply template” generates a full countdown — 12-month wedding, 6-month express, corporate or milestone — with dates worked backwards from the event.'},
-    {view:'projects', sel:'.pj-grid,.pj-rows,.pj-empty', place:'bottom', title:'Print what you need on site',
-     body:'The Print button produces the running order, guest list, seating chart, vendor contact sheet or floor plan on letterhead.'}
+    {view:'dashboard', sel:'[data-evsec="checklist"]', place:'top', title:'Task templates save the day',
+     body:'In the Checklist, “Apply template” generates a full countdown, with dates worked backwards from the event — and fitted to the time you actually have if the job was booked late.'},
+    {view:'money', sel:'.stat-row', place:'bottom', title:'This job’s money',
+     body:'Money shows this project’s invoices, what has been collected and what is still owed, next to its budget. Switch projects and the money switches with you.'}
   ]},
   seating:{name:'Guests & the room',mins:2,desc:'Import guests, seat them, lay out the floor.',steps:[
     {view:'guests', sel:'.tbl-wrap', place:'top', title:'Guests and RSVPs',
@@ -14401,19 +14427,20 @@ function startTour(key){
 
 /* ---- getting-started checklist, driven by real data ---- */
 function setupSteps(){
-  var ev=db.events[0];
+  /* Hints are PLAIN TEXT — they render through esc(), so an icon here would
+     print as markup. The icon sweep learned that the hard way. */
   return [
-    {k:'lead', label:'Add your first enquiry', hint:'Leads & Pipeline → '+icn("plus")+'New lead',
+    {k:'lead', label:'Add your first enquiry', hint:'Leads & Pipeline → New lead',
      done:db.leads.length>0, view:'pipeline'},
-    {k:'event', label:'Create an event', hint:'Events → '+icn("plus")+'New event',
-     done:db.events.length>0, view:'events'},
-    {k:'tasks', label:'Apply a task template', hint:'Open an event → Checklist → Apply template',
-     done:db.events.some(function(e){return e.checklist.length>=8;}), view:'events'},
+    {k:'event', label:'Create a project', hint:'All projects → New project',
+     done:db.events.length>0, view:'projects'},
+    {k:'tasks', label:'Apply a task template', hint:'Open a project → Checklist → Apply template',
+     done:db.events.some(function(e){return e.checklist.length>=8;}), view:'projects'},
     {k:'guests', label:'Add or import your guest list', hint:'Guests & RSVP → Import CSV',
      done:db.events.some(function(e){return e.guests.length>0;}), view:'guests'},
     {k:'floor', label:'Lay out the room', hint:'Seating Chart → drag tables into place',
      done:db.events.some(function(e){return e.tables.length>0&&(e.floor&&e.floor.items.length>0);}), view:'seating'},
-    {k:'vendor', label:'Build your vendor directory', hint:'Vendors → '+icn("plus")+'Add vendor',
+    {k:'vendor', label:'Build your vendor directory', hint:'Vendors → Add vendor',
      done:db.vendors.length>0, view:'vendors'},
     {k:'doc', label:'Send a contract or questionnaire', hint:'Contracts & Docs, or Questionnaires',
      done:db.documents.some(function(d){return d.status!=='draft';})||db.questionnaires.some(function(q){return q.status!=='draft';}),

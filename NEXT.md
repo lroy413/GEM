@@ -871,6 +871,36 @@ never pulled, which is what stops a fresh install overwriting the studio.
   - `scratchpad/passone-test.mjs` locks all five in at 1400 and 393. Note for
     future seeds: a "quiet" fixture must also set questionnaires to draft —
     a sent questionnaire counts as waiting.
+- **The settings pass, and the Learn content caught up with project-first.**
+  A standing rule now applies: after every phase, a premium passover — walk the
+  screens the phase touched plus the ones nobody has looked at lately, on both
+  widths, before offering to deploy.
+  - **Fourteen more drawn icons** (briefcase, palette, columns, rows, people,
+    sliders, layout, bell, eye, flag, question-circle, sync, database, info)
+    replaced the settings index's geometric unicode (◆ ▥ ▤ ◉ ◐ ◍ ◔ ◑ ✧ ? ⇄ ▢ ◇),
+    which rendered as mystery blobs at tile size. Branding got the palette so
+    Templates keeps the spark to itself.
+  - **The icon sweep had put SVG into `setupSteps()` hints**, which render
+    through `esc()` — the getting-started card would have printed raw markup.
+    Hints are plain text again, with a comment saying why they must stay so.
+  - **The basics tour is project-first**: board → to-do → waiting → a project's
+    dashboard → the switcher → pipeline → seating → search. "Running an event"
+    is "Running a project" and points at the dashboard, checklist section and
+    Money screen instead of narrating over the board. The clients tour's
+    vendor-team step became "the person across their jobs". Selectors verified
+    by `scratchpad/tour-test.mjs`, which clicks through every tour end to end
+    and fails if a pointed step cannot find its target — at 1400 and 393.
+  - **HELP rewritten**: "Dashboard" → "The projects home" (board, needs chips,
+    quiet header), "Events" → "Projects" (This Project group, switcher, Money,
+    sub-events), Clients (projects as cards, vendors live in the project),
+    Vendors, Contracts & money (per-project Money vs the studio roll-up), and
+    a new Calendar entry (tap a day, add a task).
+  - **Appearance**: "Dashboard layout" → "Projects home layout"; the dead
+    "Upcoming events" hero toggle removed by retiring 'hero' from
+    `DASH_MODULES` (dashOrder() drops unknown keys, so saved orders migrate
+    themselves); to-do-rows copy updated. Free-text settings inputs get
+    `.set-in.wide` (330px) so default terms stop truncating. The Connection
+    card description stopped saying "Supabase" to a planner.
 - **The calendar could be read and not written to, and its link out of a
   project did nothing.**
   - **"Open calendar ›" was dead on the one screen it matters on.** The week
