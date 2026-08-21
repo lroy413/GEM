@@ -679,7 +679,64 @@ never pulled, which is what stops a fresh install overwriting the studio.
     `sbTagCol()` probes for it exactly as `sbAttireCol()` does. Verified
     against local Postgres: default, containment query, and the check refusing
     an object.
-- **Project-first meant the screens had to be re-cut, not just re-labelled.**
+- **A phone pass over the project screens, from a real device.** Six separate
+  complaints, all of them about weight and space rather than function.
+  - **A checklist task cost 258px and three stacked lines** — name, then the
+    date and category pills on an indented line of their own, then the edit and
+    delete buttons on a third, because `.r-acts` is always visible on a touch
+    screen and had nowhere left to wrap to. Two 32px bordered squares ended up
+    the loudest thing in the row, louder than the tick box. Under 700px the row
+    is a grid now: `"box lbl lbl" "box meta acts"`, so the name owns the full
+    width, the date drops its pill and reads as plain muted text beside the one
+    category chip, and the actions sit at the right of the meta line as quiet
+    borderless glyphs. 83px, and six tasks fit where three did.
+  - **`.modal-actions` had no `flex-wrap`.** Three buttons come to 358px inside
+    a 315px row on a phone, and with `justify-content:flex-end` the FIRST one
+    was painted 34px off the modal's left edge — "Save this checklist" arrived
+    as "ave this checklist". That painted overflow is also what made the page
+    drift sideways while scrolling a modal. Wrapping is the fix; below 560px
+    the buttons also share the row evenly so a wrap does not read as debris.
+  - **The new-event form asked where the event was three times**: a free-text
+    "City / region" (`e.loc`), then the address's own City and State / region.
+    `e.loc` is only ever a short display string, so it is derived from the
+    address on save now and no longer asked for. An older event with a `loc`
+    and no address seeds the City box rather than losing it.
+  - **Inside a project, the page is about the project.** The `‹ All projects`
+    link came off the top of the project screen — the nav, the switcher card
+    and the Projects tab are three ways out already, and a fourth sitting above
+    the headline said the screen was somewhere you pass through. `＋ Add a
+    sub-event` moved from a bar above the content to a dashed offer at the foot
+    (only when the project has no weekend; when it has one the bar stays,
+    because then it is navigation). And with no cover photo the four figures
+    come before the venue card: a photograph is a header, an address is a
+    detail.
+  - **Edit and Print are words again.** As `btn-icon` they lost their labels
+    below 560px and became two unidentifiable marks in the corner. They are
+    `btn-sm` now, and `#pgActions:not(:has(.ev-switch)):not(:has(.btn-gold))`
+    keeps any purely-secondary group on the title's row instead of costing a
+    row of its own — about 110px of blank, on the screen whose whole complaint
+    was blank at the top.
+  - **A project ran to 5.3 phone screens.** The timeline, the vendor team and
+    the documents are 2,300px of it and none is what you open a project to
+    check, so on a narrow first load they join the guest list in starting
+    collapsed — 2.9 screens, everything one tap away, each section header
+    acting as its own index. A default only; the moment anyone opens one it is
+    remembered.
+  - **The guest screen led with three buttons of equal weight** for one
+    everyday action and two CSV utilities you use twice a year. The utilities
+    moved to the foot of the list they act on, as words; they wire in
+    `wireGuests()` now, because `wireActions()` runs before `render()` paints
+    `#content`. And `evSwitcher()` is scoped to `evBlock(activeEvent())` — it
+    used to list every event in the studio, which made it a second project
+    switcher able to take you out of the project you were standing in. It
+    answers "which night" now, and says nothing at all when there is one night.
+  - **`.btn-gold` lost its `text-shadow`** and half its inner highlight.
+    Embossed white-on-gold type is the single thing that made the primaries
+    read as chunky rather than expensive. `.chk-tab.on` lost its solid gold
+    fill for the same reason — a filter should not be the loudest thing on the
+    screen.
+  - `scratchpad/polish-test.mjs` covers all of it at 393 and 1400.
+
   Once every screen is inside a job, the old shape leaves the same facts in
   three places. What was actually duplicated: the client's contact details on
   the workspace *and* on their file; documents in the project, in the studio

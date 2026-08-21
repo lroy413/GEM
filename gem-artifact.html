@@ -487,9 +487,12 @@ html.no-motion body::before{opacity:.3}
 .btn-gold{
   background:var(--gold-grad);color:var(--on-accent,#fff);
   border-color:var(--gold-deep);
-  box-shadow:inset 0 1px 0 rgba(255,255,255,.42), inset 0 -1px 0 rgba(0,0,0,.10),
-             0 1px 2px rgba(var(--accent-deep-rgb),.28), 0 6px 18px rgba(var(--accent-deep-rgb),.22);
-  text-shadow:0 1px 1px rgba(105,82,32,.28);
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.22),
+             0 1px 2px rgba(var(--accent-deep-rgb),.22), 0 4px 12px rgba(var(--accent-deep-rgb),.16);
+  /* No text-shadow. Embossed white-on-gold type is the single thing that made
+     these read as chunky rather than expensive, and at phone sizes it just
+     smears the letterforms. The inner highlight is halved for the same
+     reason — the button should look pressed out of one piece, not lacquered. */
 }
 .btn-gold:hover{transform:translateY(-1px);
   box-shadow:inset 0 1px 0 rgba(255,255,255,.5), inset 0 -1px 0 rgba(0,0,0,.10),
@@ -1283,6 +1286,41 @@ tbody tr:hover{background:var(--pink-50)}
   /* On a phone the empty date cell is dead weight; the container query above
      already handles the widths. */
   .check .cat.due:empty{display:none}
+  /* A task was costing 258px and three stacked lines: name, then the two
+     pills on their own indented line, then — because the row actions are
+     always visible on a touch screen and had nowhere left to go — two 32px
+     bordered squares on a third. The squares ended up the loudest thing in
+     the row, louder than the checkbox, which is backwards.
+
+     A grid fixes the wrapping properly: the box spans both rows down the
+     left, the name and its meta line stack in the middle, and the actions sit
+     at the right across both rows. Two lines, ~86px, and the eye lands on the
+     name. */
+  .check{display:grid;grid-template-columns:auto minmax(0,1fr) auto;
+    grid-template-areas:"box lbl lbl" "box meta acts";
+    column-gap:12px;row-gap:3px;align-items:center;padding:12px 0}
+  .check .box{grid-area:box;align-self:start;margin-top:1px}
+  /* The name gets the whole width. Sharing line one with the actions cost it
+     about 70px and broke three-word titles across two lines for no reason;
+     the actions belong beside the meta, which is the weight they should
+     carry anyway. */
+  .check .lbl{grid-area:lbl;font-size:14.5px;line-height:1.35}
+  .chk-meta{grid-area:meta;flex:0 1 auto;padding-left:0;margin-top:0;gap:0;min-width:0}
+  .check .r-acts{grid-area:acts;align-self:center;margin-left:0;justify-self:end}
+  /* The date is a fact about the task, not a label on it — plain muted text,
+     with the category keeping the one chip. A row with two chips of equal
+     weight reads as two tags and neither is. */
+  .chk-meta .cat.due{background:none;padding:0;font-size:11.5px;color:var(--muted);
+    text-align:left;min-width:0}
+  .chk-meta .cat.due:not(:empty)+.cat.tag{margin-left:17px;position:relative}
+  .chk-meta .cat.due:not(:empty)+.cat.tag::before{content:'·';position:absolute;
+    left:-11px;color:var(--muted);font-weight:600}
+  .chk-meta .cat.tag{font-size:11px;padding:1px 8px;min-width:0}
+  /* Quiet. They are always on show on a touch screen, so they cannot also be
+     bordered boxes — the tap target stays 32px, the paint does not. */
+  .check .r-acts{gap:2px}
+  .check .r-act{border-color:transparent;background:none;color:var(--muted);font-size:12px}
+  .check .r-act.r-del:hover,.check .r-act:hover{background:var(--pink-100);border-color:transparent}
 }
 
 /* budget bars */
@@ -1435,8 +1473,18 @@ tbody tr:hover{background:var(--pink-50)}
   background-repeat:no-repeat;background-position:right 13px center}
 .field input:focus,.field select:focus{outline:none;border-color:var(--gold);background:#fff;box-shadow:var(--ring)}
 .field input::placeholder{color:var(--muted)}
-.modal-actions{display:flex;gap:10px;justify-content:flex-end;margin-top:24px;
+/* flex-wrap is not a nicety here. Three buttons — "Save this checklist",
+   "Cancel", "Add tasks" — come to 358px inside a 315px row on a phone, and
+   with justify-content:flex-end and no wrap the FIRST one is painted 34px
+   off the left edge of the modal, unreachable and half-legible. Wrapping
+   costs a line; not wrapping costs the button. */
+.modal-actions{display:flex;flex-wrap:wrap;gap:10px;justify-content:flex-end;margin-top:24px;
   padding-top:20px;border-top:1px solid var(--line)}
+@media (max-width:560px){
+  /* Once they have wrapped, ragged widths read as debris. Let them share the
+     row evenly and the pair looks deliberate. */
+  .modal-actions .btn{flex:1 1 132px}
+}
 
 /* ---- the questionnaire a client actually fills in ----
    Header, questions and fields all share ONE left/centre axis: a hanging
@@ -1780,15 +1828,29 @@ td.inv-col{text-align:center;width:1%}
 .pa-row .pill{font-size:10px}
 .pa-row .r-act{opacity:1}
 /* --- two task lists, and a note on each task --- */
+/* "Add a sub-event" at the foot of a solo project: an offer, not a control
+   bar. Dashed rather than solid so it reads as a slot waiting to be filled. */
+.wknd-foot{display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-top:22px;
+  padding:15px 18px;border:1px dashed var(--gold-line);border-radius:var(--radius);
+  background:var(--gold-soft)}
+.wknd-foot .ew-add{font-family:var(--sans);font-size:13px;font-weight:600;color:var(--gold-deep);
+  background:none;border:none;cursor:pointer;padding:0}
+.wknd-foot .ew-h{font-size:12px;color:var(--muted)}
+@media (max-width:560px){ .wknd-foot{padding:14px 15px;gap:4px}
+  .wknd-foot .ew-add,.wknd-foot .ew-h{flex:1 1 100%} }
+
 .chk-tabs{display:flex;gap:6px;margin:2px 0 10px}
 .chk-tab{display:inline-flex;align-items:center;gap:7px;padding:6px 13px;border-radius:var(--radius-pill);
   border:1px solid var(--line);background:transparent;cursor:pointer;font:inherit;font-size:12.5px;
   font-weight:600;color:var(--muted);transition:background .12s,border-color .12s,color .12s}
 .chk-tab:hover{border-color:var(--gold-line);color:var(--ink)}
-.chk-tab.on{background:var(--gold);border-color:var(--gold);color:#fff}
+/* A solid gold fill on a filter made the loudest thing on the phone screen a
+   control that only says which list you are looking at. A wash and the deep
+   ink read as selected without shouting. */
+.chk-tab.on{background:var(--gold-soft);border-color:var(--gold-line);color:var(--gold-deep)}
 .chk-tab .ct-n{font-size:11px;font-weight:700;background:var(--pink-100);color:var(--ink-soft);
   border-radius:20px;padding:1px 7px}
-.chk-tab.on .ct-n{background:rgba(255,255,255,.28);color:#fff}
+.chk-tab.on .ct-n{background:var(--card);color:var(--gold-deep)}
 .chk-wrap.open{background:var(--bg-2);border-radius:var(--radius-sm);margin:2px -8px;padding:0 8px}
 .chk-wrap.open .check{border-bottom-color:transparent}
 .lbl .has-note{margin-left:7px;font-size:11px;color:var(--gold)}
@@ -3672,10 +3734,15 @@ tr:hover .r-acts,.ev-card:hover .r-acts,.table-card:hover .r-acts,
      Icon-ONLY, though: once the group also carries an event picker or a
      primary button — the guest screen has all three — squeezing it onto the
      title's row is what made it wrap into a ragged block. */
-  #pgActions:has(.btn-icon):not(:has(.ev-switch)):not(:has(.btn-gold)){
-    width:auto;justify-content:flex-end;margin-left:auto}
-  .topbar:has(#pgActions .btn-icon):not(:has(#pgActions .ev-switch)):not(:has(#pgActions .btn-gold)){
-    flex-wrap:nowrap;align-items:flex-start}
+  /* Widened from :has(.btn-icon) to any group of purely secondary controls,
+     because the project screen's Edit and Print are words now rather than
+     marks and were dropping to a row of their own — which, with the topbar's
+     gap either side of it, was about 110px of blank between the project's
+     name and the first thing it actually says. */
+  #pgActions:not(:has(.ev-switch)):not(:has(.btn-gold)){
+    width:auto;justify-content:flex-end;margin-left:auto;align-self:flex-start}
+  .topbar:not(:has(#pgActions .ev-switch)):not(:has(#pgActions .btn-gold)){
+    flex-wrap:nowrap;align-items:flex-start;gap:10px}
   /* The event picker is context, not an action — which event you are looking
      at, not something you do. On the one screen carrying enough actions to
      need icons, it takes its own line and they form a single row beneath it.
@@ -3687,12 +3754,24 @@ tr:hover .r-acts,.ev-card:hover .r-acts,.table-card:hover .r-acts,
      to hit — 42px, not a 15px strip of text. */
   .btn-icon .bl{display:none}
   .btn-icon{width:42px;min-width:42px;padding:0;justify-content:center;font-size:16px}
+  /* Once the label is gone a bordered box is all outline and no meaning: two
+     of them beside a gold primary read as three buttons of equal importance,
+     which is exactly backwards for a pair of CSV utilities. The 42px target
+     stays; the box goes. */
+  #pgActions .btn-ghost.btn-icon,#pgActions .btn-quiet.btn-icon{
+    background:none;border-color:transparent;box-shadow:none;color:var(--ink-soft)}
+  #pgActions .btn-ghost.btn-icon:active,#pgActions .btn-quiet.btn-icon:active{
+    background:var(--pink-100);color:var(--ink)}
   .ev-switch{flex:0 1 auto;min-width:0;max-width:none}
 }
 
 /* ---- phone ---- */
 @media (max-width:560px){
   .main{padding:16px 14px calc(48px + env(safe-area-inset-bottom))}
+  /* 28px under the title plus a 16px flex gap above the actions was a third
+     of a phone screen spent on the header of a page whose whole complaint was
+     the header. */
+  .topbar{margin-bottom:16px}
   .sidebar{padding-bottom:calc(26px + env(safe-area-inset-bottom))}
   /* Was 1fr — one figure per row, so four of them cost about 800px of scroll
      to say four numbers. A label, a figure and a caption fit in half a phone
@@ -5751,12 +5830,18 @@ function evSwitcher(){
   /* Blocks together, sub-events indented under their primary, so switching
      between the ceremony and the rehearsal dinner is one click and the
      relationship is visible while you do it. */
-  var rows=[];
-  evPrimaries().forEach(function(p){
-    rows.push({e:p,sub:false});
-    evChildren(p.id).forEach(function(c){ rows.push({e:c,sub:true}); });
-  });
-  return '<select id="evSwitch" class="ev-switch" aria-label="Active event">'+rows.map(function(r){
+  /* This project's block, and nothing else. It used to list every event in
+     the studio, which made it a second project switcher sitting under the nav's
+     — two controls for the same job, one of them able to take you out of the
+     project you are standing in without saying so. Inside a job it now answers
+     only "which night", and when there is only one night it says nothing at
+     all. */
+  var cur=activeEvent();
+  if(!cur)return '';
+  var blk=evBlock(cur);
+  if(blk.length<2)return '';
+  var rows=blk.map(function(x){ return {e:x,sub:evIsSub(x)}; });
+  return '<select id="evSwitch" class="ev-switch" aria-label="Which event in this project">'+rows.map(function(r){
     return '<option value="'+r.e.id+'"'+(r.e.id===state.activeEventId?' selected':'')+'>'+
       (r.sub?'  └ '+esc(roleLabel(r.e,true))+' · '+esc(r.e.title):esc(r.e.title))+'</option>';
   }).join('')+'</select>';
@@ -5772,25 +5857,25 @@ function actionsFor(v){
   /* The board carries its own New project, so the topbar stays empty at the
      front door rather than offering the same action twice. */
   if(v==='projects')return '';
+  /* Not btn-icon. On a phone that class drops the label, and these two became
+     a pair of unlabelled glyphs in the corner of the project screen that
+     nobody could identify — "the 2 icons on top right seem small and not sure
+     what they are" is the whole review. They are short words; they can afford
+     to be words. */
   if(v==='events'||v==='dashboard')return (v==='dashboard'||state.eventId)
-    ?'<button class="btn btn-quiet btn-icon" id="printEvent" title="Print" aria-label="Print">'+
-       '⎙<span class="bl"> Print</span></button> '+
-     '<button class="btn btn-quiet btn-icon" id="editEvent" title="Edit event" aria-label="Edit event">'+
-       '✎<span class="bl"> Edit event</span></button>'
+    ?'<button class="btn btn-quiet btn-sm" id="editEvent" title="Edit this project" aria-label="Edit this project">✎ Edit</button> '+
+     '<button class="btn btn-quiet btn-sm" id="printEvent" title="Print the event sheet" aria-label="Print the event sheet">⎙ Print</button>'
     :'';
   /* The switcher is context, not an action, and the two CSV utilities are
      things you do twice a year. Below 700px the switcher takes its own line
      and those two become icons, so the row reads as one primary action rather
      than four buttons of equal weight wrapping onto two lines. */
+  /* One action in the header. The two CSV utilities used to sit up here as
+     bordered squares beside the gold primary, which on a phone read as three
+     buttons of equal importance for one everyday action and two you use twice
+     a year. They have moved to the foot of the list, next to the data they
+     act on, as words. */
   if(v==='guests')return evSwitcher()+
-    ' <button class="btn btn-ghost btn-icon" id="importGuests" title="Import a CSV" aria-label="Import a CSV">'+
-      '<svg class="ic" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">'+
-      '<path d="M10 13V3"/><path d="M6.6 6.4 10 3l3.4 3.4"/><path d="M3.5 12.5v3a1.5 1.5 0 0 0 1.5 1.5h10a1.5 1.5 0 0 0 1.5-1.5v-3"/></svg>'+
-      '<span class="bl"> Import CSV</span></button>'+
-    ' <button class="btn btn-ghost btn-icon" id="exportGuests" title="Export a CSV" aria-label="Export a CSV">'+
-      '<svg class="ic" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">'+
-      '<path d="M10 3v10"/><path d="M6.6 9.6 10 13l3.4-3.4"/><path d="M3.5 12.5v3a1.5 1.5 0 0 0 1.5 1.5h10a1.5 1.5 0 0 0 1.5-1.5v-3"/></svg>'+
-      '<span class="bl"> Export</span></button>'+
     ' <button class="btn btn-gold" id="addGuest">＋ Add guest</button>';
   if(v==='seating')return evSwitcher()+' <button class="btn btn-gold" id="addTable">＋ Add table</button>';
   if(v==='vendors')return '<button class="btn btn-gold" id="addVendor">＋ Add vendor</button>';
@@ -5818,8 +5903,6 @@ function wireActions(){
      MouseEvent has no .swatches to push onto. The ones below take no argument
      and are safe bare; these two are not. */
   var g=$('#addGuest'); if(g)g.onclick=function(){openGuestModal();};
-  var ig=$('#importGuests'); if(ig)ig.onclick=function(){openImportModal(activeEvent());};
-  var eg=$('#exportGuests'); if(eg)eg.onclick=exportGuestsCsv;
   var t=$('#addTable'); if(t)t.onclick=openTableModal;
   var v=$('#addVendor'); if(v)v.onclick=openVendorModal;
   var sw=$('#addSwatch'); if(sw)sw.onclick=function(){openSwatchModal();};
@@ -5977,6 +6060,20 @@ var evCollapsed={};
 try{ evCollapsed=JSON.parse(localStorage.getItem(EVKEY))||{}; }catch(e){ evCollapsed={}; }
 /* Guest list starts closed — it is the longest section by far. */
 if(evCollapsed.guests===undefined)evCollapsed.guests=true;
+/* And on a phone, so do the other three long ones. Expanded, a project ran to
+   five and a half screens of scroll — the day-of timeline, the vendor team and
+   the documents are 2,300px of it, and none of them is what you open a project
+   to check. Closed, the page is the glance, this week, the checklist and the
+   client, with the rest one tap away and its own header acting as the index.
+   Only ever a DEFAULT: the moment anyone opens one it is remembered, here and
+   on a desktop alike, because the store is this browser's. */
+try{
+  if(window.matchMedia&&window.matchMedia('(max-width:700px)').matches){
+    ['timeline','vendors','docs'].forEach(function(k){
+      if(evCollapsed[k]===undefined)evCollapsed[k]=true;
+    });
+  }
+}catch(e){}
 function saveEvSections(){ try{ localStorage.setItem(EVKEY,JSON.stringify(evCollapsed)); }catch(e){} }
 
 var PIPEKEY='gem-pipe-collapsed';
@@ -7187,18 +7284,31 @@ function viewEventDetail(id){
       }).join('')+
       '<button type="button" class="ew-add" data-addsub="'+prim.id+'">+ Sub-event</button>'+
     '</div>'
-    :'<div class="wknd-bar solo"><button type="button" class="ew-add" data-addsub="'+e.id+'">'+
-      '+ Add a sub-event</button><span class="ew-h">Welcome party, rehearsal dinner, farewell brunch…</span></div>');
+    :'');
+  /* A project with no sub-events yet does not need a bar at the top of its
+     page offering to make one — that is a once-per-job action wearing the
+     clothes of navigation, and on a phone it was a whole row between the
+     planner and their own work. When there IS a weekend the bar above stays,
+     because then it is navigation. When there is not, the offer moves to the
+     foot of the page, which is where "and another thing" belongs. */
+  var subFoot=(blk.length>1?'':'<div class="wknd-foot"><button type="button" class="ew-add" data-addsub="'+e.id+'">'+
+    '＋ Add a sub-event</button><span class="ew-h">Welcome party, rehearsal dinner, farewell brunch…</span></div>');
 
   /* The banner comes first. It is the header for this screen, so anything
      above it pushes the thing the page is about below the fold of the eye —
      the weekend switcher and the sub-event control now sit under the picture,
      in the strip that already answers "where is this". */
-  return '<button class="back-link" data-back="projects">‹ All projects</button>'+
-  sampleBanner()+
-  (cover?'':switcher)+
+  /* No "‹ All projects" above the title. Inside a job the first thing on the
+     page should be the job, not a door back out of it — the nav's All
+     projects, the switcher card above it and the Projects tab are three ways
+     out already, and a fourth sitting on top of the headline only tells you
+     the screen you are on is somewhere you are passing through.
 
-  // ---- venue, given the prominence it deserves ----
+     Order: a cover photograph IS this screen's header, so it leads. Without
+     one the venue is a text card about an address, and the four figures that
+     say where the job actually stands are worth more at the top than a street
+     name — so they lead instead. */
+  var venueBand=
   '<div class="venue-band'+(cover?' has-cover':'')+'">'+
     /* With a cover the name and the countdown move ONTO the photograph, under
        a bottom-up scrim, and the dense copy — address, contact, site notes —
@@ -7287,14 +7397,18 @@ function viewEventDetail(id){
           '</div></div>':'')+
     '</div>'+
     (e.venueNotes?'<div class="vb-note"><b>Site notes</b> '+esc(e.venueNotes)+'</div>':'')+
-  '</div>'+
+  '</div>';
 
-  '<div class="stat-row">'+
+  var glance='<div class="stat-row">'+
     stat('Countdown',daysAway(e.date)+' days',fmtDate(e.date))+
     stat('Checklist',pct+'%',done+' of '+tot+' done')+
     stat('Guests',attending.length+' / '+e.guests.length,pending.length+' awaiting reply')+
     stat('Committed',money(actT),estT?Math.round(actT/estT*100)+'% of '+money(estT):'no budget set')+
-  '</div>'+
+  '</div>';
+
+  return sampleBanner()+
+  (cover?'':switcher)+
+  (cover?venueBand+glance:glance+venueBand)+
 
   /* What is happening this week on this job, and everything still to do on it
      — the two questions a planner opens a project to answer. Both are full
@@ -7389,7 +7503,7 @@ function viewEventDetail(id){
         customFieldsMarkup('event',e)):'')+
       evSection('client','Client',null,clientPanel(e,lead))+
     '</div>'+
-  '</div>';
+  '</div>'+subFoot;
 }
 
 /* ---- the project's list of work ----
@@ -7986,6 +8100,8 @@ function viewGuests(){
        the list too now, which is where you are when you think of the next
        name. */
     '<div class="sec-actions"><button class="btn btn-ghost btn-sm" id="addGuestFoot">＋ Add guest</button>'+
+      '<button class="btn btn-quiet btn-sm" id="importGuests">⇪ Import CSV</button>'+
+      '<button class="btn btn-quiet btn-sm" id="exportGuests">⇩ Export</button>'+
       (q?'<span class="sec-badge" style="margin-left:auto">'+g.length+' of '+all.length+' shown</span>':'')+
     '</div>'+
     (!sub&&subs.length?'<div class="inv-key">Tick to invite. <b>✓</b> attending · <b>✕</b> declined · <b>·</b> awaiting reply'+
@@ -8110,6 +8226,11 @@ function wireGuests(){
     };
   });
   var agf=$('#addGuestFoot'); if(agf)agf.onclick=function(){ openGuestModal(); };
+  /* Moved down from the topbar with the buttons themselves. wireActions()
+     runs before render() paints #content, so wiring them there would have
+     found nothing. */
+  var ig=$('#importGuests'); if(ig)ig.onclick=function(){ openImportModal(activeEvent()); };
+  var eg=$('#exportGuests'); if(eg)eg.onclick=exportGuestsCsv;
   var nx=$('#gsNext'); if(nx)nx.onclick=function(){ guestShuffle(1); };
   var pv=$('#gsPrev'); if(pv)pv.onclick=function(){ guestShuffle(-1); };
   var st=$('.gstack');
@@ -15107,6 +15228,11 @@ function openEventModal(existing,parentId,seedLeadId){
   /* A sub-event's type follows its parent — the roles on offer have to match
      the block it is joining, not whatever this form last had selected. */
   var typeOf=parent?evType(parent):(e?evType(e):((leadById((e&&e.leadId)||seedLeadId)||{}).type||'Wedding'));
+  /* An older event may carry a short location line and no address at all.
+     Rather than lose it when the free-text box goes away, it seeds the City
+     field, where the planner can split it properly the next time they are in
+     here. */
+  var seedCity=a.city||((a.region||a.line1)?'':((e&&e.loc)||''));
   var roleOpts=rolesForType(typeOf).map(function(r){return {value:r.id,label:r.label};});
   /* Sub-events are one level deep, so only events that are not already part of
      a block, and have no block of their own, may be attached to one. An event
@@ -15207,10 +15333,15 @@ function openEventModal(existing,parentId,seedLeadId){
                  {value:'no',label:'Somewhere else'}],
         showIf:function(v){ return !!v.parentId; }}:null),
       {id:'venue',label:'Venue',value:e&&e.venue,placeholder:'To be confirmed',showIf:elsewhere},
-      {id:'loc',label:'City / region',value:e&&e.loc,showIf:elsewhere},
+      /* "City / region" used to sit here as its own free-text box, three
+         fields above the City and State/region of the actual address — so the
+         form asked where the event was three times and no two answers had to
+         agree. The address is the real record; e.loc is the short display
+         string every card and export reads. So ask once, in the address, and
+         derive the short line from it on save. */
       {id:'line1',label:'Street address',value:a.line1,full:true,showIf:elsewhere},
       {id:'line2',label:'Suite / entrance',value:a.line2,full:true,showIf:elsewhere},
-      {id:'city',label:'City',value:a.city,showIf:elsewhere},
+      {id:'city',label:'City',value:seedCity,showIf:elsewhere},
       {id:'region',label:'State / region',value:a.region,showIf:elsewhere},
       {id:'postal',label:'Postal code',value:a.postal,showIf:elsewhere},
       {id:'country',label:'Country',value:a.country,showIf:elsewhere},
@@ -15271,7 +15402,14 @@ function openEventModal(existing,parentId,seedLeadId){
                           region:pa.region||'',postal:pa.postal||'',country:pa.country||''};
         rec.venueContact={name:pc.name||'',role:pc.role||'',phone:pc.phone||'',email:pc.email||''};
       }else{
-        rec.venue=v.venue; rec.loc=v.loc; rec.venueNotes=v.venueNotes;
+        rec.venue=v.venue; rec.venueNotes=v.venueNotes;
+        /* The short "where" line, built from the address rather than typed
+           twice. Only overwritten when the address actually says something,
+           so an older event that has a loc and no address keeps its line
+           until somebody fills the address in. */
+        var shortLoc=[(v.city||'').trim(),(v.region||'').trim()].filter(Boolean).join(', ');
+        if(shortLoc)rec.loc=shortLoc;
+        else if(seedCity)rec.loc='';   /* they cleared it on purpose */
         rec.venueAddress={line1:v.line1,line2:v.line2,city:v.city,region:v.region,postal:v.postal,country:v.country};
         rec.venueContact={name:v.vcName,role:v.vcRole,phone:v.vcPhone,email:v.vcEmail};
       }
