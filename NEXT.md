@@ -871,6 +871,31 @@ never pulled, which is what stops a fresh install overwriting the studio.
   - `scratchpad/passone-test.mjs` locks all five in at 1400 and 393. Note for
     future seeds: a "quiet" fixture must also set questionnaires to draft —
     a sent questionnaire counts as waiting.
+- **Two pieces of phone chrome, reported from a real device.**
+  - **The drawer's footer slid under the tab bar.** The tab bar is fixed at
+    z-index 60, the sidebar is 40, and the sidebar reserved
+    `26px + env(safe-area-inset-bottom)` at the bottom — which covers the home
+    indicator and nothing else, while the BAR itself is 46px on top of that
+    inset. So the studio chip, the settings gear and help were behind it. The
+    reserve is `var(--tabbar-h) + env(safe-area-inset-bottom) + 14px` now, and
+    `--tabbar-h` is a token so the two cannot drift apart.
+  - **Nothing behind the page was painted.** `body` paints its gradient over
+    its own box; anything the browser composites OUTSIDE that box — the strip
+    behind a status bar, an overscroll rubber-band — fell through to the UA's
+    white. `html{background-color:var(--wash-b)}` closes it, from the same
+    token family the theme-color meta reads, so the document, the page and the
+    status bar agree (the test asserts they agree to within 14 per channel).
+  - **`@media (display-mode:standalone)`** adds `env(safe-area-inset-top)` to
+    the main column and the sidebar. Scoped to standalone deliberately: in
+    Safari that inset is the notch and the toolbar already sits below it, so
+    padding there would open a gap; in an installed app whose web view runs
+    under a translucent bar it is exactly the room the clock needs.
+  - Verified: `theme-color` produces a valid six-digit hex for all eight
+    palettes in both grounds (`scratchpad/tcheck.mjs`), so a grey status band
+    is NOT an invalid colour. iOS snapshots the status-bar appearance when an
+    app is added to the Home Screen — an install predating these metas keeps
+    the old band until it is removed and re-added.
+  - `scratchpad/chrome-test.mjs` covers all of it at 393 and 1400.
 - **Evening mode — the last audit item, and the one the theming engine was
   always going to make cheap.** Because every surface, line, ink and wash is
   DERIVED from two colours, a second ground is a change to the derivation

@@ -112,6 +112,8 @@
   /* One control height keeps every toolbar element on the same baseline. */
   --ctl-h:42px;
   --ctl-h-sm:34px;
+  /* What the phone tab bar occupies, before its safe-area inset. */
+  --tabbar-h:46px;
 
   --sans:'Karla',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;
   --serif:'Cormorant Garamond',"Hoefler Text",Georgia,serif;
@@ -143,7 +145,12 @@ table,td,th,.pill,.status,.stat .v,.stat .d,.wk-n,.wk-due,.arc-s,.vn-f,
   font-feature-settings:"tnum" 1,"lnum" 1}
 /* min-height, not height: a fixed 100% pinned the document to the
    viewport, so anything taller than the fold could not be scrolled to. */
+/* html carries the ground colour too. body paints the gradient over its own
+   box; anything the browser composites outside that box — the strip behind a
+   status bar, an overscroll rubber-band — would otherwise be the UA's white.
+   Set from the same token the theme-color meta uses, so the three agree. */
 html,body{min-height:100%}
+html{background-color:var(--wash-b)}
 body{
   font-family:var(--sans);
   color:var(--ink);
@@ -179,6 +186,13 @@ body::after{
 html.no-motion body::before{opacity:.3}
 #sparkles{position:fixed;inset:0;pointer-events:none;z-index:1;opacity:.38}
 .app{position:relative;z-index:2;display:flex;min-height:100vh}
+/* Only when installed. In Safari the inset is the notch and the toolbar is
+   already below it, so padding there would open a gap; in a standalone web
+   app with a translucent bar it is exactly the room the clock needs. */
+@media (display-mode:standalone){
+  .main{padding-top:calc(28px + env(safe-area-inset-top,0px))}
+  .sidebar{padding-top:calc(28px + env(safe-area-inset-top,0px))}
+}
 
 /* ============ SIDEBAR ============ */
 .sidebar{
@@ -3987,7 +4001,11 @@ h3.cal-title .cal-y{color:var(--muted);font-weight:500}
      of a phone screen spent on the header of a page whose whole complaint was
      the header. */
   .topbar{margin-bottom:16px}
-  .sidebar{padding-bottom:calc(26px + env(safe-area-inset-bottom))}
+  /* The tab bar is fixed at z-index 60 and the sidebar is 40, so the drawer's
+     footer — the studio chip, settings and help — was sliding underneath it.
+     26px covered the home indicator and nothing else; the reserve has to be
+     the BAR's own height plus that inset plus room to breathe. */
+  .sidebar{padding-bottom:calc(var(--tabbar-h) + env(safe-area-inset-bottom) + 14px)}
   /* Was 1fr — one figure per row, so four of them cost about 800px of scroll
      to say four numbers. A label, a figure and a caption fit in half a phone
      screen with room to spare. */
