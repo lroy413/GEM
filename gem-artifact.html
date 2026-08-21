@@ -245,6 +245,32 @@ html.no-motion body::before{opacity:.3}
 .ne-n{font-size:12.5px;font-weight:600;color:var(--ink);
   overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .ne-d{font-size:10.5px;color:var(--muted);white-space:nowrap}
+/* ---- the front door, in the nav ---- */
+.nav-home{margin:2px 0 6px}
+.nav-home .nav-item{font-weight:600}
+/* At the front door the project tools would act on a project you are not in,
+   and the switcher would offer a choice the screen is already showing. */
+.app.at-home .nav-group[data-group="project"]{display:none}
+/* ---- the switcher ---- */
+.nav-ev.open{border-color:var(--gold);box-shadow:var(--shadow)}
+.ne-list{display:flex;flex-direction:column;gap:2px;margin:4px 0 10px;padding:5px;
+  background:var(--bg-2);border:1px solid var(--line);border-radius:var(--radius);
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.6)}
+.ne-opt{display:flex;align-items:center;gap:9px;width:100%;padding:7px 8px;text-align:left;
+  background:none;border:none;border-radius:10px;cursor:pointer;font:inherit;color:inherit}
+.ne-opt:hover{background:var(--card)}
+.ne-opt:focus-visible{outline:none;box-shadow:var(--ring)}
+.ne-oth{width:28px;height:28px;flex:0 0 28px;border-radius:8px;background-size:cover;
+  background-position:center;border:1px solid var(--line);display:grid;place-items:center;
+  color:#fff;font-family:var(--serif);font-size:13px;font-weight:600}
+.ne-otx{display:flex;flex-direction:column;gap:1px;min-width:0}
+.ne-on{font-size:12.5px;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.ne-od{font-size:10.5px;color:var(--muted);white-space:nowrap}
+.ne-all{width:100%;padding:8px;margin-top:2px;background:none;border:none;border-top:1px solid var(--line);
+  font:inherit;font-size:11.5px;font-weight:600;color:var(--gold-deep);cursor:pointer;text-align:left}
+.ne-all:hover{color:var(--gold)}
+.ne-all:focus-visible{outline:none;box-shadow:var(--ring);border-radius:8px}
+.app.rail .ne-list{display:none}
 .ne-k{font-size:9.5px;letter-spacing:.16em;text-transform:uppercase;color:var(--muted);
   font-weight:600;padding:6px 10px 0}
 .ne-go{margin-left:auto;flex:0 0 auto;color:var(--muted);font-size:15px;line-height:1}
@@ -2037,6 +2063,96 @@ td.inv-col{text-align:center;width:1%}
 /* The per-chip dropdown was the touch fallback; tap-to-seat replaces it and
    is both faster and less cluttered, so it goes back to being desktop-only. */
 @media (pointer:coarse),(max-width:860px){ .seat-wrap .move-sel{display:none} }
+/* One line of what needs you, above everything. */
+.nb{display:flex;flex-wrap:wrap;gap:10px;margin:20px 0 2px}
+.nb-i{display:flex;align-items:baseline;gap:7px;font:inherit;cursor:pointer;
+  padding:9px 15px;border-radius:var(--radius-pill);border:1px solid var(--line);
+  background:var(--card);box-shadow:var(--shadow-xs);color:var(--ink-soft);
+  transition:border-color .14s var(--ease),transform .14s var(--ease)}
+.nb-i:hover{border-color:var(--gold-line);transform:translateY(-1px)}
+.nb-i:focus-visible{outline:none;box-shadow:var(--ring)}
+.nb-i b{font-family:var(--serif);font-size:19px;font-weight:600;line-height:1}
+.nb-i span{font-size:12px}
+.nb-i.over{border-color:#EDD1D1;background:#FBF4F4}
+.nb-i.over b{color:#A75252}
+.nb-i.now b{color:var(--gold-deep)}
+.nb-clear{display:flex;align-items:center;gap:9px;font-size:12.5px;color:var(--muted);
+  padding:11px 2px;margin:18px 0 0}
+.nb-clear .nb-ic{color:var(--gold)}
+/* ============ PROJECTS — the front door ============
+   A board of jobs. Cards when you want to see them, a list when you want to
+   scan them, and the same facts either way: when it is, who for, how far
+   along. */
+.pj-head{display:flex;align-items:center;justify-content:space-between;gap:14px;
+  flex-wrap:wrap;margin:26px 0 14px}
+.pj-h{font-family:var(--serif);font-size:23px;font-weight:600;letter-spacing:-.01em;margin:0}
+.pj-tools{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.pj-sub{font-size:10.5px;letter-spacing:.14em;text-transform:uppercase;color:var(--muted);
+  font-weight:600;margin:26px 0 12px}
+.pj-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:16px}
+.pj-card{display:flex;flex-direction:column;text-align:left;padding:0;overflow:hidden;
+  background:var(--card);border:1px solid var(--line);border-radius:var(--radius-lg);
+  box-shadow:var(--shadow-sm);cursor:pointer;font:inherit;color:inherit;
+  transition:transform .16s var(--ease),box-shadow .16s var(--ease),border-color .16s var(--ease)}
+.pj-card:hover{transform:translateY(-2px);box-shadow:var(--shadow);border-color:var(--gold-line)}
+.pj-card:focus-visible{outline:none;box-shadow:var(--ring)}
+.pj-cov{position:relative;display:grid;place-items:center;height:132px;
+  background-size:cover;background-position:center;border-bottom:1px solid var(--line)}
+.pj-mono{font-family:var(--serif);font-size:34px;font-weight:600;color:#fff;opacity:.9}
+/* The countdown reads on the picture, so it needs its own ground. */
+.pj-when{position:absolute;left:12px;bottom:11px;font-size:11px;font-weight:600;
+  padding:4px 10px;border-radius:var(--radius-pill);color:#fff;
+  background:rgba(var(--shade-1),.52);-webkit-backdrop-filter:blur(6px);backdrop-filter:blur(6px)}
+.pj-body{display:flex;flex-direction:column;gap:3px;padding:14px 16px 16px}
+.pj-type{font-size:9.5px;letter-spacing:.14em;text-transform:uppercase;color:var(--gold-deep);font-weight:600}
+.pj-t{font-family:var(--serif);font-size:20px;font-weight:600;line-height:1.15;margin-top:2px}
+.pj-d{font-size:12.5px;color:var(--ink-soft)}
+.pj-f{font-size:11.5px;color:var(--muted);margin-top:2px}
+.pj-bar{display:block;height:5px;border-radius:99px;background:var(--sunk);overflow:hidden;margin-top:11px}
+.pj-bar i{display:block;height:100%;background:var(--gold-grad);border-radius:99px}
+.pj-pct{font-size:10.5px;color:var(--muted);margin-top:5px}
+/* ---- the same board as a list ---- */
+.pj-rows{display:flex;flex-direction:column;border:1px solid var(--line);border-radius:var(--radius);
+  overflow:hidden;background:var(--card);box-shadow:var(--shadow-sm)}
+.pj-row{display:flex;align-items:center;gap:14px;padding:12px 16px;text-align:left;
+  background:none;border:none;border-bottom:1px solid var(--line);cursor:pointer;font:inherit;color:inherit}
+.pj-row:last-child{border-bottom:none}
+.pj-row:hover{background:var(--accent-wash)}
+.pj-row:focus-visible{outline:none;box-shadow:var(--ring)}
+.pj-th{flex:0 0 42px;width:42px;height:42px;border-radius:12px;display:grid;place-items:center;
+  background-size:cover;background-position:center;color:#fff;font-family:var(--serif);
+  font-size:17px;font-weight:600;border:1px solid var(--line)}
+.pj-rn{flex:1 1 auto;min-width:0;display:flex;flex-direction:column;gap:1px}
+.pj-rn b{font-size:14.5px;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.pj-rs{font-size:11.5px;color:var(--muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.pj-rd,.pj-rg,.pj-rp{flex:0 0 auto;display:flex;flex-direction:column;gap:2px;
+  font-size:12.5px;color:var(--ink-soft)}
+.pj-rd{width:132px}
+.pj-rg{width:74px}
+.pj-rp{width:110px}
+.pj-rp .pj-bar{margin-top:2px;width:100%}
+.pj-rc,.pj-rk{font-size:10.5px;color:var(--muted)}
+.pj-go{flex:0 0 auto;color:var(--muted);font-size:16px}
+.pj-row:hover .pj-go{color:var(--gold-deep)}
+.pj-empty{display:flex;flex-direction:column;align-items:center;gap:8px;text-align:center;
+  padding:46px 24px;border:1.5px dashed var(--line-strong);border-radius:var(--radius-lg);
+  background:var(--bg-2)}
+.pj-e-ic{font-size:20px;color:var(--gold)}
+.pj-e-t{font-family:var(--serif);font-size:21px;font-weight:600}
+.pj-e-s{font-size:13px;color:var(--muted);max-width:52ch;line-height:1.5}
+.pj-empty .btn{margin-top:6px}
+@media (max-width:700px){
+  /* The heading and its two controls were fighting for one line and losing;
+     the heading takes the line and the controls take the next. */
+  .pj-head{flex-direction:column;align-items:stretch;gap:10px;margin:18px 0 12px}
+  .pj-tools{justify-content:space-between}
+  .pj-grid{grid-template-columns:1fr;gap:13px}
+  .pj-cov{height:116px}
+  /* A row on a phone keeps the name, the date and the countdown; the rest is
+     what the card is for. */
+  .pj-rd{width:auto;flex:0 0 auto;text-align:right}
+  .pj-rg,.pj-rp{display:none}
+}
 /* ---- the guest filter bar ----
    A 200-name list is only a list if you can ask it questions. Two parts, and
    only the first is ever in the way: the chips naming what is being filtered
@@ -3870,24 +3986,27 @@ html,body{max-width:100%;overflow-x:hidden}
     <div class="side-scroll">
     <button class="srch-open" id="srchOpen" type="button"><span class="srch-ic">⌕</span><span>Search</span><kbd id="srchKbd">⌘K</kbd></button>
     <div id="navEvent"></div>
-    <div class="nav-group" data-group="workspace">
-      <button class="nav-label" type="button" aria-expanded="true"><span>Workspace</span><span class="chev" aria-hidden="true"></span></button>
+    <!-- The way out of a project, and the way into another one. Everything
+         below the switcher is about the job you are in; everything under
+         Studio is about the studio. -->
+    <div class="nav-home"><div class="nav-item" data-view="projects" tabindex="0"><svg class="ic" viewBox="0 0 20 20" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"><path d="M2.8 3h6.1v8H2.8ZM11.1 3h6.1v4.6h-6.1ZM11.1 9.7h6.1V17h-6.1ZM2.8 13.2h6.1V17H2.8Z"/></svg><span class="lbl">All projects</span></div></div>
+    <div class="nav-group" data-group="project">
+      <button class="nav-label" type="button" aria-expanded="true"><span>This project</span><span class="chev" aria-hidden="true"></span></button>
       <div class="nav-items"><div class="nav-items-inner">
-        <div class="nav-item" data-view="dashboard" tabindex="0"><svg class="ic" viewBox="0 0 20 20" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"><path d="M2.8 3h6.1v8H2.8ZM11.1 3h6.1v4.6h-6.1ZM11.1 9.7h6.1V17h-6.1ZM2.8 13.2h6.1V17H2.8Z"/></svg><span class="lbl">Dashboard</span></div>
-        <div class="nav-item" data-view="pipeline" tabindex="0"><svg class="ic" viewBox="0 0 20 20" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"><path d="M2.8 3.6h4.4v12.8H2.8ZM7.8 3.6h4.4v12.8H7.8ZM12.8 3.6h4.4v12.8h-4.4Z"/><path d="M2.8 7.4h4.4M7.8 7.4h4.4M12.8 7.4h4.4"/></svg><span class="lbl">Leads &amp; Pipeline</span></div>
-        <div class="nav-item" data-view="clients" tabindex="0"><svg class="ic" viewBox="0 0 20 20" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"><circle cx="10" cy="7.3" r="2.9"/><path d="M4.2 16.6a5.8 5.8 0 0 1 11.6 0"/></svg><span class="lbl">Clients</span></div>
-      </div></div>
-    </div>
-    <div class="nav-group" data-group="events">
-      <button class="nav-label" type="button" aria-expanded="true"><span>Events</span><span class="chev" aria-hidden="true"></span></button>
-      <div class="nav-items"><div class="nav-items-inner">
-        <div class="nav-item" data-view="events" tabindex="0"><svg class="ic" viewBox="0 0 20 20" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"><path d="M10 2.4 11.9 8.1 17.6 10 11.9 11.9 10 17.6 8.1 11.9 2.4 10 8.1 8.1Z"/></svg><span class="lbl">Events</span></div>
+        <div class="nav-item" data-view="dashboard" tabindex="0"><svg class="ic" viewBox="0 0 20 20" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"><path d="M10 2.4 11.9 8.1 17.6 10 11.9 11.9 10 17.6 8.1 11.9 2.4 10 8.1 8.1Z"/></svg><span class="lbl">Dashboard</span></div>
         <div class="nav-item" data-view="guests" tabindex="0"><svg class="ic" viewBox="0 0 20 20" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"><circle cx="7.4" cy="6.6" r="2.6"/><path d="M2.6 15.9a4.8 4.8 0 0 1 9.6 0"/><path d="M13.6 8.6l1.6 1.7 3-3.4"/></svg><span class="lbl">Guests &amp; RSVP</span></div>
         <div class="nav-item" data-view="seating" tabindex="0"><svg class="ic" viewBox="0 0 20 20" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"><circle cx="10" cy="10" r="4"/><circle cx="10" cy="3.1" r="1.5"/><circle cx="10" cy="16.9" r="1.5"/><circle cx="3.1" cy="10" r="1.5"/><circle cx="16.9" cy="10" r="1.5"/></svg><span class="lbl">Seating Chart</span></div>
+        <div class="nav-item" data-view="design" tabindex="0"><svg class="ic" viewBox="0 0 20 20" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"><circle cx="7.6" cy="8" r="4.2"/><circle cx="12.4" cy="12" r="4.2"/></svg><span class="lbl">Design Studio</span></div>
+      </div></div>
+    </div>
+    <div class="nav-group" data-group="workspace">
+      <button class="nav-label" type="button" aria-expanded="true"><span>Studio</span><span class="chev" aria-hidden="true"></span></button>
+      <div class="nav-items"><div class="nav-items-inner">
+        <div class="nav-item" data-view="pipeline" tabindex="0"><svg class="ic" viewBox="0 0 20 20" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"><path d="M2.8 3.6h4.4v12.8H2.8ZM7.8 3.6h4.4v12.8H7.8ZM12.8 3.6h4.4v12.8h-4.4Z"/><path d="M2.8 7.4h4.4M7.8 7.4h4.4M12.8 7.4h4.4"/></svg><span class="lbl">Leads &amp; Pipeline</span></div>
+        <div class="nav-item" data-view="clients" tabindex="0"><svg class="ic" viewBox="0 0 20 20" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"><circle cx="10" cy="7.3" r="2.9"/><path d="M4.2 16.6a5.8 5.8 0 0 1 11.6 0"/></svg><span class="lbl">Clients</span></div>
         <div class="nav-item" data-view="vendors" tabindex="0"><svg class="ic" viewBox="0 0 20 20" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"><path d="M9.6 2.4H17v7.4l-7.6 7.6a1.6 1.6 0 0 1-2.3 0L2.4 12.3a1.6 1.6 0 0 1 0-2.3Z"/><path d="M13.4 6h.02"/></svg><span class="lbl">Vendors</span></div>
         <div class="nav-item" data-view="venues" tabindex="0"><svg class="ic" viewBox="0 0 20 20" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"><path d="M3.2 17.4V8.6L10 3.4l6.8 5.2v8.8Z"/><path d="M7.8 17.4v-5h4.4v5"/></svg><span class="lbl">Venues</span></div>
         <div class="nav-item" data-view="archive" tabindex="0"><svg class="ic" viewBox="0 0 20 20" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"><path d="M2.8 4.2h14.4v11.6H2.8Z"/><circle cx="7" cy="8.2" r="1.4"/><path d="M2.8 13.4l4.3-3.6 3.4 2.8 3-2.4 3.7 3.2"/></svg><span class="lbl">Archive</span></div>
-        <div class="nav-item" data-view="design" tabindex="0"><svg class="ic" viewBox="0 0 20 20" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"><circle cx="7.6" cy="8" r="4.2"/><circle cx="12.4" cy="12" r="4.2"/></svg><span class="lbl">Design Studio</span></div>
       </div></div>
     </div>
     <div class="nav-group" data-group="client">
@@ -3936,7 +4055,7 @@ html,body{max-width:100%;overflow-x:hidden}
        scroller is invisible, and you can never learn where a thing lives.
        These are the five a planner reaches for on a phone; More opens the
        same grouped sidebar the desktop has. -->
-  <nav class="tabbar" id="tabbar" aria-label="Main"><button class="tab" type="button" data-view="dashboard" aria-label="Today"><svg class="tab-ic" viewBox="0 0 20 20" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M2.8 3h6.1v8H2.8ZM11.1 3h6.1v4.6h-6.1ZM11.1 9.7h6.1V17h-6.1ZM2.8 13.2h6.1V17H2.8Z"/></svg><span class="tab-l">Today</span></button><button class="tab" type="button" data-view="events" aria-label="Events"><svg class="tab-ic" viewBox="0 0 20 20" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M10 2.4 11.9 8.1 17.6 10 11.9 11.9 10 17.6 8.1 11.9 2.4 10 8.1 8.1Z"/></svg><span class="tab-l">Events</span></button><button class="tab" type="button" data-view="clients" aria-label="Clients"><svg class="tab-ic" viewBox="0 0 20 20" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="10" cy="7.3" r="2.9"/><path d="M4.2 16.6a5.8 5.8 0 0 1 11.6 0"/></svg><span class="tab-l">Clients</span></button><button class="tab" type="button" data-view="calendar" aria-label="Calendar"><svg class="tab-ic" viewBox="0 0 20 20" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M3.2 4.8h13.6v12H3.2Z"/><path d="M3.2 8.6h13.6"/><path d="M6.8 2.6v3.2M13.2 2.6v3.2"/></svg><span class="tab-l">Calendar</span></button><button class="tab" type="button" id="tabMore" aria-label="More"><svg class="tab-ic" viewBox="0 0 20 20" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M2.8 5.4h14.4M2.8 10h14.4M2.8 14.6h14.4"/></svg><span class="tab-l">More</span></button></nav>
+  <nav class="tabbar" id="tabbar" aria-label="Main"><button class="tab" type="button" data-view="projects" aria-label="All projects"><svg class="tab-ic" viewBox="0 0 20 20" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M2.8 3h6.1v8H2.8ZM11.1 3h6.1v4.6h-6.1ZM11.1 9.7h6.1V17h-6.1ZM2.8 13.2h6.1V17H2.8Z"/></svg><span class="tab-l">Projects</span></button><button class="tab" type="button" data-view="dashboard" aria-label="This project’s dashboard"><svg class="tab-ic" viewBox="0 0 20 20" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M10 2.4 11.9 8.1 17.6 10 11.9 11.9 10 17.6 8.1 11.9 2.4 10 8.1 8.1Z"/></svg><span class="tab-l">Dashboard</span></button><button class="tab" type="button" data-view="clients" aria-label="Clients"><svg class="tab-ic" viewBox="0 0 20 20" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="10" cy="7.3" r="2.9"/><path d="M4.2 16.6a5.8 5.8 0 0 1 11.6 0"/></svg><span class="tab-l">Clients</span></button><button class="tab" type="button" data-view="calendar" aria-label="Calendar"><svg class="tab-ic" viewBox="0 0 20 20" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M3.2 4.8h13.6v12H3.2Z"/><path d="M3.2 8.6h13.6"/><path d="M6.8 2.6v3.2M13.2 2.6v3.2"/></svg><span class="tab-l">Calendar</span></button><button class="tab" type="button" id="tabMore" aria-label="More"><svg class="tab-ic" viewBox="0 0 20 20" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M2.8 5.4h14.4M2.8 10h14.4M2.8 14.6h14.4"/></svg><span class="tab-l">More</span></button></nav>
 
   <main class="main">
     <div class="topbar">
@@ -5340,7 +5459,7 @@ function uid(prefix){
 }
 var _justDragged=false;   // set during HTML5 drag so drop doesn't also navigate
 var _now=new Date();
-var state={view:'dashboard',eventId:null,clientId:null,boardId:null,qId:null,venueId:null,settingsPage:null,helpOpen:null,seatMode:'plan',floorSel:null,chkTab:'planner',chkOpen:null,heroIdx:0,guestIdx:0,gsDir:null,invoiceId:null,activeEventId:(db.events[0]||{}).id,
+var state={view:'projects',eventId:null,clientId:null,boardId:null,qId:null,venueId:null,settingsPage:null,helpOpen:null,seatMode:'plan',floorSel:null,chkTab:'planner',chkOpen:null,heroIdx:0,guestIdx:0,gsDir:null,invoiceId:null,activeEventId:(db.events[0]||{}).id,
            calY:_now.getFullYear(),calM:_now.getMonth()};
 function activeEvent(){return db.events.find(function(e){return e.id===state.activeEventId;})||db.events[0];}
 
@@ -5389,13 +5508,22 @@ function countdownLine(){
 function pageHead(v){
   var lab=(TITLES[v]||['',''])[0], sub=(TITLES[v]||['',''])[1];
   /* [eyebrow, headline, sub] — an empty eyebrow hides itself. */
-  if(v==='dashboard')
+  if(v==='projects')
     return [dateLine(),countdownLine(),'A calm day of details.'];
+  /* Dashboard is a project now, so the head says which one and how long there
+     is — the two things you want confirmed the second the screen paints. */
+  if(v==='dashboard'){
+    var pe=activeEvent();
+    if(!pe)return [dateLine(),countdownLine(),'A calm day of details.'];
+    var d=daysAway(pe.date);
+    return [evType(pe)+' · '+(pe.date?fmtDate(pe.date):'no date yet'), pe.title,
+      pe.date?(d>0?d+' days away':d===0?'Today.':Math.abs(d)+' days ago'):'Set a date when you have one.'];
+  }
   if(v==='clients'&&!state.clientId){
     var n=db.leads.length;
     return [lab,n?(n+' client file'+(n===1?'':'s')):'No clients yet',sub];
   }
-  if(v==='events'&&!state.eventId){
+  if((v==='events'||v==='projects')&&!state.eventId){
     var ps=evPrimaries().length, subs=db.events.length-ps;
     return [lab,ps?(ps+' event'+(ps===1?'':'s')+' in play'):'No events yet',
             subs?(subs+' sub-event'+(subs===1?'':'s')+' inside them'):sub];
@@ -5464,6 +5592,7 @@ function pageHead(v){
   return ['',lab,sub];
 }
 var TITLES={
+  projects:['Projects','Every job you are running, and what needs you today.'],
   dashboard:['Dashboard',''],
   pipeline:['Leads & Pipeline',''],
   clients:['Clients','Every couple and host, in one place.'],
@@ -5506,6 +5635,11 @@ function setView(v,opts){
   if(opts&&opts.invoiceId!==undefined)state.invoiceId=opts.invoiceId;
   if(opts&&opts.settingsPage!==undefined){state.settingsPage=opts.settingsPage;state.helpOpen=null;}
   if(v!=='finance'&&(!opts||opts.invoiceId===undefined))state.invoiceId=null;
+  /* The shell knows whether it is inside a project, which is what hides the
+     project tools at the front door. */
+  var shell=document.querySelector('.app');
+  if(shell)shell.classList.toggle('at-home',v==='projects'||(v==='events'&&!state.eventId));
+  if(v==='projects')state.projSwitch=false;
   document.querySelectorAll('.nav-item').forEach(function(n){n.classList.toggle('active',n.dataset.view===v);});
   document.querySelectorAll('.tab[data-view]').forEach(function(n){n.classList.toggle('active',n.dataset.view===v);});
   var sb=document.getElementById('settingsBtn');
@@ -5593,12 +5727,15 @@ function actionsFor(v){
      one you were reading. */
   if(v==='finance')return state.invoiceId?'':
     '<button class="btn btn-ghost" id="exportInv">Export CSV</button> <button class="btn btn-gold" id="addInv">＋ New invoice</button>';
-  if(v==='events')return state.eventId
+  /* The board carries its own New project, so the topbar stays empty at the
+     front door rather than offering the same action twice. */
+  if(v==='projects')return '';
+  if(v==='events'||v==='dashboard')return (v==='dashboard'||state.eventId)
     ?'<button class="btn btn-quiet btn-icon" id="printEvent" title="Print" aria-label="Print">'+
        '⎙<span class="bl"> Print</span></button> '+
      '<button class="btn btn-quiet btn-icon" id="editEvent" title="Edit event" aria-label="Edit event">'+
        '✎<span class="bl"> Edit event</span></button>'
-    :'<button class="btn btn-gold" id="addEvent">＋ New event</button>';
+    :'';
   /* The switcher is context, not an action, and the two CSV utilities are
      things you do twice a year. Below 700px the switcher takes its own line
      and those two become icons, so the row reads as one primary action rather
@@ -5676,7 +5813,16 @@ function shiftMonth(d){
 
 function render(){
   var el=$('#content');
-  if(state.view==='dashboard'){ el.innerHTML=viewDashboard(); wireDashboard(); wireSetupCard(); }
+  /* The front door: everything true across the studio, then the projects. */
+  if(state.view==='projects'){ el.innerHTML=viewProjects(); wireDashboard(); wireSetupCard(); wireProjects(); }
+  /* Dashboard means "this project" now. It renders the workspace — the screen
+     that was already the best answer to where a job is at — so there is one
+     page for a project rather than two competing ones. */
+  else if(state.view==='dashboard'){
+    var pe=activeEvent();
+    if(!pe){ el.innerHTML=viewProjects(); wireDashboard(); wireSetupCard(); wireProjects(); }
+    else { state.eventId=pe.id; el.innerHTML=viewEventDetail(pe.id); wireEvents(); wireSampleBanner(); }
+  }
   else if(state.view==='pipeline'){el.innerHTML=viewPipeline();wireBoard();}
   else if(state.view==='clients'){
     el.innerHTML= state.clientId?viewClientDetail(state.clientId):viewClients();
@@ -5689,7 +5835,12 @@ function render(){
   else if(state.view==='settings'){ el.innerHTML=viewSettings(); wireSettings(); }
   else if(state.view==='analytics'){ el.innerHTML=viewAnalytics(); }
   else if(state.view==='tax'){ el.innerHTML=viewTax(); wireTax(); }
-  else if(state.view==='events'){ el.innerHTML= state.eventId?viewEventDetail(state.eventId):viewEvents(); wireEvents(); wireSampleBanner(); }
+  else if(state.view==='events'){
+    /* The old grid is the Projects home now — anything that asked for "all
+       events" is asking for the front door. */
+    if(!state.eventId){ el.innerHTML=viewProjects(); wireDashboard(); wireSetupCard(); wireProjects(); }
+    else { el.innerHTML=viewEventDetail(state.eventId); wireEvents(); wireSampleBanner(); }
+  }
   else if(state.view==='guests'){ el.innerHTML=viewGuests(); wireGuests(); }
   else if(state.view==='seating'){ el.innerHTML=viewSeating(); wireSeating(); }
   else if(state.view==='vendors'){ el.innerHTML=viewVendors(); wireVendors(); }
@@ -5819,7 +5970,13 @@ function allOpenTasks(){
     return a.days-b.days;
   });
 }
-function viewDashboard(){
+/* ---- the studio's own view ----
+   Everything true across every project: what is overdue, what is waiting on
+   somebody else, the week, the money. It used to be the Dashboard and open on
+   launch. It is the top of the Projects home now, and the card stack of
+   upcoming events at the top of it is replaced by the projects themselves —
+   which is what that stack was always standing in for. */
+function viewStudio(boardHtml){
   var tasks=allOpenTasks();
   var overdue=tasks.filter(function(t){return t.days!==null&&t.days<0;});
   var today=tasks.filter(function(t){return t.days===0;});
@@ -5910,6 +6067,23 @@ function viewDashboard(){
      what needs doing, not what it earned; the money matters but it is not the
      reason you come in. Anyone who disagrees can move it to the top in
      Settings → Appearance rather than being argued with. */
+  /* One line of what actually needs you, across every project, so the front
+     door answers "is anything on fire" before it answers "what am I running".
+     The detail is in the To Do and Waiting On cards further down; this is the
+     glance. */
+  function needsBand(){
+    var items=[];
+    if(overdue.length)items.push(['over',overdue.length,'overdue']);
+    if(today.length)items.push(['now',today.length,today.length===1?'due today':'due today']);
+    if(week.length)items.push(['soon',week.length,'this week']);
+    if(waiting.length)items.push(['wait',waiting.length,'waiting on others']);
+    if(!items.length)return '<div class="nb nb-clear"><span class="nb-ic">✦</span>'+
+      '<span>Nothing overdue, nothing waiting. Enjoy the quiet.</span></div>';
+    return '<div class="nb">'+items.map(function(it){
+      return '<button type="button" class="nb-i '+it[0]+'" data-needs="'+it[0]+'">'+
+        '<b>'+it[1]+'</b><span>'+esc(it[2])+'</span></button>';
+    }).join('')+'</div>';
+  }
   var MODS={
     hero:function(){ return heroStack(upcoming); },
     week:function(){ return weekStrip(); },
@@ -5956,9 +6130,16 @@ function viewDashboard(){
     '</div>';
   }
 
-  return setupCard()+dashOrder().map(function(k){
-    return (dashHidden()[k]||!MODS[k])?'':MODS[k]();
-  }).join('');
+  /* On the projects home the board takes the place the card stack of upcoming
+     events used to hold — it is the same idea, done properly — and the band
+     goes above it, which is the order the front door was asked for: what is
+     urgent, then everything you run. */
+  return setupCard()+
+    (boardHtml==null?'':needsBand()+boardHtml)+
+    dashOrder().map(function(k){
+      if(boardHtml!=null&&k==='hero')return '';
+      return (dashHidden()[k]||!MODS[k])?'':MODS[k]();
+    }).join('');
 }
 
 /* ---- which modules, in which order ----
@@ -6624,32 +6805,131 @@ function viewClientDetail(id){
 }
 
 /* --- Events --- */
-function viewEvents(){
-  /* Only primaries get a card. Their sub-events ride inside it, so a weekend
-     reads as one job rather than four unrelated ones competing for the eye. */
-  return '<div class="ev-cards">'+evPrimaries().map(function(e){
-    var kids=evChildren(e.id),pct=evPct(e);
-    /* Row actions live in the banner, not beside the title. Inline, a long
-       client name wrapped around them and the card grew a second row — the
-       grid then sat at two different heights depending on the name. */
-    var cov=evPhoto(e);
-    return '<div class="ev-card'+(isSampleEvent(e)?' is-sample':'')+'" data-ev="'+e.id+'">'+
-      '<div class="banner'+(cov?' has-photo':'')+'"'+
-        (cov?' style="background-image:url('+cov+')"':'')+'>'+rowActions('event',e.id)+
-      (isSampleEvent(e)?'<span class="samp-tag card">Sample</span>':'')+
-      '<span class="d">'+daysAway(e.date)+' days · '+fmtDate(e.date)+'</span>'+
-      (kids.length?'<span class="ev-blk">'+(kids.length+1)+' events</span>':'')+'</div>'+
-      '<div class="body"><h4>'+esc(e.title)+'</h4>'+
-      '<div class="loc"><span class="ev-type">'+esc(evType(e))+'</span> · '+esc(venueDot(e.venue,e.loc))+'</div>'+
-      (kids.length?'<div class="ev-subs">'+kids.map(function(k){
-        return '<button class="ev-sub" type="button" data-ev="'+k.id+'">'+
-          '<span class="es-r">'+esc(roleLabel(k,true))+'</span>'+
-          '<span class="es-t">'+esc(k.title)+'</span>'+
-          '<span class="es-d">'+fmtDate(k.date)+'</span></button>';
-      }).join('')+'</div>':'')+
-      '<div class="prog"><div style="display:flex;justify-content:space-between;font-size:11px;color:var(--muted);margin-bottom:5px"><span>Planning progress</span><span>'+pct+'%</span></div><div class="bar"><i style="width:'+pct+'%"></i></div></div></div></div>';
-  }).join('')+'</div>';
+/* ============================================================
+ * Projects
+ *
+ * A studio does not run "events", it runs jobs — and a job is a client, a
+ * date, a guest list, a budget and a hundred decisions that belong to that one
+ * job and to nothing else. The app opened on a studio-wide dashboard and every
+ * tool acted on whichever event happened to be current, which is a filing
+ * cabinet with all the drawers open.
+ *
+ * So the front door is a board of projects. Pick one and the whole app is
+ * about it — the nav grows a set of tools for that job, the Dashboard IS that
+ * job — and the switcher at the top of the nav moves you between them without
+ * leaving the screen you are on.
+ * ============================================================ */
+function projView(){ return prefs().projView==='list'?'list':'grid'; }
+/* What is worth knowing about a job without opening it: when it is, who it is
+   for, how far along, and whether anything is waiting. */
+function projFacts(e){
+  var kids=evChildren(e.id), r=rosterFor(e);
+  var yes=r.filter(function(g){ return gRsvp(g,e)==='yes'; }).length;
+  var wait=r.filter(function(g){ var v=gRsvp(g,e); return v==='invited'||v==='pending'; }).length;
+  var open=(evBlock(e)||[e]).reduce(function(n,x){
+    return n+(x.checklist||[]).filter(function(c){ return !c.done; }).length; },0);
+  var due=(e.budget||[]).reduce(function(a,b){ return a+(Number(b.est)||0); },0);
+  var lead=e.leadId?leadById(e.leadId):null;
+  return {kids:kids,roster:r.length,yes:yes,wait:wait,open:open,budget:due,lead:lead,pct:evPct(e)};
 }
+function projCard(e){
+  var f=projFacts(e), cov=evPhoto(e), d=daysAway(e.date);
+  var when=e.date?(d>0?d+' days away':d===0?'Today':Math.abs(d)+' days ago'):'No date yet';
+  var bits=[];
+  if(f.roster)bits.push(f.yes+' of '+f.roster+' replied yes');
+  if(f.open)bits.push(f.open+' task'+(f.open===1?'':'s')+' open');
+  if(f.budget)bits.push(money(f.budget)+' budgeted');
+  return '<button type="button" class="pj-card'+(isSampleEvent(e)?' is-sample':'')+'" data-openproj="'+esc(e.id)+'">'+
+    '<span class="pj-cov'+(cov?' has-photo':'')+'"'+(cov?' style="background-image:url('+cov+')"':
+      ' style="background:'+eventTint(e.id)+'"')+'>'+
+      (cov?'':'<span class="pj-mono">'+esc(String(e.title||'?').trim()[0]||'?').toUpperCase()+'</span>')+
+      (isSampleEvent(e)?'<span class="samp-tag card">Sample</span>':'')+
+      '<span class="pj-when">'+esc(when)+'</span>'+
+    '</span>'+
+    '<span class="pj-body">'+
+      '<span class="pj-type">'+esc(evType(e))+(f.kids.length?' · '+(f.kids.length+1)+' events':'')+'</span>'+
+      '<span class="pj-t">'+esc(e.title)+'</span>'+
+      '<span class="pj-d">'+esc(e.date?fmtDate(e.date):'Date to be set')+
+        (e.venue?' · '+esc(venueName(e.venue)):'')+'</span>'+
+      (bits.length?'<span class="pj-f">'+esc(bits.join(' · '))+'</span>':'')+
+      '<span class="pj-bar"><i style="width:'+f.pct+'%"></i></span>'+
+      '<span class="pj-pct">'+f.pct+'% planned</span>'+
+    '</span>'+
+  '</button>';
+}
+function projRow(e){
+  var f=projFacts(e), cov=evPhoto(e), d=daysAway(e.date);
+  return '<button type="button" class="pj-row'+(isSampleEvent(e)?' is-sample':'')+'" data-openproj="'+esc(e.id)+'">'+
+    '<span class="pj-th'+(cov?' has-photo':'')+'"'+(cov?' style="background-image:url('+cov+')"':
+      ' style="background:'+eventTint(e.id)+'"')+'>'+
+      (cov?'':esc(String(e.title||'?').trim()[0]||'?').toUpperCase())+'</span>'+
+    '<span class="pj-rn"><b>'+esc(e.title)+'</b>'+
+      '<span class="pj-rs">'+esc(evType(e))+(e.venue?' · '+esc(venueName(e.venue)):'')+'</span></span>'+
+    '<span class="pj-rd">'+esc(e.date?fmtDate(e.date):'No date')+
+      '<span class="pj-rc">'+esc(e.date?(d>=0?d+' days away':Math.abs(d)+' days ago'):'')+'</span></span>'+
+    '<span class="pj-rg">'+(f.roster?f.yes+'/'+f.roster:'—')+'<span class="pj-rk">guests</span></span>'+
+    '<span class="pj-rp"><span class="pj-bar"><i style="width:'+f.pct+'%"></i></span>'+
+      '<span class="pj-rk">'+f.pct+'%</span></span>'+
+    '<span class="pj-go" aria-hidden="true">›</span>'+
+  '</button>';
+}
+/* Soonest first, and the ones already behind you at the end — a board you read
+   top to bottom is a diary. */
+function projList(){
+  var all=evPrimaries().slice();
+  var live=all.filter(function(e){ return !e.date||daysAway(e.date)>=0; })
+    .sort(function(a,b){ return (a.date||'9')<(b.date||'9')?-1:1; });
+  var past=all.filter(function(e){ return e.date&&daysAway(e.date)<0; })
+    .sort(function(a,b){ return a.date<b.date?1:-1; });
+  return {live:live,past:past};
+}
+function projectBoard(){
+  var g=projList(), mode=projView();
+  var one=mode==='list'?projRow:projCard;
+  var wrap=function(list){ return '<div class="'+(mode==='list'?'pj-rows':'pj-grid')+'">'+
+    list.map(one).join('')+'</div>'; };
+  return '<div class="pj-head">'+
+      '<h2 class="pj-h">Projects</h2>'+
+      '<span class="pj-tools">'+
+        '<span class="seg pj-seg" role="tablist" aria-label="How to show your projects">'+
+          [['grid','Cards'],['list','List']].map(function(m){
+            return '<button type="button" class="seg-b'+(mode===m[0]?' on':'')+'" data-projview="'+m[0]+'" '+
+              'role="tab" aria-selected="'+(mode===m[0])+'">'+m[1]+'</button>';
+          }).join('')+
+        '</span>'+
+        '<button class="btn btn-gold btn-sm" id="pjNew">＋ New project</button>'+
+      '</span>'+
+    '</div>'+
+    (g.live.length?wrap(g.live):
+      '<div class="pj-empty"><span class="pj-e-ic">✦</span>'+
+      '<span class="pj-e-t">No projects yet</span>'+
+      '<span class="pj-e-s">Every guest list, budget and timeline lives inside one. Start with the date and the names — the rest can wait.</span>'+
+      '<button class="btn btn-gold btn-sm" id="pjNew2">＋ New project</button></div>')+
+    (g.past.length?'<div class="pj-sub">Finished</div>'+wrap(g.past):'');
+}
+function viewProjects(){ return viewStudio(projectBoard()); }
+function wireProjects(){
+  document.querySelectorAll('[data-openproj]').forEach(function(b){
+    b.onclick=function(){ openProject(b.dataset.openproj); };
+  });
+  document.querySelectorAll('[data-projview]').forEach(function(b){
+    b.onclick=function(){ var p=prefs(); p.projView=b.dataset.projview; savePrefs(); render(); wireProjects(); };
+  });
+  var n=$('#pjNew'), n2=$('#pjNew2');
+  if(n)n.onclick=function(){ openEventModal(null); };
+  if(n2)n2.onclick=function(){ openEventModal(null); };
+}
+/* Opening a project is the only way in, and it lands on that project's own
+   dashboard — which is the event workspace, the screen that was already the
+   best answer to "where is this job at". */
+function openProject(id){
+  var e=evById(id); if(!e)return;
+  state.activeEventId=id;
+  setView('dashboard',{eventId:id});
+  if(window.innerWidth<=860)setNav(false);
+}
+/* The old events grid lived here. It is the Projects board now — same job,
+   done as the front door rather than as one screen among nineteen. */
 function wireEvents(){
   document.querySelectorAll('[data-evtoggle]').forEach(function(btn){
     btn.onclick=function(ev){
@@ -6818,7 +7098,7 @@ function evSection(key,title,count,body,extra){
     '<div class="ev-wrap"><div class="ev-inner">'+body+'</div></div></div>';
 }
 function viewEventDetail(id){
-  var e=db.events.find(function(x){return x.id===id;});if(!e)return viewEvents();
+  var e=db.events.find(function(x){return x.id===id;});if(!e)return viewProjects();
   var done=e.checklist.filter(function(c){return c.done;}).length,tot=e.checklist.length,pct=tot?Math.round(done/tot*100):0;
   var estT=e.budget.reduce(function(a,b){return a+b.est;},0),actT=e.budget.reduce(function(a,b){return a+b.act;},0);
   var vend=bookingsForEvent(e.id);
@@ -6862,7 +7142,7 @@ function viewEventDetail(id){
      above it pushes the thing the page is about below the fold of the eye —
      the weekend switcher and the sub-event control now sit under the picture,
      in the strip that already answers "where is this". */
-  return '<button class="back-link" data-back="events">‹ All events</button>'+
+  return '<button class="back-link" data-back="projects">‹ All projects</button>'+
   sampleBanner()+
   (cover?'':switcher)+
 
@@ -10197,7 +10477,7 @@ function prefs(){
     bizAddress:d.bizAddress||'',
     sparkles:d.sparkles!==false,
     reduceMotion:!!d.reduceMotion,
-    landing:d.landing||'dashboard',
+    landing:d.landing||'projects',
     density:d.density||'comfortable',
     roomW:d.roomW||60, roomH:d.roomH||40,
     defaultTable:d.defaultTable||'r60',
@@ -10214,6 +10494,10 @@ function prefs(){
     dashHidden:d.dashHidden||{},
     clientView:d.clientView==='cards'?'cards':'list',
     guestView:d.guestView==='stack'?'stack':'list',
+    /* prefs() rebuilds a whitelisted object — a key that is not named here is
+       dropped on the next load, which is how three settings have been lost
+       before. */
+    projView:d.projView==='list'?'list':'grid',
     portalDocs:d.portalDocs!==false,
     portalPayments:d.portalPayments!==false,
     portalQuestionnaires:d.portalQuestionnaires!==false,
@@ -10386,7 +10670,7 @@ function settingsPage(k){
             return '<option value="'+n+'"'+(p.todoRows===n?' selected':'')+'>'+n+' rows</option>';}).join('')+'</select>',
           'How much of the list the dashboard shows before it stops. The card collapses either way.')+
         setRow('Open GEM on','<select class="set-sel" id="s_landing">'+
-          [['dashboard','Dashboard'],['calendar','Calendar'],['pipeline','Leads & Pipeline'],['events','Events']]
+          [['projects','All projects'],['dashboard','The project I was in'],['calendar','Calendar'],['pipeline','Leads & Pipeline']]
           .map(function(o){return '<option value="'+o[0]+'"'+(p.landing===o[0]?' selected':'')+'>'+o[1]+'</option>';}).join('')+'</select>')+
       '</div>'+
       /* Everyone works differently. Some planners want the money first; most
@@ -11412,7 +11696,7 @@ function wireSettings(){
             if(parsed.settings){ settings=null; localStorage.setItem(SET_KEY,JSON.stringify(parsed.settings)); prefs(); }
             save(); loadStages(); applyPrefs(); applyBrand(); paintIdentity();
 /* Photos are stored apart from the workspace now, so put them back. */
-try{ mediaRehydrate(); }catch(e){} setView('dashboard'); toast('Backup restored ✦');
+try{ mediaRehydrate(); }catch(e){} setView('projects',{eventId:null}); toast('Backup restored ✦');
           });
         }catch(err){ toast('That file isn’t a GEM backup.'); }
       };
@@ -11443,33 +11727,66 @@ function applyPrefs(){
 function paintNavEvent(){
   var host=document.getElementById('navEvent'); if(!host)return;
   var e=activeEvent();
-  if(!e){ host.innerHTML=''; return; }
+  /* At the front door there is no current project, and the switcher would be
+     a control for choosing between things the screen is already showing. */
+  if(!e||state.view==='projects'){ host.innerHTML=''; return; }
   var cover=evPhoto(e), d=daysAway(e.date);
   var when=e.date?(d>=0?(d===0?'Today':d===1?'Tomorrow':d+' days away'):'Completed'):'No date yet';
-  /* Said nothing about what it was, so it read as decoration somebody had left
-     there. It is the event every screen in the app is currently about — the
-     one the guest list, the seating chart and the budget all belong to — and
-     saying so is two words. */
-  host.innerHTML='<div class="ne-k">Working on</div>'+
-    '<button class="nav-ev'+(state.view==='events'&&state.eventId===e.id?' on':'')+'" '+
-    'data-openevent="'+esc(e.id)+'" title="Open '+esc(e.title)+'">'+
-    (cover?'<span class="ne-th" style="background-image:url('+cover+')"></span>'
-          :'<span class="ne-th ne-mono" style="background:'+eventTint(e.id)+'">'+
-             esc(String(e.title||'?').trim()[0]||'?').toUpperCase()+'</span>')+
-    '<span class="ne-tx"><span class="ne-n">'+esc(e.title)+'</span>'+
-      '<span class="ne-d">'+esc(when)+'</span></span>'+
-    '<span class="ne-go" aria-hidden="true">›</span>'+
-  '</button>';
-  /* The click delegate that handles every other [data-openevent] is bound to
-     #content, and the sidebar is not inside #content — so this one had looked
-     like a button and done nothing since the day it was added. Wired here
-     directly, and property assignment because paintNavEvent runs on every
-     render. */
-  var btn=host.querySelector('.nav-ev');
-  if(btn)btn.onclick=function(){
-    setView('events',{eventId:e.id});
-    if(window.innerWidth<=860)setNav(false);
+  var open=!!state.projSwitch;
+  var thumb=function(x,cls){
+    var c=evPhoto(x);
+    return c?'<span class="'+cls+'" style="background-image:url('+c+')"></span>'
+            :'<span class="'+cls+' ne-mono" style="background:'+eventTint(x.id)+'">'+
+               esc(String(x.title||'?').trim()[0]||'?').toUpperCase()+'</span>';
   };
+  /* The card is the switcher. Pressing it lists every project underneath, and
+     picking one keeps you on the screen you are already looking at — the whole
+     point is to compare the same thing across two jobs. */
+  host.innerHTML='<div class="ne-k">Working on</div>'+
+    '<button class="nav-ev'+(open?' open':'')+'" id="navSwitch" aria-expanded="'+open+'" '+
+      'title="Switch project">'+
+      thumb(e,'ne-th')+
+      '<span class="ne-tx"><span class="ne-n">'+esc(e.title)+'</span>'+
+        '<span class="ne-d">'+esc(when)+'</span></span>'+
+      '<span class="ne-go" aria-hidden="true">'+(open?'⌃':'⌄')+'</span>'+
+    '</button>'+
+    (open?'<div class="ne-list" role="listbox">'+
+      evPrimaries().filter(function(x){ return x.id!==e.id; })
+        .sort(function(a,b){ return (a.date||'9')<(b.date||'9')?-1:1; })
+        .map(function(x){
+          var dd=daysAway(x.date);
+          return '<button type="button" class="ne-opt" data-goproj="'+esc(x.id)+'">'+
+            thumb(x,'ne-oth')+
+            '<span class="ne-otx"><span class="ne-on">'+esc(x.title)+'</span>'+
+              '<span class="ne-od">'+esc(x.date?fmtDate(x.date)+(dd>=0?' · '+dd+'d':''):'No date')+'</span></span>'+
+          '</button>';
+        }).join('')+
+      '<button type="button" class="ne-all" data-view="projects">All projects ›</button>'+
+    '</div>':'');
+
+  /* The click delegate that handles the rest of the app is bound to #content,
+     and the sidebar is not inside #content — so everything here is wired
+     directly, with property assignment because this runs on every render. */
+  var btn=host.querySelector('#navSwitch');
+  if(btn)btn.onclick=function(){ state.projSwitch=!state.projSwitch; paintNavEvent(); };
+  host.querySelectorAll('[data-goproj]').forEach(function(b){
+    b.onclick=function(){
+      state.activeEventId=b.dataset.goproj;
+      state.projSwitch=false;
+      /* Same screen, other project. Detail screens that name a record — a board,
+         an invoice — go back to that project's dashboard instead, because the
+         record they were showing belongs to the project you just left. */
+      var v=state.view, deep=(v==='design'&&state.boardId)||(v==='finance'&&state.invoiceId);
+      if(v==='projects'||v==='events'||deep){ openProject(b.dataset.goproj); return; }
+      state.eventId=state.activeEventId;
+      setView(v,{eventId:state.activeEventId,boardId:null,invoiceId:null});
+      render();
+      if(window.innerWidth<=860)setNav(false);
+    };
+  });
+  var all=host.querySelector('.ne-all');
+  if(all)all.onclick=function(){ state.projSwitch=false; setView('projects',{eventId:null}); render();
+    if(window.innerWidth<=860)setNav(false); };
 }
 /* Open the group you are in. Groups start closed on purpose — a calm index
    rather than a wall of links — so this only opens the one holding the current
@@ -13226,7 +13543,7 @@ var TOUR=[
   {view:'clients', sel:'.tbl-wrap', place:'top',
    title:'Client files',
    body:'Click any name for the full file — contact details, address, their vendor team, invoices, documents and private notes.'},
-  {view:'events', sel:'.ev-cards', place:'top',
+  {view:'projects', sel:'.pj-grid,.pj-rows,.pj-empty', place:'top',
    title:'Event workspaces',
    body:'Each event holds its venue and address, running order, guest list, budget and documents in collapsible sections.'},
   {view:'seating', sel:'#fpStage', place:'top',
@@ -13254,13 +13571,13 @@ var TOURS={
      body:'Inside a client file you can book vendors from your directory, set fees and track contract status.'}
   ]},
   events:{name:'Running an event',mins:2,desc:'Venue details, running order, tasks and budget.',steps:[
-    {view:'events', sel:'.ev-cards', place:'bottom', title:'Every event is a workspace',
+    {view:'projects', sel:'.pj-grid,.pj-rows,.pj-empty', place:'bottom', title:'Every event is a workspace',
      body:'Open one to find its venue, day-of timeline, guest list, vendors, budget and documents in one place.'},
-    {view:'events', sel:'.ev-cards', place:'bottom', title:'Venue details matter',
+    {view:'projects', sel:'.pj-grid,.pj-rows,.pj-empty', place:'bottom', title:'Venue details matter',
      body:'The venue band holds the full address, an Open in Maps link, your venue contact, and site notes like load-in gates and curfews.'},
-    {view:'events', sel:'.ev-cards', place:'bottom', title:'Task templates save the day',
+    {view:'projects', sel:'.pj-grid,.pj-rows,.pj-empty', place:'bottom', title:'Task templates save the day',
      body:'In the Checklist section, “✦ Apply template” generates a full countdown — 12-month wedding, 6-month express, corporate or milestone — with dates worked backwards from the event.'},
-    {view:'events', sel:'.ev-cards', place:'bottom', title:'Print what you need on site',
+    {view:'projects', sel:'.pj-grid,.pj-rows,.pj-empty', place:'bottom', title:'Print what you need on site',
      body:'The Print button produces the running order, guest list, seating chart, vendor contact sheet or floor plan on letterhead.'}
   ]},
   seating:{name:'Guests & the room',mins:2,desc:'Import guests, seat them, lay out the floor.',steps:[
@@ -13325,7 +13642,7 @@ function endTour(completed){
     toursDone[tourKeyRunning]=true; saveTours();
     var t=TOURS[tourKeyRunning];
     toast((t?t.name:'Tour')+' complete ✦');
-    if(tourKeyRunning==='basics')setView('dashboard');
+    if(tourKeyRunning==='basics')setView('projects',{eventId:null});
     else setView('settings',{settingsPage:'tours'});
   }
 }
@@ -17394,7 +17711,11 @@ try{
 try{ requestPersistence(); }catch(e){}
 /* PORTAL_ONLY wins over the parameter: a couple's host must not be steerable
    into the studio's views by editing the URL. */
-setView(PORTAL_ONLY?'portal':(shortcutView()||prefs().landing||'dashboard'));
+/* The front door is the projects board. A studio that would rather open on
+   the calendar or the pipeline still can, in Settings → Appearance — and a
+   saved landing of 'dashboard' from before projects existed now means that
+   project's own dashboard, which is close enough to what it meant then. */
+setView(PORTAL_ONLY?'portal':(shortcutView()||prefs().landing||'projects'));
 /* Drop ?view= once it has been honoured, so a later reload lands on the normal
    landing view instead of staying pinned to whichever shortcut was tapped. */
 try{
