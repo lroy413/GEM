@@ -1,10 +1,14 @@
 // Stage the deployable asset set into dist/ for `wrangler deploy`.
 //
 // This mirrors build.py deliberately rather than shelling out to it: the
-// Cloudflare build image is guaranteed to have Node, not Python, and the
-// transform is small enough that a second copy is cheaper than a dependency.
-// If you change the <head> in build.py, change it here too — the check at the
-// bottom of this file will tell you when they have drifted.
+// Cloudflare build image is guaranteed to have Node, not Python. The TRANSFORM
+// is duplicated; the <head> is not. It used to be, kept in step by hand with a
+// console note at the bottom of this file if the two drifted — and that is
+// precisely what went wrong: build.py's head was corrected, this copy was not,
+// and the deploy went out carrying the right build stamp and the previous
+// status-bar colour. The note scrolled past in a CI log nobody reads. build.py
+// owns the head now and this file parses it out; reading a Python file as text
+// needs no Python.
 //
 // Nothing here reads the committed index.html. CI rebuilds it from
 // gem-artifact.html so a stale commit can never reach production.
@@ -17,30 +21,25 @@ import { fileURLToPath } from "node:url";
 const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), "..");
 const DIST = join(ROOT, "dist");
 
-const HEAD = `<!doctype html>
-<html lang="en">
-<head>
-<meta charset="utf-8">
-<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<meta name="description" content="Wedding and event planning for Glimmer Events Management.">
-<meta name="theme-color" content="#F2DFE1">
-<meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-status-bar-style" content="default">
-<meta name="apple-mobile-web-app-title" content="GEM">
-<meta name="format-detection" content="telephone=no">
-<meta name="gem-build" content="__BUILD__">
-<link rel="manifest" href="/manifest.webmanifest">
-<link rel="icon" href="/icons/icon-192.png" sizes="192x192" type="image/png">
-<link rel="apple-touch-icon" href="/icons/icon-180.png">
-<title>GEM · Glimmer Events Management</title>
-</head>
-<body>
-`;
-const FOOT = `
-</body>
-</html>
-`;
+/* Lifted from build.py's own template literals, so there is exactly one
+   definition of the wrapper and it cannot drift again. */
+const buildPy = readFileSync(join(ROOT, "build.py"), "utf8");
+const lift = (name) => {
+  const m = buildPy.match(new RegExp('^' + name + ' = """([\\s\\S]*?)"""$', "m"));
+  if (!m) throw new Error(`could not find the ${name} template in build.py`);
+  return m[1];
+};
+const HEAD = lift("HEAD");
+const FOOT = lift("FOOT");
+
+/* The two things the wrapper exists to guarantee. A silently malformed head is
+   how the last one got out, so these throw rather than warn. */
+if (!HEAD.includes('charset="utf-8"')) {
+  throw new Error("build.py's HEAD no longer declares a charset");
+}
+if (!HEAD.includes("__BUILD__")) {
+  throw new Error("build.py's HEAD no longer carries the __BUILD__ stamp");
+}
 
 /* The eight files that get deployed. _headers and download.html are excluded
    on purpose — see the note in deploy.py; shipping them would change the live

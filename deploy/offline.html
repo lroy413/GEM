@@ -3,19 +3,31 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#FBF4F4">
+<meta name="color-scheme" content="light">
 <title>GEM · Offline</title>
 <style>
   *{box-sizing:border-box;margin:0;padding:0}
-  body{min-height:100vh;display:grid;place-items:center;padding:32px;
+  /* Same three moves as the app itself: the document carries the ground so
+     nothing composited outside the body box falls through to the browser's
+     white, dvh so a fixed full-height box does not hang below an iOS
+     toolbar, and the ground is the app's own rather than the pink it was
+     derived from before the wash tokens were introduced. */
+  html{background-color:#FDFAF8;min-height:100%}
+  body{min-height:100vh;min-height:100dvh;display:grid;place-items:center;padding:32px;
     font-family:'Inter',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;color:#3B2E33;
-    background:radial-gradient(900px 480px at 15% -10%,#F7E9EC,rgba(247,233,236,0) 60%),
-               linear-gradient(180deg,#FAF2F3,#FDF9F8)}
+    background:radial-gradient(900px 480px at 15% -10%,#F9EFEF,rgba(249,239,239,0) 60%),
+               linear-gradient(180deg,#FBF4F4,#FDFAF8)}
   .card{max-width:420px;text-align:center;background:#fff;border:1px solid #EEE1E3;border-radius:20px;
     padding:40px 34px;box-shadow:0 2px 6px rgba(59,46,51,.05),0 14px 34px rgba(120,70,80,.09)}
+  /* The studio's own mark, not a letter in a box. Pass three gave the app a
+     faceted gem drawn in the icon set's stroke; this page is one of the few a
+     client might ever land on, so it wears the same one. */
   .mark{width:52px;height:52px;margin:0 auto 20px;border-radius:15px;display:grid;place-items:center;
     background:linear-gradient(145deg,#E3C579,#C2A052 42%,#A8842F);color:#fff;
-    font-family:Georgia,serif;font-size:28px;font-weight:600;
     box-shadow:inset 0 1px 0 rgba(255,255,255,.5),0 4px 14px rgba(143,113,48,.3)}
+  .mark svg{width:27px;height:27px;fill:none;stroke:currentColor;stroke-width:1.4;
+    stroke-linecap:round;stroke-linejoin:round}
   h1{font-family:Georgia,serif;font-size:27px;font-weight:600;letter-spacing:-.01em}
   p{font-size:13.5px;line-height:1.65;color:#5E4E54;margin-top:12px}
   .hint{font-size:11.5px;color:#948289;margin-top:20px;padding-top:18px;border-top:1px solid #EEE1E3}
@@ -27,7 +39,9 @@
 </head>
 <body>
   <div class="card">
-    <div class="mark">G</div>
+    <div class="mark" aria-hidden="true">
+      <svg viewBox="0 0 20 20"><path d="M2.6 8.1L5.3 4.9h9.4l2.7 3.2L10 16.4z"/><path d="M2.6 8.1h14.8M5.3 4.9l1.6 3.2M14.7 4.9l-1.6 3.2M6.9 8.1L10 16.4M13.1 8.1L10 16.4"/></svg>
+    </div>
     <h1>You're offline</h1>
     <p>GEM couldn't reach the network. Anything already saved on this device is still available — reopen the app to keep working.</p>
     <button onclick="location.href='/'">Reopen GEM</button>

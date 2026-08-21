@@ -955,6 +955,33 @@ never pulled, which is what stops a fresh install overwriting the studio.
     `max-height:88vh` on a short phone its top edge lands within a few pixels
     of the clock.
   - `scratchpad/chrome-test.mjs` covers all of it at 393 and 1400.
+- **The deploy shipped the right build and the wrong colour — and the reason
+  matters more than the fix.** `python3 build.py` writes the committed
+  `index.html`, but that is NOT what Cloudflare serves. The Worker's build
+  command is `npm run build`, which runs `scripts/build-dist.mjs` and stages
+  `dist/`. That file carried its OWN copy of the `<head>` template, with a
+  comment saying to keep the two in step by hand and a `console.log` at the
+  bottom if they drifted. So the corrected `theme-color` went into `build.py`,
+  the served head kept `#F2DFE1`, the drift note printed into a CI log nobody
+  reads, and the deploy went green.
+  - It was caught only because the deploy check compares the LIVE file against
+    the committed one byte for byte rather than trusting the build stamp. The
+    stamp is a hash of `gem-artifact.html`, so it was correct and current — it
+    says nothing about the wrapper. **Never treat a matching stamp as a
+    verified deploy.** Five bytes differed, and the file sizes were identical
+    because the old and new hex colours are the same length.
+  - `build-dist.mjs` now parses `HEAD` and `FOOT` out of `build.py`'s own
+    triple-quoted literals, so there is one definition and it cannot drift.
+    Reading a Python file as text needs no Python, which was the only reason
+    for the second copy. The two builders are asserted byte-identical.
+  - The soft checks around it are hard now: a missing charset or a missing
+    `__BUILD__` stamp throws instead of warning.
+  - The served manifest was fine throughout — it is copied verbatim, so it
+    never had a second copy to drift from. Only the head did.
+- **`deploy/offline.html`** got the same three fixes as the app (`html`
+  carries the ground, `dvh`, a `theme-color`), its ground moved off the old
+  pre-token pink onto the app's own, and the placeholder "G" in a box became
+  the real gem mark. It is one of the few pages a client might land on cold.
 - **Evening mode — the last audit item, and the one the theming engine was
   always going to make cheap.** Because every surface, line, ink and wash is
   DERIVED from two colours, a second ground is a change to the derivation
