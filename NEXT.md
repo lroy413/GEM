@@ -1698,3 +1698,31 @@ exists.
   - `scratchpad/budget-test.mjs` covers all of it at 1400 and 393 — the
     migration, the arithmetic, over-allocation, all three move cases including
     the clamp, the ledger, clearing the envelope, and the roll-up.
+
+- **The demo wedding was refusing every edit without saying why.** Found while
+  testing the envelope, and older than it. `openProject()` sets the view to
+  `'dashboard'`; `sampleScope()` still listed `'events'`, which is what the
+  view was called before the project-first rework. So `sampleLocked()` was
+  false on every project screen and `sampleBanner()` — which carries both the
+  explanation and the two ways out — never rendered. But `isSampleRecord()`
+  asks `activeEvent()` DIRECTLY rather than going through the view, so it kept
+  returning true and the capture-phase gate kept refusing every edit and
+  delete on the sample, with a toast and nothing else. **A new studio landed on
+  the demo wedding, found that nothing would take an edit, and had no offer to
+  adopt it.**
+  - `sampleScope()` lists `dashboard` and `money` now alongside the rest.
+  - `money`, `guests` and `design` render `sampleBanner()` and wire it. They
+    were locked and silent too — only `viewEventDetail` and the studio home
+    ever drew it. `seating`, `messages` and `portal` have no editable rows, so
+    they are left alone.
+  - The envelope's own write paths — `openBudgetTotal` and `openBudgetMove` —
+    check `isSampleRecord('event', …)` themselves rather than relying on the
+    gate, because they are buttons rather than row actions and the gate only
+    intercepts `[data-edit]`/`[data-del]`.
+  - `scratchpad/sample-lock-test.mjs` asserts the rule directly: any project
+    screen with editable rows must also carry the banner. That is the invariant
+    that broke, so it is the one worth testing rather than a list of views.
+  - Lesson worth keeping: `sampleScope()` keys off view NAMES and
+    `isSampleRecord()` keys off the active event. Renaming a view silently
+    separates them, and the failure is invisible — things stop working rather
+    than breaking loudly.

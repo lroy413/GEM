@@ -4870,8 +4870,19 @@ function sampleScope(){
     var e=db.events.find(function(x){return x.id===state.eventId;});
     return isSampleEvent(e)?{kind:'event',rec:e}:null;
   }
-  /* Views that always act on the active event. */
-  if(['guests','seating','design','portal','messages'].indexOf(v)>=0){
+  /* Views that always act on the active event.
+     ---- why 'dashboard' and 'money' are here ----
+     openProject() sets the view to 'dashboard', not 'events' — the
+     project-first rework changed that and this list was never updated. So on
+     the sample wedding sampleScope() returned null, the banner did not render,
+     and sampleLocked() was false. But isSampleRecord() asks activeEvent()
+     DIRECTLY rather than going through the view, so it still returned true and
+     the capture-phase gate refused every edit and delete on the demo project —
+     with a toast, no explanation, and no offer to adopt it, because the banner
+     that carries both was the thing that had gone missing. A new studio landed
+     on the sample, found nothing would take an edit, and had no way forward.
+     'money' is here for the same reason: it holds real write paths now. */
+  if(['dashboard','money','guests','seating','design','portal','messages'].indexOf(v)>=0){
     var a=activeEvent();
     return isSampleEvent(a)?{kind:'event',rec:a}:null;
   }
@@ -8216,7 +8227,8 @@ function viewMoney(){
      of its own and read as an afterthought rather than the headline figure it
      is. The phone rule turns any stat row into two columns, so this is 2x2
      there either way. */
-  return '<div class="stat-row">'+
+  return sampleBanner()+
+    '<div class="stat-row">'+
       stat('Invoiced',money(billed),inv.length+' invoice'+(inv.length===1?'':'s'))+
       stat('Collected',money(paid),billed?Math.round(paid/billed*100)+'% of what is billed':'nothing billed yet','up')+
       stat('Outstanding',money(owed),late?late+' overdue':'nothing overdue')+
@@ -8247,6 +8259,8 @@ function viewMoney(){
 }
 function wireMoney(){
   var n=$('#mnNew'); if(n)n.onclick=function(){ openInvoiceModal(); };
+  /* The banner is rendered here now, so its two ways out have to be live. */
+  wireSampleBanner();
   wireBudget();
   /* The budget rows are the workspace's rows, and they keep its handlers. */
   wireEvents();
@@ -8350,6 +8364,12 @@ function budgetCard(e){
    venue and the date is how it stays unset. */
 function openBudgetTotal(e){
   if(!e)return;
+  /* The Money screen is not in sampleScope()'s list, so sampleLocked() is
+     false here and only the row actions were being intercepted. Setting a
+     total writes to the event and moving money rewrites the lines — both are
+     exactly what the demo wedding is protected from, so they say so the same
+     way the pencil on a sample row does. */
+  if(isSampleRecord('event',e.id)){ sampleToast(); return; }
   var st=budgetStats(e);
   openEditor({
     title:st.set?'Edit the budget total':'Set the budget total',
@@ -8386,6 +8406,7 @@ function openBudgetTotal(e){
    back is how you free it up again. */
 function openBudgetMove(e){
   if(!e)return;
+  if(isSampleRecord('event',e.id)){ sampleToast(); return; }
   var st=budgetStats(e);
   if(!st.set){ toast('Set a budget total first'); return; }
   var ends=[{value:BUDGET_ENVELOPE,label:'Unallocated — '+money(Math.max(0,st.unallocated))}]
@@ -8691,7 +8712,9 @@ function viewGuests(){
     return '<div class="bud-row"><div class="cat">'+esc(m)+'</div><div class="track"><div class="bar" style="height:12px"><i style="width:'+pct+'%"></i></div></div><div class="amt"><b>'+meals[m]+'</b> guest'+(meals[m]===1?'':'s')+'</div></div>';
   }).join('')||'<div style="padding:18px 22px;color:var(--muted);font-size:.84375rem">No meal selections yet.</div>';
 
-  return ''+
+  /* Locked but unexplained until now: the gate refuses every edit here and
+     the banner that says why, and offers the way out, was never rendered. */
+  return sampleBanner()+''+
   '<div class="stat-row">'+
     stat('Invited',String(g.length),g.length?Math.round(yes/g.length*100)+'% confirmed':'—')+
     stat('Attending',String(yes),no+' declined','up')+
@@ -8906,6 +8929,7 @@ function viewGuests(){
   '<div class="card"><div class="card-h"><h3>Meal Counts</h3><span class="sec-badge">'+yes+' attending</span></div><div style="padding:8px 0 12px">'+mealRows+'</div></div>';
 }
 function wireGuests(){
+  wireSampleBanner();
   document.querySelectorAll('.rsvp-sel').forEach(function(sel){
     sel.onchange=function(){
       var e=activeEvent();
@@ -10137,7 +10161,7 @@ var DECOR={approved:{lbl:'Approved',cls:'s-paid'},pending:{lbl:'Pending',cls:'s-
 function viewDesign(){
   var e=activeEvent(); if(!e)return emptyState('No events yet.');
   var d=e.design;
-  return ''+
+  return sampleBanner()+''+
   '<div class="card" style="margin-bottom:20px"><div class="card-h"><h3>Colour Palette</h3><span class="sec-badge">'+d.palette.length+' tones</span></div>'+
     '<div class="palette">'+d.palette.map(function(c,i){
       return '<div class="swatch" data-i="'+i+'"><div class="chip" style="background:'+esc(c.hex)+'"></div>'+
@@ -10166,6 +10190,7 @@ function viewDesign(){
     }).join('')+'</tbody></table></div></div>';
 }
 function wireDesign(){
+  wireSampleBanner();
   document.querySelectorAll('.decor-sel').forEach(function(sel){
     sel.onchange=function(){
       var e=activeEvent();
