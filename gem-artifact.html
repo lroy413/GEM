@@ -1441,6 +1441,9 @@ tbody tr:hover{background:var(--pink-50)}
 .env .free{background:repeating-linear-gradient(135deg,
   var(--sunk) 0 5px,var(--line) 5px 10px)}
 .env .over{background:var(--danger)}
+/* The buffer is inside the envelope but it is not free, so it reads as a
+   quieter member of the accent family rather than as more slack. */
+.env .held{background:var(--gold-soft)}
 .env-legend{display:flex;flex-wrap:wrap;gap:6px 18px;margin-top:11px;
   font-size:.75rem;color:var(--ink-soft)}
 .env-legend span{display:inline-flex;align-items:center;gap:7px}
@@ -1449,10 +1452,13 @@ tbody tr:hover{background:var(--pink-50)}
 .env-legend s.f{background:repeating-linear-gradient(135deg,
   var(--sunk) 0 3px,var(--line-strong) 3px 6px);border:1px solid var(--line-strong)}
 .env-legend s.o{background:var(--danger)}
+.env-legend s.h{background:var(--gold-soft);border:1px solid var(--gold-line)}
 .env-wrap{padding:4px 22px 18px}
 .env-over{margin-top:11px;padding:10px 13px;border-radius:10px;
   background:var(--danger-wash);border:1px solid var(--danger-line);
   color:var(--danger-ink);font-size:.78125rem;line-height:1.5}
+/* Spending the buffer is what a buffer is for — a note, not an alarm. */
+.env-over.warn{background:var(--warn-wash);border-color:var(--warn-line);color:var(--warn-ink)}
 
 /* budget bars */
 .bud-row{display:flex;align-items:center;gap:16px;padding:13px 22px;border-bottom:1px solid var(--line)}
@@ -1469,6 +1475,42 @@ tbody tr:hover{background:var(--pink-50)}
 .bud-row .amt .sub{display:block;font-size:.6875rem;color:var(--muted);margin-top:2px}
 .bud-row .amt b.over{color:var(--danger-ink)}
 .bud-row .track .bar i.over{background:var(--danger)}
+/* what is owed, and when */
+.pay-list{display:flex;flex-direction:column;padding:4px 0}
+.pay-row{display:flex;align-items:center;gap:16px;padding:12px 22px;border-bottom:1px solid var(--line)}
+.pay-row:last-child{border-bottom:none}
+.pay-c{flex:1;min-width:0;font-size:.84375rem;font-weight:500}
+.pay-c em{display:block;font-style:normal;font-size:.6875rem;color:var(--muted);
+  font-weight:400;margin-top:2px}
+.pay-row.late .pay-c em{color:var(--danger-ink)}
+.pay-a{font-size:.9375rem;font-weight:600;font-variant-numeric:tabular-nums;
+  text-align:right;white-space:nowrap}
+.pay-a span{display:block;font-size:.6875rem;color:var(--muted);font-weight:400;margin-top:2px}
+.sec-badge.is-late{color:var(--danger-ink)}
+@media (max-width:700px){
+  .pay-row{padding:12px 16px;gap:10px}
+}
+
+/* a proposed split, priced */
+.sp-list{display:flex;flex-direction:column;margin:6px 0 0}
+.sp-row{display:grid;grid-template-columns:1fr auto auto;gap:14px;align-items:baseline;
+  padding:9px 0;border-bottom:1px solid var(--line);font-size:.84375rem}
+.sp-row:last-child{border-bottom:none}
+.sp-p{font-size:.6875rem;color:var(--muted);font-variant-numeric:tabular-nums}
+.sp-a{font-weight:600;font-variant-numeric:tabular-nums;min-width:5.5rem;text-align:right}
+.sp-foot{font-size:.75rem;color:var(--muted);line-height:1.55;margin-top:12px}
+
+/* the reallocation ledger, read back */
+.bh-list{display:flex;flex-direction:column}
+.bh-row{display:grid;grid-template-columns:1fr auto;gap:2px 14px;
+  padding:12px 0;border-bottom:1px solid var(--line)}
+.bh-row:last-child{border-bottom:none}
+.bh-m{font-size:.875rem;display:flex;align-items:center;gap:7px;flex-wrap:wrap}
+.bh-m .gi{color:var(--muted)}
+.bh-w{grid-column:1;font-size:.75rem;color:var(--muted);line-height:1.5}
+.bh-d{grid-row:1;grid-column:2;font-size:.6875rem;color:var(--muted);
+  white-space:nowrap;font-variant-numeric:tabular-nums}
+
 .bud-due{display:flex;width:-moz-fit-content;width:fit-content;max-width:100%;
   align-items:center;gap:5px;font-size:.6875rem;
   color:var(--warn-ink);background:var(--warn-wash);border:1px solid var(--warn-line);
@@ -4828,6 +4870,15 @@ var SAMPLE_FLAGGED=['vendors','bookings'];
    build on it. */
 function isSampleEvent(e){
   if(!e)return false;
+  /* ---- adoption has to survive a reload ----
+     adoptSample() clears the flags and empties SAMPLE_IDS, but SAMPLE_IDS is a
+     fixed list rebuilt from the seed on every load — so the demo wedding came
+     back flagged and the banner reappeared, offering to adopt something the
+     planner had already adopted. Harmless while the lock was inert; the moment
+     the gate started biting it meant a project you had claimed went read-only
+     again on the next launch. The preference is the durable answer, and it is
+     the same one samplePrint() has always consulted. */
+  if(sampleAdopted())return false;
   if(e.sample||SAMPLE_IDS.events.indexOf(e.id)>=0)return true;
   /* A sub-event of the sample wedding is part of the sample. */
   if(e.parentId){ var p=db.events.find(function(x){return x.id===e.parentId;});
@@ -4835,6 +4886,7 @@ function isSampleEvent(e){
   return false;
 }
 function isSampleLead(l){
+  if(sampleAdopted())return false;
   return !!(l&&(l.sample||SAMPLE_IDS.leads.indexOf(l.id)>=0));
 }
 /* Is the record this control would change part of the sample? Used both for
@@ -6026,11 +6078,28 @@ function groupFor(cat){
   return hit;
 }
 
-/* The seam for per-head lines. A catering line priced by the plate belongs to
-   the guest list, not to a number somebody retyped after every RSVP — but
-   that arrives with the templates, so for now this is where est comes from
-   and there is exactly one place to change. */
-function budgetEst(b){ return Number(b&&b.est)||0; }
+/* ---- what a line is allocated ----
+   A line priced by the plate belongs to the guest list, not to a number
+   somebody retypes after every RSVP. perHead is the price; the count comes
+   from whoever has actually said yes, so the allocation moves when the
+   answers do. The stored est is kept in step on every read so nothing else
+   in the app — sync, exports, the roll-up — has to know the rule.
+
+   Counted on the whole block, not one occasion: a weekend is catered as one
+   number, which is the same reason budget lines hang off the primary. */
+function budgetHeads(e){
+  if(!e)return 0;
+  var prim=evPrimary(e)||e;
+  return rosterFor(prim).filter(function(g){ return gRsvp(g,prim)==='yes'; }).length;
+}
+function budgetEst(b,e){
+  if(b&&b.perHead>0&&e){
+    var n=Math.round(Number(b.perHead)*budgetHeads(e));
+    if(b.est!==n)b.est=n;
+    return n;
+  }
+  return Number(b&&b.est)||0;
+}
 
 /* ---- the six figures ----
    projected takes max(est,act) per line ON PURPOSE. A florist who comes in
@@ -6041,16 +6110,30 @@ function budgetStats(e){
   var lines=(e&&e.budget)||[];
   var allocated=0,contracted=0,paid=0,projected=0;
   lines.forEach(function(b){
-    var est=budgetEst(b), act=Number(b.act)||0, pd=Number(b.paid)||0;
+    var est=budgetEst(b,e), act=Number(b.act)||0, pd=Number(b.paid)||0;
     allocated+=est; contracted+=act; paid+=pd;
     projected+=Math.max(est,act);
   });
   var total=(e&&e.budgetTotal!=null&&e.budgetTotal!=='')?Number(e.budgetTotal):null;
   if(total!=null&&!isFinite(total))total=null;
+  /* ---- the contingency is held back, not merely noted ----
+     It was a number the form asked for and nothing read, which is worse than
+     not asking. A reserve is carved off the TOP: what is left is what may be
+     allocated, so the buffer cannot be spent by forgetting it exists. It is
+     still reachable on purpose — the move dialogue offers it as an end — which
+     is what a contingency is for. */
+  var pct=(e&&e.contingencyPct!=null)?Number(e.contingencyPct):8;
+  if(!isFinite(pct)||pct<0)pct=0; if(pct>90)pct=90;
+  var reserve     = total==null?0:Math.round(total*pct/100);
+  var allocatable = total==null?null:total-reserve;
   return {
-    set:total!=null, total:total, count:lines.length,
+    set:total!=null, total:total, count:lines.length, pct:pct,
+    reserve:reserve, allocatable:allocatable,
     allocated:allocated, contracted:contracted, paid:paid, projected:projected,
-    unallocated: total==null?null:total-allocated,
+    /* What is free BEFORE the buffer. Negative once allocations have started
+       eating it, which is a state worth naming rather than hiding at zero. */
+    unallocated: allocatable==null?null:allocatable-allocated,
+    intoReserve: total==null?0:Math.max(0,Math.min(reserve,allocated-allocatable)),
     variance:    total==null?null:projected-total,
     outstanding: Math.max(0,contracted-paid)
   };
@@ -6064,26 +6147,43 @@ function budgetStats(e){
 
    ENVELOPE is a valid end of a move: pulling from the envelope's own slack is
    the common case, and putting money back is how you free it up again. */
-/* A var is safe here: moveBudget() is only ever reached from the screen,
+/* Vars are safe here: moveBudget() is only ever reached from the screen,
    long after boot. */
 var BUDGET_ENVELOPE='envelope';
+/* Releasing the buffer is a deliberate act with a reason attached, like any
+   other move — not a percentage quietly edited in a settings form. */
+var BUDGET_RESERVE='contingency';
 function budgetLine(e,id){ return ((e&&e.budget)||[]).find(function(b){ return b.id===id; })||null; }
 function moveBudget(e,fromId,toId,amt,why){
   amt=Number(amt)||0;
   if(amt<=0||fromId===toId)return 0;
   var st=budgetStats(e);
-  var from=fromId===BUDGET_ENVELOPE?null:budgetLine(e,fromId);
-  var to  =toId===BUDGET_ENVELOPE  ?null:budgetLine(e,toId);
-  if(fromId!==BUDGET_ENVELOPE&&!from)return 0;
-  if(toId  !==BUDGET_ENVELOPE&&!to)  return 0;
+  var isEnd=function(id){ return id===BUDGET_ENVELOPE||id===BUDGET_RESERVE; };
+  var from=isEnd(fromId)?null:budgetLine(e,fromId);
+  var to  =isEnd(toId)  ?null:budgetLine(e,toId);
+  if(!isEnd(fromId)&&!from)return 0;
+  if(!isEnd(toId)  &&!to)  return 0;
   /* Clamped at what the source actually holds. A line cannot give away money
-     it was never allocated, and the envelope cannot give away slack it does
-     not have — which is what keeps Σest honest against the total. */
-  var room=from?budgetEst(from):Math.max(0,st.unallocated==null?0:st.unallocated);
+     it was never allocated, the envelope cannot give away slack it does not
+     have, and the buffer cannot give away more than is still held back —
+     which is what keeps Σest honest against the total. */
+  var room = from ? budgetEst(from,e)
+           : fromId===BUDGET_RESERVE ? Math.max(0,st.reserve-st.intoReserve)
+           : Math.max(0,st.unallocated==null?0:st.unallocated);
   amt=Math.min(amt,room);
   if(amt<=0)return 0;
-  if(from)from.est=budgetEst(from)-amt;
-  if(to)  to.est  =budgetEst(to)+amt;
+  /* The buffer is stored as a percentage of the total, so releasing money from
+     it means lowering that percentage by the equivalent — and putting money
+     back raises it. Held as a share rather than an amount because raising the
+     envelope should raise the buffer with it. */
+  if(st.total>0){
+    if(fromId===BUDGET_RESERVE) e.contingencyPct=Math.max(0, (st.reserve-amt)/st.total*100);
+    if(toId  ===BUDGET_RESERVE) e.contingencyPct=Math.min(90,(st.reserve+amt)/st.total*100);
+  }
+  /* A per-head line is priced, not allocated, so moving money in or out of it
+     would be undone on the next read. Its price is the thing to change. */
+  if(from)from.est=budgetEst(from,e)-amt;
+  if(to)  to.est  =budgetEst(to,e)+amt;
   if(!e.budgetMoves)e.budgetMoves=[];
   e.budgetMoves.push({id:uid('bm'),from:fromId,to:toId,amt:amt,
     why:String(why||'').slice(0,240),at:new Date().toISOString()});
@@ -6096,6 +6196,7 @@ function moveBudget(e,fromId,toId,amt,why){
 }
 function moveEndLabel(e,id){
   if(id===BUDGET_ENVELOPE)return 'Unallocated';
+  if(id===BUDGET_RESERVE) return 'Contingency';
   var b=budgetLine(e,id);
   return b?(b.cat||'Untitled line'):'a deleted line';
 }
@@ -6704,6 +6805,13 @@ function waitingOn(){
   });
   if(pr.alertInvoices)db.invoices.filter(function(i){return i.status==='over';}).forEach(function(i){
     waiting.push({tone:'danger',t:i.num+' is overdue',m:invoiceClientName(i)+' \u00b7 '+money(i.amount),v:'finance'});
+  });
+  /* A vendor payment that has gone past its date belongs here for the same
+     reason an overdue invoice does — it is a thing somebody is waiting on,
+     and the only difference is which direction the money goes. */
+  if(pr.alertInvoices)studioPayments(0).forEach(function(x){
+    waiting.push({tone:'danger',t:(x.b.cat||'A payment')+' is past due',
+      m:x.e.title+' \u00b7 '+money(budgetOwing(x.b))+' \u00b7 '+fmtDate(x.b.due),v:'money'});
   });
   if(pr.alertQuestionnaires)db.questionnaires.filter(function(q){return q.status!=='draft'&&qProgress(q).done<qProgress(q).total;}).forEach(function(q){
     var p=qProgress(q);
@@ -7743,10 +7851,11 @@ function wireEvents(){
   });
   add('[data-addbl]',function(){
     openEditor({title:'Add budget line',sub:ev&&ev.title,twoCol:true,saveLabel:'Add',
-      fields:budgetFields(null),
+      fields:budgetFields(null,ev),
       onSave:function(v){
-        var row=budgetValues(v);
-        row.id=uid('bl'); row.vendorId=null; row.perHead=null;
+        var row=budgetFromVendor(budgetValues(v),ev);
+        row.id=uid('bl'); row.perHead=null;
+        if(row.vendorId===undefined)row.vendorId=null;
         row.clientVisible=true; row.markup=null;
         ev.budget.push(row);
         closeModal(); afterChange();
@@ -8255,6 +8364,7 @@ function viewMoney(){
         }).join('')+'</tbody></table></div>'
       :'<div class="empty-hint" style="padding:26px">Nothing invoiced on this project yet.</div>')+
     '</div>'+
+    paymentsCard(e)+
     budgetCard(e);
 }
 function wireMoney(){
@@ -8270,10 +8380,16 @@ function wireBudget(){
   var e=activeEvent();
   var t=$('#budTotal'); if(t)t.onclick=function(){ openBudgetTotal(e); };
   var m=$('#budMove');  if(m)m.onclick=function(){ openBudgetMove(e); };
+  var h=$('#budHist');  if(h)h.onclick=function(){ openBudgetHistory(e); };
+  var sp=$('#budSplit'); if(sp)sp.onclick=function(){ openBudgetSplit(e); };
 }
 /* ---- the budget, as a card ----
    One renderer, because the same card belongs on the project's Money screen
    and on the studio roll-up, and two copies of it drifted apart last time. */
+/* ---- one bar, three honest states ----
+   The buffer is part of the envelope but it is not free, so it gets its own
+   band rather than hiding inside "unallocated". Reading left to right:
+   what is committed, what is still free, what is being kept back. */
 function budgetBar(st){
   if(!st.set)return '';
   var t=st.total||0;
@@ -8283,30 +8399,42 @@ function budgetBar(st){
   var over=st.allocated>t;
   var span=over?st.allocated:t;
   var pct=function(n){ return span>0?Math.max(0,Math.min(100,n/span*100)):0; };
+  var freeRoom=Math.max(0,st.unallocated||0);
+  var heldLeft=Math.max(0,st.reserve-st.intoReserve);
   var inner=over
-    ? '<i class="alloc" style="width:'+pct(t)+'%"></i><i class="over" style="width:'+pct(st.allocated-t)+'%"></i>'
-    : '<i class="alloc" style="width:'+pct(st.allocated)+'%"></i><i class="free" style="width:'+pct(t-st.allocated)+'%"></i>';
+    ? '<i class="alloc" style="width:'+pct(t)+'%"></i>'+
+      '<i class="over" style="width:'+pct(st.allocated-t)+'%"></i>'
+    : '<i class="alloc" style="width:'+pct(st.allocated)+'%"></i>'+
+      '<i class="free" style="width:'+pct(freeRoom)+'%"></i>'+
+      (heldLeft>0?'<i class="held" style="width:'+pct(heldLeft)+'%"></i>':'');
+  var legend='<span><s class="a"></s>Allocated '+money(st.allocated)+'</span>';
+  if(over) legend+='<span><s class="o"></s>Over by '+money(st.allocated-t)+'</span>';
+  else     legend+='<span><s class="f"></s>Unallocated '+money(freeRoom)+'</span>';
+  if(heldLeft>0)
+    legend+='<span><s class="h"></s>Contingency '+money(heldLeft)+' held</span>';
   return '<div class="env-wrap">'+
-    '<div class="env" role="img" aria-label="'+esc(money(st.allocated)+' of '+money(t)+' allocated')+'">'+inner+'</div>'+
-    '<div class="env-legend">'+
-      '<span><s class="a"></s>Allocated '+money(st.allocated)+'</span>'+
-      (over
-        ? '<span><s class="o"></s>Over by '+money(st.allocated-t)+'</span>'
-        : '<span><s class="f"></s>Unallocated '+money(st.unallocated)+'</span>')+
-    '</div>'+
-    /* Says what the number IS. The legend's "Over by" is about allocation;
-       this is about projected spend, which is larger wherever a contract came
-       in above its line. Two bare "over by" figures side by side, differing by
-       the overspend, read as an arithmetic bug. */
+    '<div class="env" role="img" aria-label="'+
+      esc(money(st.allocated)+' allocated, '+money(freeRoom)+' free, '+
+          money(heldLeft)+' held back, of '+money(t))+'">'+inner+'</div>'+
+    '<div class="env-legend">'+legend+'</div>'+
+    /* Two notes, and never both. Eating the buffer is a warning; going past
+       the whole envelope is a problem. */
     (st.variance>0
+      /* Says what the number IS. The legend's "Over by" is about allocation;
+         this is about projected spend, which is larger wherever a contract
+         came in above its line. Two bare "over by" figures side by side,
+         differing by the overspend, read as an arithmetic bug. */
       ? '<div class="env-over">Signed contracts project <b>'+money(st.projected)+
         '</b> against an envelope of <b>'+money(st.total)+'</b>. '+
         'Move money from another line, or raise the total.</div>'
-      : '')+
+      : st.intoReserve>0
+        ? '<div class="env-over warn"><b>'+money(st.intoReserve)+'</b> of the contingency '+
+          'is allocated. That is what it is for — but there is '+money(heldLeft)+' of buffer left.</div>'
+        : '')+
   '</div>';
 }
 function budgetRow(e,b){
-  var est=budgetEst(b), act=Number(b.act)||0, pd=Number(b.paid)||0;
+  var est=budgetEst(b,e), act=Number(b.act)||0, pd=Number(b.paid)||0;
   var over=act>est;
   var w=est?Math.min(100,Math.round(act/est*100)):(act?100:0);
   var d=b.due?daysAway(b.due):null;
@@ -8317,7 +8445,11 @@ function budgetRow(e,b){
   var gl=groupLabel(b.group);
   var a=String(b.cat||'').toLowerCase(), g=gl.toLowerCase();
   var sameThing=!!a&&(g.indexOf(a)>-1||a.indexOf(g.split(' ')[0])>-1);
-  var sub=[]; if(!sameThing)sub.push(esc(gl)); if(b.note)sub.push(esc(b.note));
+  var sub=[]; if(!sameThing)sub.push(esc(gl));
+  var bv=b.vendorId?vendorById(b.vendorId):null;
+  if(bv)sub.push(esc(bv.name));
+  if(b.perHead>0)sub.push(money(b.perHead)+' per head \u00d7 '+budgetHeads(e));
+  if(b.note)sub.push(esc(b.note));
   return '<div class="bud-row">'+
     '<div class="cat">'+esc(b.cat||'Untitled line')+
       (sub.length?'<em>'+sub.join(' · ')+'</em>':'')+
@@ -8342,9 +8474,13 @@ function budgetCard(e){
   var head=st.set
     ? '<span class="sec-badge">'+money(st.allocated)+' of '+money(st.total)+' allocated</span>'
     : '<span class="sec-badge">'+money(st.contracted)+' of '+money(st.allocated)+' contracted</span>';
+  var moves=(e.budgetMoves||[]).length;
   var actions='<div class="sec-actions">'+
+    (st.set?'<button class="btn '+(st.count?'btn-ghost':'btn-gold')+' btn-sm" id="budSplit">'+
+      icn("spark")+'Start from a split</button>':'')+
     '<button class="btn btn-ghost btn-sm" data-addbl="1">'+icn("plus")+'Add line</button>'+
     (st.set&&st.count>1?'<button class="btn btn-ghost btn-sm" id="budMove">'+icn("sliders")+'Move money</button>':'')+
+    (moves?'<button class="btn btn-ghost btn-sm" id="budHist">'+icn("sync")+moves+' move'+(moves===1?'':'s')+'</button>':'')+
     '<button class="btn btn-ghost btn-sm" id="budTotal">'+icn("pencil")+(st.set?'Edit total':'Set a total')+'</button>'+
   '</div>';
   return '<div class="card"><div class="card-h"><h3>Budget</h3>'+head+'</div>'+
@@ -8353,7 +8489,7 @@ function budgetCard(e){
       ? '<div style="padding:6px 0 10px">'+e.budget.map(function(b){ return budgetRow(e,b); }).join('')+actions+'</div>'
       : '<div class="empty-hint" style="padding:26px">'+
           (st.set
-            ? 'The envelope is set. Add the first line and start dividing it.'
+            ? 'The envelope is set. Start from a split, or add lines one at a time.'
             : 'No budget lines yet. Set a total first and GEM can tell you what is left to allocate.')+
           actions+'</div>')+
   '</div>';
@@ -8379,7 +8515,8 @@ function openBudgetTotal(e){
       {id:'total',label:'Total budget',type:'number',value:st.set?st.total:'',full:true,
        placeholder:'What the client has to spend'},
       {id:'contingencyPct',label:'Contingency held back (%)',type:'number',
-       value:e.contingencyPct==null?8:e.contingencyPct}
+       value:st.set?Math.round((e.contingencyPct==null?8:e.contingencyPct)*10)/10:8,
+       placeholder:'8'}
     ],
     onSave:function(v){
       var t=Number(v.total)||0;
@@ -8392,6 +8529,10 @@ function openBudgetTotal(e){
       closeModal(); afterChange();
       if(e.budgetTotal!=null){
         var a=budgetStats(e);
+        /* The moment there is a number and nothing to spend it on is exactly
+           when a proposed split is worth most, so it is offered rather than
+           left to be found. */
+        if(!a.count){ openBudgetSplit(e); return; }
         toast(a.unallocated>=0
           ? money(a.unallocated)+' left to allocate'
           : money(-a.unallocated)+' over — move money or raise the total');
@@ -8409,9 +8550,14 @@ function openBudgetMove(e){
   if(isSampleRecord('event',e.id)){ sampleToast(); return; }
   var st=budgetStats(e);
   if(!st.set){ toast('Set a budget total first'); return; }
+  var heldLeft=Math.max(0,st.reserve-st.intoReserve);
   var ends=[{value:BUDGET_ENVELOPE,label:'Unallocated — '+money(Math.max(0,st.unallocated))}]
+    /* The buffer is an end like any other, so releasing it is one deliberate
+       act with a reason attached rather than a percentage edited in a form. */
+    .concat(heldLeft>0||st.intoReserve>0
+      ? [{value:BUDGET_RESERVE,label:'Contingency held back — '+money(heldLeft)}] : [])
     .concat(e.budget.map(function(b){
-      return {value:b.id,label:(b.cat||'Untitled line')+' — '+money(budgetEst(b))};
+      return {value:b.id,label:(b.cat||'Untitled line')+' — '+money(budgetEst(b,e))};
     }));
   openEditor({
     title:'Move money',
@@ -8441,28 +8587,293 @@ function openBudgetMove(e){
   });
 }
 
+/* ============================================================
+ * Splitting an envelope
+ *
+ * Setting a total is the moment a planner has least appetite for typing nine
+ * lines. A template turns the one number they just gave into a whole budget
+ * they can then argue with — which is the useful direction, because arguing
+ * with a proposal is faster than composing one.
+ *
+ * Three shipped splits, and once a studio has finished a few jobs of a type,
+ * a fourth built from what those jobs ACTUALLY cost. A national average is a
+ * guess about somebody else's market; a studio's own median is a fact about
+ * its own. But you need something before you have three, which is why both
+ * exist rather than either alone.
+ * ============================================================ */
+function budgetSplits(){ return {
+  wedding:{name:'Wedding', type:'Wedding', lines:[
+    {cat:'Catering & bar',        group:'food',    pct:28, perHead:true},
+    {cat:'Venue & rentals',       group:'venue',   pct:22},
+    {cat:'Photography & film',    group:'media',   pct:12},
+    {cat:'Florals & décor',       group:'decor',   pct:10},
+    {cat:'Music & entertainment', group:'music',   pct:8},
+    {cat:'Planning fee',          group:'staff',   pct:8},
+    {cat:'Attire & beauty',       group:'attire',  pct:6},
+    {cat:'Stationery',            group:'paper',   pct:3},
+    {cat:'Travel & transport',    group:'travel',  pct:3}
+  ]},
+  corporate:{name:'Corporate', type:'Corporate', lines:[
+    {cat:'Food & beverage',       group:'food',    pct:30, perHead:true},
+    {cat:'Venue',                 group:'venue',   pct:20},
+    {cat:'AV & production',       group:'media',   pct:20},
+    {cat:'Speakers & talent',     group:'music',   pct:10},
+    {cat:'Staffing',              group:'staff',   pct:10},
+    {cat:'Print & signage',       group:'paper',   pct:5},
+    {cat:'Travel & transport',    group:'travel',  pct:5}
+  ]},
+  social:{name:'Social', type:'', lines:[
+    {cat:'Catering',              group:'food',    pct:32, perHead:true},
+    {cat:'Venue',                 group:'venue',   pct:25},
+    {cat:'Décor',                 group:'decor',   pct:16},
+    {cat:'Entertainment',         group:'music',   pct:12},
+    {cat:'Photography',           group:'media',   pct:7},
+    {cat:'Staffing',              group:'staff',   pct:5},
+    {cat:'Stationery',            group:'paper',   pct:3}
+  ]}
+}; }
+
+/* The studio's own, from jobs that are done and had a real envelope. Median
+   rather than mean: one runaway florals bill should not move the proposal for
+   every wedding after it. */
+function learnedSplit(type){
+  var done=evPrimaries().filter(function(e){
+    return e.date&&daysAway(e.date)<0&&budgetStats(e).set&&(e.budget||[]).length&&
+           (!type||evType(e)===type);
+  });
+  if(done.length<3)return null;
+  var shares={};
+  done.forEach(function(e){
+    var st=budgetStats(e); if(!st.allocated)return;
+    var by={};
+    (e.budget||[]).forEach(function(b){
+      var k=b.group||'other';
+      /* What it COST, where that is known, not what was set aside for it. */
+      by[k]=(by[k]||0)+Math.max(budgetEst(b,e),Number(b.act)||0);
+    });
+    var tot=Object.keys(by).reduce(function(a,k){return a+by[k];},0)||1;
+    Object.keys(by).forEach(function(k){
+      (shares[k]=shares[k]||[]).push(by[k]/tot*100);
+    });
+  });
+  var med=function(a){ a=a.slice().sort(function(x,y){return x-y;});
+    var m=Math.floor(a.length/2);
+    return a.length%2?a[m]:(a[m-1]+a[m])/2; };
+  var lines=Object.keys(shares).map(function(k){
+    return {cat:groupLabel(k),group:k,pct:med(shares[k])};
+  }).filter(function(l){ return l.pct>=0.5; }).sort(function(a,b){ return b.pct-a.pct; });
+  if(!lines.length)return null;
+  /* Medians of shares do not add to a hundred. Rescaled so the proposal
+     spends the envelope it was given rather than 96% or 104% of it. */
+  var sum=lines.reduce(function(a,l){return a+l.pct;},0);
+  lines.forEach(function(l){ l.pct=l.pct/sum*100; });
+  return {name:'Your own '+(type||'past')+' jobs', lines:lines, jobs:done.length, learned:true};
+}
+
+/* Percentages become money against what is ALLOCATABLE, not the whole
+   envelope — the buffer is held back, so a split that spent the total would
+   put every new budget straight into its contingency. */
+function applySplit(e,split){
+  var st=budgetStats(e);
+  var pot=Math.max(0,st.allocatable==null?0:st.allocatable);
+  var heads=budgetHeads(e);
+  var added=0;
+  split.lines.forEach(function(l){
+    var amt=Math.round(pot*l.pct/100);
+    if(amt<=0)return;
+    var row={id:uid('bl'),cat:l.cat,group:l.group||groupFor(l.cat),
+             est:amt,act:0,paid:0,due:null,vendorId:null,
+             /* Priced per plate where the split says so and there is a guest
+                list to price against. Without one the money still lands; it
+                is simply a flat line until the RSVPs arrive. */
+             perHead:(l.perHead&&heads>0)?Math.round(amt/heads):null,
+             clientVisible:true,markup:null,note:'',tagEventId:null};
+    e.budget.push(row); added++;
+  });
+  return added;
+}
+
+/* Offered the moment a total is set on an empty budget, and reachable after
+   that from the card. Shows the money, not the percentages: "28%" is a
+   negotiating position, "$25,760" is what the caterer will ask for. */
+function openBudgetSplit(e){
+  if(!e)return;
+  if(isSampleRecord('event',e.id)){ sampleToast(); return; }
+  var st=budgetStats(e);
+  if(!st.set){ toast('Set a budget total first'); return; }
+  var type=evType(e);
+  var shipped=budgetSplits();
+  var keys=Object.keys(shipped);
+  var mine=learnedSplit(type)||learnedSplit(null);
+  var all={};
+  if(mine)all.mine=mine;
+  keys.forEach(function(k){ all[k]=shipped[k]; });
+  /* The studio's own if it has one, otherwise the shipped split that matches
+     the job — a corporate event should not be proposed a bridal party line. */
+  var pick=mine?'mine':(keys.find(function(k){ return shipped[k].type===type; })||'social');
+  var pot=Math.max(0,st.allocatable||0);
+  var preview=function(k){
+    var sp=all[k];
+    return '<div class="sp-list">'+sp.lines.map(function(l){
+      return '<div class="sp-row"><span class="sp-c">'+esc(l.cat)+'</span>'+
+        '<span class="sp-p">'+(Math.round(l.pct*10)/10)+'%</span>'+
+        '<span class="sp-a">'+money(Math.round(pot*l.pct/100))+'</span></div>';
+    }).join('')+'</div>'+
+    '<p class="sp-foot">'+
+      (sp.learned
+        ? 'The median of '+sp.jobs+' finished job'+(sp.jobs===1?'':'s')+' of your own.'
+        : 'A starting point. Every line is editable, and money moves between them.')+
+      ' Spreading '+money(pot)+' — the envelope less the contingency held back.</p>';
+  };
+  md.className='modal';
+  md.innerHTML='<h3>Start from a split</h3>'+
+    '<p class="sub">'+esc(e.title)+'</p>'+
+    '<div class="modal-scroll">'+
+      '<div class="field"><label for="sp_pick">Split</label><select id="sp_pick">'+
+        Object.keys(all).map(function(k){
+          return '<option value="'+k+'"'+(k===pick?' selected':'')+'>'+esc(all[k].name)+'</option>';
+        }).join('')+'</select></div>'+
+      '<div id="sp_prev">'+preview(pick)+'</div>'+
+    '</div>'+
+    '<div class="modal-actions"><button class="btn btn-ghost" id="mCancel">Cancel</button>'+
+      '<button class="btn btn-gold" id="mSave">Add these lines</button></div>';
+  ov.classList.add('show');
+  $('#mCancel').onclick=closeModal;
+  $('#sp_pick').onchange=function(){ $('#sp_prev').innerHTML=preview(this.value); };
+  $('#mSave').onclick=function(){
+    var n=applySplit(e,all[$('#sp_pick').value]);
+    closeModal(); afterChange();
+    toast(n+' lines added — '+money(Math.max(0,budgetStats(e).unallocated))+' still free');
+  };
+}
+
+/* ============================================================
+ * What is owed, and when
+ *
+ * `act` used to mean both "contracted" and "paid", so a budget could say what
+ * a job would cost and never what was about to leave the account. With the two
+ * separated, every line that is contracted, part-paid and dated is a payment
+ * with a date on it — which is the thing a planner actually plans around.
+ * ============================================================ */
+function budgetOwing(b){ return Math.max(0,(Number(b.act)||0)-(Number(b.paid)||0)); }
+function paymentsDue(e,within){
+  return ((e&&e.budget)||[]).filter(function(b){
+    if(!b.due||budgetOwing(b)<=0.004)return false;
+    if(within==null)return true;
+    return daysAway(b.due)<=within;
+  }).sort(function(a,b){ return a.due<b.due?-1:1; });
+}
+/* Across the studio, for the dashboard and the calendar. */
+function studioPayments(within){
+  var out=[];
+  evPrimaries().forEach(function(e){
+    paymentsDue(e,within).forEach(function(b){ out.push({e:e,b:b}); });
+  });
+  return out.sort(function(x,y){ return x.b.due<y.b.due?-1:1; });
+}
+/* The card. Thirty days because that is the horizon a planner works to for
+   money — far enough to move something, near enough to be real. */
+function paymentsCard(e){
+  var due=paymentsDue(e,30);
+  if(!due.length)return '';
+  var total=due.reduce(function(a,b){ return a+budgetOwing(b); },0);
+  var late=due.filter(function(b){ return daysAway(b.due)<0; }).length;
+  return '<div class="card" style="margin-bottom:20px"><div class="card-h"><h3>Due in the next 30 days</h3>'+
+    '<span class="sec-badge'+(late?' is-late':'')+'">'+money(total)+
+      (late?' · '+late+' overdue':'')+'</span></div>'+
+    '<div class="pay-list">'+due.map(function(b){
+      var d=daysAway(b.due), when=d<0?Math.abs(d)+' days ago':d===0?'today':'in '+d+' days';
+      return '<div class="pay-row'+(d<0?' late':'')+'">'+
+        '<div class="pay-c">'+esc(b.cat||'Untitled line')+
+          '<em>'+esc(fmtDate(b.due))+' · '+when+'</em></div>'+
+        '<div class="pay-a">'+money(budgetOwing(b))+
+          '<span>of '+money(b.act)+'</span></div>'+
+        rowActions('budget',b.id)+
+      '</div>';
+    }).join('')+'</div></div>';
+}
+
+/* ---- reading the ledger back ----
+   Every move already carried a reason and a timestamp and there was nowhere to
+   see either, which made attaching them decoration. Three months on, "why is
+   florals nine thousand" is the question, and this is the answer. */
+function openBudgetHistory(e){
+  if(!e||!(e.budgetMoves||[]).length){ toast('No money has been moved yet'); return; }
+  var rows=e.budgetMoves.slice().reverse().map(function(m){
+    var when=m.at?new Date(m.at):null;
+    return '<div class="bh-row">'+
+      '<div class="bh-m"><b>'+money(m.amt)+'</b> '+
+        esc(moveEndLabel(e,m.from))+' '+icn("chev")+' '+esc(moveEndLabel(e,m.to))+'</div>'+
+      (m.why?'<div class="bh-w">'+esc(m.why)+'</div>':'')+
+      '<div class="bh-d">'+esc(when?when.toLocaleDateString('en-US',
+        {month:'short',day:'numeric',year:'numeric'}):'')+'</div>'+
+    '</div>';
+  }).join('');
+  md.className='modal';
+  md.innerHTML='<h3>Where the money went</h3>'+
+    '<p class="sub">'+esc(e.title)+' · '+e.budgetMoves.length+' move'+
+      (e.budgetMoves.length===1?'':'s')+'</p>'+
+    '<div class="modal-scroll"><div class="bh-list">'+rows+'</div></div>'+
+    '<div class="modal-actions"><button class="btn btn-ghost" id="mCancel">Close</button></div>';
+  ov.classList.add('show');
+  $('#mCancel').onclick=closeModal;
+}
+
 /* The fields a budget line carries, shared by add and edit so the two cannot
    drift. clientVisible and markup are in the model but not on the form yet —
    they belong to the client portal, which is its own piece of work. */
-function budgetFields(it){
+/* ---- a line backed by a real booking ----
+   The app has held vendor bookings with fees all along and nothing connected
+   them to the money. Naming the booking is what lets a line say where its
+   number came from, and lets confirming a vendor fill it in. */
+function budgetVendorOpts(ev){
+  var out=[{value:'',label:'Not tied to a vendor'}];
+  bookingsForEvent((ev||{}).id).forEach(function(bk){
+    var v=vendorById(bk.vendorId); if(!v)return;
+    out.push({value:v.id,label:v.name+(bk.fee?' — '+money(bk.fee):'')});
+  });
+  return out;
+}
+function budgetFields(it,ev){
   it=it||{};
+  var opts=budgetVendorOpts(ev);
   return [
     {id:'cat',label:'Line',value:it.cat,required:true,full:true,
      placeholder:'Ceremony florals'},
     {id:'group',label:'Files under',type:'select',value:it.group||'other',
      options:budgetGroups().map(function(g){ return {value:g.k,label:g.t}; })},
-    {id:'est',label:'Allocated',type:'number',value:it.est},
+    {id:'perHead',label:'Price per head',type:'number',value:it.perHead||'',
+     placeholder:'Blank for a flat amount'},
+    /* Hidden rather than removed when a line is priced per head: its
+       allocation is then derived from the guest list, and a second box
+       holding a stale total invites somebody to correct the wrong one. */
+    {id:'est',label:'Allocated',type:'number',value:it.est,
+     showIf:function(v){ return !(Number(v.perHead)>0); }},
     {id:'act',label:'Contracted',type:'number',value:it.act},
     {id:'paid',label:'Paid so far',type:'number',value:it.paid},
     {id:'due',label:'Next payment due',type:'date',value:it.due},
     {id:'note',label:'Note',value:it.note,full:true,
      placeholder:'Why this number is this number'}
-  ];
+  ].concat(opts.length>1?[{id:'vendorId',label:'Backed by',type:'select',
+     value:it.vendorId||'',options:opts,full:true}]:[]);
 }
 function budgetValues(v){
-  return {cat:v.cat,group:v.group||groupFor(v.cat),
+  var ph=Number(v.perHead)||0;
+  return {cat:v.cat,group:v.group||groupFor(v.cat),perHead:ph>0?ph:null,
           est:Number(v.est)||0,act:Number(v.act)||0,paid:Number(v.paid)||0,
-          due:v.due||null,note:v.note||''};
+          due:v.due||null,note:v.note||'',
+          /* Absent when the studio has no bookings on this job, so the field
+             was never offered — and undefined would wipe an existing link. */
+          vendorId:v.vendorId===undefined?undefined:(v.vendorId||null)};
+}
+/* A booking's fee is what the line is contracted at, so naming one fills the
+   number in rather than asking for it twice. Only when the line has none: an
+   edited figure is the planner's answer and outranks the booking's. */
+function budgetFromVendor(row,ev){
+  if(!row.vendorId||Number(row.act)>0)return row;
+  var bk=bookingsForEvent((ev||{}).id).find(function(b){ return b.vendorId===row.vendorId; });
+  if(bk&&Number(bk.fee)>0)row.act=Number(bk.fee);
+  return row;
 }
 /* --- Guests & RSVP --- */
 var RSVP={yes:{lbl:'Attending',cls:'s-paid'},no:{lbl:'Declined',cls:'s-over'},pending:{lbl:'Pending',cls:'s-due'},invited:{lbl:'Invited',cls:'s-draft'}};
@@ -10878,6 +11289,12 @@ function viewCalendar(){
   });
   db.invoices.forEach(function(x){
     if(x.status==='due'||x.status==='over') push(x.due,{k:'invoice',t:x.num+' · '+money(x.amount),c:'#D99A54'});
+  });
+  /* Money going OUT, beside the money coming in. An invoice is what the studio
+     is owed; a budget line's due date is what the studio owes a vendor, and a
+     calendar that showed only one half was answering half the question. */
+  studioPayments(null).forEach(function(x){
+    push(x.b.due,{k:'payment',t:(x.b.cat||'Payment')+' \u00b7 '+money(budgetOwing(x.b)),c:'#B07C9E'});
   });
 
   var cells='', agenda='';
@@ -13916,7 +14333,7 @@ function budgetRollup(){
     (e.budget||[]).forEach(function(b){
       var k=b.group||'other';
       if(!by[k])by[k]={k:k,est:0,act:0,paid:0};
-      by[k].est+=budgetEst(b); by[k].act+=Number(b.act)||0; by[k].paid+=Number(b.paid)||0;
+      by[k].est+=budgetEst(b,e); by[k].act+=Number(b.act)||0; by[k].paid+=Number(b.paid)||0;
     });
   });
   var groups=budgetGroups().map(function(g){ return by[g.k]; })
@@ -17153,8 +17570,8 @@ function editRecord(kind,id){
               {id:'due',label:'Due date',type:'date',value:it.due}],
       onSave:function(v){ Object.assign(it,v); closeModal(); afterChange(); }});},
     budget:function(){ openEditor({title:'Edit budget line',sub:ev&&ev.title,twoCol:true,onDelete:del,deleteLabel:it.cat,
-      fields:budgetFields(it),
-      onSave:function(v){ Object.assign(it,budgetValues(v)); closeModal(); afterChange(); }});},
+      fields:budgetFields(it,ev),
+      onSave:function(v){ Object.assign(it,budgetFromVendor(budgetValues(v),ev)); closeModal(); afterChange(); }});},
     decor:function(){ openEditor({title:'Edit décor item',sub:ev&&ev.title,onDelete:del,deleteLabel:it.item,
       fields:[{id:'item',label:'Item',value:it.item,required:true},
               {id:'vendor',label:'Vendor',value:it.vendor},

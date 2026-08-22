@@ -1793,3 +1793,51 @@ exists.
     half width; "Can be set later" measures 101px into 171px of room.
   - `scratchpad/newbudget-test.mjs` covers both widths: asked, optional,
     answered, skipped, and absent on a sub-event.
+
+- **Phases two and three, and the three loose ends phase one left.**
+  - **The contingency now means something.** It was a number two forms asked
+    for and nothing read — worse than not asking. The reserve is carved off the
+    TOP: `allocatable = total − reserve`, and `unallocated` counts down from
+    that, so the buffer cannot be spent by forgetting it exists. The bar has
+    three bands, and `intoReserve` names the state between "fine" and "over" —
+    eating the buffer is a note in the warn tone, not an alarm, because that is
+    what a buffer is for.
+  - It is still reachable ON PURPOSE: `BUDGET_RESERVE` is a move end like any
+    other, so releasing it is one deliberate act with a reason attached rather
+    than a percentage quietly edited in a form. Held as a share rather than an
+    amount, so raising the envelope raises the buffer with it — which means
+    releasing money from it lowers `contingencyPct` by the equivalent.
+  - **The ledger can be read back.** Every move already carried a reason and a
+    timestamp with nowhere to see either, which made attaching them decoration.
+    `openBudgetHistory()` is the answer to "why is florals nine thousand".
+  - **A line can name the booking behind it.** `vendorId` was stored and wired
+    to nothing. Naming a booking fills `act` from its fee — but only when the
+    line has none, because an edited figure is the planner's answer and
+    outranks the booking's.
+  - **Per-head lines follow the guest list.** `budgetEst(b,e)` is where the
+    seam was left; a line with `perHead` set derives its allocation from
+    whoever has said yes, counted on the whole BLOCK because a weekend is
+    catered as one number. The stored `est` is kept in step on every read, so
+    sync, exports and the roll-up never have to know the rule.
+  - **A total becomes a budget.** Three shipped splits, plus `learnedSplit()`
+    from the studio's own finished jobs once there are three of a type —
+    median, not mean, so one runaway florals bill does not move the proposal
+    for every wedding after it. Medians of shares do not sum to 100, so they
+    are rescaled. Percentages apply to `allocatable`, NOT the total: a split
+    that spent the whole envelope would put every new budget straight into its
+    own contingency. Offered automatically the moment a total is set on an
+    empty budget, which is when it is worth most.
+  - **Cash flow.** `budgetOwing()` is `act − paid`; a dated line with something
+    owing is a payment. The Money screen gets "Due in the next 30 days", the
+    calendar gets money going OUT beside the invoices coming in, and an overdue
+    one joins Waiting On — the only difference from an overdue invoice being
+    which direction the money goes.
+- **Adopting the sample did not survive a reload.** Found in a screenshot, not
+  a test. `adoptSample()` clears the flags and empties `SAMPLE_IDS`, but that
+  list is rebuilt from the seed on every load, and `isSampleEvent()` never
+  consulted the `sampleAdopted` preference the way `samplePrint()` always had.
+  So a project the planner had claimed went read-only again on the next launch,
+  and the banner offered to adopt something already adopted. Harmless while the
+  gate was inert; a real trap the moment it started biting. Both
+  `isSampleEvent()` and `isSampleLead()` check the preference first now, and
+  `sample-lock-test.mjs` reloads to prove it.
