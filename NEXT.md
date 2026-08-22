@@ -1633,3 +1633,68 @@ exists.
   capture-phase gate on `.main`; `SAMPLE_SAFE` is the allowlist of things that
   still work. "Use this as my project" adopts it; if a control mysteriously
   does nothing on a client or event, check for the sample banner first.
+
+- **The budget became an envelope — phase one of the build spec.** A budget was
+  four fields, `{id, cat, est, act}`, and a total that was whatever the lines
+  came to. Bottom-up only, so there was no such thing as UNALLOCATED — and
+  without that number reallocation is not an operation, it is two unrelated
+  edits that happen to cancel out. `e.budgetTotal` is the envelope now and
+  every other figure is derived on read, so nothing is stored twice and the
+  totals cannot drift from the lines.
+  - `budgetStats(e)` returns the six: allocated, contracted, paid, projected,
+    unallocated, variance. **`projected` takes `max(est, act)` per line on
+    purpose** — a florist who comes in over moves the projected total the
+    moment the contract is signed, not when the invoice clears. That is the
+    difference between a budget that warns you and one that reports on you.
+  - `moveBudget(e, from, to, amt, why)` is one action with a reason, clamped at
+    what the source actually holds, writing to `e.budgetMoves`. `'envelope'` is
+    a valid end at either side, because pulling from the slack is the common
+    case. Because the total is fixed, a move never changes `allocated`: the
+    header bar does not budge and the two rows trade width, which is the whole
+    idea made visible in one gesture.
+  - **`budgetTotal: null` means no envelope, and the screen behaves exactly as
+    it did before.** Setting a total of zero clears it rather than budgeting
+    nothing — otherwise there is no way back once you have tried one.
+  - `group` files a line for rollup and, later, for templates. The line keeps
+    its own name: "Ceremony florals" is what the planner wrote and what the
+    couple recognises. `groupFor()` is a keyword sweep, additive and editable,
+    and anything unrecognised lands in `other` where it is visible.
+  - **A boot-order trap, caught before it shipped.** `db=normalize(db)` runs at
+    top level around line 5700, ABOVE where the budget helpers sit, and
+    normalize files every existing line into a group. `BUDGET_GROUPS` and
+    `BUDGET_WORDS` as `var`s would still have been `undefined` at that moment.
+    They are `budgetGroups()` and `budgetWords()` declarations now — the same
+    fix the notes on `STAGES` and `uid()` describe, for the same reason.
+  - **A cascade trap, caught by measuring.** The new `.bud-row` rules were
+    inserted ABOVE the base ones, so at equal specificity the base won on
+    source order and `.track` kept `flex:1 1 0%` — the phone bar rendered as a
+    61px stub instead of spanning the row. Same class of bug as the phone-chrome
+    round: at equal specificity, position decides, so an override block belongs
+    AFTER what it overrides. `scratchpad/bud-measure.mjs` reads the computed
+    flex and order rather than trusting a screenshot.
+  - On the phone every child of a wrapped `.bud-row` needs a declared `order`.
+    Without one the edit and delete buttons keep source order and land between
+    the amount and the bar, reading as though they belonged to the number.
+  - The over-budget banner names what its number IS. It reports `projected`,
+    while the legend's "Over by" reports `allocated` — two bare "over by"
+    figures side by side, differing by the overspend, read as an arithmetic bug.
+  - **`viewFinance()` rendered `db.events[0]`** — the first event in the array,
+    not the active project and not a total — under a heading that read as though
+    it covered the studio. Stranded by the project-first rework. `budgetRollup()`
+    adds every live project's lines up by group, which is what that screen was
+    always implying.
+  - Sync: `sbBudgetCols()` probes `budget_lines?select=paid` and the push omits
+    every new field until it comes back true, the contract `sbAttireCol` and
+    `sbRoleCol` already keep. The ledger rides on the event row as jsonb beside
+    `floor` and `venue_address` — a move is only legible next to the two lines
+    it names — and is capped at 200 entries, because a column that grows without
+    limit is a sync payload that grows without limit.
+  - `supabase/migrations/…_27_budget_envelope.sql` is additive throughout, with
+    checks that money cannot go negative and a backfill that files existing
+    lines the way the app does.
+  - `clientVisible` and `markup` are written and synced from now on and read by
+    nothing. That is deliberate: the client portal and the margin layer are
+    later phases, and neither will need a second migration.
+  - `scratchpad/budget-test.mjs` covers all of it at 1400 and 393 — the
+    migration, the arithmetic, over-allocation, all three move cases including
+    the clamp, the ledger, clearing the envelope, and the roll-up.

@@ -10,7 +10,7 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="GEM">
 <meta name="format-detection" content="telephone=no">
-<meta name="gem-build" content="5b27fa17907c">
+<meta name="gem-build" content="18884cbbc415">
 <link rel="manifest" href="/manifest.webmanifest">
 <link rel="icon" href="/icons/icon-192.png" sizes="192x192" type="image/png">
 <link rel="apple-touch-icon" href="/icons/icon-180.png">
@@ -1446,6 +1446,32 @@ tbody tr:hover{background:var(--pink-50)}
   .check .r-act.r-del:hover,.check .r-act:hover{background:var(--pink-100);border-color:transparent}
 }
 
+/* ---- the budget envelope ----
+   One bar for the whole job. Allocated is solid, the slack is hatched so it
+   reads as room rather than as another category, and over-allocation takes
+   the danger colour because it is the one state that needs deciding about.
+   The hatch is drawn from tokens so it follows the studio's palette and both
+   grounds like everything else. */
+.env{display:flex;height:26px;border-radius:9px;overflow:hidden;
+  border:1px solid var(--line-strong);background:var(--sunk)}
+.env i{display:block;height:100%;min-width:0}
+.env .alloc{background:var(--gold-grad)}
+.env .free{background:repeating-linear-gradient(135deg,
+  var(--sunk) 0 5px,var(--line) 5px 10px)}
+.env .over{background:var(--danger)}
+.env-legend{display:flex;flex-wrap:wrap;gap:6px 18px;margin-top:11px;
+  font-size:.75rem;color:var(--ink-soft)}
+.env-legend span{display:inline-flex;align-items:center;gap:7px}
+.env-legend s{width:11px;height:11px;border-radius:3px;flex:0 0 auto;text-decoration:none}
+.env-legend s.a{background:var(--gold)}
+.env-legend s.f{background:repeating-linear-gradient(135deg,
+  var(--sunk) 0 3px,var(--line-strong) 3px 6px);border:1px solid var(--line-strong)}
+.env-legend s.o{background:var(--danger)}
+.env-wrap{padding:4px 22px 18px}
+.env-over{margin-top:11px;padding:10px 13px;border-radius:10px;
+  background:var(--danger-wash);border:1px solid var(--danger-line);
+  color:var(--danger-ink);font-size:.78125rem;line-height:1.5}
+
 /* budget bars */
 .bud-row{display:flex;align-items:center;gap:16px;padding:13px 22px;border-bottom:1px solid var(--line)}
 .bud-row:last-child{border-bottom:none}
@@ -1453,6 +1479,29 @@ tbody tr:hover{background:var(--pink-50)}
 .bud-row .track{flex:1}
 .bud-row .amt{width:150px;text-align:right;font-size:.84375rem;color:var(--ink-soft);font-variant-numeric:tabular-nums}
 .bud-row .amt b{color:var(--ink)}
+
+/* A budget row carries three numbers now, so the phone gets its own shape
+   rather than three columns fighting over 360px. */
+.bud-row .cat em{display:block;font-style:normal;font-size:.6875rem;color:var(--muted);
+  margin-top:2px;font-weight:400}
+.bud-row .amt .sub{display:block;font-size:.6875rem;color:var(--muted);margin-top:2px}
+.bud-row .amt b.over{color:var(--danger-ink)}
+.bud-row .track .bar i.over{background:var(--danger)}
+.bud-due{display:flex;width:-moz-fit-content;width:fit-content;max-width:100%;
+  align-items:center;gap:5px;font-size:.6875rem;
+  color:var(--warn-ink);background:var(--warn-wash);border:1px solid var(--warn-line);
+  border-radius:999px;padding:1px 8px;margin-top:4px}
+.bud-due.past{color:var(--danger-ink);background:var(--danger-wash);border-color:var(--danger-line)}
+@media (max-width:700px){
+  /* Every child needs a declared order once the row wraps. Without one the
+     edit and delete buttons keep source order and land between the amount and
+     the bar — reading as though they belonged to the number. */
+  .bud-row{flex-wrap:wrap;gap:6px 12px;padding:13px 16px;align-items:baseline}
+  .bud-row .cat{width:auto;flex:1 1 100%;min-width:0;order:0}
+  .bud-row .amt{width:auto;flex:1 1 auto;text-align:left;order:1}
+  .bud-row .r-acts{order:2;margin-left:auto}
+  .bud-row .track{flex:1 1 100%;order:3}
+}
 
 /* modal */
 .overlay{position:fixed;inset:0;background:rgba(var(--shade-1),.34);backdrop-filter:blur(6px) saturate(.9);
@@ -5636,7 +5685,33 @@ function normalize(d){
        gives a pulled one a defined order at all, since timeline_items come back
        from PostgREST unsorted and nothing re-sorted them on the way in. */
     sortTimeline(e);
-    e.budget.forEach(function(b){ if(!b.id)b.id=uid('bl'); });
+    /* ---- the budget envelope ----
+       A budget used to be a list that added itself up: four fields, and a
+       total that was whatever the lines happened to come to. There was no
+       ceiling, so there was no such thing as UNALLOCATED — and without that
+       number there is no reallocation, which is the question a planner
+       actually asks. budgetTotal is the envelope; everything else here is a
+       field the envelope needs to be worth having.
+
+       budgetTotal stays null until somebody sets one, and null means the
+       Money screen behaves exactly as it did before. Nobody's existing
+       project changes shape on load. */
+    e.budget.forEach(function(b){
+      if(!b.id)b.id=uid('bl');
+      if(b.paid===undefined)b.paid=0;
+      if(b.due===undefined)b.due=null;
+      if(b.vendorId===undefined)b.vendorId=null;
+      if(b.perHead===undefined)b.perHead=null;
+      /* Defaults to visible. The couple's budget is the couple's; what is
+         private is the studio's margin, which is its own field. */
+      if(b.clientVisible===undefined)b.clientVisible=true;
+      if(b.markup===undefined)b.markup=null;
+      if(typeof b.note!=='string')b.note='';
+      if(!b.group)b.group=groupFor(b.cat);
+    });
+    if(e.budgetTotal===undefined)e.budgetTotal=null;
+    if(e.contingencyPct===undefined)e.contingencyPct=8;
+    if(!e.budgetMoves)e.budgetMoves=[];
     e.checklist.forEach(function(c){ if(!c.id)c.id=uid('ck'); });
     if(!e.tables)e.tables=[];
     if(!e.guests)e.guests=[];
@@ -5896,6 +5971,142 @@ var GI={
 };
 function icn(n,cls){return '<svg class="gi'+(cls?' '+cls:'')+'" viewBox="0 0 20 20" aria-hidden="true">'+GI[n]+'</svg>';}
 function money(n){return '$'+Number(n||0).toLocaleString('en-US');}
+/* ============================================================
+ * The budget envelope
+ *
+ * A fixed sum you divide, rather than a list that adds itself up. Every
+ * figure below is DERIVED on read — nothing here is stored twice, so the
+ * totals cannot drift from the lines and sync stays a row per line.
+ * ============================================================ */
+
+/* Groups exist so a budget can roll up, so a template can propose a split,
+   and so one studio's jobs can be compared with each other. The line KEEPS
+   its own name — "Ceremony florals" is what the planner wrote and what the
+   couple recognises; the group is only how it files. */
+/* Declarations, not vars. `db=normalize(db)` runs at top level ABOVE this
+   point in the file, and normalize() files every existing budget line into a
+   group — so a var here would still be undefined the first time groupFor()
+   reached for it. The same boot-order trap the notes on STAGES and uid()
+   describe, and the reason those are declarations too. */
+function budgetGroups(){ return [
+  {k:'venue',   t:'Venue & rentals'},
+  {k:'food',    t:'Catering & bar'},
+  {k:'media',   t:'Photography & film'},
+  {k:'decor',   t:'Florals & décor'},
+  {k:'music',   t:'Music & entertainment'},
+  {k:'attire',  t:'Attire & beauty'},
+  {k:'paper',   t:'Stationery & print'},
+  {k:'staff',   t:'Staffing & planning'},
+  {k:'travel',  t:'Travel & transport'},
+  {k:'reserve', t:'Contingency'},
+  {k:'other',   t:'Other'}
+]; }
+function groupLabel(k){
+  var g=budgetGroups().find(function(x){ return x.k===k; });
+  return g?g.t:'Other';
+}
+/* Existing lines were free text and there are only ever a few dozen of them,
+   so a keyword sweep files them well enough to be useful and never destroys
+   anything: the group is additive, the name is untouched, and it is editable. */
+function budgetWords(){ return {
+  venue:['venue','hall','room','rental','rentals','site','space','tent','marquee','furniture','linen','chair','table'],
+  food:['cater','catering','food','bar','drink','beverage','alcohol','wine','cake','dessert','menu','tasting'],
+  media:['photo','photograph','video','videograph','film','cinema','content','album','print'],
+  decor:['floral','flower','decor','décor','design','style','styling','candle','installation','centrepiece','centerpiece'],
+  music:['music','band','dj','entertain','ceremony music','sound','performer','act'],
+  attire:['attire','dress','suit','tux','gown','beauty','hair','makeup','make-up','grooming','alterations'],
+  paper:['station','invit','paper','signage','sign','menu card','place card','calligraph','print'],
+  staff:['staff','planning','planner','coordinat','fee','assistant','crew','labour','labor','service charge'],
+  travel:['travel','transport','shuttle','car','coach','flight','accommodat','hotel','lodging'],
+  reserve:['conting','reserve','buffer','misc','extra']
+}; }
+function groupFor(cat){
+  var t=String(cat||'').toLowerCase();
+  if(!t)return 'other';
+  var W=budgetWords(), hit='other';
+  Object.keys(W).some(function(k){
+    return W[k].some(function(w){
+      if(t.indexOf(w)>-1){ hit=k; return true; }
+      return false;
+    });
+  });
+  return hit;
+}
+
+/* The seam for per-head lines. A catering line priced by the plate belongs to
+   the guest list, not to a number somebody retyped after every RSVP — but
+   that arrives with the templates, so for now this is where est comes from
+   and there is exactly one place to change. */
+function budgetEst(b){ return Number(b&&b.est)||0; }
+
+/* ---- the six figures ----
+   projected takes max(est,act) per line ON PURPOSE. A florist who comes in
+   over budget moves the projected total the moment the contract is signed,
+   not when the invoice clears — the difference between a budget that warns
+   you and one that reports on you. */
+function budgetStats(e){
+  var lines=(e&&e.budget)||[];
+  var allocated=0,contracted=0,paid=0,projected=0;
+  lines.forEach(function(b){
+    var est=budgetEst(b), act=Number(b.act)||0, pd=Number(b.paid)||0;
+    allocated+=est; contracted+=act; paid+=pd;
+    projected+=Math.max(est,act);
+  });
+  var total=(e&&e.budgetTotal!=null&&e.budgetTotal!=='')?Number(e.budgetTotal):null;
+  if(total!=null&&!isFinite(total))total=null;
+  return {
+    set:total!=null, total:total, count:lines.length,
+    allocated:allocated, contracted:contracted, paid:paid, projected:projected,
+    unallocated: total==null?null:total-allocated,
+    variance:    total==null?null:projected-total,
+    outstanding: Math.max(0,contracted-paid)
+  };
+}
+
+/* ---- moving money ----
+   Reallocation is one action with a reason attached, not two edits that
+   happen to cancel out. Because the envelope is fixed, a move never changes
+   `allocated` — the header bar does not budge and the two rows trade width,
+   which is the whole idea made visible in one gesture.
+
+   ENVELOPE is a valid end of a move: pulling from the envelope's own slack is
+   the common case, and putting money back is how you free it up again. */
+/* A var is safe here: moveBudget() is only ever reached from the screen,
+   long after boot. */
+var BUDGET_ENVELOPE='envelope';
+function budgetLine(e,id){ return ((e&&e.budget)||[]).find(function(b){ return b.id===id; })||null; }
+function moveBudget(e,fromId,toId,amt,why){
+  amt=Number(amt)||0;
+  if(amt<=0||fromId===toId)return 0;
+  var st=budgetStats(e);
+  var from=fromId===BUDGET_ENVELOPE?null:budgetLine(e,fromId);
+  var to  =toId===BUDGET_ENVELOPE  ?null:budgetLine(e,toId);
+  if(fromId!==BUDGET_ENVELOPE&&!from)return 0;
+  if(toId  !==BUDGET_ENVELOPE&&!to)  return 0;
+  /* Clamped at what the source actually holds. A line cannot give away money
+     it was never allocated, and the envelope cannot give away slack it does
+     not have — which is what keeps Σest honest against the total. */
+  var room=from?budgetEst(from):Math.max(0,st.unallocated==null?0:st.unallocated);
+  amt=Math.min(amt,room);
+  if(amt<=0)return 0;
+  if(from)from.est=budgetEst(from)-amt;
+  if(to)  to.est  =budgetEst(to)+amt;
+  if(!e.budgetMoves)e.budgetMoves=[];
+  e.budgetMoves.push({id:uid('bm'),from:fromId,to:toId,amt:amt,
+    why:String(why||'').slice(0,240),at:new Date().toISOString()});
+  /* The ledger rides on the event row as jsonb, so it is bounded on purpose:
+     a column that grows without limit is a sync payload that grows without
+     limit. Two hundred moves is far more than any one job produces and still
+     a few kilobytes. */
+  if(e.budgetMoves.length>200)e.budgetMoves=e.budgetMoves.slice(-200);
+  return amt;
+}
+function moveEndLabel(e,id){
+  if(id===BUDGET_ENVELOPE)return 'Unallocated';
+  var b=budgetLine(e,id);
+  return b?(b.cat||'Untitled line'):'a deleted line';
+}
+
 function fmtDate(iso){if(!iso)return '';var d=new Date(iso+'T00:00');return d.toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'});}
 function daysAway(iso){var d=new Date(iso+'T00:00'),now=new Date();return Math.ceil((d-now)/86400000);}
 function stageOf(id){return STAGES.find(function(s){return s.id===id;});}
@@ -7539,11 +7750,14 @@ function wireEvents(){
   });
   add('[data-addbl]',function(){
     openEditor({title:'Add budget line',sub:ev&&ev.title,twoCol:true,saveLabel:'Add',
-      fields:[{id:'cat',label:'Category',required:true,full:true},
-              {id:'est',label:'Estimated',type:'number'},
-              {id:'act',label:'Committed',type:'number'}],
-      onSave:function(v){ ev.budget.push({id:uid('bl'),cat:v.cat,est:v.est,act:v.act});
-        closeModal(); afterChange(); }});
+      fields:budgetFields(null),
+      onSave:function(v){
+        var row=budgetValues(v);
+        row.id=uid('bl'); row.vendorId=null; row.perHead=null;
+        row.clientVisible=true; row.markup=null;
+        ev.budget.push(row);
+        closeModal(); afterChange();
+      }});
   });
   add('[data-addguest]',function(){ openGuestModal(ev); });
   add('[data-openguests]',function(){ state.activeEventId=(ev||{}).id; setView('guests'); });
@@ -7646,7 +7860,7 @@ function evSection(key,title,count,body,extra){
 function viewEventDetail(id){
   var e=db.events.find(function(x){return x.id===id;});if(!e)return viewProjects();
   var done=e.checklist.filter(function(c){return c.done;}).length,tot=e.checklist.length,pct=tot?Math.round(done/tot*100):0;
-  var estT=e.budget.reduce(function(a,b){return a+b.est;},0),actT=e.budget.reduce(function(a,b){return a+b.act;},0);
+  var bst=budgetStats(e);
   var vend=bookingsForEvent(e.id);
   var docs=db.documents.filter(function(d){return d.eventId===e.id;});
   var lead=leadForEvent(e)||{};
@@ -7803,7 +8017,15 @@ function viewEventDetail(id){
     stat('Countdown',daysAway(e.date)+' days',fmtDate(e.date))+
     stat('Checklist',pct+'%',done+' of '+tot+' done')+
     stat('Guests',attending.length+' / '+e.guests.length,pending.length+' awaiting reply')+
-    stat('Committed',money(actT),estT?Math.round(actT/estT*100)+'% of '+money(estT):'no budget set')+
+    /* Once there is an envelope the useful glance figure is what is LEFT, not
+       what has been spent — the same swap the Money screen makes. Without one
+       this reads exactly as it always did. */
+    (bst.set
+      ? stat(bst.unallocated<0?'Over budget':'Unallocated',
+             money(Math.abs(bst.unallocated)),
+             bst.unallocated<0?'of '+money(bst.total)+' committed':'of '+money(bst.total))
+      : stat('Committed',money(bst.contracted),
+             bst.allocated?Math.round(bst.contracted/bst.allocated*100)+'% of '+money(bst.allocated):'no budget set'))+
   '</div>';
 
   return sampleBanner()+
@@ -7997,8 +8219,7 @@ function clientPanel(e,lead){
 function viewMoney(){
   var e=activeEvent(); if(!e)return viewProjects();
   var lead=leadForEvent(e)||null;
-  var estT=e.budget.reduce(function(a,b){return a+b.est;},0);
-  var actT=e.budget.reduce(function(a,b){return a+b.act;},0);
+  var bst=budgetStats(e);
   var ids=evBlock(e).map(function(x){return x.id;});
   /* An invoice belongs to this job if it was raised against one of its events,
      or — for invoices raised before events carried one — against its client. */
@@ -8009,11 +8230,19 @@ function viewMoney(){
   var paid=inv.reduce(function(a,x){return a+invPaid(x);},0);
   var owed=inv.filter(function(x){return x.status!=='draft';}).reduce(function(a,x){return a+Math.max(0,invBalance(x));},0);
   var late=inv.filter(function(x){return invStatus(x)==='over';}).length;
-  return '<div class="stat-row cols-3">'+
+  /* Four stats, so four columns. Left at cols-3 the fourth dropped to a row
+     of its own and read as an afterthought rather than the headline figure it
+     is. The phone rule turns any stat row into two columns, so this is 2x2
+     there either way. */
+  return '<div class="stat-row">'+
       stat('Invoiced',money(billed),inv.length+' invoice'+(inv.length===1?'':'s'))+
       stat('Collected',money(paid),billed?Math.round(paid/billed*100)+'% of what is billed':'nothing billed yet','up')+
       stat('Outstanding',money(owed),late?late+' overdue':'nothing overdue')+
-      stat('Committed',money(actT),money(estT)+' budgeted')+
+      stat(bst.set?'Unallocated':'Contracted',
+           bst.set?money(bst.unallocated):money(bst.contracted),
+           bst.set
+             ? (bst.unallocated<0?money(-bst.unallocated)+' over the envelope':'of '+money(bst.total))
+             : (bst.allocated?money(bst.allocated)+' budgeted':'no budget set'))+
     '</div>'+
     '<div class="card" style="margin-bottom:20px"><div class="card-h"><h3>Invoices</h3>'+
       '<span class="ev-h-r"><button class="btn btn-ghost btn-sm" id="mnNew">'+icn("plus")+'New invoice</button></span></div>'+
@@ -8032,22 +8261,205 @@ function viewMoney(){
         }).join('')+'</tbody></table></div>'
       :'<div class="empty-hint" style="padding:26px">Nothing invoiced on this project yet.</div>')+
     '</div>'+
-    '<div class="card"><div class="card-h"><h3>Budget</h3>'+
-      '<span class="sec-badge">'+money(actT)+' of '+money(estT)+' committed</span></div>'+
-      (e.budget.length?'<div style="padding:6px 0 10px">'+e.budget.map(function(b){
-        var aw=b.est?Math.round(b.act/b.est*100):0;
-        return '<div class="bud-row"><div class="cat">'+esc(b.cat)+'</div>'+
-          '<div class="track"><div class="bar" style="height:10px"><i style="width:'+Math.min(100,aw)+'%"></i></div></div>'+
-          '<div class="amt"><b>'+money(b.act)+'</b> / '+money(b.est)+'</div>'+rowActions('budget',b.id)+'</div>';
-      }).join('')+'<div class="sec-actions"><button class="btn btn-ghost btn-sm" data-addbl="1">'+icn("plus")+'Add line</button></div></div>'
-      :'<div class="empty-hint" style="padding:26px">No budget lines yet.'+
-        '<div class="sec-actions" style="justify-content:center"><button class="btn btn-ghost btn-sm" data-addbl="1">'+icn("plus")+'Add line</button></div></div>')+
-    '</div>';
+    budgetCard(e);
 }
 function wireMoney(){
   var n=$('#mnNew'); if(n)n.onclick=function(){ openInvoiceModal(); };
+  wireBudget();
   /* The budget rows are the workspace's rows, and they keep its handlers. */
   wireEvents();
+}
+/* Shared, because the card is. */
+function wireBudget(){
+  var e=activeEvent();
+  var t=$('#budTotal'); if(t)t.onclick=function(){ openBudgetTotal(e); };
+  var m=$('#budMove');  if(m)m.onclick=function(){ openBudgetMove(e); };
+}
+/* ---- the budget, as a card ----
+   One renderer, because the same card belongs on the project's Money screen
+   and on the studio roll-up, and two copies of it drifted apart last time. */
+function budgetBar(st){
+  if(!st.set)return '';
+  var t=st.total||0;
+  /* Over-allocation is drawn against the OVERSPENT total rather than the
+     envelope, so the bar stays full width and the red is the share that does
+     not fit. A bar that ran off the end would say nothing a number does not. */
+  var over=st.allocated>t;
+  var span=over?st.allocated:t;
+  var pct=function(n){ return span>0?Math.max(0,Math.min(100,n/span*100)):0; };
+  var inner=over
+    ? '<i class="alloc" style="width:'+pct(t)+'%"></i><i class="over" style="width:'+pct(st.allocated-t)+'%"></i>'
+    : '<i class="alloc" style="width:'+pct(st.allocated)+'%"></i><i class="free" style="width:'+pct(t-st.allocated)+'%"></i>';
+  return '<div class="env-wrap">'+
+    '<div class="env" role="img" aria-label="'+esc(money(st.allocated)+' of '+money(t)+' allocated')+'">'+inner+'</div>'+
+    '<div class="env-legend">'+
+      '<span><s class="a"></s>Allocated '+money(st.allocated)+'</span>'+
+      (over
+        ? '<span><s class="o"></s>Over by '+money(st.allocated-t)+'</span>'
+        : '<span><s class="f"></s>Unallocated '+money(st.unallocated)+'</span>')+
+    '</div>'+
+    /* Says what the number IS. The legend's "Over by" is about allocation;
+       this is about projected spend, which is larger wherever a contract came
+       in above its line. Two bare "over by" figures side by side, differing by
+       the overspend, read as an arithmetic bug. */
+    (st.variance>0
+      ? '<div class="env-over">Signed contracts project <b>'+money(st.projected)+
+        '</b> against an envelope of <b>'+money(st.total)+'</b>. '+
+        'Move money from another line, or raise the total.</div>'
+      : '')+
+  '</div>';
+}
+function budgetRow(e,b){
+  var est=budgetEst(b), act=Number(b.act)||0, pd=Number(b.paid)||0;
+  var over=act>est;
+  var w=est?Math.min(100,Math.round(act/est*100)):(act?100:0);
+  var d=b.due?daysAway(b.due):null;
+  var owing=act-pd;
+  /* The group is filing, not information, when it only restates the line's own
+     name — "Catering & Bar" over "Catering & bar" is a row saying the same
+     thing twice. Shown when it adds something, dropped when it does not. */
+  var gl=groupLabel(b.group);
+  var a=String(b.cat||'').toLowerCase(), g=gl.toLowerCase();
+  var sameThing=!!a&&(g.indexOf(a)>-1||a.indexOf(g.split(' ')[0])>-1);
+  var sub=[]; if(!sameThing)sub.push(esc(gl)); if(b.note)sub.push(esc(b.note));
+  return '<div class="bud-row">'+
+    '<div class="cat">'+esc(b.cat||'Untitled line')+
+      (sub.length?'<em>'+sub.join(' · ')+'</em>':'')+
+      (b.due&&owing>0.004
+        ?'<span class="bud-due'+(d<0?' past':'')+'">'+icn("bell")+
+          (d<0?money(owing)+' overdue':money(owing)+' due '+fmtDate(b.due))+'</span>'
+        :'')+
+    '</div>'+
+    '<div class="track"><div class="bar" style="height:10px">'+
+      '<i class="'+(over?'over':'')+'" style="width:'+w+'%"></i></div></div>'+
+    '<div class="amt"><b'+(over?' class="over"':'')+'>'+money(act)+'</b> / '+money(est)+
+      /* Only when there is something to say. "nothing paid" under every line
+         was a column of the same three words down the whole card. */
+      (pd>0.004?'<span class="sub">'+money(pd)+' paid</span>':'')+'</div>'+
+    rowActions('budget',b.id)+
+  '</div>';
+}
+/* The whole card: the envelope if one is set, the lines, and the two actions
+   that only make sense once there is a total to divide. */
+function budgetCard(e){
+  var st=budgetStats(e);
+  var head=st.set
+    ? '<span class="sec-badge">'+money(st.allocated)+' of '+money(st.total)+' allocated</span>'
+    : '<span class="sec-badge">'+money(st.contracted)+' of '+money(st.allocated)+' contracted</span>';
+  var actions='<div class="sec-actions">'+
+    '<button class="btn btn-ghost btn-sm" data-addbl="1">'+icn("plus")+'Add line</button>'+
+    (st.set&&st.count>1?'<button class="btn btn-ghost btn-sm" id="budMove">'+icn("sliders")+'Move money</button>':'')+
+    '<button class="btn btn-ghost btn-sm" id="budTotal">'+icn("pencil")+(st.set?'Edit total':'Set a total')+'</button>'+
+  '</div>';
+  return '<div class="card"><div class="card-h"><h3>Budget</h3>'+head+'</div>'+
+    budgetBar(st)+
+    (e.budget.length
+      ? '<div style="padding:6px 0 10px">'+e.budget.map(function(b){ return budgetRow(e,b); }).join('')+actions+'</div>'
+      : '<div class="empty-hint" style="padding:26px">'+
+          (st.set
+            ? 'The envelope is set. Add the first line and start dividing it.'
+            : 'No budget lines yet. Set a total first and GEM can tell you what is left to allocate.')+
+          actions+'</div>')+
+  '</div>';
+}
+/* ---- setting the envelope ----
+   Deliberately its own modal rather than a field on the event form. The total
+   is the decision the rest of the screen hangs off, and burying it among the
+   venue and the date is how it stays unset. */
+function openBudgetTotal(e){
+  if(!e)return;
+  var st=budgetStats(e);
+  openEditor({
+    title:st.set?'Edit the budget total':'Set the budget total',
+    sub:e.title,
+    saveLabel:st.set?'Save total':'Set total',
+    fields:[
+      {id:'total',label:'Total budget',type:'number',value:st.set?st.total:'',full:true,
+       placeholder:'What the client has to spend'},
+      {id:'contingencyPct',label:'Contingency held back (%)',type:'number',
+       value:e.contingencyPct==null?8:e.contingencyPct}
+    ],
+    onSave:function(v){
+      var t=Number(v.total)||0;
+      /* Zero clears the envelope rather than setting a budget of nothing —
+         otherwise there is no way back to the plain list once you have tried
+         a total, and "undo" should not mean deleting the project. */
+      e.budgetTotal=t>0?t:null;
+      var c=Number(v.contingencyPct);
+      e.contingencyPct=(isFinite(c)&&c>=0&&c<=90)?c:8;
+      closeModal(); afterChange();
+      if(e.budgetTotal!=null){
+        var a=budgetStats(e);
+        toast(a.unallocated>=0
+          ? money(a.unallocated)+' left to allocate'
+          : money(-a.unallocated)+' over — move money or raise the total');
+      }
+    }
+  });
+}
+
+/* ---- moving money ----
+   Two ends and an amount. Unallocated is offered as a real end because
+   pulling from the envelope's slack is the common case and putting money
+   back is how you free it up again. */
+function openBudgetMove(e){
+  if(!e)return;
+  var st=budgetStats(e);
+  if(!st.set){ toast('Set a budget total first'); return; }
+  var ends=[{value:BUDGET_ENVELOPE,label:'Unallocated — '+money(Math.max(0,st.unallocated))}]
+    .concat(e.budget.map(function(b){
+      return {value:b.id,label:(b.cat||'Untitled line')+' — '+money(budgetEst(b))};
+    }));
+  openEditor({
+    title:'Move money',
+    sub:e.title,
+    saveLabel:'Move it',
+    fields:[
+      {id:'from',label:'From',type:'select',full:true,
+       value:st.unallocated>0?BUDGET_ENVELOPE:(e.budget[0]||{}).id,options:ends},
+      {id:'to',label:'To',type:'select',full:true,
+       value:(e.budget[0]||{}).id,options:ends},
+      {id:'amt',label:'Amount',type:'number'},
+      {id:'why',label:'Why (optional)',type:'text',placeholder:'Florist came in over'}
+    ],
+    onSave:function(v){
+      var moved=moveBudget(e,v.from,v.to,v.amt,v.why);
+      if(!moved){
+        /* Says which of the three ways it could not happen, rather than
+           failing quietly and leaving the planner to guess. */
+        toast(v.from===v.to?'Pick two different lines'
+          :Number(v.amt)>0?'There is not that much to move'
+          :'Enter an amount');
+        return;
+      }
+      closeModal(); afterChange();
+      toast(money(moved)+' moved to '+moveEndLabel(e,v.to));
+    }
+  });
+}
+
+/* The fields a budget line carries, shared by add and edit so the two cannot
+   drift. clientVisible and markup are in the model but not on the form yet —
+   they belong to the client portal, which is its own piece of work. */
+function budgetFields(it){
+  it=it||{};
+  return [
+    {id:'cat',label:'Line',value:it.cat,required:true,full:true,
+     placeholder:'Ceremony florals'},
+    {id:'group',label:'Files under',type:'select',value:it.group||'other',
+     options:budgetGroups().map(function(g){ return {value:g.k,label:g.t}; })},
+    {id:'est',label:'Allocated',type:'number',value:it.est},
+    {id:'act',label:'Contracted',type:'number',value:it.act},
+    {id:'paid',label:'Paid so far',type:'number',value:it.paid},
+    {id:'due',label:'Next payment due',type:'date',value:it.due},
+    {id:'note',label:'Note',value:it.note,full:true,
+     placeholder:'Why this number is this number'}
+  ];
+}
+function budgetValues(v){
+  return {cat:v.cat,group:v.group||groupFor(v.cat),
+          est:Number(v.est)||0,act:Number(v.act)||0,paid:Number(v.paid)||0,
+          due:v.due||null,note:v.note||''};
 }
 /* --- Guests & RSVP --- */
 var RSVP={yes:{lbl:'Attending',cls:'s-paid'},no:{lbl:'Declined',cls:'s-over'},pending:{lbl:'Pending',cls:'s-due'},invited:{lbl:'Invited',cls:'s-draft'}};
@@ -13472,12 +13884,33 @@ function printInvoice(x){
   doc.close();
   setTimeout(function(){ w.contentWindow.focus(); w.contentWindow.print(); },220);
 }
+/* ---- the studio's budgets, rolled up ----
+   This screen used to render db.events[0] — the FIRST event in the array, not
+   the active project and not a total — under a heading that reads as though it
+   covers the studio. It predates the project-first rework and got stranded by
+   it. group_key is what makes the honest version possible: every live job's
+   lines, added up by what they are for. */
+function budgetRollup(){
+  var live=projList().live;
+  var by={}, total=0, haveEnvelope=0;
+  live.forEach(function(e){
+    var st=budgetStats(e);
+    if(st.set){ total+=st.total; haveEnvelope++; }
+    (e.budget||[]).forEach(function(b){
+      var k=b.group||'other';
+      if(!by[k])by[k]={k:k,est:0,act:0,paid:0};
+      by[k].est+=budgetEst(b); by[k].act+=Number(b.act)||0; by[k].paid+=Number(b.paid)||0;
+    });
+  });
+  var groups=budgetGroups().map(function(g){ return by[g.k]; })
+    .filter(Boolean)
+    .sort(function(a,b){ return b.est-a.est; });
+  return {jobs:live.length,groups:groups,total:total,haveEnvelope:haveEnvelope,
+    est:groups.reduce(function(a,g){return a+g.est;},0),
+    act:groups.reduce(function(a,g){return a+g.act;},0)};
+}
 function viewFinance(){
-  /* Invoices stand on their own; the budget card needs an event, and there may
-     not be one — a new studio, or the sample data removed. */
-  var e=db.events[0];
-  var estT=e?e.budget.reduce(function(a,b){return a+b.est;},0):0;
-  var actT=e?e.budget.reduce(function(a,b){return a+b.act;},0):0;
+  var roll=budgetRollup();
   /* What has actually come in, and what is still owed — a part-paid invoice
      is neither wholly collected nor wholly outstanding, and reading .amount
      for both put it in one column at full value. */
@@ -13503,14 +13936,21 @@ function viewFinance(){
         (bal>0.004&&invPaid(x)?'<div class="inv-bal">'+money(bal)+' left</div>':'')+
         rowActions('invoice',x.id)+'</td></tr>';
     }).join('')+'</tbody></table></div></div>'+
-  (e?
-  '<div class="card"><div class="card-h"><h3>Budget · '+esc(e.title)+'</h3><span class="sec-badge">'+money(actT)+' of '+money(estT)+' committed</span></div>'+
-    '<div style="padding:8px 0 12px">'+(e.budget.length?e.budget.map(function(b){var aw=b.est?Math.round(b.act/b.est*100):0;
-      return '<div class="bud-row"><div class="cat">'+esc(b.cat)+'</div><div class="track"><div class="bar" style="height:12px"><i style="width:'+aw+'%"></i></div></div>'+
-      '<div class="amt"><b>'+money(b.act)+'</b> / '+money(b.est)+'</div></div>';
-    }).join(''):'<div class="empty-hint">No budget lines yet.</div>')+'</div></div>'
-  :'<div class="card"><div class="card-h"><h3>Budget</h3></div>'+
-    '<div class="empty-hint" style="padding:26px">Create an event to start tracking a budget.</div></div>');
+  '<div class="card"><div class="card-h"><h3>Budgets across the studio</h3>'+
+    '<span class="sec-badge">'+roll.jobs+' live project'+(roll.jobs===1?'':'s')+
+      (roll.haveEnvelope?' · '+money(roll.total)+' committed to clients':'')+'</span></div>'+
+    (roll.groups.length
+      ? '<div style="padding:8px 0 12px">'+roll.groups.map(function(g){
+          var w=g.est?Math.min(100,Math.round(g.act/g.est*100)):0;
+          return '<div class="bud-row"><div class="cat">'+esc(groupLabel(g.k))+'</div>'+
+            '<div class="track"><div class="bar" style="height:12px"><i class="'+
+              (g.act>g.est?'over':'')+'" style="width:'+w+'%"></i></div></div>'+
+            '<div class="amt"><b'+(g.act>g.est?' class="over"':'')+'>'+money(g.act)+'</b> / '+money(g.est)+
+            (g.paid>0.004?'<span class="sub">'+money(g.paid)+' paid</span>':'')+'</div></div>';
+        }).join('')+'</div>'
+      : '<div class="empty-hint" style="padding:26px">No budget lines on any live project yet. '+
+        'Open a project\u2019s Money screen to set its total.</div>')+
+  '</div>';
 }
 
 /* ---------- modals ---------- */
@@ -16660,10 +17100,8 @@ function editRecord(kind,id){
               {id:'due',label:'Due date',type:'date',value:it.due}],
       onSave:function(v){ Object.assign(it,v); closeModal(); afterChange(); }});},
     budget:function(){ openEditor({title:'Edit budget line',sub:ev&&ev.title,twoCol:true,onDelete:del,deleteLabel:it.cat,
-      fields:[{id:'cat',label:'Category',value:it.cat,required:true,full:true},
-              {id:'est',label:'Estimated',type:'number',value:it.est},
-              {id:'act',label:'Committed',type:'number',value:it.act}],
-      onSave:function(v){ Object.assign(it,v); closeModal(); afterChange(); }});},
+      fields:budgetFields(it),
+      onSave:function(v){ Object.assign(it,budgetValues(v)); closeModal(); afterChange(); }});},
     decor:function(){ openEditor({title:'Edit décor item',sub:ev&&ev.title,onDelete:del,deleteLabel:it.item,
       fields:[{id:'item',label:'Item',value:it.item,required:true},
               {id:'vendor',label:'Vendor',value:it.vendor},
@@ -17950,6 +18388,19 @@ function sbTagCol(){
   return SB_TAG_COL;
 }
 var SB_ROLE_COL=null;
+/* The envelope's columns arrive with migration 27. Until a studio runs it the
+   push must not mention them, or every sync fails on an unknown column — the
+   same contract sbAttireCol and sbRoleCol keep for guests. */
+var SB_BUDGET_COLS=null;
+function sbBudgetCols(){
+  if(SB_BUDGET_COLS===null){
+    SB_BUDGET_COLS=false;
+    sbRest('budget_lines?select=paid&limit=1')
+      .then(function(){ SB_BUDGET_COLS=true; })
+      .catch(function(){ SB_BUDGET_COLS=false; });
+  }
+  return SB_BUDGET_COLS;
+}
 function sbRoleCol(){
   if(SB_ROLE_COL===null){
     SB_ROLE_COL=false;
@@ -18044,8 +18495,19 @@ function sbPush(opts){
       owner:c.owner==='client'?'client':'planner',note:s(c.note)}); });
     /* tag_event_id marks the sub-event a line belongs to. The budget itself
        stays on the primary — a planner quotes a weekend as one number. */
-    (e.budget||[]).forEach(function(b,i){ budget.push({id:b.id,org_id:org,event_id:e.id,category:s(b.cat),
-      estimated:num(b.est),actual:num(b.act),sort_order:i,tag_event_id:nn(b.tagEventId)}); });
+    (e.budget||[]).forEach(function(b,i){
+      var row={id:b.id,org_id:org,event_id:e.id,category:s(b.cat),
+        estimated:num(b.est),actual:num(b.act),sort_order:i,tag_event_id:nn(b.tagEventId)};
+      if(sbBudgetCols()){
+        row.paid=num(b.paid); row.due_date=nn(b.due);
+        row.vendor_id=(b.vendorId&&db.vendors.some(function(v){return v.id===b.vendorId;}))?b.vendorId:null;
+        row.per_head=b.perHead==null?null:num(b.perHead);
+        row.client_visible=b.clientVisible!==false;
+        row.markup=b.markup==null?null:num(b.markup);
+        row.note=s(b.note); row.group_key=s(b.group)||'other';
+      }
+      budget.push(row);
+    });
     (e.tables||[]).forEach(function(t,i){ tables.push({id:t.id,org_id:org,event_id:e.id,name:s(t.name),seats:num(t.seats)||1,
       shape:t.shape||'round',w:num(t.w),h:num(t.h),x:num(t.x),y:num(t.y),rotation:num(t.rot||t.rotation),sort_order:i}); });
     (e.guests||[]).forEach(function(g){
@@ -18134,6 +18596,15 @@ function sbPush(opts){
       event_date:nn(e.date),venue:s(e.venue),location:s(e.loc),start_time:s(e.startTime),
       parent_event_id:par,event_role:par?(s(e.role)||'other'):'primary',sort_order:num(e.sort),
       event_type:s(e.eventType)||'Wedding',
+      /* The envelope is one number per job, so it rides on the event rather
+         than as a line. undefined omits the key entirely before migration 27,
+         the way venue_id does. */
+      budget_total:sbBudgetCols()?(e.budgetTotal==null?null:num(e.budgetTotal)):undefined,
+      contingency_pct:sbBudgetCols()?num(e.contingencyPct==null?8:e.contingencyPct):undefined,
+      /* jsonb on the event, like floor and venue_address. A move is only
+         meaningful next to the two lines it names, so it belongs to the job
+         rather than to a table of its own. */
+      budget_moves:sbBudgetCols()?(e.budgetMoves||[]):undefined,
       role_label:par&&e.role==='custom'?s(e.roleLabel):'',
       venue_address:e.venueAddress||{},venue_contact:e.venueContact||{},venue_notes:s(e.venueNotes),
       photo_path:nn(e.photoPath),
@@ -18497,8 +18968,19 @@ function sbPull(opts){
           timeline:of(R.timeline_items,e.id).map(function(x){return {id:x.id,t:x.at_time,ev:x.title,ds:x.detail};}),
           checklist:of(R.checklist_items,e.id).map(function(x){return {id:x.id,lbl:x.label,cat:x.category,done:x.done,
             due:x.due_date,owner:x.owner==='client'?'client':'planner',note:x.note||''};}),
+          /* Every envelope field falls back to the pre-migration default, so a
+             pull from a database that has not been migrated yet reads as a
+             budget with no envelope rather than as one full of nulls. */
+          budgetTotal:e.budget_total==null?null:Number(e.budget_total),
+          contingencyPct:e.contingency_pct==null?8:Number(e.contingency_pct),
+          budgetMoves:Array.isArray(e.budget_moves)?e.budget_moves:[],
           budget:of(R.budget_lines,e.id).map(function(x){return {id:x.id,cat:x.category,est:Number(x.estimated),
-            act:Number(x.actual),tagEventId:x.tag_event_id||null};}),
+            act:Number(x.actual),paid:Number(x.paid||0),due:x.due_date||null,
+            vendorId:x.vendor_id||null,perHead:x.per_head==null?null:Number(x.per_head),
+            clientVisible:x.client_visible!==false,
+            markup:x.markup==null?null:Number(x.markup),
+            note:x.note||'',group:x.group_key||groupFor(x.category),
+            tagEventId:x.tag_event_id||null};}),
           tables:of(R.seating_tables,e.id).map(function(x){return {id:x.id,name:x.name,seats:x.seats,shape:x.shape,
             w:Number(x.w),h:Number(x.h),x:Number(x.x),y:Number(x.y),rot:Number(x.rotation)};}),
           guests:of(R.guests,e.id).map(function(x){return {id:x.id,name:x.name,party:x.party,side:x.side||'',rsvp:x.rsvp,
