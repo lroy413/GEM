@@ -1726,3 +1726,29 @@ exists.
     `isSampleRecord()` keys off the active event. Renaming a view silently
     separates them, and the failure is invisible — things stop working rather
     than breaking loudly.
+
+- **A gold button could not carry its own label.** Found in the passover after
+  the envelope, and app-wide rather than new: white on `--gold-fill` measured
+  **4.41:1 in day** — under the 4.5 small text needs, and a gold button's label
+  is always small text — and **3.20:1 in evening**. It only surfaced now because
+  restoring the sample banner put three more gold buttons on screen and into the
+  audit's path.
+  - The evening cause is worth keeping. `applyEvening()` lifted `--gold-fill`
+    along with the accent. That is right for the ACCENT, which has to carry as a
+    line and as ink on a dark field, and wrong for a FILL, which is the ground
+    UNDER `--on-accent`. Lifting it to 44% lightness is what put white at 3.2.
+    The accent still brightens; only the thing with type on top of it is held
+    down, capped at 36% where white clears 4.5 in every palette.
+  - Day went from `a.l-9` to `a.l-12`. Three points of lightness was the whole
+    difference between "nearly" and "passes".
+  - Day 31 → **30** low-contrast runs and evening 9 → **8**, so both grounds are
+    now better than the baseline that existed before this work — the same fill
+    sits behind avatars, badges and status chips.
+  - `scratchpad/goldcheck.mjs` asserts it across all eight palettes in both
+    grounds: 4.68 to 12.25, no failures.
+  - **Still outstanding, and deliberately not fixed here:** `.avatar` is white
+    on the bright gold GRADIENT at 1.72:1 — the worst run in the app. Fixing it
+    means either touching `--gold-grad`, which is the signature the visual
+    identity rests on, or giving the avatar a different ground from the rest of
+    the gold family. That is an aesthetic decision, not a defect to quietly
+    patch inside another change.

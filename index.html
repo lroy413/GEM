@@ -10,7 +10,7 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="GEM">
 <meta name="format-detection" content="telephone=no">
-<meta name="gem-build" content="180cbf829ac1">
+<meta name="gem-build" content="e06ad78418c1">
 <link rel="manifest" href="/manifest.webmanifest">
 <link rel="icon" href="/icons/icon-192.png" sizes="192x192" type="image/png">
 <link rel="apple-touch-icon" href="/icons/icon-180.png">
@@ -11621,8 +11621,14 @@ function applyEvening(root,a,t,p){
   root.setProperty('--gold-deep',   hsl(a.h,aS,Math.min(aL+8,80)));
   root.setProperty('--gold-soft',   hsl(a.h,Math.max(aS-30,14),20));
   root.setProperty('--gold-line',   hslA(a.h,aS,aL,.34));
-  root.setProperty('--gold-fill',   hsl(a.h,aS,Math.max(a.l-2,44)));
-  root.setProperty('--gold-press',  hsl(a.h,aS,Math.max(a.l-9,36)));
+  /* ---- why the fill does not brighten with the accent ----
+     Evening lifts the accent so it carries as a line and as ink on a dark
+     field. A FILL has the opposite job: it is the ground under --on-accent,
+     and lifting it to 44% put white text at 3.2:1 on every gold button in the
+     app. Capped where white clears 4.5:1 instead. The accent itself stays
+     bright; only the thing with type on top of it is held down. */
+  root.setProperty('--gold-fill',   hsl(a.h,aS,Math.min(Math.max(a.l-2,32),36)));
+  root.setProperty('--gold-press',  hsl(a.h,aS,Math.min(Math.max(a.l-9,26),30)));
   root.setProperty('--gold-grad',
     'linear-gradient(145deg,'+hsl(a.h,aS,Math.min(aL+12,84))+' 0%,'+
     hsl(a.h,aS,aL)+' 42%,'+hsl(a.h,aS,Math.max(aL-16,30))+' 100%)');
@@ -11738,8 +11744,12 @@ function dayPalette(root,a,t,p){
   root.setProperty('--gold-deep',   hsl(a.h,Math.min(a.s+4,95),Math.max(a.l-13,16)));
   root.setProperty('--gold-soft',   hsl(a.h,Math.max(a.s-22,12),Math.min(a.l+42,95)));
   root.setProperty('--gold-line',   hslA(a.h,a.s,a.l,.28));
-  root.setProperty('--gold-fill',   hsl(a.h,Math.min(a.s+4,90),Math.max(a.l-9,18)));
-  root.setProperty('--gold-press',  hsl(a.h,Math.min(a.s+4,90),Math.max(a.l-16,13)));
+  /* -12, not -9. The default gold landed the fill at 37.6% lightness, where
+     white is 4.41:1 — just under what small text needs, and a gold button's
+     label is always small text. Three points of lightness is the difference
+     between "nearly" and "passes". */
+  root.setProperty('--gold-fill',   hsl(a.h,Math.min(a.s+4,90),Math.min(Math.max(a.l-12,18),36)));
+  root.setProperty('--gold-press',  hsl(a.h,Math.min(a.s+4,90),Math.max(a.l-19,13)));
   root.setProperty('--gold-grad',
     'linear-gradient(145deg,'+hsl(a.h,Math.min(a.s+6,95),Math.min(a.l+16,84))+' 0%,'+
     hsl(a.h,a.s,a.l)+' 42%,'+hsl(a.h,Math.min(a.s+4,95),Math.max(a.l-10,18))+' 100%)');
