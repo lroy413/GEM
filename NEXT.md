@@ -1726,6 +1726,17 @@ exists.
     `isSampleRecord()` keys off the active event. Renaming a view silently
     separates them, and the failure is invisible — things stop working rather
     than breaking loudly.
+  - **This is a real behaviour change, not only a bug fix.** While
+    `sampleLocked()` was false on the project screens the gate was inert there,
+    so ADDING to the demo wedding worked — a timeline moment, a checklist task,
+    ticking a box — while EDITING an existing row was refused by
+    `isSampleRecord()`. Half writable, with no banner to explain either half.
+    The demo is properly read-only now, which is what its own banner has always
+    claimed ("edits here are not your studio's work and will not sync") and what
+    the gate's comment describes. Three tests were relying on the gap and now
+    adopt the sample first, the way a planner would.
+  - So: the way to work in the demo wedding is **Use this as my project**. That
+    button was always the intended route and was simply unreachable.
 
 - **A gold button could not carry its own label.** Found in the passover after
   the envelope, and app-wide rather than new: white on `--gold-fill` measured
@@ -1752,3 +1763,33 @@ exists.
     identity rests on, or giving the avatar a different ground from the rest of
     the gold family. That is an aesthetic decision, not a defect to quietly
     patch inside another change.
+
+- **The budget is asked for when the event is created.** The envelope is the
+  number the whole Money screen hangs off, and a planner who is never asked for
+  it never goes looking for it — the Money screen's own empty state was the
+  only place that mentioned it existed. `New Event` asks now, beside the date
+  rather than under eleven address fields.
+  - **Not required, and it says so.** Plenty of jobs are booked before the
+    couple have decided, and a form that insists gets a made-up number typed
+    into it. Blank means no envelope, which is exactly what the Money screen
+    already treats as "behave as before" — so skipping it costs nothing and
+    changes nothing.
+  - Blank also CLEARS an envelope on edit, the same way a total of zero does on
+    the Money screen. One rule in both places, and a way back out.
+  - **A sub-event is never asked.** A planner quotes a weekend as one number,
+    which is why budget lines already hang off the primary and tag their
+    occasion rather than splitting. The field is absent from the sub-event form
+    rather than merely hidden, so reading it back cannot blank the block's
+    envelope.
+  - `budgetTotal`, `contingencyPct` and `budgetMoves` join the new-record
+    literal for the same reason `floor` is there: normalize() fills them in on
+    the next load, but the Money screen is reachable before then.
+  - The creation toast carries the number when there is one — "$62,000 to
+    allocate under Money" — because the point of asking is that the next step
+    is now obvious.
+  - Placeholder copy is sized to the field: the label says what the number is,
+    the missing REQUIRED badge says it is optional, so the placeholder only has
+    to say skipping costs nothing. "Leave blank to decide later" clipped at
+    half width; "Can be set later" measures 101px into 171px of room.
+  - `scratchpad/newbudget-test.mjs` covers both widths: asked, optional,
+    answered, skipped, and absent on a sub-event.

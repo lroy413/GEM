@@ -16583,6 +16583,25 @@ function openEventModal(existing,parentId,seedLeadId){
         showIf:function(v){ return !!v.parentId&&v.role==='custom'; }}:null),
       {id:'date',label:'Event date',type:'date',value:e&&e.date,required:true},
       {id:'startTime',label:'Start time',value:e&&e.startTime,placeholder:'4:30 PM',fmt:'time'},
+      /* ---- asked here, not left to be discovered ----
+         The envelope is the number the whole Money screen hangs off, and a
+         planner who is never asked for it never goes looking for it. Not
+         required: plenty of jobs are booked before the couple have decided,
+         and a form that insists gets a made-up number typed into it. Blank
+         means no envelope, which is exactly what the Money screen already
+         treats as "behave as before".
+
+         A sub-event does not get asked at all. A planner quotes a weekend as
+         one number, which is why budget lines already hang off the primary
+         and tag their occasion rather than splitting. */
+      (isSub?null:{id:'budgetTotal',label:'Total budget',type:'number',
+        value:(e&&e.budgetTotal!=null)?e.budgetTotal:'',
+        /* Short enough to survive a half-width field. The label already
+           says what the number is and the missing REQUIRED badge already
+           says it is optional; the placeholder only has to say that
+           skipping it costs nothing. */
+        placeholder:'Can be set later',
+        showIf:function(v){ return !v.parentId; }}),
       /* Most of a weekend happens in one place. Asking a rehearsal dinner for
          a street address, a postcode, a country, a coordinator's name, their
          role, their phone, their email and site notes — eleven fields you
@@ -16621,7 +16640,11 @@ function openEventModal(existing,parentId,seedLeadId){
       /* floor was missing here, so a brand-new event had no room envelope and
          the seating view threw on f.showChairs until the next reload, when
          normalize() quietly filled it in. Same defaults as normalize(). */
+      /* budgetTotal, contingencyPct and budgetMoves are here for the same
+         reason floor is: normalize() fills them in on the next load, but the
+         Money screen is reachable before then. */
       var rec=e||{id:uid('e'),timeline:[],checklist:[],budget:[],tables:[],guests:[],
+                  budgetTotal:null,contingencyPct:8,budgetMoves:[],
                   floor:{w:60,h:40,unit:'ft',items:[],snap:true,showChairs:true},
                   design:{palette:[],boards:[],decor:[]}};
       /* "'+icn("plus")+'Add a new client…" creates the lead here, so an event can be made
@@ -16637,6 +16660,15 @@ function openEventModal(existing,parentId,seedLeadId){
         db.leads.unshift(nl); lid=nl.id;
       }
       rec.title=v.title; rec.leadId=lid; rec.date=v.date; rec.startTime=v.startTime;
+      /* A sub-event's field was never shown, so reading it back would blank
+         the primary's envelope through the block. Only a primary answers. */
+      if(!v.parentId||v.parentId===''){
+        var bt=Number(v.budgetTotal);
+        /* Blank clears it, the same way a total of zero does on the Money
+           screen — otherwise there is no way back out of an envelope. */
+        rec.budgetTotal=(isFinite(bt)&&bt>0)?bt:null;
+        if(rec.contingencyPct==null)rec.contingencyPct=8;
+      }
       /* A sub-event has no type of its own — it belongs to its parent's block,
          and evType() resolves it upward. */
       if(!v.parentId||v.parentId==='')rec.eventType=v.eventType||typeOf||'Wedding';
@@ -16682,7 +16714,11 @@ function openEventModal(existing,parentId,seedLeadId){
       if(!e){ db.events.push(rec); state.activeEventId=rec.id; }
       closeModal(); save();
       if(!e){ setView('events',{eventId:rec.id});
-        setTimeout(function(){ toast('Event created — apply a task template to get going'); },250); }
+        setTimeout(function(){
+          toast(rec.budgetTotal
+            ? 'Event created — '+money(rec.budgetTotal)+' to allocate under Money'
+            : 'Event created — apply a task template to get going');
+        },250); }
       else afterChange();
     }
   });
