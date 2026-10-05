@@ -196,3 +196,55 @@ Bugs 4 and 6 are DOM-lifecycle changes, verified structurally: `render()`
 re-wires each of those views itself, and only the redundant second call was
 removed. Both files pass `node --check`, and `index.html` was rebuilt from the
 artifact with `python3 build.py` (build `9b54b8cc2450`).
+
+## A device showing the sample could replace a whole studio · **fixed**
+
+Reported twice — a tester in August, and a planner on Chrome in October. Both
+described the same thing: their work was gone and the demo wedding was back.
+
+**The browser evicting local storage is only the first half.** Chrome drops an
+origin's storage under disk pressure, and "clear browsing data" does it on
+request. The app handles that: the workspace is reseeded from the template, and
+`sbSyncDown()` pulls the studio back down when there is provably nothing on the
+device to lose. That recovery works.
+
+**The second half is what cost people their studios.** `save()` queues a push
+four seconds after any edit. The recovery runs on focus and on a three-minute
+timer. One edit inside that window and the template-shaped payload reached the
+studio first — and `sbPush()` prunes every row its payload does not mention.
+
+Three things should have stopped it. None did.
+
+1. `sbLooksReseeded()` began `if(sbVer()===null) return false`. `sbVer()` reads
+   `gem-sb-ver` out of the same local storage that was just evicted, so the
+   guard was inert in exactly the situation it was written for.
+2. Its own comment said the server was the backstop — *"gem_claim_sync() cannot
+   stop it, because that guard only refuses a device with NO version at all."*
+   That had the SQL backwards. `if p_expect is not null and v <> p_expect` does
+   not FAIL on a null version, it SKIPS the check. A blank push was waved
+   through.
+3. Settings › Connection › Push — *"replacing it with this device"* — honoured
+   `opts.full` with no reseed check. It is the button somebody presses when
+   their work has just vanished and they are trying to put it back.
+
+**Fixed in four places.** `sbLooksReseeded()` no longer consults the stored
+version: a workspace that is the template and nothing else never pushes,
+whatever it remembers. The guard now runs before `opts.full`, so the manual
+override is refused too. `sbSyncNow()` asks the studio what it holds before
+writing when the device has no version, which removes the race rather than
+narrowing it. And migration 28 makes the comment true — a null `p_expect` is
+refused against a studio with `sync_version > 0`, in both phases.
+
+The deliberate override still exists: the manual push reads the studio's
+current version and sends it, so it arrives versioned rather than blank. Loud
+stays possible; silent does not.
+
+**One trap found while fixing it.** `sampleHit()` matched on the sample's FIXED
+ids, which an adopted sample keeps until a push rewrites them. So an adopted
+demo read as sample-only work, `hasOwnWork()` returned false, and the stricter
+guard would have refused that studio's first push for ever. `sampleHit()`
+consults `sampleAdopted()` now, like `isSampleEvent()` and `samplePrint()`.
+
+`scratchpad/reseed-test.mjs` asserts the guard on the code rather than on the
+comments — the first version of that test matched the prose quoting the very
+line it was checking had gone.

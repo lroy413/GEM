@@ -10,7 +10,7 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="GEM">
 <meta name="format-detection" content="telephone=no">
-<meta name="gem-build" content="8b01df6ee94c">
+<meta name="gem-build" content="05162663090c">
 <link rel="manifest" href="/manifest.webmanifest">
 <link rel="icon" href="/icons/icon-192.png" sizes="192x192" type="image/png">
 <link rel="apple-touch-icon" href="/icons/icon-180.png">
@@ -5020,6 +5020,14 @@ function hasSampleData(){
    deleted the sample vendors, reported a count, and left the wedding itself in
    place with the button gone, because hasSampleData() then found nothing. */
 function sampleHit(k,r){
+  /* Adoption is the studio saying "this is mine now". Until this line, the
+     FIXED ids still matched after a reload — adoptSample() clears the flags and
+     empties SAMPLE_IDS in memory, but the id list is rebuilt from the literal
+     on every load and the records keep their ids until a push rewrites them.
+     So an adopted sample read as sample-only work, hasOwnWork() said false, and
+     the reseed guard below would have refused that studio's first push for
+     ever. Same preference isSampleEvent() and samplePrint() consult. */
+  if(sampleAdopted())return false;
   return !!r.sample||(SAMPLE_IDS[k]||[]).indexOf(r.id)>=0||samplePrint(k,r);
 }
 /* And the fingerprints, for when the flag is gone as well as the id. `sample`
@@ -5093,12 +5101,27 @@ function hasOwnWork(){
 
    Pushing in that state is the worst thing the app can do. sbPush() prunes
    every row the payload does not mention, so it would replace a studio's real
-   work with the sample wedding — and gem_claim_sync() cannot stop it, because
-   that guard only refuses a device with NO version at all. A tester lost her
+   work with the sample wedding. The server is a second line of defence as of
+   migration 28 — before it, a null version meant the version check was skipped
+   rather than enforced, so there was no second line at all. A tester lost her
    clients and timeline exactly this way, and the sample's timeline is what was
    left in the studio afterwards. */
 function sbLooksReseeded(){
-  if(typeof sbVer!=='function'||sbVer()===null)return false;
+  /* ---- why there is no version check here any more ----
+     This used to begin `if(sbVer()===null) return false`, which made the guard
+     inert in precisely the situation it was written for. sbVer() reads
+     gem-sb-ver out of local storage — so a browser that evicted the workspace
+     took the version with it, the guard waved the device through, and the push
+     below pruned the studio down to the template.
+
+     The comment under this function also had the server backwards. It claimed
+     gem_claim_sync refuses a device with no version; the SQL skips the version
+     check entirely when p_expect is null, which ACCEPTS it. Migration 28 makes
+     that comment true. This function no longer depends on it being true.
+
+     The rule is now simply: a workspace that is the template and nothing else
+     never pushes, whatever it remembers about syncing. A device holding only
+     the sample has nothing a studio could want. */
   /* And nothing of its own alongside. Fixed ids next to real work is not a
      re-seed — it is a backup restored from before this workspace first synced,
      which someone chose deliberately and must not have pulled out from under
@@ -13428,6 +13451,17 @@ function wireSettings(){
       sbP.disabled=true; sbSay('wait','Uploading…');
       sbResolveOrg().then(function(id){
         if(!id)throw new Error('Create your studio first.');
+        /* Migration 28 refuses a push from a device with no version against a
+           studio that has history, because that is the silent path that cost a
+           planner her work. This button is the LOUD path — it is behind a
+           confirmation that says the studio will be replaced — so it adopts the
+           studio's current version first and sends it deliberately. */
+        if(sbVer()===null){
+          return sbCheckRemote().then(function(v){
+            if(v!==null)setSbVer(v);
+            return sbPush({full:true});
+          });
+        }
         return sbPush({full:true});
       }).then(function(){ sbSay('ok','Uploaded. Supabase now matches this device.'); render(); })
         .catch(function(e){ sbSay(e.stale?'wait':'bad',e.message); })
@@ -18691,6 +18725,15 @@ function setSbVer(v){ try{ v===null?localStorage.removeItem('gem-sb-ver'):localS
    studio stands; commit is what makes the new state visible. See 17. */
 function sbSyncErr(e){
   var m=String((e&&e.message)||'');
+  /* Migration 28. The server now refuses a push from a device with no stored
+     version against a studio that has history — the silent path that replaced
+     two planners' studios with the demo wedding. Said as an instruction rather
+     than as a Postgres exception. */
+  if(/never synced with this studio/i.test(m)){
+    var n=new Error('This device has never synced with your studio, or its saved work was cleared. '+
+      'Pull first — Settings › Connection › Pull.');
+    n.stale=true; return n;
+  }
   if(/unsynced/i.test(m)){
     /* This device has never pulled, but the studio already holds records.
        Its ids differ from the ones on the server, so a push would insert a
@@ -18916,9 +18959,15 @@ function sbPush(opts){
      and destroy the evidence. Nothing about this push is safe to attempt: the
      prune at the end deletes whatever the payload leaves out, so a workspace
      that has reverted to the template would take the studio down with it. */
+  /* Deliberately BEFORE the opts.full escape hatch. "Replace the studio with
+     this device" is the button somebody presses when their work has just
+     vanished and they are trying to fix it — which is the one moment it does
+     the most damage. There is no reading of a sample-only device that a studio
+     should accept, so this refuses the manual push too. */
   if(sbLooksReseeded()){
-    var lost=new Error('This device has lost its saved work and is showing the sample again. '+
-      'Pushing now would replace your studio with the sample — pull instead.');
+    var lost=new Error('This device is showing the sample, not your studio — its saved work was '+
+      'cleared by the browser. Pushing would replace your studio with the sample. '+
+      'Use Settings › Connection › Pull to bring your work back.');
     lost.reseeded=true;
     return Promise.reject(lost);
   }
@@ -19656,6 +19705,18 @@ function sbSyncNow(){
   if(!SB_STATE.org){ sbNoStudioWarn(); return Promise.resolve(false); }
   if(SB_SYNC.busy){ SB_SYNC.queued=true; return Promise.resolve(false); }
   if(!navigator.onLine){ sbSetStatus('off','Offline — will sync when you reconnect'); return Promise.resolve(false); }
+  /* ---- look before writing ----
+     A device with no stored version has either never synced or has just lost
+     its storage, and the two are indistinguishable from here. Pushing first
+     was a race: save() queues a push four seconds after an edit, while the
+     recovery that would have rescued this device runs on focus and on a
+     three-minute timer. One edit in the wrong four seconds and the template
+     reached the studio ahead of the pull that would have refilled it.
+     Ask the studio what it holds first; sbSyncDown() pulls when there is
+     nothing here to lose, and the next edit re-queues this push. */
+  if(sbVer()===null){
+    return sbSyncDown().then(function(){ return false; });
+  }
   SB_SYNC.busy=true; sbSetStatus('busy','Syncing…');
   return sbPush().then(function(){
     sbSetStatus(SB_SYNC.wrote?'ok':'idle',SB_SYNC.wrote?'Saved to Supabase':'');
