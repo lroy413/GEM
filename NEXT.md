@@ -1904,3 +1904,21 @@ exists.
   - The About footnote said multi-device sync "arrives when the hosted backend
     is connected" — written before it was. Telling somebody chasing a sync
     problem that sync does not exist yet is worse than saying nothing.
+
+- **A Save button that tells the truth.** The sync pill only ever appeared for
+  a few seconds after something happened; the rest of the time there was no
+  sign on the page that work was safe anywhere. For somebody planning a real
+  wedding on a borrowed browser that is the wrong silence. The pill is now
+  persistent — `✓ Saved · synced 3 min ago`, `Saved here · sending…`, `Saved
+  here · not backed up` — and pressing it runs `quickSave()`: a local write,
+  then an immediate sync instead of waiting out the 4-second queue.
+  - It never lies to reassure. A failed local write surfaces `SAVE_FAIL`'s
+    reason; a signed-out device is told it is on this device only and where to
+    sign in; no studio yet says so. The button is peace of mind only because
+    the label is computed from state, not from the click.
+  - Every change was already on disk before the button existed — `save()` is
+    synchronous to localStorage. The button buys an earlier push, not safety
+    that was missing.
+  - The pre-existing phone rule stretched it edge to edge (`left:14px` for a
+    centred toast). One rule now, at the tab bar's own 860px breakpoint, with
+    no `left`, so the pill keeps its width above the bar on every size.

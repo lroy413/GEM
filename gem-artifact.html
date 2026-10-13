@@ -895,13 +895,21 @@ body.portal-only .main{margin-left:0!important}
   font-size:.84375rem;line-height:1;color:var(--muted)}
 .sb-pill.can-close:hover .sb-x{color:var(--ink)}
 .sb-pill.show{opacity:1;transform:none}
+/* The resting state is a button: Save now. Quiet on purpose — it is on screen
+   all day — and the tick is the only colour. */
+.sb-pill.saveable{pointer-events:auto;cursor:pointer;color:var(--ink-soft);
+  display:inline-flex;align-items:center;gap:7px}
+.sb-pill.saveable:hover{border-color:var(--gold);color:var(--ink)}
+.sb-pill .sb-tick{color:var(--ok-ink);font-weight:700}
 .sb-pill.busy{color:var(--ink-soft)}
 .sb-pill.ok{color:#4B7C5C;border-color:rgba(143,191,159,.5)}
 .sb-pill.warn{color:#9C4B4B;border-color:rgba(200,90,90,.42)}
 .sb-pill.off{color:var(--muted)}
-/* Above the tab bar and the home indicator, not on top of them. */
-@media (max-width:700px){
-  .sb-pill{left:14px;right:14px;bottom:calc(84px + env(safe-area-inset-bottom,0px));text-align:center}
+/* Above the tab bar and the home indicator, not on top of them. The bar shows
+   from 860px down, so the pill lifts at the same width — and it keeps its own
+   width: setting `left` here stretched the persistent Save pill edge to edge. */
+@media (max-width:860px){
+  .sb-pill{right:12px;bottom:calc(var(--tabbar-h) + env(safe-area-inset-bottom,0px) + 12px)}
 }
 .sb-msg{margin-top:14px;padding:11px 13px;border-radius:11px;font-size:.75rem;line-height:1.5;border:1px solid var(--line)}
 .sb-msg.ok{background:rgba(143,191,159,.13);border-color:rgba(143,191,159,.4)}
@@ -5924,6 +5932,7 @@ function save(){
      signed-in tester whose storage was blocked kept nothing at all: not on the
      device, and not on the server either. */
   if(typeof sbAutoQueue==='function')sbAutoQueue();
+  if(typeof SB_SYNC!=='undefined'&&SB_SYNC.status==='idle'&&typeof sbSetStatus==='function')sbSetStatus('idle','');
   return ok;
 }
 function storageUsed(){
@@ -19961,6 +19970,48 @@ var SB_SYNC={timer:null,busy:false,queued:false,claimed:null,wrote:0,status:'idl
    purpose: a reload is a fresh look at the problem, and the condition is
    still there to report. */
 var SB_MUTED={};
+/* ---- "Saved", said out loud ----
+   The app saves on every change and pushes four seconds after you stop
+   typing, and that was exactly the problem: nothing on screen said so.
+   Somebody planning a real wedding wants to press something and be told. The
+   pill is that something now. At rest it reads Saved, with when the studio
+   last heard from this device; pressed, it writes, pushes NOW rather than in
+   four seconds, and reports what actually happened — including the honest case
+   where the work is on this device and nowhere else, which is the case the
+   person on Chrome was in without knowing it. */
+function savedLabel(){
+  if(typeof sbReady!=='function'||!sbReady())return 'Saved here \u00b7 not backed up';
+  if(!SB_STATE.org)return 'Saved here \u00b7 no studio yet';
+  if(typeof sbDirty==='function'&&(sbDirty()||SB_SYNC.timer))return 'Saved here \u00b7 sending\u2026';
+  var t=SB_STATE.lastSync;
+  return t?'Saved \u00b7 synced '+agoLabel(t):'Saved here \u00b7 never synced';
+}
+function agoLabel(iso){
+  var ms=Date.now()-new Date(iso).getTime();
+  if(!isFinite(ms)||ms<0)return 'just now';
+  var m=Math.round(ms/60000);
+  if(m<1)return 'just now';
+  if(m<60)return m+' min ago';
+  var h=Math.round(m/60);
+  if(h<24)return h+' hr ago';
+  return fmtStamp(iso);
+}
+function quickSave(){
+  var ok=saveLocal();
+  if(!ok){
+    sbSetStatus('warn','Could not save on this device \u2014 '+
+      (typeof SAVE_FAIL!=='undefined'&&SAVE_FAIL?SAVE_FAIL.msg:'the browser refused the write'));
+    return Promise.resolve(false);
+  }
+  if(typeof sbReady!=='function'||!sbReady()){
+    sbSetStatus('warn','Saved on this device only \u2014 sign in under Settings \u203a Connection to back it up');
+    return Promise.resolve(false);
+  }
+  if(!SB_STATE.org){ sbNoStudioWarn(); return Promise.resolve(false); }
+  clearTimeout(SB_SYNC.timer); SB_SYNC.timer=null;
+  if(typeof setSbDirty==='function')setSbDirty(true);
+  return sbSyncNow();
+}
 function sbSetStatus(st,msg){
   SB_SYNC.status=st; SB_SYNC.msg=msg||'';
   var el=document.getElementById('sbPill');
@@ -19968,13 +20019,21 @@ function sbSetStatus(st,msg){
      while it is being read. So it gets a way out instead — and one that is
      remembered, or the next tick puts it straight back. */
   var closable=(st==='warn'||st==='off');
-  if(closable&&SB_MUTED[msg||'']){ if(el)el.className='sb-pill idle'; return; }
+  if(closable&&SB_MUTED[msg||'']){ st='idle'; msg=''; closable=false; }
   if(!el){
-    if(st==='idle')return;
     el=document.createElement('div'); el.id='sbPill'; el.className='sb-pill';
+    el.setAttribute('role','status');
     document.body.appendChild(el);
   }
-  el.className='sb-pill '+st+(st==='idle'?'':' show')+(closable?' can-close':'');
+  /* Idle is no longer "gone". It is the resting state, and it is the button. */
+  if(st==='idle'){
+    el.className='sb-pill idle show saveable';
+    el.innerHTML='<span class="sb-tick">\u2713</span>'+esc(savedLabel());
+    el.title='Save now and send to your studio';
+    el.onclick=function(){ quickSave(); };
+    return;
+  }
+  el.className='sb-pill '+st+' show'+(closable?' can-close':'');
   el.textContent=msg||'';
   if(closable){
     var x=document.createElement('span');
@@ -20150,6 +20209,10 @@ try{ SB_FRESH_LINK=sbCaptureRedirect(); }catch(e){}
    without waiting for the Connection page to be opened. */
 try{
   sbWatch();
+  /* Painted at boot rather than waiting for the first sync event, so a device
+     that is not signed in still says, plainly, that its work is not backed up. */
+  sbSetStatus('idle','');
+  setInterval(function(){ if(SB_SYNC.status==='idle')sbSetStatus('idle',''); },30000);
   if(sbReady()){
     /* A magic-link arrival has to go through the whole post-sign-in path, not
        just the version check. Only sbClaimInvites() attaches an invited couple
