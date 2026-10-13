@@ -1922,3 +1922,16 @@ exists.
   - The pre-existing phone rule stretched it edge to edge (`left:14px` for a
     centred toast). One rule now, at the tab bar's own 860px breakpoint, with
     no `left`, so the pill keeps its width above the bar on every size.
+
+- **A device that had never synced can now sync.** The first live tester
+  pressed Save and watched "sending…" all evening. Since the reseed guard, a
+  device with no stored version only ever pulled — and a brand-new studio has
+  no `org_prefs` row to read a version from, so it never did anything at all.
+  `sbFirstSync()` now resolves each case (empty studio: adopt 0 and push;
+  history and sample only: pull; history and real work: merge — push, then
+  pull the rest; unreachable: say so). BUGS.md has the full account.
+  - The automatic push retires only rows this device previously sent, so an
+    adopted-version push into a studio with history is additive. Only the
+    manual Push on Settings › Connection prunes by difference, and it says so.
+  - The pill's "sending…" is now earned: scheduled or in flight. Dirty with
+    neither reads "not sent yet", reason in the tooltip.

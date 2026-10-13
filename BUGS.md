@@ -248,3 +248,46 @@ consults `sampleAdopted()` now, like `isSampleEvent()` and `samplePrint()`.
 `scratchpad/reseed-test.mjs` asserts the guard on the code rather than on the
 comments — the first version of that test matched the prose quoting the very
 line it was checking had gone.
+
+## A device that had never synced could never sync · fixed
+
+**Report.** A planner pressed the new Save button and the pill read *"Saved
+here · sending…"* for the rest of the evening. Nothing was sending. The
+owner's device, same build, read *"Saved · synced 2 min ago"*.
+
+**Cause.** Since the reseed fix (migration 28 and `sbSyncNow()` asking the
+studio first), a device with no stored sync version was handed to
+`sbSyncDown()` — which only ever pulls. Three dead ends followed:
+
+1. **A brand-new studio.** `gem_create_org()` makes no `org_prefs` row; the row
+   appears on the first *claim*. `sbCheckRemote()` read "no row" as `null`,
+   "unknown", and `sbSyncDown()` returned on unknown. So the first push of
+   every studio created since the guard went in was skipped — in silence,
+   under a *"Studio ready — your work is backed up"* that was not true. The
+   device never acquired a version, so every later push was skipped the same
+   way. Manual Push was the only way out, and nothing said so.
+2. **A studio with history, a device holding work.** `sbSyncDown()` warned
+   *"open Settings › Connection"* and stopped. Dismiss the warning and the pill
+   said *"sending…"*; press Save and the same warning was muted into nothing.
+3. **An unreachable studio.** Silent.
+
+The label made it worse: *"sending…"* was computed from the dirty flag alone,
+so it promised a push that nothing had scheduled.
+
+**Fixed.** `sbCheckRemote()` returns 0 for a studio with no row and `null` only
+when the request fails. `sbFirstSync(remote)` resolves every no-version case
+and is used by the timer, the focus check and the button alike: an empty
+studio adopts version 0 and pushes; a studio with history pulls over a device
+holding only the sample; a studio with history and a device holding work
+**merges** — adopts the studio's version, pushes (the automatic push retires
+only rows this device sent before, which is none), then pulls the rest down;
+unreachable says so and keeps the work marked unsent. The version is mirrored
+in memory, so a browser refusing storage can still adopt one. The pill says
+*"sending…"* only while a push is scheduled or in flight, *"not sent yet"* when
+one was skipped, with the reason in its tooltip; pressing it un-mutes a
+dismissed warning. *"Studio ready — your work is backed up"* is said only when
+a push happened.
+
+`scratchpad/firstsync-test.mjs` runs the unmodified app against a mocked
+Supabase for all four cases and asserts the merge deletes nothing.
+

@@ -18846,8 +18846,11 @@ function sbResolveOrg(){
     SB_STATE.org=(r&&r[0])?r[0].org_id:null;
     /* The save alarm says something quite different once the work has somewhere
        else to go, and at boot it is painted before this has resolved — so a
-       signed-in planner was being told to sign in. */
+       signed-in planner was being told to sign in. The Save pill has the same
+       problem: painted at boot, it read "no studio yet" to everyone for up to
+       thirty seconds. */
     if(SAVE_FAIL&&typeof paintSaveAlarm==='function')paintSaveAlarm();
+    if(typeof SB_SYNC!=='undefined'&&SB_SYNC.status==='idle'&&typeof sbSetStatus==='function')sbSetStatus('idle','');
     return SB_STATE.org;
   });
 }
@@ -18874,9 +18877,14 @@ function sbAutoCreateStudio(){
     /* Whatever is on this device now was typed before there was anywhere to
        put it. Send it immediately, while the new studio is still empty and
        gem_claim_sync() is certain to accept a device that has never synced. */
-    return sbSyncNow().then(function(){
-      sbSetStatus('ok','Studio ready — your work is backed up');
-      setTimeout(function(){ if(SB_SYNC.status==='ok')sbSetStatus('idle',''); },2800);
+    return sbSyncNow().then(function(ok){
+      /* Said only when the push happened. A new studio has nothing to send
+         until there is work on this device, and that reads "never synced"
+         rather than claiming a backup that has not been made. */
+      if(ok){
+        sbSetStatus('ok','Studio ready — your work is backed up');
+        setTimeout(function(){ if(SB_SYNC.status==='ok')sbSetStatus('idle',''); },2800);
+      }else if(SB_SYNC.status!=='warn')sbSetStatus('idle','');
       if(typeof render==='function')render();
       return id;
     });
@@ -19015,8 +19023,12 @@ function sbDirty(){
 function setSbDirty(on){
   try{ on?localStorage.setItem(SB_DIRTY_KEY,'1'):localStorage.removeItem(SB_DIRTY_KEY); }catch(e){}
 }
-function sbVer(){ var v=null; try{ v=localStorage.getItem('gem-sb-ver'); }catch(e){} return v===null?null:Number(v); }
-function setSbVer(v){ try{ v===null?localStorage.removeItem('gem-sb-ver'):localStorage.setItem('gem-sb-ver',String(v)); }catch(e){} }
+/* Mirrored in memory: a browser that refuses to store anything is the one
+   device whose only hope is the studio, and it could never adopt a version
+   to push with. The stored copy still wins when there is one. */
+var SB_VER_MEM=null;
+function sbVer(){ var v=null; try{ v=localStorage.getItem('gem-sb-ver'); }catch(e){} return v===null?SB_VER_MEM:Number(v); }
+function setSbVer(v){ SB_VER_MEM=v; try{ v===null?localStorage.removeItem('gem-sb-ver'):localStorage.setItem('gem-sb-ver',String(v)); }catch(e){} }
 
 /* Compare-and-increment on the server. A device whose last-seen version has
    moved on is refused rather than allowed to prune away another device's
@@ -19681,7 +19693,7 @@ function sbPush(opts){
     /* Everything local is now on the server, so an automatic pull is safe
        again. Cleared here rather than on entry: a push that fails half way
        must leave the device marked as holding work. */
-    setSbDirty(false);
+    setSbDirty(false); SB_SYNC.hold=null;
     SB_STATE.lastSync=new Date().toISOString(); SB_STATE.lastError=null;
     try{ localStorage.setItem('gem-sb-last',SB_STATE.lastSync); }catch(e){}
     return true;
@@ -19951,8 +19963,8 @@ function sbPull(opts){
     /* Fresh from the server: nothing is locally dirty, and this device is now
        level with the version it just read. */
     setSbHashes({});
-    setSbDirty(false);
-    setSbVer(R.org_prefs[0]?Number(R.org_prefs[0].sync_version||0):null);
+    setSbDirty(false); SB_SYNC.hold=null;
+    setSbVer(R.org_prefs[0]?Number(R.org_prefs[0].sync_version||0):0);
     SB_STATE.lastSync=new Date().toISOString();
     try{ localStorage.setItem('gem-sb-last',SB_STATE.lastSync); }catch(e){}
     /* Pixels come down after the rows, so the pull returns as soon as the
@@ -19963,7 +19975,7 @@ function sbPull(opts){
 }
 
 /* ---------- automatic sync ---------- */
-var SB_SYNC={timer:null,busy:false,queued:false,claimed:null,wrote:0,status:'idle',onePhase:false,runId:null,counts:{}};
+var SB_SYNC={timer:null,busy:false,queued:false,claimed:null,wrote:0,status:'idle',onePhase:false,runId:null,counts:{},hold:null};
 /* Messages the person has waved away. An automatic pull runs on focus and on
    a three-minute timer, so a warning dismissed once would otherwise be back
    before you had finished reading the screen behind it. Session-only on
@@ -19982,7 +19994,11 @@ var SB_MUTED={};
 function savedLabel(){
   if(typeof sbReady!=='function'||!sbReady())return 'Saved here \u00b7 not backed up';
   if(!SB_STATE.org)return 'Saved here \u00b7 no studio yet';
-  if(typeof sbDirty==='function'&&(sbDirty()||SB_SYNC.timer))return 'Saved here \u00b7 sending\u2026';
+  /* "sending" only while a push is scheduled or in flight. Dirty with neither
+     means a push was skipped, and the label has to say so rather than promise
+     one — a tester whose pill read "sending…" all evening was sending nothing. */
+  if(SB_SYNC.timer||SB_SYNC.busy)return 'Saved here \u00b7 sending\u2026';
+  if(typeof sbDirty==='function'&&sbDirty())return 'Saved here \u00b7 not sent yet';
   var t=SB_STATE.lastSync;
   return t?'Saved \u00b7 synced '+agoLabel(t):'Saved here \u00b7 never synced';
 }
@@ -20010,7 +20026,13 @@ function quickSave(){
   if(!SB_STATE.org){ sbNoStudioWarn(); return Promise.resolve(false); }
   clearTimeout(SB_SYNC.timer); SB_SYNC.timer=null;
   if(typeof setSbDirty==='function')setSbDirty(true);
-  return sbSyncNow();
+  /* Pressing the button is asking to be told — including the warning that was
+     waved away earlier, which would otherwise be muted into a silent no-op. */
+  SB_MUTED={};
+  return sbSyncNow().then(function(r){
+    if(SB_SYNC.status==='idle')sbSetStatus('idle','');
+    return r;
+  });
 }
 function sbSetStatus(st,msg){
   SB_SYNC.status=st; SB_SYNC.msg=msg||'';
@@ -20029,12 +20051,12 @@ function sbSetStatus(st,msg){
   if(st==='idle'){
     el.className='sb-pill idle show saveable';
     el.innerHTML='<span class="sb-tick">\u2713</span>'+esc(savedLabel());
-    el.title='Save now and send to your studio';
+    el.title=SB_SYNC.hold||'Save now and send to your studio';
     el.onclick=function(){ quickSave(); };
     return;
   }
   el.className='sb-pill '+st+' show'+(closable?' can-close':'');
-  el.textContent=msg||'';
+  el.textContent=msg||''; el.title='';
   if(closable){
     var x=document.createElement('span');
     x.className='sb-x'; x.setAttribute('aria-hidden','true'); x.textContent='\u00d7';
@@ -20084,10 +20106,10 @@ function sbSyncNow(){
      recovery that would have rescued this device runs on focus and on a
      three-minute timer. One edit in the wrong four seconds and the template
      reached the studio ahead of the pull that would have refilled it.
-     Ask the studio what it holds first; sbSyncDown() pulls when there is
-     nothing here to lose, and the next edit re-queues this push. */
+     Ask the studio what it holds first, then do the one right thing for
+     this device — see sbFirstSync(). */
   if(sbVer()===null){
-    return sbSyncDown().then(function(){ return false; });
+    return sbCheckRemote().then(sbFirstSync);
   }
   SB_SYNC.busy=true; sbSetStatus('busy','Syncing…');
   return sbPush().then(function(){
@@ -20108,9 +20130,51 @@ function sbSyncNow(){
 function sbCheckRemote(){
   if(!sbReady()||!SB_STATE.org)return Promise.resolve(null);
   return sbRest('org_prefs?select=sync_version&org_id=eq.'+SB_STATE.org).then(function(r){
-    if(!r||!r[0])return null;
+    /* No row is not "unknown". gem_create_org() makes no org_prefs row, so a
+       studio nobody has pushed to has none until its first claim — it is at
+       version zero, and read as unknown every first sync of every new studio
+       was declined. Only a failed request is unknown. */
+    if(!r||!r[0])return 0;
     return Number(r[0].sync_version||0);
   }).catch(function(){ return null; });
+}
+
+/* ---- a device with no stored version ----
+   It has never synced, or the browser threw its storage away; the two look
+   the same from here, and since migration 28 neither may push blind. Until now
+   this handed off to sbSyncDown(), which only ever PULLS — so a device with
+   something to send was left with nothing scheduled, and a brand-new studio
+   (no org_prefs row, so "no version to read") was skipped in silence. Every
+   automatic push of a studio created since the guard went in was skipped that
+   way, while the pill said "sending…". Each case is resolved here instead. */
+function sbFirstSync(remote){
+  SB_SYNC.hold=null;
+  if(remote===null){
+    SB_SYNC.hold='Could not reach your studio to check where it stands';
+    sbSetStatus('warn','Could not reach your studio \u2014 your work is saved on this device and will be sent when it can be');
+    return Promise.resolve(false);
+  }
+  /* An empty studio: nothing on either side to lose. Adopt zero and send what
+     is here — unless what is here is only the sample, which never pushes, in
+     which case there is simply nothing to send yet. */
+  if(remote===0){
+    setSbVer(0);
+    if(!hasOwnWork()){ setSbDirty(false); return Promise.resolve(false); }
+    return sbSyncNow();
+  }
+  /* The studio has history and this device holds nothing of its own: the
+     studio is the truth. A reseed is the same answer and should say so. */
+  if(sbLooksReseeded())return sbAutoPull('Restoring your work\u2026');
+  if(!hasOwnWork())return sbAutoPull('Getting your studio\u2026');
+  /* Both sides hold work. The automatic push retires only rows this device
+     sent before — nothing, here — so adopting the studio's version and sending
+     is a merge, not a replacement: this device's records go up and the
+     studio's stay. Then the rest comes down, which costs nothing because
+     everything here is now also there. */
+  setSbVer(remote);
+  return sbSyncNow().then(function(ok){
+    return ok?sbAutoPull('Getting the rest of your studio\u2026'):ok;
+  });
 }
 
 /* ---- coming down from the studio ----
@@ -20140,25 +20204,26 @@ function sbAutoPull(msg){
 function sbSyncDown(){
   if(!sbReady()||!SB_STATE.org||SB_SYNC.busy||!sbAuto())return Promise.resolve(false);
   return sbCheckRemote().then(function(remote){
-    if(remote===null)return false;
     var local=sbVer();
+    /* Unreachable. A synced device with nothing pending can wait for the next
+       check; one that has never synced and is holding work is the device the
+       pill exists for, so it hears why rather than reading "not sent yet"
+       with no reason attached. */
+    if(remote===null){
+      if(local===null&&sbDirty())return sbFirstSync(null);
+      return false;
+    }
 
     /* Local storage lost the workspace and the template is standing in for it.
        The studio still holds the real thing, and there is nothing here worth
        keeping, so take it back — this is the recovery for the failure above,
        and it runs whether or not the version numbers differ. */
-    if(sbLooksReseeded())return sbAutoPull('Restoring your work…');
+    if(remote>0&&sbLooksReseeded())return sbAutoPull('Restoring your work…');
 
-    /* Never synced on this device. This is the installed app on a phone, or a
-       new browser: the studio is the truth and there is nothing here but the
-       sample. Pull without asking — the alternative is what the sample lock
-       exists to prevent, someone typing into a device whose every push
-       gem_claim_sync will refuse. */
-    if(local===null){
-      if(remote>0&&!hasOwnWork())return sbAutoPull('Getting your studio…');
-      if(remote>0)sbSetStatus('warn','This device has work your studio has not seen — open Settings › Connection');
-      return false;
-    }
+    /* Never synced on this device — the installed app on a phone, a new
+       browser, or one that lost its storage. Resolved the same way whether a
+       timer, a focus or the Save button got here first. */
+    if(local===null)return sbFirstSync(remote);
 
     if(remote<=local)return false;
 
