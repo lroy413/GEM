@@ -1888,3 +1888,19 @@ exists.
     text. It carries an `alt` line, and the Word renderer prints that instead —
     a positioned layout is not a thing .docx can hold. Safe to pass through
     because every label inside is escaped at source by `floorPlanMarkup()`.
+
+- **About says "Version" and now shows one.** The build stamp was only ever on
+  Data & storage, so the first question of any report that somebody has lost
+  work — which build are they running? — had no answer on the page whose own
+  subtitle promised it. About carries the stamp, says whether this is the
+  installed app or a browser tab (they have separate storage, which is half of
+  every "my work vanished" report), and offers **Run the storage check** —
+  which jumps to the check and runs it, rather than describing where it lives.
+  The person being asked to run it is usually not the person who knows the app.
+  - `storageDiag()` already reported `build`, `context`, `evictionProtected`,
+    `lastWriteFailure`, `syncedAtVersion` and `lastSync`, and already had a copy
+    button. Nothing was missing from the report; what was missing was anyone
+    knowing it existed.
+  - The About footnote said multi-device sync "arrives when the hosted backend
+    is connected" — written before it was. Telling somebody chasing a sync
+    problem that sync does not exist yet is worse than saying nothing.

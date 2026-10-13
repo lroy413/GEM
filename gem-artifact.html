@@ -13085,17 +13085,41 @@ function settingsPage(k){
                    :'Use your browser’s menu — look for Install or Add to Home Screen.';
   }
   if(k==='about'){
+    var bs=buildStamp();
     return back+'<div class="set-page">'+
       '<div class="about-mark">'+icn('gem')+'</div>'+
       '<div class="about-name">'+esc(p.bizName)+'</div>'+
-      '<div class="about-v">Prototype build · gemevents.app</div>'+
+      '<div class="about-v">gemevents.app</div>'+
+      /* ---- the version, on the page whose subtitle promises one ----
+         It was only ever on Data & storage, so "which build are you running?"
+         — the first question of any report that someone has lost work — had no
+         answer where anyone looked for it. The stamp is selectable (user-select
+         is on .build-id) and the whole row copies, because it is usually being
+         read out or pasted into a message. */
       '<div class="set-card" style="margin-top:20px">'+
+        setRow('Version','<code class="build-id">'+esc(bs||'dev')+'</code>',
+          bs?'The build this device is running. Reload to pick up a newer one.'
+            :'Running from source rather than a deployed build.')+
+        setRow('Running as',"<span class='pill'>"+(isInstalled()?'Installed app':'Browser tab')+'</span>',
+          isInstalled()?'Its own window, and its own storage, separate from the browser'
+                       :'An installed app keeps its own storage, separate from this tab')+
+      '</div>'+
+      /* Someone on this page is usually here because something looks wrong. */
+      '<div class="set-card" style="margin-top:14px">'+
+        setRow('Something missing?','<button class="btn btn-ghost btn-sm" id="aboutDiag">Run the storage check</button>',
+          'Tests whether this browser is really keeping your work, and produces a report you can send on')+
+      '</div>'+
+      '<div class="set-card" style="margin-top:14px">'+
         setRow('Data isolation','<span class="pill gold">Row-level security</span>','Every record is scoped to your studio')+
         setRow('Client access','<span class="pill">Per-event</span>','A couple can only ever reach their own event')+
         setRow('Media','<span class="pill">Private bucket</span>','Photos served by signed, expiring links')+
         setRow('Offline','<span class="pill">Installable</span>','Add to Home Screen for venue use')+
       '</div>'+
-      '<div class="set-note">Payments, email notifications and multi-device sync arrive when the hosted backend is connected.</div></div>';
+      /* Was "multi-device sync arrives when the hosted backend is connected",
+         written before it was. Telling somebody chasing a sync problem that
+         sync does not exist yet is worse than saying nothing. */
+      '<div class="set-note">Sync and the client portal run on the hosted backend. '+
+        'Payments and email notifications are still to come.</div></div>';
   }
   return back+'<div class="set-page"></div>';
 }
@@ -13196,6 +13220,14 @@ function helpPage(){
 
 function wireSettings(){
   var p=prefs();
+  /* Jumps to Data & storage and runs the check, rather than describing where
+     it lives — the person being asked to run it is usually not the person who
+     knows this app. */
+  var ad=$('#aboutDiag');
+  if(ad)ad.onclick=function(){
+    setView('settings',{settingsPage:'data'});
+    setTimeout(function(){ var b=$('#s_diag'); if(b){ b.click(); b.scrollIntoView({block:'center'}); } },80);
+  };
   document.querySelectorAll('[data-setpage]').forEach(function(b){
     b.onclick=function(){ setView('settings',{settingsPage:b.dataset.setpage}); };
   });
