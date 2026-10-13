@@ -1491,6 +1491,31 @@ tbody tr:hover{background:var(--pink-50)}
   .pay-row{padding:12px 16px;gap:10px}
 }
 
+/* a supplier's people */
+.pc-more{display:inline-flex;align-items:center;gap:6px;margin-top:7px;padding:3px 9px;
+  border-radius:999px;border:1px solid var(--line-strong);background:var(--sunk);
+  color:var(--ink-soft);font:inherit;font-size:.6875rem;cursor:pointer}
+.pc-more:hover{border-color:var(--gold);color:var(--gold-deep)}
+.pc-list{display:flex;flex-direction:column}
+.pc-row{display:flex;align-items:flex-start;gap:14px;padding:13px 0;
+  border-bottom:1px solid var(--line)}
+.pc-row:last-child{border-bottom:none}
+.pc-m{flex:1;min-width:0;font-size:.875rem}
+.pc-m em{display:block;font-style:normal;font-size:.6875rem;color:var(--muted);margin-top:2px}
+.pc-n{display:block;font-size:.6875rem;color:var(--muted);margin-top:3px;line-height:1.5}
+.pc-pri{display:inline-block;margin-left:8px;font-size:.625rem;letter-spacing:.07em;
+  text-transform:uppercase;font-weight:600;color:var(--gold-deep);
+  background:var(--accent-wash);border:1px solid var(--gold-line);
+  border-radius:999px;padding:1px 7px;vertical-align:1px}
+.pc-a{display:flex;align-items:center;gap:6px;flex:0 0 auto}
+.vc-list{display:flex;flex-direction:column;gap:14px}
+.vc-one{padding-bottom:12px;border-bottom:1px solid var(--line)}
+.vc-one:last-child{padding-bottom:0;border-bottom:none}
+@media (max-width:560px){
+  .pc-row{flex-wrap:wrap}
+  .pc-a{width:100%;justify-content:flex-end}
+}
+
 /* a proposed split, priced */
 .sp-list{display:flex;flex-direction:column;margin:6px 0 0}
 .sp-row{display:grid;grid-template-columns:1fr auto auto;gap:14px;align-items:baseline;
@@ -5643,6 +5668,7 @@ function normalize(d){
   d.venues.forEach(function(v){
     if(!v.address)v.address={};
     if(!v.contact)v.contact={};
+    liftPeople('venue',v);
     if(!v.spaces)v.spaces=[];
     if(v.kind===undefined)v.kind='';
     if(v.website===undefined)v.website='';
@@ -5695,6 +5721,7 @@ function normalize(d){
     if(v.preferred===undefined)v.preferred=false;
     if(v.rating===undefined)v.rating=0;
     if(v.notes===undefined)v.notes='';
+    liftPeople('vendor',v);
   });
   if(!d.documents)d.documents=DEFAULT.documents.slice();
   if(!d.questionnaires)d.questionnaires=DEFAULT.questionnaires.slice();
@@ -10230,15 +10257,27 @@ function viewVenueDetail(id){
           '</div>')+
       '</div>'+
       '<div class="ev-col">'+
-        evSection('vncontact','Coordinator',c.name?1:0,
+        /* A venue is a team too: the coordinator who runs the day, the
+           events manager who signs, the duty number for the morning of. The
+           first is still the one the rest of the app reads. */
+        evSection('vncontact','Contacts',peopleOf(v).length,
           '<div style="padding:18px 22px">'+
-          (c.name
-            ?'<div class="vc-n">'+esc(c.name)+'</div><div class="vc-r">'+esc(c.role||'')+'</div>'+
-             '<div class="vc-l">'+
-               (c.phone?'<a href="tel:'+esc(String(c.phone).replace(/[^\d+]/g,''))+'">'+esc(fmtPhone(c.phone))+'</a>':'')+
-               (c.email?'<a href="mailto:'+esc(c.email)+'">'+esc(c.email)+'</a>':'')+
-             '</div>'
-            :'<div class="empty-hint">No coordinator on file. Add one under Edit details.</div>')+
+          (peopleOf(v).length
+            ?'<div class="vc-list">'+peopleOf(v).map(function(pp,i){
+               return '<div class="vc-one">'+
+                 '<div class="vc-n">'+esc(pp.name||'Unnamed')+
+                   (i===0?'<span class="pc-pri">Primary</span>':'')+'</div>'+
+                 (pp.role?'<div class="vc-r">'+esc(pp.role)+'</div>':'')+
+                 (pp.note?'<div class="vc-r">'+esc(pp.note)+'</div>':'')+
+                 '<div class="vc-l">'+
+                   (pp.phone?'<a href="tel:'+esc(String(pp.phone).replace(/[^\d+]/g,''))+'">'+esc(fmtPhone(pp.phone))+'</a>':'')+
+                   (pp.email?'<a href="mailto:'+esc(pp.email)+'">'+esc(pp.email)+'</a>':'')+
+                 '</div></div>';
+             }).join('')+'</div>'
+            :'<div class="empty-hint">Nobody on file yet. The first contact you add '+
+             'becomes the one that appears on contact sheets.</div>')+
+          '<button class="btn btn-ghost btn-sm" data-pcopen="venue:'+esc(v.id)+'" style="margin-top:14px">'+
+            icn("people")+'Manage contacts</button>'+
           (v.website?'<div class="vc-l" style="margin-top:10px"><a href="'+esc(v.website)+'" target="_blank" rel="noopener">'+esc(v.website)+'</a></div>':'')+
           '</div>')+
         evSection('vnevents','Events Here',held.length,
@@ -10276,7 +10315,10 @@ function openVenueModal(v){
       {id:'region',label:'State / region',value:a.region},
       {id:'postal',label:'Postcode',value:a.postal},
       {id:'country',label:'Country',value:a.country},
-      {id:'cname',label:'Coordinator',value:c.name},
+      /* Still four plain fields, because adding a venue is usually adding one
+         coordinator. They write the PRIMARY contact; the rest of the team is
+         added from the venue's own page, where there is room to list them. */
+      {id:'cname',label:'Main contact',value:c.name},
       {id:'crole',label:'Their role',value:c.role,placeholder:'Venue Coordinator'},
       {id:'cphone',label:'Phone',type:'tel',value:c.phone},
       {id:'cemail',label:'Email',type:'email',value:c.email}
@@ -10296,7 +10338,17 @@ function openVenueModal(v){
       rec.seated=Math.max(0,x.seated||0); rec.standing=Math.max(0,x.standing||0);
       rec.address={line1:x.line1||'',line2:x.line2||'',city:x.city||'',
                    region:x.region||'',postal:x.postal||'',country:x.country||''};
-      rec.contact={name:x.cname||'',role:x.crole||'',phone:x.cphone||'',email:x.cemail||''};
+      /* Writes through the list so the two can never disagree. Editing the
+         primary edits person one; naming somebody on an empty venue creates
+         them. Clearing the fields on a venue with a team does NOT delete the
+         team — it would be a strange way to ask. */
+      liftPeople('venue',rec);
+      var pr=peopleOf(rec)[0];
+      var typed={name:x.cname||'',role:x.crole||'',phone:x.cphone||'',email:x.cemail||''};
+      var anyTyped=['name','role','phone','email'].some(function(k){ return (typed[k]||'').trim(); });
+      if(pr){ pr.name=typed.name; pr.role=typed.role; pr.phone=typed.phone; pr.email=typed.email; }
+      else if(anyTyped) rec.people.push(newPerson(typed));
+      syncPrimary('venue',rec);
       if(isNew){ rec.notes=''; db.venues.push(rec); }
       /* Renaming the place renames it everywhere it is used. Events linked by
          id follow on their own; the cached name on each one has to be told. */
@@ -10347,6 +10399,11 @@ function venueKinds(){
   return out;
 }
 function wireVenues(){
+  /* Shared with the vendor directory — the control is the same on both. */
+  document.querySelectorAll('[data-pcopen]').forEach(function(b){
+    b.onclick=function(ev){ ev.stopPropagation();
+      var sp=b.dataset.pcopen.split(':'); openContacts(sp[0],sp.slice(1).join(':')); };
+  });
   var q=$('#venueSearch');
   if(q)q.oninput=function(){ var pos=q.selectionStart; state.venueQ=q.value;
     render(); var n=$('#venueSearch'); if(n){ n.focus(); n.setSelectionRange(pos,pos); } };
@@ -10453,7 +10510,11 @@ function viewVendors(){
         '<td><span class="pill">'+esc(v.cat||'—')+'</span></td>'+
         '<td>'+esc(v.contact||'—')+
           '<div class="v-links">'+(v.phone?'<a href="tel:'+esc(String(v.phone).replace(/[^\d+]/g,''))+'">'+esc(fmtPhone(v.phone))+'</a>':'')+
-          (v.email?'<a href="mailto:'+esc(v.email)+'">'+esc(v.email)+'</a>':'')+'</div></td>'+
+          (v.email?'<a href="mailto:'+esc(v.email)+'">'+esc(v.email)+'</a>':'')+'</div>'+
+          /* The others are one tap away rather than crowding the row. A count
+             rather than a bare button, so a team reads as a team at a glance. */
+          '<button class="pc-more" data-pcopen="vendor:'+esc(v.id)+'">'+icn("people")+
+            (peopleOf(v).length>1?peopleOf(v).length+' contacts':'Contacts')+'</button></td>'+
         '<td><button class="rate" data-rate="'+esc(v.id)+'" aria-label="Rate '+esc(v.name)+'">'+stars(v.rating)+'</button></td>'+
         '<td>'+bk.length+(total?'<div class="v-sub">'+money(total)+'</div>':'')+'</td>'+
         '<td style="text-align:right"><button class="r-act" data-fav="'+esc(v.id)+'" aria-label="Toggle preferred" title="Preferred">'+(v.preferred?'★':'☆')+'</button>'+
@@ -10470,6 +10531,10 @@ function wireVendors(){
   document.querySelectorAll('[data-fav]').forEach(function(b){
     b.onclick=function(e){ e.stopPropagation();
       var v=vendorById(b.dataset.fav); if(v){ v.preferred=!v.preferred; afterChange(); } };
+  });
+  document.querySelectorAll('[data-pcopen]').forEach(function(b){
+    b.onclick=function(ev){ ev.stopPropagation();
+      var s=b.dataset.pcopen.split(':'); openContacts(s[0],s.slice(1).join(':')); };
   });
   document.querySelectorAll('[data-rate]').forEach(function(b){
     b.onclick=function(e){ e.stopPropagation();
@@ -10542,12 +10607,166 @@ function vendorFields(v,showIf){
     {id:'phone',label:'Phone',type:'tel',value:v&&v.phone,showIf:showIf}
   ];
 }
+/* ============================================================
+ * More than one person at the same company
+ *
+ * A vendor carried exactly one contact name, email and phone, and a venue
+ * carried exactly one coordinator. Real suppliers are small teams: the owner
+ * who quotes, the coordinator who runs the day, the account that sends the
+ * invoice. Planners were putting the second name in the notes field, where
+ * nothing could dial it.
+ *
+ * `people` is the list. The FIRST entry is the primary and is mirrored back
+ * onto the legacy fields on every write, so the sixty-odd places that read
+ * v.contact / v.email / v.phone — tables, search, exports, the client bible,
+ * the sync payload — keep working untouched. Same move as deriving an event's
+ * short `loc` line from its address: one place writes, everything else reads
+ * what it always read.
+ * ============================================================ */
+function peopleOf(rec){ return (rec&&Array.isArray(rec.people))?rec.people:[]; }
+function newPerson(o){
+  o=o||{};
+  return {id:uid('pc'),name:(o.name||'').trim(),role:(o.role||'').trim(),
+          email:(o.email||'').trim(),phone:(o.phone||'').trim(),note:(o.note||'').trim()};
+}
+/* Keeps the legacy single-contact fields in step with people[0]. A vendor
+   stores them flat; a venue stores an object. */
+function syncPrimary(kind,rec){
+  var p=peopleOf(rec)[0]||null;
+  if(kind==='venue'){
+    rec.contact=p?{name:p.name,role:p.role,phone:p.phone,email:p.email}
+                 :{name:'',role:'',phone:'',email:''};
+  }else{
+    rec.contact=p?p.name:'';
+    rec.email  =p?p.email:'';
+    rec.phone  =p?p.phone:'';
+  }
+  return rec;
+}
+/* Existing records have one contact in the old shape. Lifted into the list on
+   load, and only when there is something to lift — an empty contact becomes an
+   empty list, not a blank person nobody can tell apart from a real one. */
+function liftPeople(kind,rec){
+  if(Array.isArray(rec.people))return rec;
+  var c=rec.contact;
+  var seed=(kind==='venue')
+    ? {name:(c&&c.name)||'',role:(c&&c.role)||'',phone:(c&&c.phone)||'',email:(c&&c.email)||''}
+    : {name:c||'',email:rec.email||'',phone:rec.phone||''};
+  var any=['name','role','email','phone'].some(function(k){ return (seed[k]||'').trim(); });
+  rec.people=any?[newPerson(seed)]:[];
+  return rec;
+}
 function newVendorFrom(v){
   var rec={id:uid('vn'),name:(v.name||'').trim(),cat:(v.cat||'').trim()||'Other',
-    contact:(v.contact||'').trim(),email:(v.email||'').trim(),phone:(v.phone||'').trim(),
+    contact:'',email:'',phone:'',people:[],
     notes:'',preferred:false,rating:0};
+  /* The quick form still asks for one person, because adding a florist is
+     usually adding one name. That name becomes the first of the list rather
+     than the only thing the record can hold. */
+  var seed=newPerson({name:v.contact,email:v.email,phone:v.phone});
+  if(seed.name||seed.email||seed.phone)rec.people.push(seed);
+  syncPrimary('vendor',rec);
   db.vendors.push(rec);
   return rec;
+}
+
+/* ---- the contacts a supplier actually has ----
+   One modal for vendors and venues: the record differs, the question does not.
+   The individual person opens the ordinary field editor and comes back here on
+   save, rather than a second modal stacked on this one — md is a single
+   element, so stacking is not a thing this app can do. */
+function contactHost(kind,id){
+  return kind==='venue' ? (db.venues||[]).find(function(x){return x.id===id;})
+                        : (db.vendors||[]).find(function(x){return x.id===id;});
+}
+function openContacts(kind,id){
+  var rec=contactHost(kind,id); if(!rec)return;
+  if(isSampleRecord(kind==='venue'?'venue':'vendor',id)){ sampleToast(); return; }
+  liftPeople(kind,rec);
+  var list=peopleOf(rec);
+  md.className='modal';
+  md.innerHTML='<h3>Contacts</h3>'+
+    '<p class="sub">'+esc(rec.name||'')+' · '+
+      (list.length?list.length+' contact'+(list.length===1?'':'s'):'nobody yet')+'</p>'+
+    '<div class="modal-scroll"><div class="pc-list">'+
+      (list.length?list.map(function(pp,i){
+        return '<div class="pc-row">'+
+          '<div class="pc-m"><b>'+esc(pp.name||'Unnamed')+'</b>'+
+            (i===0?'<span class="pc-pri">Primary</span>':'')+
+            (pp.role?'<em>'+esc(pp.role)+'</em>':'')+
+            (pp.note?'<span class="pc-n">'+esc(pp.note)+'</span>':'')+
+            '<div class="v-links">'+
+              (pp.phone?'<a href="tel:'+esc(String(pp.phone).replace(/[^\d+]/g,''))+'">'+esc(fmtPhone(pp.phone))+'</a>':'')+
+              (pp.email?'<a href="mailto:'+esc(pp.email)+'">'+esc(pp.email)+'</a>':'')+
+            '</div></div>'+
+          '<div class="pc-a">'+
+            (i===0?'':'<button class="btn btn-ghost btn-sm" data-pcpri="'+esc(pp.id)+'">Make primary</button>')+
+            '<button class="r-act" data-pcedit="'+esc(pp.id)+'" aria-label="Edit '+esc(pp.name||'contact')+'">'+icn("pencil")+'</button>'+
+            '<button class="r-act r-del" data-pcdel="'+esc(pp.id)+'" aria-label="Remove '+esc(pp.name||'contact')+'">'+icn("x")+'</button>'+
+          '</div></div>';
+      }).join('')
+      :'<div class="empty-hint" style="padding:22px">No contacts yet. '+
+        'The first one you add becomes the primary — the name and number that '+
+        'appear on contact sheets and in the directory.</div>')+
+    '</div></div>'+
+    '<div class="modal-actions">'+
+      '<button class="btn btn-ghost" id="pcAdd">'+icn("plus")+'Add contact</button>'+
+      '<span style="flex:1"></span>'+
+      '<button class="btn btn-gold" id="mCancel">Done</button></div>';
+  ov.classList.add('show');
+  $('#mCancel').onclick=closeModal;
+  $('#pcAdd').onclick=function(){ openPerson(kind,id,null); };
+  md.querySelectorAll('[data-pcedit]').forEach(function(b){
+    b.onclick=function(){ openPerson(kind,id,b.dataset.pcedit); };
+  });
+  md.querySelectorAll('[data-pcpri]').forEach(function(b){
+    b.onclick=function(){
+      var arr=peopleOf(rec), i=arr.findIndex(function(x){return x.id===b.dataset.pcpri;});
+      if(i>0){ arr.unshift(arr.splice(i,1)[0]); syncPrimary(kind,rec); save(); render(); }
+      openContacts(kind,id);
+    };
+  });
+  md.querySelectorAll('[data-pcdel]').forEach(function(b){
+    b.onclick=function(){
+      var arr=peopleOf(rec), i=arr.findIndex(function(x){return x.id===b.dataset.pcdel;});
+      if(i<0)return;
+      var who=arr[i].name||'this contact';
+      confirmAction('Remove '+who+'?','They come off '+(rec.name||'this record')+
+        ' and off every contact sheet it prints.','Remove',function(){
+        arr.splice(i,1); syncPrimary(kind,rec); save(); render(); openContacts(kind,id);
+      });
+    };
+  });
+}
+function openPerson(kind,id,pid){
+  var rec=contactHost(kind,id); if(!rec)return;
+  var arr=peopleOf(rec);
+  var it=pid?arr.find(function(x){return x.id===pid;}):null;
+  openEditor({
+    title:it?'Edit contact':'Add contact',
+    sub:rec.name||'',
+    twoCol:true,
+    saveLabel:it?'Save contact':'Add',
+    onDelete:it?function(){
+      var i=arr.indexOf(it); if(i>=0)arr.splice(i,1);
+      syncPrimary(kind,rec); save(); render(); closeModal(); openContacts(kind,id);
+    }:null,
+    deleteLabel:it&&(it.name||'this contact'),
+    fields:[
+      {id:'name',label:'Name',value:it&&it.name,required:true,full:true},
+      {id:'role',label:'Their role',value:it&&it.role,
+       placeholder:kind==='venue'?'Venue Coordinator':'Owner, Day-of lead…'},
+      {id:'phone',label:'Phone',type:'tel',value:it&&it.phone},
+      {id:'email',label:'Email',type:'email',value:it&&it.email},
+      {id:'note',label:'Note',value:it&&it.note,full:true,
+       placeholder:'Best before noon · handles invoicing'}
+    ],
+    onSave:function(v){
+      if(it){ it.name=v.name; it.role=v.role; it.phone=v.phone; it.email=v.email; it.note=v.note; }
+      else arr.push(newPerson(v));
+      syncPrimary(kind,rec); save(); render(); closeModal(); openContacts(kind,id);
+    }
+  });
 }
 
 function openBookingModal(eventId,existing){
@@ -15940,38 +16159,39 @@ function printSheet(kind,ev){
     }).join('')||'<div class="pr-note">No tables yet.</div>';
   } else if(kind==='vendors'){
     title='Vendor Contact Sheet';
-    var vs=db.vendors.filter(function(v){return v.eventId===ev.id;});
+    /* Vendors stopped carrying eventId when bookings were split out of them,
+       and this filter was never updated — so the sheet a planner takes to a
+       venue has been printing an empty table. The booking is the join. */
+    var vs=bookingsForEvent(ev.id).map(function(bk){
+      var vn=vendorById(bk.vendorId);
+      return vn?{v:vn,b:bk}:null;
+    }).filter(Boolean).sort(function(a,b){
+      return (a.v.cat||'').localeCompare(b.v.cat||'')||a.v.name.localeCompare(b.v.name); });
     body='<table class="pr-t"><thead><tr><th>Vendor</th><th>Category</th><th>Contact</th><th>Phone</th><th>Email</th><th>Status</th></tr></thead><tbody>'+
-      vs.map(function(v){return '<tr><td><b>'+esc(v.name)+'</b></td><td>'+esc(v.cat||'')+'</td><td>'+esc(v.contact||'')+'</td>'+
-        '<td>'+esc(v.phone||'')+'</td><td>'+esc(v.email||'')+'</td><td>'+esc((VSTATUS[v.status]||{}).lbl||'')+'</td></tr>';}).join('')+
+      (vs.length?vs.map(function(r){
+        var ppl=peopleOf(r.v);
+        if(!ppl.length)ppl=[{name:r.v.contact||'',phone:r.v.phone||'',email:r.v.email||'',role:''}];
+        /* Every contact gets a line. The vendor's name and status sit on the
+           first and span the rest, so a team reads as one block on paper
+           rather than as three separate suppliers. */
+        return ppl.map(function(pp,i){
+          return '<tr>'+
+            (i===0?'<td rowspan="'+ppl.length+'"><b>'+esc(r.v.name)+'</b></td>'+
+                   '<td rowspan="'+ppl.length+'">'+esc(r.v.cat||'')+'</td>':'')+
+            '<td>'+esc(pp.name||'')+(pp.role?' <span class="pr-role">'+esc(pp.role)+'</span>':'')+'</td>'+
+            '<td>'+esc(pp.phone?fmtPhone(pp.phone):'')+'</td><td>'+esc(pp.email||'')+'</td>'+
+            (i===0?'<td rowspan="'+ppl.length+'">'+esc((VSTATUS[r.b.status]||{}).lbl||'')+'</td>':'')+
+          '</tr>';
+        }).join('');
+      }).join('')
+      :'<tr><td colspan="6">No vendors booked to this event yet.</td></tr>')+
       '</tbody></table>'+
       (ev.venueContact&&ev.venueContact.name?'<div class="pr-note"><b>Venue:</b> '+esc(ev.venueContact.name)+
         ' · '+esc(ev.venueContact.phone||'')+' · '+esc(ev.venueContact.email||'')+'</div>':'')+
       (ev.venueNotes?'<div class="pr-note"><b>Site notes:</b> '+esc(ev.venueNotes)+'</div>':'');
   } else if(kind==='floorplan'){
     title='Floor Plan';
-    var f=ev.floor, sc=680/f.w;                       // scale the room onto the page
-    body='<div class="pr-note">Room '+f.w+' × '+f.h+' '+esc(f.unit)+
-      ' · '+ev.tables.length+' tables · '+rosterFor(ev).filter(function(g){return gRsvp(g,ev)==='yes'&&gTable(g,ev);}).length+' seated</div>'+
-      '<div class="pr-floor" style="width:'+Math.round(f.w*sc)+'px;height:'+Math.round(f.h*sc)+'px">'+
-      f.items.map(function(i){
-        return '<div class="pr-fx" style="left:'+((i.x-i.w/2)*sc)+'px;top:'+((i.y-i.h/2)*sc)+'px;'+
-          'width:'+(i.w*sc)+'px;height:'+(i.h*sc)+'px;transform:rotate('+(i.rot||0)+'deg)">'+
-          esc(i.label||(FIXTURES[i.kind]||{}).label||'')+'</div>';
-      }).join('')+
-      ev.tables.map(function(t){
-        var at=seatedAt(ev,t.id);
-        return '<div class="pr-tb" style="left:'+((t.x-t.w/2)*sc)+'px;top:'+((t.y-t.h/2)*sc)+'px;'+
-          'width:'+(t.w*sc)+'px;height:'+(t.h*sc)+'px;transform:rotate('+(t.rot||0)+'deg);'+
-          'border-radius:'+(t.shape==='round'?'50%':t.shape==='oval'?'50%/40%':'5px')+'">'+
-          '<b>'+esc(t.name)+'</b><span>'+at.length+'/'+t.seats+'</span></div>';
-      }).join('')+'</div>'+
-      ev.tables.map(function(t){
-        var at=seatedAt(ev,t.id);
-        if(!at.length)return '';
-        return '<div class="pr-tbl"><h3>'+esc(t.name)+' <span>'+at.length+' of '+t.seats+'</span></h3>'+
-          '<ol>'+at.map(function(g){return '<li>'+esc(g.name)+(g.diet?' <em>('+esc(g.diet)+')</em>':'')+'</li>';}).join('')+'</ol></div>';
-      }).join('');
+    body=floorPlanMarkup(ev);
   } else if(kind==='checklist'){
     title='Task Checklist';
     body='<table class="pr-t"><thead><tr><th style="width:26px"></th><th>Task</th><th>Category</th><th style="width:120px">Due</th></tr></thead><tbody>'+
@@ -15993,6 +16213,41 @@ function printSheet(kind,ev){
   setTimeout(function(){ w.contentWindow.focus(); w.contentWindow.print(); },220);
 }
 function accentHex(){ return prefs().accent||'#B08D3E'; }
+/* ---- the room, drawn to scale ----
+   Lifted out of the Floor Plan sheet so the Bible can carry the same page.
+   One builder, because two copies of a scaled layout drift the moment either
+   is touched — and the Bible's copy is the one a planner hands to a venue. */
+function floorPlanMarkup(ev,withLists){
+  var f=ev.floor; if(!f)return '';
+  var sc=680/f.w;                                   // scale the room onto the page
+  var seated=rosterFor(ev).filter(function(g){ return gRsvp(g,ev)==='yes'&&gTable(g,ev); }).length;
+  var out='<div class="pr-note">Room '+f.w+' × '+f.h+' '+esc(f.unit)+
+    ' · '+ev.tables.length+' tables · '+seated+' seated</div>'+
+    '<div class="pr-floor" style="width:'+Math.round(f.w*sc)+'px;height:'+Math.round(f.h*sc)+'px">'+
+    (f.items||[]).map(function(i){
+      return '<div class="pr-fx" style="left:'+((i.x-i.w/2)*sc)+'px;top:'+((i.y-i.h/2)*sc)+'px;'+
+        'width:'+(i.w*sc)+'px;height:'+(i.h*sc)+'px;transform:rotate('+(i.rot||0)+'deg)">'+
+        esc(i.label||(FIXTURES[i.kind]||{}).label||'')+'</div>';
+    }).join('')+
+    (ev.tables||[]).map(function(t){
+      var at=seatedAt(ev,t.id);
+      return '<div class="pr-tb" style="left:'+((t.x-t.w/2)*sc)+'px;top:'+((t.y-t.h/2)*sc)+'px;'+
+        'width:'+(t.w*sc)+'px;height:'+(t.h*sc)+'px;transform:rotate('+(t.rot||0)+'deg);'+
+        'border-radius:'+(t.shape==='round'?'50%':t.shape==='oval'?'50%/40%':'5px')+'">'+
+        '<b>'+esc(t.name)+'</b><span>'+at.length+'/'+t.seats+'</span></div>';
+    }).join('')+'</div>';
+  /* The Bible already prints a Seating chapter table by table, so the plan
+     there is the drawing alone — the lists would be the same page twice. */
+  if(withLists!==false){
+    out+=(ev.tables||[]).map(function(t){
+      var at=seatedAt(ev,t.id);
+      if(!at.length)return '';
+      return '<div class="pr-tbl"><h3>'+esc(t.name)+' <span>'+at.length+' of '+t.seats+'</span></h3>'+
+        '<ol>'+at.map(function(g){return '<li>'+esc(g.name)+(g.diet?' <em>('+esc(g.diet)+')</em>':'')+'</li>';}).join('')+'</ol></div>';
+    }).join('');
+  }
+  return out;
+}
 function printCss(){ return ''+
  '*{box-sizing:border-box}'+
  'body{font:13px/1.55 -apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;color:#2b2226;margin:32px 30px}'+
@@ -16014,6 +16269,7 @@ function printCss(){ return ''+
  '.pr-tbl ol{margin:0;padding-left:20px}'+
  '.pr-tbl li{font-size:.75rem;padding:2px 0}'+
  '.pr-tbl em{color:#8b7b80;font-size:.625rem}'+
+ '.pr-role{color:#8b7b80;font-size:.9em}'+
  '.pr-foot{margin-top:22px;padding-top:11px;border-top:1px solid #eee3e5;font-size:.625rem;color:#8b7b80;text-align:center}'+
  '.pr-floor{position:relative;border:1.5px solid '+accentHex()+';border-radius:4px;background:#fdfaf7;margin:0 auto 18px;break-inside:avoid}'+
  '.pr-tb{position:absolute;border:1.5px solid #7b6a70;background:#fff;display:flex;flex-direction:column;'+
@@ -16119,6 +16375,7 @@ var BIBLE_SECTIONS=[
   {k:'timeline', t:'Running order', d:'Hour by hour, for each event'},
   {k:'guests',   t:'Guest list',    d:'RSVP, meal, dietary needs and table'},
   {k:'seating',  t:'Seating',       d:'Table by table, with dietary flags'},
+  {k:'floorplan',t:'Floor plan',    d:'The room drawn to scale, with every table placed'},
   {k:'tasks',    t:'Checklist',     d:'What is done, and what is left'},
   {k:'design',   t:'Design',        d:'Palette, mood boards and décor'},
   {k:'docs',     t:'Documents',     d:'Contracts and proposals, with status'},
@@ -16131,9 +16388,10 @@ function bibleDefaults(aud){
   var on={};
   BIBLE_SECTIONS.forEach(function(s){
     if(s.planner&&aud!=='planner')return;
-    /* A client's copy opens without the guest list and seating ticked: it is
-       the half most often still moving, and it is theirs to ask for. */
-    on[s.k]=!(aud==='client'&&(s.k==='guests'||s.k==='seating'));
+    /* A client's copy opens without the guest list, seating or floor plan
+       ticked: that is the half most often still moving, and it is theirs to
+       ask for. The plan is the seating chart drawn, so it travels with it. */
+    on[s.k]=!(aud==='client'&&(s.k==='guests'||s.k==='seating'||s.k==='floorplan'));
   });
   return on;
 }
@@ -16232,6 +16490,22 @@ function bibleBlocks(ev,opts){
       });
     });
   }
+  /* Drawn, not described. The block is raw markup rather than text, so the
+     Word and email renderers fall back to the measurements and a table list —
+     a positioned layout is not a thing either format can carry. */
+  if(want('floorplan')){
+    var plans=wk.filter(function(x){ return x.floor&&((x.tables||[]).length||(x.floor.items||[]).length); });
+    if(plans.length){
+      push({h1:'Floor plan'});
+      plans.forEach(function(x){
+        if(wk.length>1)push({h2:roleLabel(x,true)});
+        push({raw:floorPlanMarkup(x,false),
+              alt:'Room '+x.floor.w+' × '+x.floor.h+' '+x.floor.unit+
+                  ' · '+(x.tables||[]).length+' tables placed. '+
+                  'The drawing is in the printed and PDF copies.'});
+      });
+    }
+  }
   if(want('tasks')){
     push({h1:'Checklist'});
     wk.forEach(function(x){
@@ -16328,6 +16602,9 @@ function bibleHtml(blocks){
     if(b.h2n) return '<div class="bib-sub">'+esc(b.h2n)+'</div>';
     if(b.note)return '<div class="pr-note">'+esc(b.note)+'</div>';
     if(b.p)   return '<p class="bib-p">'+esc(b.p).replace(/\n/g,'<br>')+'</p>';
+    /* Built by the app, never by a person: every label inside is escaped at
+       source by floorPlanMarkup(). */
+    if(b.raw) return '<div class="bib-plan">'+b.raw+'</div>';
     if(b.kv)  return '<table class="pr-t bib-kv"><tbody>'+b.kv.map(function(r){
                  return '<tr><th>'+esc(r[0])+'</th><td>'+esc(r[1])+'</td></tr>'; }).join('')+'</tbody></table>';
     if(b.table)return '<table class="pr-t"><thead><tr>'+b.table.head.map(function(h){
@@ -16453,6 +16730,7 @@ function bibleDocx(blocks,meta){
       if(bl.h2n) return wPara(bl.h2n,{b:true,sz:19,before:120,after:40});
       if(bl.note)return wPara(bl.note,{i:true,sz:19,shade:'FAF5F2',after:140});
       if(bl.p)   return wPara(bl.p,{sz:20});
+      if(bl.raw) return wPara(bl.alt||'',{i:true,sz:19,shade:'FAF5F2',after:140});
       if(bl.kv)  return wTable(['',''],bl.kv.map(function(r){return [r[0],r[1]];}),accent);
       if(bl.table)return wTable(bl.table.head,bl.table.rows,accent);
       return '';
@@ -16559,6 +16837,7 @@ function bibleCss(){ return ''+
  '.bib-h{font-family:Georgia,serif;font-size:.9375rem;font-weight:600;margin:15px 0 7px;break-after:avoid}'+
  '.bib-sub{font-size:.6875rem;font-weight:700;margin:9px 0 3px}'+
  '.bib-p{font-size:.75rem;margin:0 0 9px;white-space:pre-line}'+
+ '.bib-plan{margin:14px 0 18px;page-break-inside:avoid;break-inside:avoid}'+
  '.bib-kv th{width:150px;text-align:left;font-size:.625rem;letter-spacing:1.3px;text-transform:uppercase;'+
    'color:#7b6a70;vertical-align:top;padding:7px 8px;border-bottom:1px solid #eee3e5}'+
  '.bib-kv td{font-size:.75rem}';
@@ -18904,6 +19183,19 @@ var SB_ROLE_COL=null;
 /* The envelope's columns arrive with migration 27. Until a studio runs it the
    push must not mention them, or every sync fails on an unknown column — the
    same contract sbAttireCol and sbRoleCol keep for guests. */
+/* vendors.people / venues.people arrive with migration 29. Same contract the
+   other column probes keep: say nothing about them until the studio has run it,
+   or every sync fails on an unknown column. */
+var SB_PEOPLE_COLS=null;
+function sbPeopleCols(){
+  if(SB_PEOPLE_COLS===null){
+    SB_PEOPLE_COLS=false;
+    sbRest('vendors?select=people&limit=1')
+      .then(function(){ SB_PEOPLE_COLS=true; })
+      .catch(function(){ SB_PEOPLE_COLS=false; });
+  }
+  return SB_PEOPLE_COLS;
+}
 var SB_BUDGET_COLS=null;
 function sbBudgetCols(){
   if(SB_BUDGET_COLS===null){
@@ -19098,6 +19390,7 @@ function sbPush(opts){
        studio without migration 21 simply never mentions venues. */
     ['venues',VN.map(function(v){ return {id:v.id,org_id:org,name:s(v.name),kind:s(v.kind),
       address:v.address||{},contact:v.contact||{},website:s(v.website),
+      people:sbPeopleCols()?peopleOf(v):undefined,
       seated:num(v.seated),standing:num(v.standing),notes:s(v.notes),
       spaces:v.spaces||[],photo_path:nn(v.photoPath),preferred:!!v.preferred}; })],
     /* Primaries first. events_parent_guard is a BEFORE ROW trigger, so it runs
@@ -19130,6 +19423,7 @@ function sbPush(opts){
       venue_id:venueTbl?nn(e.venueId):undefined,
       floor:{w:num(f.w)||60,h:num(f.h)||40,unit:f.unit||'ft',snap:f.snap!==false,showChairs:f.showChairs!==false}}; })],
     ['vendors',V.map(function(v){ return {id:v.id,org_id:org,name:s(v.name),category:s(v.cat),contact:s(v.contact),
+      people:sbPeopleCols()?peopleOf(v):undefined,
       email:s(v.email),phone:s(v.phone),notes:s(v.notes),preferred:!!v.preferred,rating:num(v.rating)}; })],
     ['seating_tables',tables],['guests',guests],
     /* After guests AND seating_tables — an invite carries a foreign key to
@@ -19520,7 +19814,11 @@ function sbPull(opts){
             boards:boards,
             decor:of(R.decor_items,e.id).map(function(x){return {id:x.id,item:x.item,vendor:x.vendor,vendorId:x.vendor_id,status:x.status};})}};
       }),
+      /* liftPeople() fills the list from the legacy fields when the column is
+         not there yet, so a studio mid-migration reads as one contact rather
+         than none. */
       vendors:R.vendors.map(function(v){ return {id:v.id,name:v.name,cat:v.category,contact:v.contact,email:v.email,
+        people:Array.isArray(v.people)?v.people:undefined,
         phone:v.phone,notes:v.notes||'',preferred:!!v.preferred,rating:v.rating||0}; }),
       /* null means the table is not there — keep whatever this device has
          rather than replacing a working local directory with nothing. An
@@ -19528,6 +19826,7 @@ function sbPull(opts){
          does replace it. */
       venues:venueRows===null?(db.venues||[]):venueRows.map(function(v){
         return {id:v.id,name:v.name,kind:v.kind||'',address:v.address||{},contact:v.contact||{},
+          people:Array.isArray(v.people)?v.people:undefined,
           website:v.website||'',seated:v.seated||0,standing:v.standing||0,notes:v.notes||'',
           spaces:v.spaces||[],photo:null,photoPath:v.photo_path||null,preferred:!!v.preferred}; }),
       invites:(R.guest_invites||[]).map(function(i){ return {id:i.id,guestId:i.guest_id,eventId:i.event_id,

@@ -1841,3 +1841,50 @@ exists.
   gate was inert; a real trap the moment it started biting. Both
   `isSampleEvent()` and `isSampleLead()` check the preference first now, and
   `sample-lock-test.mjs` reloads to prove it.
+
+- **A supplier can be a team.** A vendor held exactly one contact name, email
+  and phone; a venue held exactly one coordinator. Real suppliers are small
+  outfits — the owner who quotes, the coordinator who runs the day, the account
+  that sends the invoice — and the second name was going in the notes field,
+  where nothing could dial it and no sheet could print it.
+  - `people[]` is the list. The FIRST entry is the primary and `syncPrimary()`
+    mirrors it back onto the legacy `contact`/`email`/`phone` fields on every
+    write, so the sixty-odd readers — tables, search, exports, the client bible,
+    the sync payload — keep working untouched. Same move as deriving an event's
+    short `loc` line from its address: one place writes, everything else reads
+    what it always read.
+  - `liftPeople()` carries an existing single contact into the list on load, and
+    only when there is something to carry — an empty contact becomes an empty
+    list, not a blank person nobody can tell from a real one.
+  - The quick-add forms still ask for one person, because adding a florist is
+    usually adding one name. That name becomes the first of the list rather than
+    the only thing the record can hold. The venue form's four coordinator fields
+    now write THROUGH the list, so the two can never disagree — and clearing
+    them on a venue with a team does not delete the team.
+  - One modal serves both: the record differs, the question does not. The
+    individual person opens the ordinary field editor and comes back to the list
+    on save, because `md` is a single element and this app cannot stack modals.
+  - **The Vendor Contact Sheet had been printing an empty table.** It filtered
+    `db.vendors` on `v.eventId`, which vendors stopped carrying when bookings
+    were split out of them, and the filter was never updated. The booking is the
+    join. Found while adding contacts to the sheet — it would have been absurd
+    to add rows to a sheet that printed none.
+  - On paper each contact gets a line, with the vendor name and status spanning
+    them, so a team reads as one block rather than as three suppliers.
+  - `supabase/migrations/…_29_supplier_contacts.sql` adds `people jsonb` to
+    vendors and venues with an is-array check and a backfill from the single
+    contact each already had — so the first sync after it does not look like
+    every supplier lost their contact. `sbPeopleCols()` probes for it and the
+    push says nothing about the column until a studio has run it.
+- **The Bible can carry the room.** Floor plan is a section now, off by default
+  on a client's copy alongside the guest list and seating — it is the seating
+  chart drawn, so it travels with it.
+  - `floorPlanMarkup(ev, withLists)` is lifted out of the Floor Plan sheet and
+    shared, because two copies of a scaled layout drift the moment either is
+    touched. The Bible passes `false`: it already prints a Seating chapter table
+    by table, so the plan there is the drawing alone rather than the same page
+    twice.
+  - A new `{raw}` block type, the first in the Bible that is markup rather than
+    text. It carries an `alt` line, and the Word renderer prints that instead —
+    a positioned layout is not a thing .docx can hold. Safe to pass through
+    because every label inside is escaped at source by `floorPlanMarkup()`.
